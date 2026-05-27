@@ -1,0 +1,38 @@
+@import 'tailwindcss';
+@plugin "tailwindcss-animate";
+
+/*
+ * 다크모드 전환은 next-themes가 <html>에 .dark 클래스를 토글한다.
+ * Tailwind 4는 기본적으로 prefers-color-scheme 변형을 사용하므로,
+ * 클래스 기반 다크모드를 명시적으로 활성화한다.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * 디자인 토큰 — 메인 컬러는 indigo 스케일을 brand-* 로 노출.
+ * 추후 OA 공식 브랜드 컬러로 교체 예정.
+ */
+@theme {
+  --color-brand-50:  oklch(0.962 0.018 272.31);
+  --color-brand-100: oklch(0.930 0.034 272.79);
+  --color-brand-200: oklch(0.870 0.065 274.04);
+  --color-brand-300: oklch(0.785 0.115 274.71);
+  --color-brand-400: oklch(0.673 0.182 276.94);
+  --color-brand-500: oklch(0.585 0.233 277.12);
+  --color-brand-600: oklch(0.511 0.262 276.97);
+  --color-brand-700: oklch(0.457 0.240 277.02);
+  --color-brand-800: oklch(0.398 0.195 277.37);
+  --color-brand-900: oklch(0.359 0.144 278.70);
+  --color-brand-950: oklch(0.257 0.092 281.29);
+}
+
+@layer base {
+  html,
+  body {
+    @apply bg-white text-slate-900;
+  }
+  html.dark,
+  html.dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}

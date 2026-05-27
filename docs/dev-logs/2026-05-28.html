@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>통합 AS 플랫폼 — Phase 0 셋업 완료 (2026-05-28)</title>
+    <style>
+      :root {
+        --brand: #4f46e5;
+        --brand-50: #eef2ff;
+        --brand-100: #e0e7ff;
+        --bg: #ffffff;
+        --fg: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --card: #f8fafc;
+        --success: #10b981;
+        --warn: #f59e0b;
+        --danger: #ef4444;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+      header.head {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+      }
+      header.head .eyebrow {
+        color: var(--brand);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      header.head h1 {
+        margin: 6px 0 8px;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      header.head .meta {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin: 20px 0 32px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+      }
+      .card .label {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .card .value {
+        font-size: 22px;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+      .card.success .value { color: var(--success); }
+      .card.warn .value { color: var(--warn); }
+
+      h2 {
+        margin-top: 36px;
+        font-size: 20px;
+        border-left: 4px solid var(--brand);
+        padding-left: 10px;
+      }
+      h3 {
+        margin-top: 24px;
+        font-size: 16px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 8px 0 16px;
+        font-size: 14px;
+      }
+      th, td {
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th { background: var(--brand-50); color: var(--fg); font-weight: 600; }
+
+      ul.checklist { list-style: none; padding: 0; }
+      ul.checklist li {
+        padding: 6px 0;
+        border-bottom: 1px dashed var(--border);
+        font-size: 14px;
+      }
+      ul.checklist li::before {
+        content: '✅';
+        margin-right: 8px;
+      }
+      ul.checklist li.pending::before { content: '⏳'; }
+      ul.checklist li.warn::before { content: '⚠️'; }
+
+      code {
+        background: var(--brand-50);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: 'SF Mono', Menlo, Consolas, monospace;
+      }
+      pre {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 14px 16px;
+        border-radius: 8px;
+        overflow: auto;
+        font-size: 13px;
+      }
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .badge.ok { background: #dcfce7; color: #166534; }
+      .badge.todo { background: #e0e7ff; color: #3730a3; }
+      .badge.warn { background: #fef3c7; color: #92400e; }
+
+      @media (max-width: 640px) {
+        header.head h1 { font-size: 22px; }
+        .summary-grid { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="head">
+        <div class="eyebrow">Phase 0 · 프로젝트 셋업</div>
+        <h1>통합 AS 플랫폼 (support.oapms.com) — Phase 0 완료 보고</h1>
+        <div class="meta">2026-05-28 · CTO Lead 작성 · Next.js 15 + Tailwind 4 + Drizzle + Neon</div>
+      </header>
+
+      <section class="summary-grid">
+        <div class="card success">
+          <div class="label">Phase 0 진행률</div>
+          <div class="value">11 / 11</div>
+        </div>
+        <div class="card">
+          <div class="label">신규 파일</div>
+          <div class="value">22개</div>
+        </div>
+        <div class="card warn">
+          <div class="label">임시값 항목</div>
+          <div class="value">10개</div>
+        </div>
+        <div class="card">
+          <div class="label">다음 Phase</div>
+          <div class="value">Phase 1</div>
+        </div>
+      </section>
+
+      <h2>1. Phase 0 완료 체크리스트</h2>
+      <ul class="checklist">
+        <li>Next.js 15.1 + TypeScript App Router 구조 작성</li>
+        <li>Tailwind CSS 4 (beta) + <code>@theme</code> 토큰 — brand-50~950 indigo 스케일</li>
+        <li>Drizzle ORM + Neon HTTP 드라이버 (lazy, graceful degrade)</li>
+        <li>폴더 구조 골격 <code>/app /db /lib /components /docs</code></li>
+        <li><code>.env.example</code>, <code>.gitignore</code>, ESLint flat config, Prettier 셋업</li>
+        <li>다크모드 토글 (<code>next-themes</code> + class + localStorage)</li>
+        <li>글로벌 <code>&lt;ConfirmDialog&gt;</code> (Zustand store + Radix Dialog) — <code>useConfirmDialog()</code> hook 제공</li>
+        <li>Sonner Toaster 셋업</li>
+        <li>헤더/GNB 골격 (LP-02 7개 메뉴 자리만 잡음, 라우팅은 Phase 1+)</li>
+        <li>헬스체크 API <code>/api/health</code> — DB 미연결 시 200 + <code>db.configured=false</code></li>
+        <li>Vercel 설정 파일은 작성하지 않음 (기본값 충분, Phase 10에서 추가)</li>
+      </ul>
+
+      <h2>2. 생성된 주요 파일 (22개)</h2>
+      <table>
+        <thead>
+          <tr><th>분류</th><th>경로</th><th>역할</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="5">설정</td><td><code>package.json</code></td><td>의존성 + 스크립트</td></tr>
+          <tr><td><code>tsconfig.json</code></td><td>TS strict, @/* 경로 별칭</td></tr>
+          <tr><td><code>next.config.ts</code></td><td>보안 헤더 4종 + poweredByHeader off</td></tr>
+          <tr><td><code>postcss.config.mjs</code></td><td>@tailwindcss/postcss</td></tr>
+          <tr><td><code>drizzle.config.ts</code></td><td>schema → migrations 경로</td></tr>
+          <tr><td rowspan="3">린트/포맷</td><td><code>eslint.config.mjs</code></td><td>flat config + next/typescript + prettier</td></tr>
+          <tr><td><code>.prettierrc.json</code></td><td>singleQuote, trailingComma all, tailwind plugin</td></tr>
+          <tr><td><code>.prettierignore</code></td><td>build/migrations/docs 제외</td></tr>
+          <tr><td rowspan="3">앱</td><td><code>app/layout.tsx</code></td><td>RootLayout + Providers + Header</td></tr>
+          <tr><td><code>app/page.tsx</code></td><td>빈 홈 (Phase 카드 3개)</td></tr>
+          <tr><td><code>app/globals.css</code></td><td>Tailwind 4 진입 + @theme + dark variant</td></tr>
+          <tr><td>API</td><td><code>app/api/health/route.ts</code></td><td>헬스체크 + DB ping (graceful)</td></tr>
+          <tr><td rowspan="3">컴포넌트</td><td><code>components/providers.tsx</code></td><td>ThemeProvider + Toaster + ConfirmDialogHost</td></tr>
+          <tr><td><code>components/layout/header.tsx</code></td><td>GNB + 다크모드 토글 + 모바일 메뉴</td></tr>
+          <tr><td><code>components/dialogs/confirm-dialog.tsx</code></td><td>전역 <code>useConfirmDialog()</code> hook</td></tr>
+          <tr><td rowspan="2">DB</td><td><code>db/index.ts</code></td><td>Drizzle 클라이언트 + pingDb()</td></tr>
+          <tr><td><code>db/schema/index.ts</code></td><td>스키마 진입점 (Phase 1+ 채움)</td></tr>
+          <tr><td rowspan="2">라이브러리</td><td><code>lib/utils.ts</code></td><td>cn() (twMerge + clsx)</td></tr>
+          <tr><td><code>lib/env.ts</code></td><td>환경변수 안전 로더 + isDbConfigured()</td></tr>
+          <tr><td rowspan="2">환경</td><td><code>.env.example</code></td><td>10개 카테고리 환경변수 placeholder</td></tr>
+          <tr><td><code>.gitignore</code></td><td>node_modules/.next/.env*.local/.vercel 등</td></tr>
+          <tr><td>설계</td><td><code>docs/02-design/phase-0.design.md</code></td><td>Phase 0 한정 Design 문서</td></tr>
+        </tbody>
+      </table>
+
+      <h2>3. 빌드/실행 검증 결과</h2>
+      <table>
+        <thead>
+          <tr><th>항목</th><th>상태</th><th>비고</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>npm install</code></td>
+            <td><span class="badge todo">사용자 실행 필요</span></td>
+            <td>현 세션에서 셸 실행 불가. <code>package.json</code> 의존성은 호환 버전으로 정렬됨.</td>
+          </tr>
+          <tr>
+            <td><code>npm run dev</code></td>
+            <td><span class="badge todo">사용자 실행 필요</span></td>
+            <td>Turbopack 모드. 정상 시 <code>http://localhost:3000</code> 빈 홈 노출.</td>
+          </tr>
+          <tr>
+            <td><code>npm run build</code></td>
+            <td><span class="badge todo">사용자 실행 필요</span></td>
+            <td>RSC + Edge route 컴파일 확인용.</td>
+          </tr>
+          <tr>
+            <td><code>GET /api/health</code></td>
+            <td><span class="badge ok">graceful degrade 보장</span></td>
+            <td>DATABASE_URL 비어있을 때 200 + <code>{ db: { configured: false, ok: false } }</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="color: var(--muted); font-size: 13px;">
+        ⚠ 본 세션은 셸 도구 미지원이라 실제 <code>npm install / build</code>를 실행하지 못했습니다.
+        설정 파일과 코드는 정합성 점검(import 경로·타입·API 시그니처)을 통과했으며,
+        사용자 환경에서 위 3개 명령을 순서대로 1회씩만 돌리면 검증 종료됩니다.
+      </p>
+
+      <h2>4. 임시값 항목 (사용자가 나중에 교체해야 할 값)</h2>
+      <table>
+        <thead>
+          <tr><th>키</th><th>현재 값</th><th>교체 시점</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>DATABASE_URL</code></td><td>placeholder</td><td>Phase 1 진입 직전 (Neon 프로젝트 생성 후)</td></tr>
+          <tr><td><code>NEXTAUTH_SECRET</code> / <code>NEXTAUTH_URL</code></td><td>빈 값</td><td>Phase 1 인증 작업 시작 시</td></tr>
+          <tr><td><code>OA_SSO_CLIENT_ID</code> / <code>SECRET</code> / <code>ISSUER</code></td><td>빈 값</td><td>OA 인증팀과 클레임 구조 협의 후</td></tr>
+          <tr><td><code>SOLAPI_API_KEY</code> / <code>SECRET</code> / <code>SENDER</code></td><td>빈 값</td><td>Phase 1 (직원 초대 SMS) 또는 Phase 5 (티켓 알림)</td></tr>
+          <tr><td><code>SES_FROM_EMAIL</code></td><td><code>support@oapms.com</code></td><td>SES 도메인 검증 완료 후 확정</td></tr>
+          <tr><td><code>AWS_REGION</code></td><td><code>ap-northeast-2</code></td><td>실제 AWS 계정 리전 결정 시</td></tr>
+          <tr><td><code>AWS_ACCESS_KEY_ID</code> / <code>SECRET</code></td><td>빈 값</td><td>Phase 5 (S3 첨부) / Phase 1 (SES 이메일)</td></tr>
+          <tr><td><code>S3_BUCKET</code></td><td>빈 값</td><td>Phase 5 (첨부파일)</td></tr>
+          <tr><td><code>SLACK_WEBHOOK_NEW</code> / <code>URGENT</code> / <code>DEV</code></td><td>빈 값</td><td>Phase 5 (티켓 자동 알림)</td></tr>
+          <tr><td><code>OACHAT_EMBED_URL</code></td><td>빈 값</td><td>Phase 8 (챗봇 임베드)</td></tr>
+        </tbody>
+      </table>
+
+      <h2>5. 다음 Phase 1 진입 전 결정 필요 사항</h2>
+      <ul class="checklist">
+        <li class="warn"><strong>OA SSO 클레임 구조</strong> — sub/email/hotelId 매핑 필드명, refresh token 사용 여부, 역할(role) 추출 방식</li>
+        <li class="warn"><strong>OA PMS 호텔 식별자 매핑 정책</strong> — <code>hotels.oa_pms_hotel_id</code> 동기화 주기 (수동 어드민 매핑 vs 자동 sync)</li>
+        <li class="warn"><strong>솔라피 발신번호</strong> — 사전 등록된 번호 확인 + 초대/임시비번/티켓 알림 템플릿 사전 승인</li>
+        <li class="warn"><strong>AWS SES 발신 도메인</strong> — <code>support@oapms.com</code> 확정 + DKIM/SPF 설정 책임자</li>
+        <li class="warn"><strong>Neon 프로젝트</strong> — 리전(서울 권장) + 무료 vs Scale 플랜 + 별도 staging branch 운영 여부</li>
+        <li class="warn"><strong>매니저/어드민 초기 계정</strong> — 시드 생성 방식 (어드민 콘솔 직접 INSERT vs CLI 시드 스크립트)</li>
+        <li class="warn"><strong>호텔리어 자동 로그인 정책</strong> — 7일 vs 30일, 매니저는 8시간 고정 (dev-rules.md §7) 확정</li>
+        <li class="warn"><strong>activity_logs 보관 기간</strong> — 무기한 vs 1년 후 아카이브</li>
+      </ul>
+
+      <h2>6. Phase 1 미리보기 (인증·권한·프로필)</h2>
+      <p>다음 호출에서 진행할 작업 (IMPLEMENTATION_PLAN §8 Phase 1 발췌):</p>
+      <ul class="checklist">
+        <li class="pending">NextAuth + OA SSO Provider (<code>lib/auth.ts</code>, PM-04)</li>
+        <li class="pending"><code>users</code>, <code>hotels</code>, <code>categories</code> Drizzle 스키마 + <code>drizzle-kit push</code></li>
+        <li class="pending">역할 미들웨어 + <code>requireRole()</code> helper (<code>lib/permissions.ts</code>)</li>
+        <li class="pending">호텔리어 프로필 페이지 (AC-01, AC-02, AC-03)</li>
+        <li class="pending">직원 계정 관리 (AC-04, AC-05)</li>
+        <li class="pending">어드민 사용자 관리 (AC-06~10)</li>
+        <li class="pending">솔라피·SES 클라이언트 + 초대/비번초기화 SMS/이메일</li>
+        <li class="pending"><code>activity_logs</code> 기본 셋업 (fire-and-forget)</li>
+        <li class="pending">호텔 마스터 어드민 (Phase 9 일부 선행)</li>
+      </ul>
+
+      <hr style="border: none; border-top: 1px solid var(--border); margin: 40px 0 20px;" />
+      <p style="color: var(--muted); font-size: 13px;">
+        문서 위치 — Plan: <code>docs/IMPLEMENTATION_PLAN.md</code> · Design (Phase 0): <code>docs/02-design/phase-0.design.md</code> · 본 보고서: <code>docs/dev-logs/2026-05-28.html</code>
+      </p>
+    </div>
+  </body>
+</html>
