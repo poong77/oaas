@@ -14,6 +14,7 @@ export const env = {
   OA_SSO_CLIENT_ID: process.env.OA_SSO_CLIENT_ID ?? '',
   OA_SSO_CLIENT_SECRET: process.env.OA_SSO_CLIENT_SECRET ?? '',
   OA_SSO_ISSUER: process.env.OA_SSO_ISSUER ?? '',
+  AUTH_DEV_STUB: process.env.AUTH_DEV_STUB ?? '',
 
   // SMS/Email (Phase 1)
   SOLAPI_API_KEY: process.env.SOLAPI_API_KEY ?? '',

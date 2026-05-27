@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Menu, X, LifeBuoy } from 'lucide-react';
+import { Moon, Sun, Menu, X, LifeBuoy, LogOut, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { signOut } from 'next-auth/react';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { useCurrentUser } from '@/lib/hooks/use-current-user';
 import { cn } from '@/lib/utils';
 
 /**
@@ -23,6 +25,17 @@ const NAV_ITEMS = [
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, status } = useCurrentUser();
+  const confirm = useConfirmDialog();
+
+  async function handleLogout() {
+    const ok = await confirm({
+      title: '로그아웃 하시겠습니까?',
+      confirmText: '로그아웃',
+      tone: 'danger',
+    });
+    if (ok) await signOut({ callbackUrl: '/' });
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80">
@@ -52,18 +65,31 @@ export function Header() {
         <div className="flex items-center gap-2">
           <ConfirmDemoButton />
           <ThemeToggle />
-          <Link
-            href="/login"
-            className="hidden rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 sm:inline-flex"
-          >
-            로그인
-          </Link>
-          <Link
-            href="/tickets"
-            className="hidden rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-500 sm:inline-flex"
-          >
-            내 문의
-          </Link>
+          {status === 'authenticated' && user ? (
+            <>
+              <Link
+                href="/profile"
+                className="hidden items-center gap-1.5 rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 sm:inline-flex"
+              >
+                <User className="h-3.5 w-3.5" />
+                {user.name ?? '내 프로필'}
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="hidden items-center gap-1.5 rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:inline-flex"
+              >
+                <LogOut className="h-3.5 w-3.5" />로그아웃
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="hidden rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-500 sm:inline-flex"
+            >
+              로그인
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
@@ -96,18 +122,32 @@ export function Header() {
             </Link>
           ))}
           <div className="mt-2 flex gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
-            <Link
-              href="/login"
-              className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-center text-sm font-medium dark:border-slate-700"
-            >
-              로그인
-            </Link>
-            <Link
-              href="/tickets"
-              className="flex-1 rounded-md bg-brand-600 px-3 py-2 text-center text-sm font-medium text-white"
-            >
-              내 문의
-            </Link>
+            {status === 'authenticated' && user ? (
+              <>
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-center text-sm font-medium dark:border-slate-700"
+                >
+                  내 프로필
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => { setMobileOpen(false); handleLogout(); }}
+                  className="flex-1 rounded-md bg-slate-100 px-3 py-2 text-center text-sm font-medium dark:bg-slate-800"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="flex-1 rounded-md bg-brand-600 px-3 py-2 text-center text-sm font-medium text-white"
+              >
+                로그인
+              </Link>
+            )}
           </div>
         </nav>
       </div>

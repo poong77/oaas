@@ -11,6 +11,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // bcryptjs / drizzle 등 server-only 라이브러리 외부 처리
+  serverExternalPackages: ['bcryptjs', '@neondatabase/serverless'],
   async headers() {
     return [
       {

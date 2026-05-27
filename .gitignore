@@ -1,3 +1,6 @@
+# bkit plugin local state (세션 런타임, 커밋 X)
+/.bkit/
+
 # dependencies
 /node_modules
 /.pnp
