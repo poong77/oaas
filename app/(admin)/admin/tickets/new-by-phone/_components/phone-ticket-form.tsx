@@ -10,7 +10,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
-import { AlertCircle, Headset, Phone, Send } from 'lucide-react';
+import { AlertCircle, Headset, Send } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -336,8 +336,8 @@ export function PhoneTicketForm({
       </Card>
 
       <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-        <Phone className="mr-1 inline h-3 w-3" />
-        전화 접수는 `channel=phone`으로 저장되며, 통화 메모는 본문 그대로
+        <Headset className="mr-1 inline h-3 w-3" />
+        대리 접수는 선택한 유입 채널로 저장되며, 통화/대화 메모는 본문 그대로
         보존됩니다.
       </p>
     </form>

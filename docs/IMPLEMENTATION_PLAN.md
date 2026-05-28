@@ -71,7 +71,7 @@
 | IC-01 | 접수 폼 — 기본 정보 | 제품·호텔/장애명·유형(오류/장애/기능문의/기능개발/데이터수정/기타)·영향범위·제목·내용. 3단계 스텝퍼 | 호텔리어 | P1 |
 | IC-02 | 접수 폼 — 멀티미디어 첨부 | 이미지·비디오·로그파일 (최대 50MB) | 호텔리어 | P1 |
 | IC-03 | 접수 폼 — 연락 수단 선택 | SMS(솔라피)·이메일(SES) 선택. 접수확인 자동 발송 | 호텔리어 | P1 |
-| IC-04 | 전화 접수 (관리자 수기) | 통화 중 직접 작성. AI 작성 보조. 체크리스트 자동 제안. 유입채널='전화' 자동 태깅 | 매니저 | P1 |
+| IC-04 | 대리 접수 (관리자 수기) | 전화·카카오톡·이메일 등 외부 채널 문의를 매니저가 대신 접수. 유입채널은 `ticket_channels` 마스터에서 선택 (시드: web/phone/chatbot/kakao/email/walk_in). 자세히는 `ticket-channels-master` 참조 | 매니저 | P1 |
 | IC-05 | 챗봇 경유 접수 | 챗봇 대화 기반 자동 접수. 호텔 매핑(매니저 수동). 대화내용 첨부 | 매니저 | P2 |
 | IC-06 | 티켓 자동 생성 & 번호 발급 | 티켓번호 자동, 접수확인 SMS/이메일 즉시, Slack `#as-new` 알림. P1 긴급은 `#as-urgent` | — (시스템) | P1 |
 | IC-07 | 내부 메모 | 티켓별 비공개 메모. Slack 스레드 양방향 연동 | 매니저 | P1 |
@@ -258,10 +258,26 @@ title, content, custom_fields jsonb,
 status enum('received' | 'in_progress' | 'on_hold' | 'completed'),
 assignee_id (FK users, nullable),
 due_date timestamp,
-channel enum('web' | 'phone' | 'chatbot'),
+channel text,  // ticket_channels.code 참조 (FK 미설정). 마스터에서 어드민이 확장 가능.
 slack_thread_ts varchar, monday_item_id varchar,
 created_at, updated_at, is_active
 ```
+
+#### `ticket_channels` (유입 채널 마스터, IC-04 확장)
+```ts
+id, code text unique,               // 'web' | 'phone' | 'chatbot' | 'kakao' | 'email' | 'walk_in' ...
+label text,                          // '웹' | '전화' | '챗봇' | '카카오톡' | '이메일' | '방문'
+description text,
+icon text,                           // lucide-react 컴포넌트 이름 (CHANNEL_ICON_MAP 화이트리스트)
+selectable_in_agent_form bool,       // 대리 접수 폼 드롭다운 노출 여부 (web/chatbot false)
+is_agent_default bool,               // 대리 접수 폼 기본 선택 (정책상 true는 1개)
+sort_order int,
+created_at, updated_at, is_active
+```
+- 시스템 채널(`web`, `chatbot`)은 비활성화/code 변경 불가 — UI + 백엔드 양쪽 보호.
+- `tickets.channel`은 `code` 문자열 참조 (FK 미설정 — 마스터 비활성/삭제 시 과거 티켓 raw 보존).
+- 어드민만 CRUD (`/admin/master/ticket-channels`).
+- 자세히는 `docs/01-plan/features/ticket-channels-master.plan.md` + `docs/02-design/features/ticket-channels-master.design.md`.
 
 #### `ticket_messages` (공개 답변 + 내부 메모)
 ```ts
@@ -457,7 +473,8 @@ created_at, is_active
 - [x] IC-02 첨부 (최대 50MB, 총 200MB)
 - [x] IC-03 연락수단 선택 (SMS·이메일)
 - [x] IC-06 티켓 자동 생성 + 솔라피/SES 접수확인 + Slack `#as-new` 알림 (P1은 `#as-urgent` 동시 발송)
-- [x] IC-04 전화 접수 (`/admin/tickets/new-by-phone`, 호텔·호텔리어 매핑 + Blob 첨부)
+- [x] IC-04 대리 접수 (`/admin/tickets/new-by-phone`, 호텔·호텔리어 매핑 + 유입채널 드롭다운 + Blob 첨부)
+- [x] **ticket_channels 마스터** (`/admin/master/ticket-channels`, 어드민이 채널 CRUD. 시스템 채널(web/chatbot) 보호. 시드 6종.)
 - [x] IC-07 내부 메모 (호텔리어 비공개, 서버단 자동 필터)
 - [x] IC-08 Dev 에스컬레이션 (Slack `#dev-escalation` + internal_memo 자동 기록)
 - [x] IS-01 내 문의 (본인 + 같은 호텔)

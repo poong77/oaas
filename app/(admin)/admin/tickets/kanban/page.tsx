@@ -7,7 +7,7 @@
  * 페이지네이션 없음, 검색 없음 (시각화 우선). completed는 최근 30일만.
  */
 
-import { FilePlus2, Phone } from 'lucide-react';
+import { FilePlus2, Headset } from 'lucide-react';
 import Link from 'next/link';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -77,8 +77,8 @@ export default async function AdminTicketsKanbanPage({
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" size="sm">
               <Link href="/admin/tickets/new-by-phone">
-                <Phone className="h-4 w-4" />
-                전화 접수
+                <Headset className="h-4 w-4" />
+                대리 접수
               </Link>
             </Button>
             <Button asChild size="sm">

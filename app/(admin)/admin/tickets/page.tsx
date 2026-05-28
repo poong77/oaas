@@ -6,7 +6,7 @@
  */
 
 import Link from 'next/link';
-import { FilePlus2, Phone } from 'lucide-react';
+import { FilePlus2, Headset } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { requireRole } from '@/lib/permissions';
@@ -118,8 +118,8 @@ export default async function AdminTicketsQueuePage({
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" size="sm">
               <Link href="/admin/tickets/new-by-phone">
-                <Phone className="h-4 w-4" />
-                전화 접수
+                <Headset className="h-4 w-4" />
+                대리 접수
               </Link>
             </Button>
             <Button asChild size="sm">

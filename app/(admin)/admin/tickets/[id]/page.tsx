@@ -31,6 +31,8 @@ import {
   listAssignableManagers,
   loadCategoryLabelMaps,
 } from '@/lib/services/tickets';
+import { getAllTicketChannelsMap } from '@/lib/services/master-ticket-channels';
+import { getChannelDisplay } from '@/lib/ticket-channel-label';
 import { RATING_LABEL, RATING_TONE } from '@/lib/services/tickets-meta';
 import type { TicketStatus } from '@/db/schema';
 import { TicketThread } from '@/app/tickets/[id]/_components/ticket-thread';
@@ -89,7 +91,7 @@ export default async function AdminTicketDetailPage({
   const { id } = await params;
   const user = await requireRole(['manager', 'admin']);
 
-  const [ticket, labels, managers, feedback] = await Promise.all([
+  const [ticket, labels, managers, feedback, channelMap] = await Promise.all([
     getTicketDetail(id, {
       id: user.id,
       role: user.role,
@@ -98,6 +100,7 @@ export default async function AdminTicketDetailPage({
     loadCategoryLabelMaps(),
     listAssignableManagers(),
     getFeedback(id),
+    getAllTicketChannelsMap(),
   ]);
 
   if (!ticket) {
@@ -148,7 +151,7 @@ export default async function AdminTicketDetailPage({
                 ·<span>영향범위 {impactLabel}</span>
               </>
             )}
-            ·<span>채널 {channelLabel(ticket.channel)}</span>
+            ·<span>채널 {getChannelDisplay(ticket.channel, channelMap).label}</span>
           </span>
         }
       />
@@ -339,20 +342,4 @@ function SideRow({
       </span>
     </div>
   );
-}
-
-function channelLabel(c: string): string {
-  // ticket-channels-master로 channel이 varchar (마스터 code) 전환됨.
-  // 시스템 코드는 기존 라벨 유지, 그 외 코드는 raw 그대로 노출 (마스터 라벨 조회는
-  // 별도 도입 예정).
-  switch (c) {
-    case 'web':
-      return '웹';
-    case 'phone':
-      return '전화';
-    case 'chatbot':
-      return '챗봇';
-    default:
-      return c;
-  }
 }

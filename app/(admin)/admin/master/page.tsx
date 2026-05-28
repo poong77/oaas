@@ -14,6 +14,7 @@ import {
   Link as LinkIcon,
   ListChecks,
   MessageSquare,
+  Radio,
   Settings,
   Sparkles,
   Wrench,
@@ -83,6 +84,14 @@ const ITEMS: MasterItem[] = [
     label: '접수 폼 필드',
     description: '제품별 동적 접수 폼 필드 정의. NULL이면 전 제품 공통.',
     icon: Wrench,
+  },
+  {
+    href: '/admin/master/ticket-channels',
+    label: '유입 채널',
+    description:
+      '티켓이 어떤 경로로 들어왔는지 분류 (전화/카카오/이메일 등). 대리 접수 폼 드롭다운에 노출.',
+    icon: Radio,
+    adminOnly: true,
   },
   {
     href: '/admin/master/system-settings',

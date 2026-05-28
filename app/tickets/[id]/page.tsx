@@ -18,7 +18,6 @@ import {
   Clock,
   ExternalLink,
   Hash,
-  ListChecks,
   Paperclip,
   UserCircle2,
 } from 'lucide-react';
@@ -34,6 +33,8 @@ import {
   getFeedback,
   loadCategoryLabelMaps,
 } from '@/lib/services/tickets';
+import { getAllTicketChannelsMap } from '@/lib/services/master-ticket-channels';
+import { getChannelDisplay } from '@/lib/ticket-channel-label';
 import { FeedbackWidget } from './_components/feedback-widget';
 import type { TicketStatus } from '@/db/schema';
 import { TicketThread } from './_components/ticket-thread';
@@ -94,13 +95,14 @@ export default async function HotelierTicketDetailPage({
   const justCreated = sp.created === '1';
 
   const user = await requireAuth();
-  const [ticket, labels] = await Promise.all([
+  const [ticket, labels, channelMap] = await Promise.all([
     getTicketDetail(id, {
       id: user.id,
       role: user.role,
       hotelId: user.hotelId,
     }),
     loadCategoryLabelMaps(),
+    getAllTicketChannelsMap(),
   ]);
 
   // 완료 상태 + 본인이 reporter면 피드백 위젯 표시
@@ -206,17 +208,17 @@ export default async function HotelierTicketDetailPage({
               value={fmtDateTime(ticket.dueDate)}
             />
           )}
-          <MetaRow
-            icon={<ListChecks className="h-3.5 w-3.5" />}
-            label="유입 채널"
-            value={
-              ticket.channel === 'phone'
-                ? '전화'
-                : ticket.channel === 'chatbot'
-                  ? '챗봇'
-                  : '웹'
-            }
-          />
+          {(() => {
+            const cd = getChannelDisplay(ticket.channel, channelMap);
+            const ChannelIcon = cd.Icon;
+            return (
+              <MetaRow
+                icon={<ChannelIcon className="h-3.5 w-3.5" />}
+                label="유입 채널"
+                value={cd.isOrphan ? `${cd.label} (마스터 미등록)` : cd.label}
+              />
+            );
+          })()}
         </CardContent>
       </Card>
 
