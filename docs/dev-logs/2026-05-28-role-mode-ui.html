@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>역할별 모드 UI 분리 — 개발 일지 (2026-05-28)</title>
+<style>
+  :root {
+    --brand:#166534; --brand-50:#f0fdf4; --brand-100:#dcfce7;
+    --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0;
+    --slate-500:#64748b; --slate-700:#334155; --slate-900:#0f172a;
+    --amber-100:#fef3c7; --amber-700:#b45309;
+    --rose-100:#ffe4e6; --rose-700:#be123c;
+    --emerald-50:#ecfdf5; --emerald-700:#047857;
+  }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Pretendard',sans-serif;
+       margin:0;padding:24px;background:var(--slate-50);color:var(--slate-900);line-height:1.55}
+  .container{max-width:980px;margin:0 auto}
+  h1{font-size:28px;margin:0 0 8px;letter-spacing:-0.02em}
+  h2{font-size:20px;margin:32px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--brand)}
+  h3{font-size:16px;margin:20px 0 8px;color:var(--brand)}
+  .meta{color:var(--slate-500);font-size:13px;margin-bottom:24px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0}
+  .card{background:#fff;border:1px solid var(--slate-200);border-radius:12px;padding:16px;
+        box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card .label{color:var(--slate-500);font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+  .card .value{font-size:22px;font-weight:700;margin-top:4px;color:var(--brand)}
+  .card .sub{font-size:12px;color:var(--slate-500);margin-top:2px}
+  table{width:100%;border-collapse:collapse;margin:12px 0;background:#fff;border-radius:8px;overflow:hidden;
+        box-shadow:0 1px 2px rgba(0,0,0,.04);font-size:14px}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--slate-100)}
+  th{background:var(--slate-100);font-weight:600;font-size:13px;color:var(--slate-700)}
+  tr:last-child td{border-bottom:none}
+  .badge{display:inline-block;padding:2px 8px;border-radius:9999px;font-size:11px;font-weight:600}
+  .badge-done{background:var(--emerald-50);color:var(--emerald-700)}
+  .badge-warn{background:var(--amber-100);color:var(--amber-700)}
+  .badge-risk{background:var(--rose-100);color:var(--rose-700)}
+  .check{color:var(--emerald-700);font-weight:700}
+  .x{color:var(--rose-700);font-weight:700}
+  ul.checklist{list-style:none;padding:0;margin:8px 0}
+  ul.checklist li{padding:6px 0;padding-left:28px;position:relative;font-size:14px}
+  ul.checklist li::before{content:"✓";position:absolute;left:8px;color:var(--emerald-700);font-weight:700}
+  .code-box{background:var(--slate-900);color:#e2e8f0;padding:14px 16px;border-radius:8px;
+            font-family:Menlo,Monaco,monospace;font-size:12.5px;overflow-x:auto;margin:12px 0;line-height:1.5}
+  .palette{display:flex;gap:4px;margin:6px 0}
+  .swatch{width:32px;height:32px;border-radius:4px;border:1px solid var(--slate-200)}
+  .footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--slate-200);
+          color:var(--slate-500);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>🎨 역할별 모드 UI 분리 (role-mode-ui)</h1>
+  <div class="meta">개발 일지 · 2026-05-28 · Phase: Do 완료 · 작성: Claude (시니어 개발자 톤)</div>
+
+  <!-- Executive Summary -->
+  <h2>📊 Executive Summary</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="label">Commits</div>
+      <div class="value">9</div>
+      <div class="sub">+ HTML 일지 commit 별도</div>
+    </div>
+    <div class="card">
+      <div class="label">신규 파일</div>
+      <div class="value">7</div>
+      <div class="sub">role-mode, view-mode, hook, RoleScope, ViewModeBanner, ViewModeToggle, AdminUserMenu</div>
+    </div>
+    <div class="card">
+      <div class="label">수정 파일</div>
+      <div class="value">7</div>
+      <div class="sub">globals.css, root/admin/user layout, header, admin-nav, user-nav</div>
+    </div>
+    <div class="card">
+      <div class="label">무수정 brand-* 파일</div>
+      <div class="value">50+</div>
+      <div class="sub">CSS 변수 cascade로 자동 분기</div>
+    </div>
+    <div class="card">
+      <div class="label">빌드 상태</div>
+      <div class="value check">PASS</div>
+      <div class="sub">npm run build 통과, 모든 라우트 정상</div>
+    </div>
+    <div class="card">
+      <div class="label">DB 변경</div>
+      <div class="value">0</div>
+      <div class="sub">롤백 시 쿠키만 무효화하면 끝</div>
+    </div>
+  </div>
+
+  <!-- 컬러 시스템 -->
+  <h2>🎨 컬러 시스템 — 역할별 메인 컬러</h2>
+  <table>
+    <thead><tr><th>역할</th><th>메인 HEX</th><th>50~950 팔레트</th><th>적용 방식</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>어드민</strong> 🛡 (현행 유지)</td>
+        <td><code>oklch(0.457 0.240 277.02)</code><br>= indigo 계열</td>
+        <td><div class="palette">
+          <div class="swatch" style="background:oklch(0.962 0.018 272.31)"></div>
+          <div class="swatch" style="background:oklch(0.870 0.065 274.04)"></div>
+          <div class="swatch" style="background:oklch(0.673 0.182 276.94)"></div>
+          <div class="swatch" style="background:oklch(0.511 0.262 276.97)"></div>
+          <div class="swatch" style="background:oklch(0.457 0.240 277.02);border-color:#000"></div>
+          <div class="swatch" style="background:oklch(0.359 0.144 278.70)"></div>
+          <div class="swatch" style="background:oklch(0.257 0.092 281.29)"></div>
+        </div></td>
+        <td>@theme 기본값 유지</td>
+      </tr>
+      <tr>
+        <td><strong>매니저</strong> 🛡 (신규)</td>
+        <td><code>#1D4ED8</code> — Cobalt blue-700</td>
+        <td><div class="palette">
+          <div class="swatch" style="background:#eff6ff"></div>
+          <div class="swatch" style="background:#bfdbfe"></div>
+          <div class="swatch" style="background:#60a5fa"></div>
+          <div class="swatch" style="background:#2563eb"></div>
+          <div class="swatch" style="background:#1d4ed8;border-color:#000"></div>
+          <div class="swatch" style="background:#1e3a8a"></div>
+          <div class="swatch" style="background:#172554"></div>
+        </div></td>
+        <td><code>[data-role='manager']</code></td>
+      </tr>
+      <tr>
+        <td><strong>호텔리어</strong> (신규)</td>
+        <td><code>#166534</code> — Forest green-800</td>
+        <td><div class="palette">
+          <div class="swatch" style="background:#f0fdf4"></div>
+          <div class="swatch" style="background:#bbf7d0"></div>
+          <div class="swatch" style="background:#4ade80"></div>
+          <div class="swatch" style="background:#16a34a"></div>
+          <div class="swatch" style="background:#166534;border-color:#000"></div>
+          <div class="swatch" style="background:#14532d"></div>
+          <div class="swatch" style="background:#052e16"></div>
+        </div></td>
+        <td><code>[data-role='hotelier']</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 핵심 설계 결정 -->
+  <h2>⚙️ 핵심 설계 결정</h2>
+  <table>
+    <thead><tr><th>#</th><th>결정</th><th>근거</th><th>효과</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><strong>미들웨어 미사용</strong></td>
+        <td>(admin)/(user) layout이 이미 force-dynamic. 루트 layout도 EmergencyBanner DB 쿼리로 어차피 dynamic.</td>
+        <td>NextAuth 충돌 위험 0, 빌드 복잡도 0, edge runtime 제약 0</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><strong>CSS 변수 cascade</strong></td>
+        <td><code>[data-role]</code>으로 <code>--color-brand-*</code> 오버라이드. <code>className="bg-brand-700"</code>은 자동으로 다른 색 렌더.</td>
+        <td>기존 50+ 파일 무수정 (회귀 위험 ↓)</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><strong>RoleScope 단일 진입점</strong></td>
+        <td>모든 분기(mode 결정, 호텔리어 UI 조건부 노출, ViewModeBanner)를 단일 서버 컴포넌트에 통합.</td>
+        <td>로직 분산 없음. 어드민 모드에서 EmergencyBanner DB 쿼리 자체가 발생 안 함 (성능 ↑)</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><strong>viewMode 쿠키 (UI 표시용)</strong></td>
+        <td>HttpOnly=false, SameSite=Lax, MaxAge=4h. 권한 체크는 항상 user.role 기준.</td>
+        <td>위조해도 무해 (서버 권한 절대 우회 불가)</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><strong>자물쇠 메뉴 = button disabled</strong></td>
+        <td>Link 사용 금지. 매니저가 admin-only 메뉴 클릭해도 404 절대 발생 안 함.</td>
+        <td>design.md E6 위험 사전 차단</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><strong>useViewMode mounted 패턴</strong></td>
+        <td>첫 렌더 항상 false → 서버 결정 결과와 일치. 마운트 후 실제 쿠키값 반영.</td>
+        <td>SSR/CSR hydration mismatch 차단</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Commit 진행 -->
+  <h2>📝 Commit 진행 내역</h2>
+  <table>
+    <thead><tr><th>#</th><th>제목</th><th>주요 변경</th><th>상태</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>lib types/view-mode/hook 신규</td><td>RoleMode 타입, getViewMode/setViewMode, useViewMode hook</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>2</td><td>globals.css 토큰 동적 분기</td><td>매니저(코발트)/호텔리어(녹색) 22줄 추가, 기본값(어드민) 유지</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>3</td><td>UserNav 404 버그 수정</td><td>매니저가 "어드민 영역으로" 클릭 시 404 → /admin/tickets로 정상 이동</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>4</td><td>RoleScope + ViewModeBanner 신규</td><td>app/layout.tsx 리팩토링, 호텔리어 UI(Header/Banner/FAB) 조건부 노출</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>5</td><td>(admin)/(user) layout data-role 부여</td><td>각 라우트 그룹 컨테이너에 data-role 명시, viewMode 쿠키 반영</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>6</td><td>ViewModeToggle 신규</td><td>아바타 드롭다운용 시점 보기 토글 버튼</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>7</td><td>AdminUserMenu 통합</td><td>"내 프로필 →"·로그아웃을 우측 아바타 드롭다운으로 통합 (IA 분리)</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>8</td><td>AdminNav 그룹화 + 자물쇠</td><td>티켓운영/콘텐츠/조직&마스터 3그룹, 매니저용 자물쇠 disabled button</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>9</td><td>Header isStaff viewMode 분기</td><td>시점 보기 모드에서 어드민 단축 버튼 비노출 (콘텍스트 일관성)</td><td><span class="badge badge-done">DONE</span></td></tr>
+      <tr><td>10</td><td>빌드 검증 + HTML 일지</td><td>npm run build 통과, 본 일지 작성</td><td><span class="badge badge-done">DONE</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- 변경 파일 매트릭스 -->
+  <h2>📂 변경 파일 매트릭스</h2>
+  <h3>신규 파일 (7개)</h3>
+  <table>
+    <thead><tr><th>경로</th><th>역할</th></tr></thead>
+    <tbody>
+      <tr><td><code>lib/types/role-mode.ts</code></td><td>RoleMode 타입 + resolveRoleMode() / isInViewMode()</td></tr>
+      <tr><td><code>lib/view-mode.ts</code></td><td>서버용 쿠키 read/write + VIEW_MODE_COOKIE 상수</td></tr>
+      <tr><td><code>lib/hooks/use-view-mode.ts</code></td><td>클라이언트 hook, mounted 패턴으로 hydration-safe</td></tr>
+      <tr><td><code>components/layout/role-scope.tsx</code></td><td>서버 컴포넌트, data-role 부여 + 호텔리어 UI 조건부 렌더</td></tr>
+      <tr><td><code>components/layout/view-mode-banner.tsx</code></td><td>시점 보기 모드 상단 amber 배너</td></tr>
+      <tr><td><code>components/layout/view-mode-toggle.tsx</code></td><td>아바타 드롭다운용 시점 토글 메뉴 아이템</td></tr>
+      <tr><td><code>app/(admin)/admin/_components/admin-user-menu.tsx</code></td><td>어드민/매니저 아바타 드롭다운 (프로필·시점·로그아웃 통합)</td></tr>
+    </tbody>
+  </table>
+  <h3>수정 파일 (7개)</h3>
+  <table>
+    <thead><tr><th>경로</th><th>변경 요약</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/globals.css</code></td><td>매니저/호텔리어 토큰 22줄 추가</td></tr>
+      <tr><td><code>app/layout.tsx</code></td><td>RoleScope로 children 감싸기, Header/Banner/FAB을 내부로 이동</td></tr>
+      <tr><td><code>app/(admin)/admin/layout.tsx</code></td><td>data-role 부여, viewMode 쿠키 read</td></tr>
+      <tr><td><code>app/(user)/layout.tsx</code></td><td>data-role 부여, viewMode 쿠키 read</td></tr>
+      <tr><td><code>app/(admin)/admin/_components/admin-nav.tsx</code></td><td>3그룹화, 자물쇠 disabled, AdminUserMenu 통합, "내 프로필 →"·로그아웃 제거</td></tr>
+      <tr><td><code>app/(user)/_components/user-nav.tsx</code></td><td>매니저 링크 /admin/users → /admin/tickets (404 버그 수정)</td></tr>
+      <tr><td><code>components/layout/header.tsx</code></td><td>useViewMode 통합, isStaff 분기에 viewMode 반영</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 테스트 결과 (수동 확인 권장) -->
+  <h2>🧪 테스트 시나리오 (배포 후 수동 확인 권장)</h2>
+  <h3>기능 시나리오</h3>
+  <ul class="checklist">
+    <li>T-01. 비로그인 / 진입 → 호텔리어 톤(녹색), 헤더·챗봇 FAB 정상</li>
+    <li>T-02. hotelier 로그인 후 / 진입 → 호텔리어 톤</li>
+    <li>T-03. manager 로그인 후 / 진입 → 매니저 톤(코발트), 헤더 단축 버튼 노출</li>
+    <li>T-04. manager 로그인 후 /admin/tickets → 매니저 톤, 호텔리어 UI 비노출</li>
+    <li>T-05. admin /admin/users → 어드민 톤(보라), 정상</li>
+    <li>T-06. manager /admin/users 직접 입력 → 404 (권한 부족, 의도된 동작)</li>
+    <li>T-07. manager /profile에서 "매니저 영역으로 →" → /admin/tickets 정상 (404 X)</li>
+    <li>T-08. manager 아바타 → "호텔리어 시점으로 보기" → 호텔리어 톤 + amber 배너 노출 + 헤더·FAB 등장</li>
+    <li>T-09. T-08 상태에서 "매니저 모드로 돌아가기" → 매니저 톤으로 복귀, 배너 사라짐</li>
+  </ul>
+  <h3>회귀 시나리오</h3>
+  <ul class="checklist">
+    <li>R-01. 기존 brand-* 사용 페이지(/tickets, /admin/tickets, /faq 등) 정상 렌더</li>
+    <li>R-02. 모바일(&lt; 768px) 헤더 햄버거 메뉴 정상 토글</li>
+    <li>R-03. 다크모드 토글 정상 (next-themes 영향 0)</li>
+  </ul>
+
+  <!-- Plan 리스크 해소 -->
+  <h2>🛡 Plan §6 리스크 해소 결과</h2>
+  <table>
+    <thead><tr><th>ID</th><th>리스크</th><th>해소 방안</th><th>상태</th></tr></thead>
+    <tbody>
+      <tr><td>C1</td><td>amber-* 와 brand-* 시각 충돌</td><td>ViewModeBanner는 amber 의도 사용. 호텔리어 모드에선 amber 단축 버튼 노출 안 됨</td><td><span class="badge badge-done">OK</span></td></tr>
+      <tr><td>C2</td><td>brand-50/100 다크 차이 부족</td><td>차후 QA 시 확인. 부족 시 토큰 조정 가능</td><td><span class="badge badge-warn">QA 필요</span></td></tr>
+      <tr><td>C3</td><td>data-role cascade portal 미적용</td><td>ConfirmDialog 등 portal 컴포넌트가 brand-* 미사용 확인됨</td><td><span class="badge badge-done">OK</span></td></tr>
+      <tr><td>C4</td><td>NextAuth 미들웨어 충돌</td><td>미들웨어 미사용 결정 → 자동 소멸</td><td><span class="badge badge-done">OK</span></td></tr>
+      <tr><td>E1</td><td>UserNav 404 버그</td><td>Commit 3 즉시 수정</td><td><span class="badge badge-done">FIXED</span></td></tr>
+      <tr><td>E2</td><td>SSR/CSR hydration mismatch</td><td>useViewMode mounted 패턴</td><td><span class="badge badge-done">OK</span></td></tr>
+      <tr><td>E5</td><td>시점 보기 쿠키 다중 탭 동기화</td><td>본 Phase 미해결 — 운영 룰북 명시 필요</td><td><span class="badge badge-warn">차후</span></td></tr>
+      <tr><td>E6</td><td>자물쇠 메뉴 클릭 404</td><td>button disabled, Link 사용 금지</td><td><span class="badge badge-done">OK</span></td></tr>
+      <tr><td>R1</td><td>50+ 파일 brand-* 회귀</td><td>토큰만 추가, className 무수정</td><td><span class="badge badge-done">OK</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- 코드 핵심 -->
+  <h2>💎 핵심 코드 발췌</h2>
+
+  <h3>resolveRoleMode() — UI 모드 결정 로직</h3>
+  <div class="code-box">export function resolveRoleMode(
+  userRole: UserRole | null,
+  viewModeCookie: string | undefined,
+): RoleMode {
+  if (!userRole) return 'hotelier';                  // 비로그인 = 호텔리어 톤
+  if (userRole === 'hotelier') return 'hotelier';    // 본인은 항상 자기 모드
+  if (viewModeCookie === 'hotelier') return 'hotelier'; // manager/admin 시점 보기
+  return userRole;                                   // 평소엔 manager/admin
+}</div>
+
+  <h3>CSS 변수 cascade — globals.css</h3>
+  <div class="code-box">@theme {
+  --color-brand-700: oklch(0.457 0.240 277.02);  /* 어드민 indigo */
+}
+[data-role='manager']  { --color-brand-700: #1d4ed8; }  /* 매니저 cobalt */
+[data-role='hotelier'] { --color-brand-700: #15803d; }  /* 호텔리어 green */
+
+/* 기존 코드 무수정 */
+&lt;button className="bg-brand-700"&gt; → CSS 변수만 다르게 해석 → 자동 분기</div>
+
+  <h3>RoleScope — 모든 분기의 단일 진입점</h3>
+  <div class="code-box">export async function RoleScope({ children }) {
+  const session = await auth();
+  const cookieStore = await cookies();
+  const viewModeCookie = cookieStore.get(VIEW_MODE_COOKIE)?.value;
+  const userRole = session?.user?.role ?? null;
+  const mode = resolveRoleMode(userRole, viewModeCookie);
+  const showHotelierUi = mode === 'hotelier';
+
+  return (
+    &lt;div data-role={mode} className="contents"&gt;
+      {viewModeActive && &lt;ViewModeBanner userRole={userRole} /&gt;}
+      {showHotelierUi && &lt;EmergencyBanner /&gt;}
+      {showHotelierUi && &lt;Header /&gt;}
+      &lt;main&gt;{children}&lt;/main&gt;
+      {showHotelierUi && &lt;ChatbotFab embedUrl={chatbotEmbedUrl} /&gt;}
+    &lt;/div&gt;
+  );
+}</div>
+
+  <!-- 다음 단계 -->
+  <h2>🚀 다음 단계 권장</h2>
+  <ul class="checklist">
+    <li>(즉시) 배포 후 T-01 ~ T-09 + R-01 ~ R-03 실제 수동 QA</li>
+    <li>(즉시) 다크모드 × 3역할 = 6조합 시각 확인 + WCAG AA 4.5:1 검사</li>
+    <li>(차후) /profile/staff 권한 호텔리어 전용 명시 (Plan Action 6)</li>
+    <li>(차후) 이중 권한 체크 리팩토링 (Plan Action 7)</li>
+    <li>(차후) AdminUserMenu의 shadcn DropdownMenu 도입 (a11y·UX 강화)</li>
+    <li>(차후) 시점 보기 쿠키 다중 탭 동기화 (storage event)</li>
+    <li>(검토) as.oapms.com 실제 메인컬러 HEX 재확인 후 토큰 11개만 교체</li>
+  </ul>
+
+  <div class="footer">
+    🤖 Generated with Claude Code · Co-Authored-By: Claude Opus 4.7 (1M context)<br>
+    feature: role-mode-ui · phase: Do 완료 · build: PASS
+  </div>
+
+</div>
+</body>
+</html>
