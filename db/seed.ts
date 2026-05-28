@@ -21,12 +21,19 @@ import { sql } from 'drizzle-orm';
 import {
   articles,
   categories,
+  checklistSteps,
+  checklists,
+  faqs,
   hotels,
   serviceStatus,
   solutionLinkPresets,
   users,
+  type ChecklistStepAction,
   type NewArticle,
   type NewCategory,
+  type NewChecklist,
+  type NewChecklistStep,
+  type NewFaq,
   type NewHotel,
   type NewServiceStatus,
   type NewSolutionLinkPreset,
@@ -405,6 +412,336 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
   }
   console.log(
     `[seed] articles: ${createdCount}건 신규 / ${skippedCount}건 스킵 (이미 존재)`,
+  );
+
+  // ─── 7. faqs (Phase 4) ─────────────────────────────────────────
+  console.log('[seed] sample FAQ (Phase 4) 확인...');
+  type SeedFaq = {
+    productCode: string;
+    issueType: string | null;
+    question: string;
+    answerMarkdown: string;
+    sortOrder: number;
+  };
+  const seedFaqs: SeedFaq[] = [
+    // PMS × 2
+    {
+      productCode: 'pms',
+      issueType: 'error',
+      sortOrder: 10,
+      question: 'PMS 로그인이 안 되는데 어떻게 해야 하나요?',
+      answerMarkdown:
+        '1. 브라우저 캐시를 지운 뒤 다시 시도해주세요.\n2. Caps Lock이 켜져 있지 않은지 확인하세요.\n3. 비밀번호 분실 시 관리자에게 임시 비밀번호 발급을 요청하세요.\n4. 그래도 안 되면 회사 네트워크 / VPN 연결 상태를 확인해주세요.',
+    },
+    {
+      productCode: 'pms',
+      issueType: 'feature_inquiry',
+      sortOrder: 20,
+      question: '룸차트 위에서 마우스로 끌어서 예약을 옮길 수 있나요?',
+      answerMarkdown:
+        '네, 가능합니다. 예약 박스 위에서 마우스를 누른 채로 다른 객실/날짜 칸으로 드래그하세요. 단, **체크인 완료된 예약**은 잠금 처리되어 이동할 수 없습니다.',
+    },
+    // CMS × 2
+    {
+      productCode: 'cms',
+      issueType: 'feature_inquiry',
+      sortOrder: 10,
+      question: 'OTA(부킹닷컴 등) 요금을 일괄로 조정할 수 있나요?',
+      answerMarkdown:
+        '`CMS > 요금 관리 > 일괄 변경`에서 기간·OTA·요금제를 선택해 % 또는 정액으로 일괄 조정할 수 있습니다. 변경 후 동기화는 평균 5분 이내에 완료됩니다.',
+    },
+    {
+      productCode: 'cms',
+      issueType: 'error',
+      sortOrder: 20,
+      question: 'CMS에서 변경한 재고가 PMS에 반영되지 않습니다',
+      answerMarkdown:
+        '동기화 상태가 비정상일 가능성이 큽니다. CMS 우측 상단의 **동기화 상태**가 녹색인지 확인하고, 비정상이면 "재동기화" 버튼을 눌러주세요. 5분 후에도 반영되지 않으면 매니저에게 큐 점검을 요청하세요.',
+    },
+    // Keyless × 2
+    {
+      productCode: 'keyless',
+      issueType: 'error',
+      sortOrder: 10,
+      question: '카드키 발급 시 "발급 실패" 오류가 나옵니다',
+      answerMarkdown:
+        '1. 카드 리더 상태 LED가 적색이면 펌웨어 이상입니다 — 단말 재부팅.\n2. 신규 객실은 락 마스터 등록이 필요합니다. `시스템 > 객실 > 락 등록` 확인.\n3. 빈 카드 자재가 손상되었을 수 있으니 새 카드로 재시도하세요.',
+    },
+    {
+      productCode: 'keyless',
+      issueType: 'feature_inquiry',
+      sortOrder: 20,
+      question: '체크아웃 후 카드키를 자동으로 만료시킬 수 있나요?',
+      answerMarkdown:
+        '기본 설정으로 체크아웃 시점에 즉시 만료됩니다. 만약 청소 / 점검 시간을 위해 30분 정도 유예가 필요하다면 `Keyless > 정책 > 카드 만료 유예`에서 조정할 수 있습니다.',
+    },
+    // Kiosk × 2
+    {
+      productCode: 'kiosk',
+      issueType: 'error',
+      sortOrder: 10,
+      question: '키오스크가 결제 단계에서 멈춥니다',
+      answerMarkdown:
+        '결제 단말 연결 문제일 가능성이 큽니다.\n1. USB 케이블 양쪽이 깊게 꽂혀 있는지 확인.\n2. 상단 메뉴 → 시스템 → 결제 단말 재초기화.\n3. 그래도 안 되면 프런트 직접 결제로 우선 전환 후 매니저에게 문의.',
+    },
+    {
+      productCode: 'kiosk',
+      issueType: 'feature_inquiry',
+      sortOrder: 20,
+      question: '키오스크 메인 화면 광고 이미지를 변경하려면?',
+      answerMarkdown:
+        '`키오스크 > 디스플레이 > 메인 슬라이드` 메뉴에서 이미지를 업로드/순서 변경할 수 있습니다. 1920×1080 권장 사이즈이며, 5MB 이하로 업로드하세요.',
+    },
+    // Web × 2
+    {
+      productCode: 'web',
+      issueType: 'feature_inquiry',
+      sortOrder: 10,
+      question: '호텔 홈페이지의 다국어를 추가하려면?',
+      answerMarkdown:
+        '`웹서비스 > 다국어 설정`에서 지원할 언어를 추가하고 각 페이지/메뉴 별 번역을 입력하세요. 자동 번역은 일본어·중국어·영어를 기본 지원하며 검수 후 적용됩니다.',
+    },
+    {
+      productCode: 'web',
+      issueType: 'error',
+      sortOrder: 20,
+      question: '홈페이지가 https로 열리지 않습니다',
+      answerMarkdown:
+        'SSL 인증서 갱신 실패일 가능성이 큽니다. 1) DNS A 레코드가 올바른지 확인, 2) CAA 레코드가 `letsencrypt.org`를 허용하는지 확인, 3) 그래도 안 되면 매니저에게 수동 갱신을 요청하세요.',
+    },
+    // Config × 2
+    {
+      productCode: 'config',
+      issueType: 'feature_inquiry',
+      sortOrder: 10,
+      question: '직원 계정을 추가하려면 어떻게 하나요?',
+      answerMarkdown:
+        '`프로필 > 직원 관리`에서 추가할 수 있습니다 (호텔리어 기준). 이름·이메일·역할(프론트/하우스키핑 등)을 지정하면 초대 메일이 발송됩니다.',
+    },
+    {
+      productCode: 'config',
+      issueType: 'error',
+      sortOrder: 20,
+      question: '관리자 비밀번호를 분실했어요',
+      answerMarkdown:
+        '1. 등록된 휴대폰 번호로 인증 코드를 받으세요.\n2. 인증 완료 후 임시 비밀번호가 SMS로 발송됩니다.\n3. 첫 로그인 시 새 비밀번호 설정이 강제됩니다.\n\n휴대폰 번호도 분실했다면 OA 운영팀(매니저)에게 직접 연락주세요.',
+    },
+  ];
+
+  let faqCreated = 0;
+  let faqSkipped = 0;
+  for (const f of seedFaqs) {
+    const existing = await db
+      .select({ id: faqs.id })
+      .from(faqs)
+      .where(
+        sql`${faqs.productCode} = ${f.productCode} AND ${faqs.question} = ${f.question}`,
+      )
+      .limit(1);
+    if (existing.length > 0) {
+      faqSkipped++;
+      continue;
+    }
+    const row: NewFaq = {
+      productCode: f.productCode,
+      issueType: f.issueType,
+      question: f.question,
+      answerMarkdown: f.answerMarkdown,
+      sortOrder: f.sortOrder,
+    };
+    await db.insert(faqs).values(row);
+    faqCreated++;
+  }
+  console.log(
+    `[seed] faqs: ${faqCreated}건 신규 / ${faqSkipped}건 스킵 (이미 존재)`,
+  );
+
+  // ─── 8. checklists + checklist_steps (Phase 4) ──────────────────
+  console.log('[seed] sample 체크리스트 (Phase 4) 확인...');
+  type SeedStep = {
+    title: string;
+    bodyMarkdown?: string;
+    conditionYesAction: ChecklistStepAction;
+    conditionNoAction: ChecklistStepAction;
+    yesLabel?: string;
+    noLabel?: string;
+  };
+  type SeedChecklist = {
+    productCode: string;
+    issueType: string | null;
+    title: string;
+    description: string;
+    sortOrder: number;
+    steps: SeedStep[];
+  };
+
+  const seedChecklists: SeedChecklist[] = [
+    {
+      productCode: 'pms',
+      issueType: 'error',
+      title: 'PMS 결제 오류 트러블슈팅',
+      description: '체크인/체크아웃 시 결제 단말 오류가 발생할 때 단계별로 진단합니다.',
+      sortOrder: 10,
+      steps: [
+        {
+          title: '결제 단말 화면에 "준비" 표시가 떠 있나요?',
+          bodyMarkdown:
+            '단말 LED 또는 디스플레이에 정상 상태(보통 녹색)가 표시되는지 확인하세요.',
+          conditionYesAction: 'next',
+          conditionNoAction: 'escalate',
+          yesLabel: '예, 준비됨',
+          noLabel: '아니오, 빨간색 또는 꺼져 있음',
+        },
+        {
+          title: '단말과 PMS 사이 케이블/네트워크는 연결되어 있나요?',
+          bodyMarkdown:
+            'USB / 시리얼 케이블이 단말과 PC에 단단히 꽂혀 있는지 확인합니다. 무선 단말이라면 객실 Wi-Fi 강도를 확인하세요.',
+          conditionYesAction: 'next',
+          conditionNoAction: 'escalate',
+          yesLabel: '예, 연결됨',
+          noLabel: '아니오 / 모르겠음',
+        },
+        {
+          title: '단말을 재부팅 후에도 오류가 계속되나요?',
+          bodyMarkdown:
+            '단말 전원을 분리하고 30초 정도 기다린 뒤 다시 켜보세요. 그 후에도 같은 메시지가 나타나면 VAN사 문제일 가능성이 큽니다.',
+          conditionYesAction: 'escalate',
+          conditionNoAction: 'resolved',
+          yesLabel: '예, 여전히 오류',
+          noLabel: '아니오, 해결됨',
+        },
+        {
+          title: 'VAN사(가맹점) 콜센터에서 한도/제한이 확인되었나요?',
+          bodyMarkdown:
+            'VAN사에 가맹점 한도, 사용 가능 카드사 목록 등을 확인합니다.',
+          conditionYesAction: 'resolved',
+          conditionNoAction: 'escalate',
+          yesLabel: '예, 한도 조정 완료',
+          noLabel: '아니오 / 도움 필요',
+        },
+      ],
+    },
+    {
+      productCode: 'keyless',
+      issueType: 'error',
+      title: 'Keyless 카드키 발급 실패',
+      description: '신규 카드키 발급이 안 될 때 점검 절차입니다.',
+      sortOrder: 20,
+      steps: [
+        {
+          title: '카드 리더 상태 LED가 적색인가요?',
+          bodyMarkdown: 'LED가 적색이면 펌웨어 오작동 가능성이 있습니다.',
+          conditionYesAction: 'next',
+          conditionNoAction: 'next',
+          yesLabel: '예, 적색',
+          noLabel: '아니오, 정상',
+        },
+        {
+          title: '단말을 재부팅하면 LED가 정상(녹색)으로 돌아오나요?',
+          conditionYesAction: 'next',
+          conditionNoAction: 'escalate',
+          yesLabel: '예',
+          noLabel: '아니오, 적색 유지',
+        },
+        {
+          title: '발급 대상 객실이 락 마스터에 등록되어 있나요?',
+          bodyMarkdown:
+            '`시스템 > 객실 > 락 등록` 메뉴에서 해당 객실 번호를 검색해보세요.',
+          conditionYesAction: 'next',
+          conditionNoAction: 'escalate',
+          yesLabel: '예, 등록됨',
+          noLabel: '아니오 / 모르겠음',
+        },
+        {
+          title: '다른 카드(새 카드 자재)로 재시도하니 발급되나요?',
+          conditionYesAction: 'resolved',
+          conditionNoAction: 'escalate',
+          yesLabel: '예, 발급됨',
+          noLabel: '아니오, 동일 오류',
+        },
+      ],
+    },
+    {
+      productCode: 'kiosk',
+      issueType: 'error',
+      title: '키오스크 화면 멈춤 진단',
+      description: '키오스크 화면이 멈췄을 때 응급 복구 단계.',
+      sortOrder: 30,
+      steps: [
+        {
+          title: '키오스크 화면 터치에 전혀 반응이 없나요?',
+          conditionYesAction: 'next',
+          conditionNoAction: 'resolved',
+          yesLabel: '예, 무반응',
+          noLabel: '아니오, 일부 반응',
+        },
+        {
+          title: '키오스크 본체 전원 표시등은 켜져 있나요?',
+          bodyMarkdown:
+            '본체 하단 / 측면의 전원 LED를 확인하세요. 꺼져 있으면 전원 문제입니다.',
+          conditionYesAction: 'next',
+          conditionNoAction: 'escalate',
+          yesLabel: '예, 켜짐',
+          noLabel: '아니오, 꺼짐',
+        },
+        {
+          title:
+            '관리자 모드(우측 상단 5회 탭) 진입 후 "재부팅"을 누르니 복구되나요?',
+          conditionYesAction: 'resolved',
+          conditionNoAction: 'escalate',
+          yesLabel: '예, 정상화',
+          noLabel: '아니오, 멈춘 상태',
+        },
+      ],
+    },
+  ];
+
+  let clCreated = 0;
+  let clSkipped = 0;
+  let stepCreated = 0;
+  for (const c of seedChecklists) {
+    const existing = await db
+      .select({ id: checklists.id })
+      .from(checklists)
+      .where(
+        sql`${checklists.productCode} = ${c.productCode} AND ${checklists.title} = ${c.title}`,
+      )
+      .limit(1);
+    if (existing.length > 0) {
+      clSkipped++;
+      continue;
+    }
+    const row: NewChecklist = {
+      productCode: c.productCode,
+      issueType: c.issueType,
+      title: c.title,
+      description: c.description,
+      sortOrder: c.sortOrder,
+    };
+    const [created] = await db
+      .insert(checklists)
+      .values(row)
+      .returning({ id: checklists.id });
+    if (!created) continue;
+    clCreated++;
+
+    const stepRows: NewChecklistStep[] = c.steps.map((s, idx) => ({
+      checklistId: created.id,
+      stepNo: idx + 1,
+      title: s.title,
+      bodyMarkdown: s.bodyMarkdown ?? null,
+      conditionYesAction: s.conditionYesAction,
+      conditionNoAction: s.conditionNoAction,
+      yesLabel: s.yesLabel ?? '예',
+      noLabel: s.noLabel ?? '아니오',
+    }));
+    if (stepRows.length > 0) {
+      await db.insert(checklistSteps).values(stepRows);
+      stepCreated += stepRows.length;
+    }
+  }
+  console.log(
+    `[seed] checklists: ${clCreated}건 신규 (단계 ${stepCreated}) / ${clSkipped}건 스킵 (이미 존재)`,
   );
 
   console.log('\n[seed] ✅ 완료. 로그인 계정:');

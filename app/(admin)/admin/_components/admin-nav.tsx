@@ -7,6 +7,8 @@ import {
   Activity,
   Building2,
   FileText,
+  HelpCircle,
+  ListChecks,
   LogOut,
   Shield,
   Users,
@@ -37,6 +39,20 @@ const ALL_TABS: Tab[] = [
     href: '/admin/articles',
     label: '아티클',
     icon: FileText,
+    roles: ['manager', 'admin'],
+  },
+  // FAQ는 매니저+어드민 (Phase 4)
+  {
+    href: '/admin/faqs',
+    label: 'FAQ',
+    icon: HelpCircle,
+    roles: ['manager', 'admin'],
+  },
+  // 체크리스트는 매니저+어드민 (Phase 4)
+  {
+    href: '/admin/checklists',
+    label: '체크리스트',
+    icon: ListChecks,
     roles: ['manager', 'admin'],
   },
   // users / hotels는 어드민만

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Phase 4 — 셀프 픽스 (SF) · 통합 AS 플랫폼</title>
+    <style>
+      :root {
+        --brand-50: #f1f8ff;
+        --brand-100: #dceeff;
+        --brand-500: #2f80ed;
+        --brand-600: #2469ce;
+        --brand-700: #1c54a9;
+        --slate-50: #f8fafc;
+        --slate-100: #f1f5f9;
+        --slate-200: #e2e8f0;
+        --slate-300: #cbd5e1;
+        --slate-600: #475569;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --green-500: #22c55e;
+        --amber-500: #f59e0b;
+        --red-500: #ef4444;
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+        margin: 0;
+        background: linear-gradient(135deg, var(--brand-50), #fff);
+        color: var(--slate-900);
+        line-height: 1.65;
+      }
+      header {
+        background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
+        color: #fff;
+        padding: 36px 24px;
+        box-shadow: 0 2px 10px rgba(36, 105, 206, 0.2);
+      }
+      header h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.02em; }
+      header p { margin: 4px 0 0; opacity: 0.9; font-size: 0.95rem; }
+      main { max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
+      section { background: #fff; border: 1px solid var(--slate-200); border-radius: 12px; padding: 22px 24px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(15,23,42,0.04); }
+      h2 { margin: 0 0 14px; font-size: 1.15rem; color: var(--brand-700); border-left: 4px solid var(--brand-500); padding-left: 10px; }
+      h3 { margin: 18px 0 8px; font-size: 0.98rem; color: var(--slate-800); }
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .stat {
+        background: var(--brand-50);
+        border: 1px solid var(--brand-100);
+        border-radius: 10px;
+        padding: 14px 16px;
+        text-align: center;
+      }
+      .stat .label { font-size: 0.78rem; color: var(--slate-600); margin-bottom: 4px; }
+      .stat .value { font-size: 1.4rem; font-weight: 700; color: var(--brand-700); }
+      table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+      th, td { padding: 8px 10px; border: 1px solid var(--slate-200); text-align: left; vertical-align: top; }
+      th { background: var(--slate-50); font-weight: 600; color: var(--slate-800); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
+      tr:hover td { background: var(--brand-50); }
+      code { background: var(--slate-100); border: 1px solid var(--slate-200); padding: 1px 5px; border-radius: 4px; font-size: 0.83em; color: var(--brand-700); }
+      .check { color: var(--green-500); font-weight: 600; }
+      .warn { color: var(--amber-500); font-weight: 600; }
+      .danger { color: var(--red-500); font-weight: 600; }
+      ul.flow { padding-left: 18px; }
+      ul.flow li { margin: 4px 0; }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        background: var(--brand-100);
+        color: var(--brand-700);
+        margin-right: 4px;
+      }
+      .pill.warn { background: #fef3c7; color: #92400e; }
+      .pill.green { background: #dcfce7; color: #166534; }
+      pre { background: var(--slate-900); color: #e2e8f0; padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 0.82rem; line-height: 1.6; }
+      .checklist li { list-style: none; padding-left: 24px; position: relative; }
+      .checklist li::before { content: "✓"; position: absolute; left: 4px; color: var(--green-500); font-weight: 700; }
+      .file-tree { font-family: 'SF Mono', Menlo, monospace; font-size: 0.82rem; background: var(--slate-50); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--slate-200); color: var(--slate-800); }
+      footer { text-align: center; color: var(--slate-600); font-size: 0.82rem; padding: 20px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Phase 4 — 셀프 픽스 (SF) 완료 보고서</h1>
+      <p>2026-05-28 · support.oapms.com · Next.js 15 + Drizzle + Neon · SF-01, SF-02, SF-04</p>
+    </header>
+
+    <main>
+      <section>
+        <h2>1. 한눈에 보기</h2>
+        <div class="summary-grid">
+          <div class="stat"><div class="label">신규 테이블</div><div class="value">3</div></div>
+          <div class="stat"><div class="label">신규 라우트</div><div class="value">6</div></div>
+          <div class="stat"><div class="label">신규 Server Actions</div><div class="value">16</div></div>
+          <div class="stat"><div class="label">시드 FAQ</div><div class="value">12</div></div>
+          <div class="stat"><div class="label">시드 체크리스트</div><div class="value">3 (11단계)</div></div>
+        </div>
+        <p>호텔리어가 운영팀에 접수하기 전 스스로 문제를 해결할 수 있는 셀프 픽스 경로 (FAQ + 트러블슈팅 체크리스트)를 완성했습니다. 매니저/어드민은 어드민 메뉴에서 콘텐츠를 추가·편집·정렬할 수 있습니다.</p>
+      </section>
+
+      <section>
+        <h2>2. DB 스키마 (신규 3개 테이블)</h2>
+        <h3>2.1 <code>faqs</code></h3>
+        <table>
+          <tr><th>컬럼</th><th>타입</th><th>비고</th></tr>
+          <tr><td>id, created_at, updated_at, is_active</td><td>공통</td><td>—</td></tr>
+          <tr><td>product_code</td><td>text</td><td>categories(type='product').code 참조 (FK 없음)</td></tr>
+          <tr><td>issue_type</td><td>text · NULL</td><td>categories(type='issue_type').code</td></tr>
+          <tr><td>question, answer_markdown</td><td>text</td><td>NOT NULL</td></tr>
+          <tr><td>sort_order, view_count, helpful_yes, helpful_no</td><td>int</td><td>default 0</td></tr>
+        </table>
+        <p>인덱스: <code>(product_code, sort_order)</code>, <code>(is_active, product_code)</code>.</p>
+
+        <h3>2.2 <code>checklists</code></h3>
+        <table>
+          <tr><th>컬럼</th><th>타입</th><th>비고</th></tr>
+          <tr><td>공통 4 + product_code + issue_type</td><td>—</td><td>—</td></tr>
+          <tr><td>title, description, sort_order</td><td>text/int</td><td>—</td></tr>
+          <tr><td>view_count, resolved_count, escalated_count</td><td>int</td><td>진행/해결/접수 카운터</td></tr>
+        </table>
+
+        <h3>2.3 <code>checklist_steps</code></h3>
+        <table>
+          <tr><th>컬럼</th><th>타입</th><th>비고</th></tr>
+          <tr><td>checklist_id</td><td>uuid FK</td><td>ON DELETE CASCADE</td></tr>
+          <tr><td>step_no</td><td>int</td><td>UNIQUE(checklist_id, step_no)</td></tr>
+          <tr><td>title, body_markdown</td><td>text</td><td>—</td></tr>
+          <tr><td>condition_yes_action, condition_no_action</td><td>enum</td><td><code>checklist_step_action_kind</code> ('next' / 'resolved' / 'escalate')</td></tr>
+          <tr><td>yes_label, no_label</td><td>text</td><td>default '예' / '아니오'</td></tr>
+        </table>
+        <p><b>enum 이름 충돌 방지</b>: 테이블명 <code>checklist_steps</code>와 충돌하지 않도록 <code>checklist_step_action_kind</code>로 명명했습니다 (Phase 0 룰셋).</p>
+      </section>
+
+      <section>
+        <h2>3. 페이지/컴포넌트 변경</h2>
+        <h3>공개 페이지</h3>
+        <table>
+          <tr><th>경로</th><th>역할</th></tr>
+          <tr><td><code>/faq</code></td><td>placeholder 전면 교체. 제품/유형 필터 + 아코디언 + 도움됨 위젯 + URL hash 자동 펼침.</td></tr>
+          <tr><td><code>/troubleshoot</code></td><td>신규. 체크리스트 카드 그리드 (해결률 표시).</td></tr>
+          <tr><td><code>/troubleshoot/[id]</code></td><td>신규. 단계 진행 UI (progress bar, yes/no 분기, 결과 화면).</td></tr>
+          <tr><td><code>/search?tab=faq</code></td><td>placeholder 제거. FAQ ILIKE 검색 활성화. 결과 → <code>/faq#faq-{id}</code> 링크.</td></tr>
+        </table>
+
+        <h3>어드민 페이지 (매니저+어드민)</h3>
+        <table>
+          <tr><th>경로</th><th>역할</th></tr>
+          <tr><td><code>/admin/faqs</code></td><td>리스트 + 필터·정렬·페이징 + 모바일 카드뷰.</td></tr>
+          <tr><td><code>/admin/faqs/new</code> · <code>/[id]</code></td><td>마크다운 split-view 폼. 제품·유형·질문·답변·정렬순.</td></tr>
+          <tr><td><code>/admin/checklists</code></td><td>리스트 + 단계 수 + 해결률 표시.</td></tr>
+          <tr><td><code>/admin/checklists/new</code></td><td>메타데이터 폼 → 저장 후 <code>/[id]</code>로 이동.</td></tr>
+          <tr><td><code>/admin/checklists/[id]</code></td><td>메타 폼 + 단계 인라인 편집/추가/순서변경/비활성.</td></tr>
+        </table>
+
+        <h3>GNB / 어드민 메뉴</h3>
+        <p>어드민 nav에 "FAQ", "체크리스트" 탭 추가 (HelpCircle, ListChecks 아이콘).</p>
+      </section>
+
+      <section>
+        <h2>4. Server Actions</h2>
+        <h3>FAQ (<code>app/actions/faq-actions.ts</code>)</h3>
+        <ul class="flow">
+          <li><b>public</b> · <code>bumpFaqViewAction</code>, <code>submitFaqHelpfulAction</code></li>
+          <li><b>admin</b> · <code>createFaqAction</code>, <code>updateFaqAction</code>, <code>archiveFaqAction</code>, <code>restoreFaqAction</code>, <code>moveFaqOrderAction</code></li>
+        </ul>
+        <h3>Checklist (<code>app/actions/checklist-actions.ts</code>)</h3>
+        <ul class="flow">
+          <li><b>public</b> · <code>bumpChecklistViewAction</code>, <code>markChecklistResolvedAction</code>, <code>markChecklistEscalatedAction</code></li>
+          <li><b>admin · 체크리스트</b> · create/update/archive/restore</li>
+          <li><b>admin · 단계</b> · <code>createStepAction</code>, <code>updateStepAction</code>, <code>archiveStepAction</code>, <code>restoreStepAction</code>, <code>moveStepOrderAction</code></li>
+        </ul>
+        <p>전부 <code>requireRole(['manager','admin'])</code>로 보호. 감사 로그(<code>faq.*</code>, <code>checklist.*</code>, <code>checklist.step.*</code>)는 fire-and-forget.</p>
+      </section>
+
+      <section>
+        <h2>5. 시드 데이터</h2>
+        <h3>FAQ 12건 (제품 6 × 2)</h3>
+        <p>PMS·CMS·Keyless·키오스크·웹서비스·설정 각 2개씩, sort_order는 10/20. <code>(product_code, question)</code> 중복 시 skip (idempotent).</p>
+        <h3>체크리스트 3건 (총 11 단계)</h3>
+        <table>
+          <tr><th>제목</th><th>제품</th><th>단계 수</th></tr>
+          <tr><td>PMS 결제 오류 트러블슈팅</td><td>pms</td><td>4</td></tr>
+          <tr><td>Keyless 카드키 발급 실패</td><td>keyless</td><td>4</td></tr>
+          <tr><td>키오스크 화면 멈춤 진단</td><td>kiosk</td><td>3</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2>6. 기존 패턴 준수 체크</h2>
+        <ul class="checklist">
+          <li>물리 DELETE 금지 — 모든 archive/delete는 <code>is_active=false</code> (FAQ·체크리스트·단계).</li>
+          <li><code>window.confirm/alert</code> 금지 — <code>useConfirmDialog()</code> 사용 (어드민 비활성/복구).</li>
+          <li>DB 호출 페이지에 <code>export const dynamic = 'force-dynamic'</code> 명시.</li>
+          <li>Drizzle pgEnum 이름과 테이블 이름 동명 금지 → <code>checklist_step_action_kind</code> 명명.</li>
+          <li>모바일 우선 디자인 — 모든 리스트는 데스크탑 테이블 + 모바일 카드뷰 이중 구현.</li>
+          <li>EmptyState 일관성 — 필터 결과 0건 시 "FAQ"/"체크리스트"별 안내 + 문의 접수 CTA.</li>
+          <li>감사 로그 (활동 로그) fire-and-forget — <code>faq.create/update/archive/restore/move_order</code>, <code>checklist.create/update/archive/restore</code>, <code>checklist.step.create/update/delete/restore/move</code>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>7. 빌드/배포 절차</h2>
+        <pre># 1) 마이그레이션 생성 (drizzle-kit이 placeholder 0002_swift_quasar.sql 덮어쓰기)
+npx drizzle-kit generate
+
+# 2) 신규 마이그레이션 적용
+npm run db:migrate
+
+# 3) 시드 데이터 (FAQ 12 + 체크리스트 3 idempotent)
+npm run db:seed
+
+# 4) 빌드
+npm run build
+
+# 5) Git
+git add .
+git commit -m "feat(sf): Phase 4 — FAQ + 트러블슈팅 체크리스트 + 어드민 콘텐츠 관리"
+git push</pre>
+        <p class="warn">⚠️ 마이그레이션 생성을 잊지 마세요. <code>db/migrations/0002_swift_quasar.sql</code>은 placeholder이므로 <code>drizzle-kit generate</code>가 정식 마이그레이션 파일(스냅샷 포함)을 생성합니다.</p>
+      </section>
+
+      <section>
+        <h2>8. 시연 흐름</h2>
+        <h3>(A) 호텔리어 — 자가 해결</h3>
+        <ul class="flow">
+          <li>홈에서 "빠른 해결" 클릭 → <code>/faq</code> 진입</li>
+          <li>제품 필터 "PMS" 선택 → 2건 표시</li>
+          <li>"PMS 로그인이 안 되는데 어떻게 해야 하나요?" 클릭 → 아코디언 펼침, view_count +1</li>
+          <li>답변 읽고 "도움됐어요" 클릭 → helpful_yes +1, localStorage에 기록 (재클릭 차단)</li>
+          <li>답이 부족하면 "트러블슈팅" 버튼 → <code>/troubleshoot</code></li>
+          <li>"PMS 결제 오류 트러블슈팅" 카드 클릭 → 단계 진행 → "해결됨" 또는 "접수 필요" 결과</li>
+          <li>접수 필요 시 <code>/tickets/new?from=checklist&checklist={id}&step={no}</code>로 안내</li>
+        </ul>
+        <h3>(B) 매니저 — 콘텐츠 관리</h3>
+        <ul class="flow">
+          <li><code>/admin/faqs</code> → "새 FAQ" → 마크다운 split-view 작성 → 저장</li>
+          <li>리스트에서 위/아래 화살표로 정렬 변경 (인접 항목과 sort_order swap)</li>
+          <li><code>/admin/checklists/new</code> → 메타 저장 → <code>/[id]</code>에서 단계 추가 (yes/no 동작 분기 설정)</li>
+          <li>단계별 위/아래 화살표로 step_no 순서 변경 (unique 제약 우회 위해 임시값 트릭 사용)</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>9. 임시값 / TODO</h2>
+        <table>
+          <tr><th>위치</th><th>내용</th><th>Phase</th></tr>
+          <tr><td><code>app/troubleshoot/[id]/_components/checklist-runner.tsx</code></td><td>escalate 시 <code>/tickets/new?from=checklist&checklist=...&step=...</code>로 컨텍스트 전달. 실접수 폼은 Phase 5.</td><td>5</td></tr>
+          <tr><td>FAQ 도움됨</td><td>localStorage 기반 1회 차단 (단순화). <code>faq_feedback</code> 테이블은 Phase 6+ 데이터 분석 시 추가.</td><td>6+</td></tr>
+          <tr><td>체크리스트 신규 작성</td><td>메타 저장 후 <code>/[id]</code>로 이동해 단계 추가 (단순화).</td><td>—</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2>10. 다음 Phase</h2>
+        <p><b>Phase 5 — 이슈 클레임 (IC)</b>: Slack 연동 본격 사용. 접수 폼, 첨부, 솔라피 SMS, SES 이메일, 티켓 자동 생성, Slack <code>#as-new</code>/<code>#as-urgent</code> 알림. 체크리스트의 escalate 컨텍스트가 접수 폼 pre-fill로 활용됨.</p>
+      </section>
+    </main>
+
+    <footer>
+      © 2026 OA 통합 AS 플랫폼 — Phase 4 셀프 픽스 완료 보고서
+    </footer>
+  </body>
+</html>

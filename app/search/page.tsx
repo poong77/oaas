@@ -23,6 +23,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { db } from '@/db';
 import { serviceStatus } from '@/db/schema';
 import { searchArticles, type SearchArticleHit } from '@/lib/services/articles';
+import { searchFaqs, type SearchFaqHit } from '@/lib/services/faqs';
 import { getProductCategories } from '@/lib/services/categories';
 import { SearchTabs } from './_components/search-tabs';
 import { SearchFilters } from './_components/search-filters';
@@ -59,22 +60,24 @@ export default async function SearchPage({
 
   // 결과 카운트는 모든 탭 한꺼번에 가져와서 뱃지로 표시 (단순 N+1)
   let helpHits: SearchArticleHit[] = [];
+  let faqHits: SearchFaqHit[] = [];
   let incidentRows: IncidentRow[] = [];
 
   if (query) {
-    helpHits = await searchArticles(query, {
-      productCode: product,
-      limit: 100,
-    });
-    incidentRows = await fetchRecentIncidents(query);
+    [helpHits, faqHits, incidentRows] = await Promise.all([
+      searchArticles(query, { productCode: product, limit: 100 }),
+      searchFaqs(query, { productCode: product, limit: 100 }),
+      fetchRecentIncidents(query),
+    ]);
   }
 
   // 정렬 적용 (도움말 탭만)
   const sortedHelp = applySort(helpHits, sort);
+  const sortedFaq = applyFaqSort(faqHits, sort);
 
   const counts = {
     help: helpHits.length,
-    faq: 0, // Phase 4
+    faq: faqHits.length,
     notice: 0, // Phase 7
     incident: incidentRows.length,
   };
@@ -159,15 +162,50 @@ export default async function SearchPage({
           )}
 
           {tab === 'faq' && (
-            <Card>
-              <CardContent className="p-6">
-                <EmptyState
-                  icon={<Search className="h-6 w-6" />}
-                  title="FAQ 검색은 Phase 4에서 추가됩니다"
-                  description="FAQ 시스템이 준비되면 이 탭에서도 결과가 표시됩니다. 그동안 도움말 탭을 활용해주세요."
-                />
-              </CardContent>
-            </Card>
+            <>
+              <SearchFilters
+                initial={{ product, sort }}
+                categories={categories}
+              />
+              {sortedFaq.length === 0 ? (
+                <EmptyResults query={query} kind="faq" />
+              ) : (
+                <ul className="grid gap-3">
+                  {sortedFaq.map((f) => (
+                    <li key={f.id}>
+                      <Link
+                        href={`/faq#faq-${f.id}`}
+                        className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-brand-300 hover:bg-brand-50/30 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-700 dark:hover:bg-brand-950/20"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Badge tone="brand" className="uppercase">
+                            {f.productCode}
+                          </Badge>
+                          {f.issueType && (
+                            <Badge tone="slate">{f.issueType}</Badge>
+                          )}
+                          {f.score >= 2 && (
+                            <Badge tone="success">질문 일치</Badge>
+                          )}
+                        </div>
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                          <Highlight text={f.question} query={query} />
+                        </h3>
+                        <p className="line-clamp-2 text-sm text-slate-600 dark:text-slate-300">
+                          <Highlight text={f.answerMarkdown} query={query} />
+                        </p>
+                        <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
+                          <span>조회 {f.viewCount.toLocaleString()}</span>
+                          <span>
+                            도움됨 {f.helpfulYes}/{f.helpfulNo}
+                          </span>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
 
           {tab === 'notice' && (
@@ -273,23 +311,45 @@ function applySort(
   });
 }
 
+function applyFaqSort(
+  hits: SearchFaqHit[],
+  sort: 'relevance' | 'recent' | 'views',
+): SearchFaqHit[] {
+  if (sort === 'recent') {
+    return [...hits].sort((a, b) => {
+      const da = new Date(a.createdAt).getTime();
+      const db = new Date(b.createdAt).getTime();
+      return db - da;
+    });
+  }
+  if (sort === 'views') {
+    return [...hits].sort((a, b) => b.viewCount - a.viewCount);
+  }
+  return [...hits].sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.sortOrder - b.sortOrder;
+  });
+}
+
 function EmptyResults({
   query,
   kind,
 }: {
   query: string;
-  kind?: 'incident';
+  kind?: 'incident' | 'faq';
 }) {
+  const title =
+    kind === 'incident'
+      ? '최근 30일간 관련 장애가 없습니다'
+      : kind === 'faq'
+        ? `"${query}"에 대한 FAQ가 없습니다`
+        : `"${query}"에 대한 검색 결과가 없습니다`;
   return (
     <Card>
       <CardContent className="p-6">
         <EmptyState
           icon={<Search className="h-6 w-6" />}
-          title={
-            kind === 'incident'
-              ? '최근 30일간 관련 장애가 없습니다'
-              : `"${query}"에 대한 검색 결과가 없습니다`
-          }
+          title={title}
           description="다른 키워드를 시도하거나 직접 문의를 접수하세요."
           action={
             <Button asChild size="sm">
