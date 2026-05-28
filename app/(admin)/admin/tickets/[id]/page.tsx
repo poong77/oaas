@@ -341,7 +341,10 @@ function SideRow({
   );
 }
 
-function channelLabel(c: 'web' | 'phone' | 'chatbot'): string {
+function channelLabel(c: string): string {
+  // ticket-channels-master로 channel이 varchar (마스터 code) 전환됨.
+  // 시스템 코드는 기존 라벨 유지, 그 외 코드는 raw 그대로 노출 (마스터 라벨 조회는
+  // 별도 도입 예정).
   switch (c) {
     case 'web':
       return '웹';
@@ -349,5 +352,7 @@ function channelLabel(c: 'web' | 'phone' | 'chatbot'): string {
       return '전화';
     case 'chatbot':
       return '챗봇';
+    default:
+      return c;
   }
 }

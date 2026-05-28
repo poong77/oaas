@@ -33,6 +33,7 @@ import {
   serviceStatus,
   solutionLinkPresets,
   systemSettings,
+  ticketChannels,
   ticketMessages,
   tickets,
   users,
@@ -1490,6 +1491,35 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
   }
   console.log(
     `[seed] quick_reply_templates: ${qrCreated}건 신규 / ${qrSkipped}건 스킵`,
+  );
+
+  // ─── 16. ticket_channels (post-MVP) ────────────────────────────
+  console.log('[seed] ticket_channels 확인...');
+  const seedTicketChannels = [
+    { code: 'web',     label: '웹',       icon: 'Globe',         sortOrder: 10, selectableInAgentForm: false, isAgentDefault: false },
+    { code: 'phone',   label: '전화',     icon: 'Phone',         sortOrder: 20, selectableInAgentForm: true,  isAgentDefault: true  },
+    { code: 'chatbot', label: '챗봇',     icon: 'Bot',           sortOrder: 30, selectableInAgentForm: false, isAgentDefault: false },
+    { code: 'kakao',   label: '카카오톡', icon: 'MessageCircle', sortOrder: 40, selectableInAgentForm: true,  isAgentDefault: false },
+    { code: 'email',   label: '이메일',   icon: 'Mail',          sortOrder: 50, selectableInAgentForm: true,  isAgentDefault: false },
+    { code: 'walk_in', label: '방문',     icon: 'Footprints',    sortOrder: 60, selectableInAgentForm: true,  isAgentDefault: false },
+  ];
+  let tcCreated = 0;
+  let tcSkipped = 0;
+  for (const tc of seedTicketChannels) {
+    const existing = await db
+      .select({ id: ticketChannels.id })
+      .from(ticketChannels)
+      .where(sql`${ticketChannels.code} = ${tc.code}`)
+      .limit(1);
+    if (existing.length > 0) {
+      tcSkipped++;
+      continue;
+    }
+    await db.insert(ticketChannels).values(tc);
+    tcCreated++;
+  }
+  console.log(
+    `[seed] ticket_channels: ${tcCreated}건 신규 / ${tcSkipped}건 스킵`,
   );
 
   console.log('\n[seed] ✅ 완료. 로그인 계정:');

@@ -4,7 +4,7 @@
  * Phase 5 IC-01~IC-08 / IS-01~IS-02 / IS-04.
  *
  * 핵심 함수:
- *   - generateTicketNo()           — 'AS-YYYY-NNNNNN' 발급 (retry 1회)
+ *   - generateTicketNo(bump)       — 'AS-YYYY-NNNNNN' 발급. bump는 INSERT 충돌 재시도 시 +N
  *   - createTicket(input)          — 티켓 생성 + 첨부 매핑 + 알림 일괄 (Slack/SMS/Email)
  *   - listTickets({...})           — 큐·내 문의 공용 (권한별 필터는 호출부에서)
  *   - getTicketById(id, viewer)    — 상세 + 메시지 + 첨부 (viewer가 호텔리어면 internal_memo 제외)
@@ -120,14 +120,16 @@ import { STATUS_LABEL } from './tickets-meta';
 // 티켓 번호 발급
 // ─────────────────────────────────────────────────────────────────────
 
-export async function generateTicketNo(): Promise<string> {
+export async function generateTicketNo(bump = 0): Promise<string> {
   if (!db) {
     return `AS-${new Date().getFullYear()}-000001`;
   }
   const year = new Date().getFullYear();
   const prefix = `AS-${year}-`;
+  // 시드 데이터(900001~)와 운영 번호가 섞이지 않도록, 시드 영역(>=900000)은 MAX 계산에서 제외.
+  const SEED_FLOOR = 900000;
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let selectAttempt = 0; selectAttempt < 3; selectAttempt++) {
     try {
       const rows = (await db.execute(
         sql`
@@ -137,6 +139,7 @@ export async function generateTicketNo(): Promise<string> {
           )::int AS max_no
           FROM tickets
           WHERE ticket_no LIKE ${prefix + '%'}
+            AND CAST(SUBSTRING(ticket_no FROM ${prefix.length + 1}) AS INTEGER) < ${SEED_FLOOR}
         `,
       )) as unknown as { rows: Array<{ max_no: number }> } | Array<{ max_no: number }>;
       // neon-http drizzle 결과는 보통 배열 그 자체 (rows 래핑 X)
@@ -144,10 +147,10 @@ export async function generateTicketNo(): Promise<string> {
         ? rows
         : (rows as { rows: Array<{ max_no: number }> }).rows;
       const currentMax = Number(arr?.[0]?.max_no ?? 0);
-      const next = currentMax + 1 + attempt; // 충돌 시 +1
+      const next = currentMax + 1 + bump; // 외부 INSERT 충돌 재시도 시 bump>=1
       return `${prefix}${String(next).padStart(6, '0')}`;
     } catch (err) {
-      console.warn('[tickets.generateTicketNo] retry', attempt, err);
+      console.warn('[tickets.generateTicketNo] retry', selectAttempt, err);
     }
   }
   // 최후 fallback: timestamp
@@ -194,9 +197,12 @@ export async function createTicket(
 ): Promise<CreateTicketResult> {
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
 
-  try {
-    const ticketNo = await generateTicketNo();
+  const MAX_INSERT_ATTEMPTS = 5;
+  let created: { id: string; ticketNo: string } | undefined;
+  let lastErr: unknown = null;
 
+  for (let attempt = 0; attempt < MAX_INSERT_ATTEMPTS; attempt++) {
+    const ticketNo = await generateTicketNo(attempt);
     const values: NewTicket = {
       ticketNo,
       hotelId: input.hotelId,
@@ -213,18 +219,46 @@ export async function createTicket(
       status: 'received',
     };
 
-    const [created] = await db
-      .insert(tickets)
-      .values(values)
-      .returning({ id: tickets.id, ticketNo: tickets.ticketNo });
+    try {
+      const [row] = await db
+        .insert(tickets)
+        .values(values)
+        .returning({ id: tickets.id, ticketNo: tickets.ticketNo });
+      if (!row) {
+        return { ok: false, message: 'INSERT_FAILED' };
+      }
+      created = row;
+      break;
+    } catch (err) {
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      const isDup =
+        msg.includes('tickets_ticket_no_uq') ||
+        msg.includes('duplicate key value');
+      if (!isDup) {
+        console.error('[tickets.createTicket] INSERT 실패:', err);
+        return { ok: false, message: msg || 'INTERNAL_ERROR' };
+      }
+      console.warn(
+        `[tickets.createTicket] ticket_no 충돌 재시도 ${attempt + 1}/${MAX_INSERT_ATTEMPTS}: ${ticketNo}`,
+      );
+    }
+  }
 
-    if (!created) return { ok: false, message: 'INSERT_FAILED' };
+  if (!created) {
+    console.error(
+      '[tickets.createTicket] 재시도 한계 초과, 마지막 에러:',
+      lastErr,
+    );
+    return { ok: false, message: 'TICKET_NO_CONFLICT' };
+  }
 
+  try {
     // 첨부 매핑
     if (input.attachments && input.attachments.length > 0) {
       const attachmentRows: NewTicketAttachment[] = input.attachments.map(
         (a) => ({
-          ticketId: created.id,
+          ticketId: created!.id,
           blobUrl: a.blobUrl,
           pathname: a.pathname,
           originalName: a.originalName,
@@ -250,7 +284,7 @@ export async function createTicket(
 
     return { ok: true, ticketId: created.id, ticketNo: created.ticketNo };
   } catch (err) {
-    console.error('[tickets.createTicket] 실패:', err);
+    console.error('[tickets.createTicket] 후속 작업 실패:', err);
     return {
       ok: false,
       message: err instanceof Error ? err.message : 'INTERNAL_ERROR',

@@ -36,6 +36,7 @@ export * from './ticket-attachments';
 export * from './ticket-form-fields';
 export * from './notification-logs';
 export * from './ticket-feedback';
+export * from './ticket-channels';
 export * from './notices';
 // Phase 9 — 어드민 마스터 데이터
 export * from './notification-templates';

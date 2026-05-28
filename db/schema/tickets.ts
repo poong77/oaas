@@ -34,14 +34,13 @@ export const ticketStatusEnum = pgEnum('ticket_status_kind', [
   'completed',
 ]);
 
-export const ticketChannelEnum = pgEnum('ticket_channel_kind', [
-  'web',
-  'phone',
-  'chatbot',
-]);
-
+/**
+ * 채널은 `ticket_channels` 마스터의 code 문자열을 참조한다.
+ * FK는 걸지 않음 — 마스터 비활성화돼도 과거 티켓 raw 값 보존.
+ * 시드: 'web' | 'phone' | 'chatbot' | 'kakao' | 'email' | 'walk_in' (확장 가능).
+ */
 export type TicketStatus = (typeof ticketStatusEnum.enumValues)[number];
-export type TicketChannel = (typeof ticketChannelEnum.enumValues)[number];
+export type TicketChannel = string;
 
 /** IC-03: 호텔리어 선호 연락 수단 (복수 선택 가능). */
 export type TicketContactMethod = 'sms' | 'email';
@@ -75,7 +74,8 @@ export const tickets = pgTable(
       onDelete: 'set null',
     }),
     dueDate: timestamp('due_date', { withTimezone: true }),
-    channel: ticketChannelEnum('channel').notNull().default('web'),
+    /** ticket_channels.code 참조 (FK 미설정, 마이그레이션 0007에서 enum→text 변환) */
+    channel: text('channel').notNull().default('web'),
     /** IC-03: ['sms','email'] 또는 ['sms'] 또는 ['email']. */
     contactMethods: jsonb('contact_methods')
       .notNull()

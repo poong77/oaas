@@ -1,18 +1,20 @@
 /**
- * `/admin/tickets/new-by-phone` — 전화 접수 (IC-04).
+ * `/admin/tickets/new-by-phone` — 대리 접수 (IC-04 확장).
  *
- * 매니저+어드민. channel='phone' 으로 저장.
+ * 매니저+어드민. 전화·카카오톡·이메일·방문 등 외부 채널 문의를 매니저가 대신 접수.
+ * channel은 ticket_channels 마스터에서 선택 (Plan ticket-channels-master Q-3).
  */
 
 import Link from 'next/link';
-import { ArrowLeft, Phone } from 'lucide-react';
+import { ArrowLeft, Headset } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { requireRole } from '@/lib/permissions';
 import { listHotels } from '@/lib/services/users';
 import { getCategoriesByType } from '@/lib/services/categories';
+import { listAgentSelectableChannels } from '@/lib/services/master-ticket-channels';
 import { PhoneTicketForm } from './_components/phone-ticket-form';
 
-export const metadata = { title: '전화 접수 — OA 통합 AS' };
+export const metadata = { title: '대리 접수 — OA 통합 AS' };
 export const dynamic = 'force-dynamic';
 
 export default async function PhoneTicketPage() {
@@ -24,12 +26,14 @@ export default async function PhoneTicketPage() {
     issueTypeCategories,
     urgencyCategories,
     impactCategories,
+    channels,
   ] = await Promise.all([
     listHotels({ isActive: true, pageSize: 100, sortBy: 'name', sortOrder: 'asc' }),
     getCategoriesByType('product'),
     getCategoriesByType('issue_type'),
     getCategoriesByType('urgency'),
     getCategoriesByType('impact'),
+    listAgentSelectableChannels(),
   ]);
 
   return (
@@ -46,14 +50,19 @@ export default async function PhoneTicketPage() {
         }
         title={
           <span className="inline-flex items-center gap-2">
-            <Phone className="h-5 w-5 text-brand-600" />
-            전화 접수
+            <Headset className="h-5 w-5 text-brand-600" />
+            대리 접수
           </span>
         }
-        description="고객과의 통화 내용을 직접 입력하여 티켓을 발급합니다. 호텔·호텔리어를 매핑하면 알림이 자동 발송됩니다."
+        description="전화·카카오톡·이메일 등 외부 채널로 들어온 문의를 매니저가 대신 접수합니다. 호텔·호텔리어를 매핑하면 알림이 자동 발송됩니다."
       />
 
       <PhoneTicketForm
+        channels={channels.map((c) => ({
+          code: c.code,
+          label: c.label,
+          isAgentDefault: c.isAgentDefault,
+        }))}
         hotels={hotelsResult.items.map((h) => ({
           id: h.id,
           name: h.name,

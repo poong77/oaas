@@ -1,15 +1,16 @@
 'use client';
 
 /**
- * 전화 접수 폼 (IC-04) — 매니저 직접 입력.
+ * 대리 접수 폼 (IC-04 확장) — 매니저/어드민이 외부 채널 문의를 대신 접수.
  *
  * 단순화 (3단계 스텝퍼 X — 한 페이지에 다 펼침).
- * 호텔/접수자 선택 + 일반 접수폼과 동일한 필수 항목.
+ * 채널/호텔/접수자 선택 + 일반 접수폼과 동일한 필수 항목.
+ * 채널은 ticket_channels 마스터에서 선택 (Plan ticket-channels-master Q-1 검증).
  */
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
-import { AlertCircle, Phone, Send } from 'lucide-react';
+import { AlertCircle, Headset, Phone, Send } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,14 +25,17 @@ import {
 type CategoryItem = { code: string; label: string };
 type HotelItem = { id: string; name: string; oaPmsHotelId: string | null };
 type HotelierOption = { id: string; name: string; email: string };
+type ChannelOption = { code: string; label: string; isAgentDefault: boolean };
 
 export function PhoneTicketForm({
+  channels,
   hotels,
   productCategories,
   issueTypeCategories,
   urgencyCategories,
   impactCategories,
 }: {
+  channels: ChannelOption[];
   hotels: HotelItem[];
   productCategories: CategoryItem[];
   issueTypeCategories: CategoryItem[];
@@ -42,6 +46,13 @@ export function PhoneTicketForm({
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // 기본값: isAgentDefault=true 채널 (없으면 첫 번째, 그것도 없으면 'phone')
+  const defaultChannelCode =
+    channels.find((c) => c.isAgentDefault)?.code ??
+    channels[0]?.code ??
+    'phone';
+  const [channel, setChannel] = useState<string>(defaultChannelCode);
 
   const [hotelId, setHotelId] = useState<string>('');
   const [reporterId, setReporterId] = useState<string>('');
@@ -87,6 +98,7 @@ export function PhoneTicketForm({
     setFieldErrors({});
 
     const fd = new FormData();
+    fd.append('channel', channel);
     if (hotelId) fd.append('hotelId', hotelId);
     if (reporterId) fd.append('reporterId', reporterId);
     fd.append('productCode', productCode);
@@ -97,7 +109,7 @@ export function PhoneTicketForm({
     fd.append('content', content.trim());
     for (const m of contactMethods) fd.append('contactMethods', m);
     fd.append('attachments', JSON.stringify(attachments));
-    fd.append('customFields', JSON.stringify({ from: 'phone' }));
+    // customFields.from='phone'은 channel 컬럼이 정식 필드라 불필요 (Design §9.3)
 
     startTransition(async () => {
       const result = await createTicketByPhoneAction(undefined, fd);
@@ -117,6 +129,29 @@ export function PhoneTicketForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <Card>
         <CardContent className="flex flex-col gap-4 p-5">
+          <div>
+            <Label required title="유입 채널" error={fieldErrors.channel} />
+            <Select
+              value={channel}
+              onChange={(e) => setChannel(e.target.value)}
+              disabled={pending}
+            >
+              {channels.length === 0 && (
+                <option value="phone">전화 (기본)</option>
+              )}
+              {channels.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                  {c.isAgentDefault ? ' (기본)' : ''}
+                </option>
+              ))}
+            </Select>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              고객이 어떤 경로로 문의를 보내왔는지 선택해주세요. 채널은
+              어드민이 마스터에서 추가/수정할 수 있습니다.
+            </p>
+          </div>
+
           <div>
             <Label required title="호텔" />
             <Select

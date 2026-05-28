@@ -31,6 +31,7 @@ import {
   submitFeedback,
   type CreateTicketInput,
 } from '@/lib/services/tickets';
+import { isAgentChannelCodeValid } from '@/lib/services/master-ticket-channels';
 import type {
   TicketContactMethod,
   TicketFeedbackRating,
@@ -90,6 +91,27 @@ function shapeFieldErrors(err: z.ZodError<unknown>): Record<string, string> {
   return out;
 }
 
+/**
+ * createTicket()이 반환하는 message 코드 → 사용자용 한글 문구.
+ * raw PostgreSQL 메시지(예: 'duplicate key value violates ...')는
+ * 사용자에게 노출하지 않는다.
+ */
+function humanizeCreateTicketError(message: string): string {
+  switch (message) {
+    case 'DB_NOT_READY':
+      return '서버가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.';
+    case 'INSERT_FAILED':
+      return '티켓을 저장하지 못했습니다. 다시 시도해주세요.';
+    case 'TICKET_NO_CONFLICT':
+      return '티켓 번호 발급 중 충돌이 발생했습니다. 잠시 후 다시 시도해주세요.';
+    case 'INTERNAL_ERROR':
+      return '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    default:
+      // raw DB 메시지가 노출되지 않도록 일반 문구로 래핑
+      return '티켓 접수에 실패했습니다. 잠시 후 다시 시도해주세요.';
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // 호텔리어 접수
 // ─────────────────────────────────────────────────────────────────────
@@ -127,7 +149,7 @@ export async function createTicketAction(
 
   const result = await createTicket(input);
   if (!result.ok) {
-    return { ok: false, message: result.message };
+    return { ok: false, message: humanizeCreateTicketError(result.message) };
   }
 
   logActivity({
@@ -156,6 +178,8 @@ export async function createTicketAction(
 const PhoneTicketSchema = TicketCreateSchema.extend({
   hotelId: z.string().uuid().optional().nullable(),
   reporterId: z.string().uuid().optional().nullable(),
+  /** Plan Q-1: 마스터 IN 절 검증은 액션에서 별도 수행 (DB 의존). */
+  channel: z.string().min(1, '유입 채널을 선택하세요').max(60),
 });
 
 export async function createTicketByPhoneAction(
@@ -168,6 +192,7 @@ export async function createTicketByPhoneAction(
     ...parseTicketFormData(formData),
     hotelId: (formData.get('hotelId')?.toString() ?? '').trim() || null,
     reporterId: (formData.get('reporterId')?.toString() ?? '').trim() || null,
+    channel: (formData.get('channel')?.toString() ?? 'phone').trim(),
   };
   const parsed = PhoneTicketSchema.safeParse(raw);
   if (!parsed.success) {
@@ -175,6 +200,16 @@ export async function createTicketByPhoneAction(
       ok: false,
       message: '입력값을 확인해주세요',
       fieldErrors: shapeFieldErrors(parsed.error),
+    };
+  }
+
+  // Plan Q-1: 마스터 IN 절 검증 (selectable=true && active=true 만 허용)
+  const channelValid = await isAgentChannelCodeValid(parsed.data.channel);
+  if (!channelValid) {
+    return {
+      ok: false,
+      message: '유효하지 않은 유입 채널입니다',
+      fieldErrors: { channel: '드롭다운에서 다시 선택해주세요' },
     };
   }
 
@@ -188,14 +223,14 @@ export async function createTicketByPhoneAction(
     title: parsed.data.title,
     content: parsed.data.content,
     customFields: parsed.data.customFields ?? {},
-    channel: 'phone',
+    channel: parsed.data.channel,
     contactMethods: parsed.data.contactMethods as TicketContactMethod[],
     attachments: parsed.data.attachments,
   };
 
   const result = await createTicket(input);
   if (!result.ok) {
-    return { ok: false, message: result.message };
+    return { ok: false, message: humanizeCreateTicketError(result.message) };
   }
 
   logActivity({
@@ -209,6 +244,7 @@ export async function createTicketByPhoneAction(
       reporterId: parsed.data.reporterId,
       productCode: parsed.data.productCode,
       urgency: parsed.data.urgency,
+      channel: parsed.data.channel,
     },
   });
 
