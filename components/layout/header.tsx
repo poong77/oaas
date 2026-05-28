@@ -19,6 +19,7 @@ import {
 import { signOut } from 'next-auth/react';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { useCurrentUser } from '@/lib/hooks/use-current-user';
+import { useViewMode } from '@/lib/hooks/use-view-mode';
 import { cn } from '@/lib/utils';
 
 /**
@@ -47,6 +48,7 @@ function isActiveNav(pathname: string, href: string) {
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, status } = useCurrentUser();
+  const { isViewMode } = useViewMode();
   const confirm = useConfirmDialog();
   const pathname = usePathname();
 
@@ -59,7 +61,10 @@ export function Header() {
     if (ok) await signOut({ callbackUrl: '/' });
   }
 
-  const isStaff = user?.role === 'manager' || user?.role === 'admin';
+  // 호텔리어 시점 보기 모드에서는 매니저/어드민 단축 버튼 노출하지 않는다.
+  // (이미 ViewModeBanner의 "돌아가기"로 원래 모드 복귀 가능 — 콘텍스트 일관성)
+  const isStaff =
+    !isViewMode && (user?.role === 'manager' || user?.role === 'admin');
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80">
