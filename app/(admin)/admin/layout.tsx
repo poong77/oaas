@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { requireRole } from '@/lib/permissions';
 import { resolveRoleMode } from '@/lib/types/role-mode';
 import { VIEW_MODE_COOKIE } from '@/lib/view-mode';
-import { AdminNav } from './_components/admin-nav';
+import { AdminShell } from './_components/admin-shell';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,12 +22,8 @@ export default async function AdminLayout({
   const adminMode = resolveRoleMode(user.role, viewModeCookie);
 
   return (
-    <div
-      data-role={adminMode}
-      className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8"
-    >
-      <AdminNav role={user.role} />
-      {children}
+    <div data-role={adminMode} className="min-h-screen">
+      <AdminShell userRole={user.role}>{children}</AdminShell>
     </div>
   );
 }

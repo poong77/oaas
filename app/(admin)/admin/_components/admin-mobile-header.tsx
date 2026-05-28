@@ -1,0 +1,114 @@
+'use client';
+
+/**
+ * AdminMobileHeader — 모바일(<lg) 환경에서만 노출되는 상단 컴팩트 헤더.
+ *
+ * 구조: [햄버거] [서비스명 + 역할] [아바타]
+ *
+ * - 햄버거: Sheet 드로어 열기 → AdminSidebar의 NavItem 메뉴 재사용
+ * - 아바타: AdminUserMenu (mobile-compact 모드, 아래쪽으로 popup)
+ *
+ * sticky top-0 z-40 — Sheet 자체는 z-50, 그 아래 위치.
+ *
+ * @see docs/02-design/features/admin-sidebar-layout.design.md §3.5
+ */
+
+import { useState } from 'react';
+import { Menu, Shield } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { ViewModeToggle } from '@/components/layout/view-mode-toggle';
+import { cn } from '@/lib/utils';
+import { NAV_ITEMS, GROUP_ORDER, GROUP_LABEL } from '../_data/nav-items';
+import { AdminNavItem } from './admin-nav-item';
+import { AdminUserMenu } from './admin-user-menu';
+
+interface AdminMobileHeaderProps {
+  userRole: 'manager' | 'admin';
+  className?: string;
+}
+
+export function AdminMobileHeader({ userRole, className }: AdminMobileHeaderProps) {
+  const [open, setOpen] = useState(false);
+  const roleLabel = userRole === 'admin' ? '어드민' : '매니저';
+
+  return (
+    <header
+      className={cn(
+        'sticky top-0 z-40 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-950 lg:hidden',
+        className,
+      )}
+    >
+      <div className="flex items-center gap-2">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <button
+              type="button"
+              aria-label="메뉴 열기"
+              className="-ml-2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <Menu className="h-5 w-5" aria-hidden />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[280px] p-0">
+            <div className="flex h-14 shrink-0 items-center border-b border-slate-100 px-4 dark:border-slate-800">
+              <Shield
+                className="h-4 w-4 text-brand-700 dark:text-brand-300"
+                aria-hidden
+              />
+              <span className="ml-2 text-sm font-semibold text-brand-700 dark:text-brand-300">
+                {roleLabel}
+              </span>
+            </div>
+
+            {/* viewMode 토글 — 모바일 Sheet 최상단 진입점 */}
+            <div className="border-b border-slate-100 px-1.5 py-1 dark:border-slate-800">
+              <ViewModeToggle
+                currentRole={userRole}
+                onAfterToggle={() => setOpen(false)}
+              />
+            </div>
+
+            <nav className="overflow-y-auto py-2">
+              {GROUP_ORDER.map((group, gi) => {
+                const items = NAV_ITEMS.filter((i) => i.group === group);
+                if (items.length === 0) return null;
+                return (
+                  <div key={group} className={cn(gi > 0 && 'mt-3')}>
+                    <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      {GROUP_LABEL[group]}
+                    </div>
+                    <ul className="flex flex-col gap-0.5 px-1.5">
+                      {items.map((item) => {
+                        const locked = !item.roles.includes(userRole);
+                        return (
+                          <li key={item.href}>
+                            <AdminNavItem
+                              item={item}
+                              locked={locked}
+                              collapsed={false}
+                              onNavigate={() => setOpen(false)}
+                            />
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                );
+              })}
+            </nav>
+          </SheetContent>
+        </Sheet>
+
+        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          통합 AS
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+          <Shield className="h-2.5 w-2.5" aria-hidden />
+          {roleLabel}
+        </span>
+      </div>
+
+      <AdminUserMenu placement="mobile-compact" />
+    </header>
+  );
+}
