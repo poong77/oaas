@@ -36,25 +36,25 @@ export function AdminNavItem({ item, locked, collapsed, onNavigate }: AdminNavIt
   const Icon = item.icon;
 
   const itemClasses = cn(
-    'group relative flex items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium transition-colors',
+    'group relative flex items-center rounded-md text-xs font-medium transition-colors',
+    collapsed ? 'justify-center px-1 py-1.5' : 'gap-1.5 px-1.5 py-1.5',
     active && [
       'bg-brand-100/60 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300',
-      "before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-r-full before:bg-brand-600 dark:before:bg-brand-400 before:content-['']",
+      "before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[2px] before:rounded-r-full before:bg-brand-600 dark:before:bg-brand-400 before:content-['']",
     ],
     !active &&
       !locked &&
       'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800',
     locked && 'cursor-not-allowed text-slate-400 dark:text-slate-500',
-    collapsed && 'justify-center',
   );
 
   // 아이콘 + (접힘 + 자물쇠 시 Lock 오버레이)
   const IconElement = (
     <span className="relative shrink-0">
-      <Icon className="h-4 w-4" aria-hidden />
+      <Icon className="h-3.5 w-3.5" aria-hidden />
       {locked && collapsed && (
         <Lock
-          className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 text-slate-400 opacity-70 dark:text-slate-500"
+          className="absolute -bottom-0.5 -right-0.5 h-2 w-2 text-slate-400 opacity-70 dark:text-slate-500"
           aria-hidden
         />
       )}
@@ -85,7 +85,7 @@ export function AdminNavItem({ item, locked, collapsed, onNavigate }: AdminNavIt
         {!collapsed && (
           <>
             <span className="flex-1 truncate text-left">{item.label}</span>
-            <Lock className="h-3 w-3 shrink-0" aria-hidden />
+            <Lock className="h-2.5 w-2.5 shrink-0" aria-hidden />
           </>
         )}
         {Tooltip}

@@ -59,14 +59,14 @@ test.describe('데스크탑 기능 (매니저)', () => {
     viewport: { width: 1440, height: 900 },
   });
 
-  test('F-01: /admin/tickets 진입 시 좌측 240px 사이드바 노출 + 티켓 큐 active', async ({
+  test('F-01: /admin/tickets 진입 시 좌측 120px 사이드바 노출 + 티켓 큐 active', async ({
     page,
   }) => {
     await setCollapsedCookie(page, false);
     await page.goto('/admin/tickets');
     await page.waitForLoadState('networkidle');
 
-    await expectSidebarVisible(page, 240);
+    await expectSidebarVisible(page, 120);
 
     // 티켓 큐 메뉴가 aria-current="page" 보유
     const ticketsLink = page
@@ -76,12 +76,12 @@ test.describe('데스크탑 기능 (매니저)', () => {
     await expect(ticketsLink).toHaveAttribute('aria-current', 'page');
   });
 
-  test('F-02 / F-03: 토글 버튼 클릭으로 240 ↔ 56px 전환', async ({ page }) => {
+  test('F-02 / F-03: 토글 버튼 클릭으로 120 ↔ 28px 전환', async ({ page }) => {
     await setCollapsedCookie(page, false);
     await page.goto('/admin/tickets');
     await page.waitForLoadState('networkidle');
 
-    await expectSidebarVisible(page, 240);
+    await expectSidebarVisible(page, 120);
 
     // 토글 (사이드바 footer)
     const toggle = page.getByRole('button', { name: /사이드바 접기/ });
@@ -89,13 +89,13 @@ test.describe('데스크탑 기능 (매니저)', () => {
     await toggle.click();
 
     // RSC re-render + transition 대기 (expectSidebarVisible 내부 polling)
-    await expectSidebarVisible(page, 56);
+    await expectSidebarVisible(page, 28);
 
     // 다시 펼치기
     const toggleExpand = page.getByRole('button', { name: /사이드바 펼치기/ });
     await expect(toggleExpand).toBeVisible();
     await toggleExpand.click();
-    await expectSidebarVisible(page, 240);
+    await expectSidebarVisible(page, 120);
   });
 
   test('F-04 / F-05: 단축키 [ ] 로 접기/펼치기', async ({ page }) => {
@@ -103,16 +103,16 @@ test.describe('데스크탑 기능 (매니저)', () => {
     await page.goto('/admin/tickets');
     await page.waitForLoadState('networkidle');
 
-    await expectSidebarVisible(page, 240);
+    await expectSidebarVisible(page, 120);
 
     // body에 focus 후 [ 키
     await page.locator('body').click();
     await page.keyboard.press('[');
-    await expectSidebarVisible(page, 56);
+    await expectSidebarVisible(page, 28);
 
     // ] 키
     await page.keyboard.press(']');
-    await expectSidebarVisible(page, 240);
+    await expectSidebarVisible(page, 120);
   });
 
   test('F-06: 입력 필드 focus 상태에서 [ 키 입력 시 사이드바 변경 없음', async ({
@@ -122,7 +122,7 @@ test.describe('데스크탑 기능 (매니저)', () => {
     await page.goto('/admin/tickets');
     await page.waitForLoadState('networkidle');
 
-    await expectSidebarVisible(page, 240);
+    await expectSidebarVisible(page, 120);
 
     // 페이지 내 검색 input 또는 첫 번째 input 찾기
     const anyInput = page.locator('input[type="text"], input[type="search"], input:not([type])').first();
@@ -136,8 +136,8 @@ test.describe('데스크탑 기능 (매니저)', () => {
     await page.keyboard.press('[');
     await page.waitForTimeout(400);
 
-    // 사이드바는 여전히 240px
-    await expectSidebarVisible(page, 240);
+    // 사이드바는 여전히 120px
+    await expectSidebarVisible(page, 120);
     // input에는 '[' 문자가 들어감
     await expect(anyInput).toHaveValue(/\[/);
   });
@@ -198,8 +198,8 @@ test.describe('데스크탑 접힘 상태 (매니저)', () => {
     await setCollapsedCookie(page, true);
     await page.goto('/admin/tickets');
     await page.waitForLoadState('networkidle');
-    // 첫 렌더 시점에 이미 56px이어야 함 (transition 시작 전)
-    await expectSidebarVisible(page, 56);
+    // 첫 렌더 시점에 이미 28px이어야 함 (transition 시작 전)
+    await expectSidebarVisible(page, 28);
   });
 });
 
@@ -237,7 +237,7 @@ test.describe('회귀 — viewMode 전환 (R-02)', () => {
     await page.goto('/admin/tickets');
     await page.waitForLoadState('networkidle');
 
-    await expectSidebarVisible(page, 240);
+    await expectSidebarVisible(page, 120);
 
     // 사이드바 footer 아바타 → 시점 보기 토글
     const aside = page.locator('aside[aria-label="관리자 내비게이션"]');
@@ -297,7 +297,7 @@ test.describe('회귀 — 페이지 시각 (R-05)', () => {
       await page.waitForLoadState('networkidle');
       // main은 RoleScope가 단일로 부여. AdminShell은 div로 wrapping.
       await expect(page.locator('main').first()).toBeVisible();
-      await expectSidebarVisible(page, 240);
+      await expectSidebarVisible(page, 120);
     }
   });
 });

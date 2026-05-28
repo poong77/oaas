@@ -98,10 +98,15 @@ export function AdminUserMenu({
       aria-label="계정 메뉴"
       className={cn(
         'inline-flex items-center justify-center rounded-full bg-brand-100 text-brand-700 transition-colors hover:bg-brand-200 dark:bg-brand-900/40 dark:text-brand-300 dark:hover:bg-brand-900/60',
-        placement === 'mobile-compact' ? 'h-8 w-8' : 'mx-auto my-2 h-9 w-9',
+        placement === 'mobile-compact' ? 'h-8 w-8' : 'mx-auto my-1.5 h-6 w-6',
       )}
     >
-      <User className="h-4 w-4" aria-hidden />
+      <User
+        className={cn(
+          placement === 'mobile-compact' ? 'h-4 w-4' : 'h-3 w-3',
+        )}
+        aria-hidden
+      />
     </button>
   ) : (
     <button
@@ -109,14 +114,14 @@ export function AdminUserMenu({
       onClick={() => setOpen((v) => !v)}
       aria-haspopup="menu"
       aria-expanded={open}
-      className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+      className="flex w-full items-center gap-1.5 px-2 py-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
     >
-      <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-        <User className="h-3.5 w-3.5" aria-hidden />
+      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+        <User className="h-3 w-3" aria-hidden />
       </span>
       <span className="min-w-0 flex-1 truncate text-left font-medium">{displayName}</span>
       <ChevronDown
-        className={cn('h-3.5 w-3.5 shrink-0 transition-transform', open && 'rotate-180')}
+        className={cn('h-3 w-3 shrink-0 transition-transform', open && 'rotate-180')}
         aria-hidden
       />
     </button>

@@ -65,7 +65,7 @@ export async function AdminShell({ children, userRole }: AdminShellProps) {
         showSidebar && staffRole
           ? cn(
               'lg:grid lg:gap-0',
-              collapsed ? 'lg:grid-cols-[56px_1fr]' : 'lg:grid-cols-[240px_1fr]',
+              collapsed ? 'lg:grid-cols-[28px_1fr]' : 'lg:grid-cols-[120px_1fr]',
               'transition-[grid-template-columns] duration-200 ease-in-out',
               'motion-reduce:transition-none',
             )
