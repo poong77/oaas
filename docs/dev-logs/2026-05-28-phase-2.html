@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Phase 2 개발 일지 — 통합 AS 플랫폼 (2026-05-28)</title>
+<style>
+  :root {
+    --brand: #4f46e5;
+    --brand-50: #eef2ff;
+    --brand-100: #e0e7ff;
+    --brand-700: #4338ca;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+    --emerald-600: #059669;
+    --amber-600: #d97706;
+    --red-600: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Segoe UI', sans-serif;
+    color: var(--slate-900);
+    background: linear-gradient(180deg, var(--brand-50) 0%, #fff 240px);
+    line-height: 1.6;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  header.title {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--brand-100);
+  }
+  header.title .eyebrow {
+    display: inline-block; padding: 4px 10px; border-radius: 999px;
+    background: var(--brand-100); color: var(--brand-700);
+    font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+  }
+  header.title h1 {
+    margin: 8px 0 4px; font-size: 28px; letter-spacing: -0.02em;
+  }
+  header.title p { margin: 0; color: var(--slate-500); }
+  .summary {
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    margin-bottom: 32px;
+  }
+  .summary .card {
+    padding: 16px; border-radius: 12px; background: #fff;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+  }
+  .summary .card .label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--slate-500); font-weight: 600;
+  }
+  .summary .card .value {
+    font-size: 22px; font-weight: 700; margin-top: 4px;
+  }
+  .summary .card .value.success { color: var(--emerald-600); }
+  .summary .card .value.warn { color: var(--amber-600); }
+  section { margin-bottom: 32px; }
+  section h2 {
+    font-size: 18px; letter-spacing: -0.01em;
+    border-left: 4px solid var(--brand); padding-left: 12px;
+    margin: 0 0 16px;
+  }
+  h3 { font-size: 14px; margin: 16px 0 8px; color: var(--slate-700); }
+  ul.checklist { padding-left: 0; list-style: none; }
+  ul.checklist li {
+    padding: 6px 0 6px 28px; position: relative;
+    font-size: 14px;
+  }
+  ul.checklist li::before {
+    content: '✓'; position: absolute; left: 0; top: 4px;
+    width: 20px; height: 20px;
+    background: var(--emerald-600); color: #fff;
+    border-radius: 50%; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  ul.checklist li.todo::before {
+    content: '·'; background: var(--slate-200); color: var(--slate-500);
+  }
+  table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+    background: #fff; border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--slate-200);
+  }
+  th, td {
+    text-align: left; padding: 10px 12px;
+    border-bottom: 1px solid var(--slate-200);
+  }
+  th {
+    background: var(--slate-50); color: var(--slate-700);
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  tr:last-child td { border-bottom: 0; }
+  td code, p code, li code {
+    background: var(--slate-100); color: var(--brand-700);
+    padding: 1px 6px; border-radius: 4px;
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+    font-size: 12px;
+  }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge.success { background: #d1fae5; color: #065f46; }
+  .badge.warn { background: #fef3c7; color: #92400e; }
+  .badge.brand { background: var(--brand-100); color: var(--brand-700); }
+  .badge.slate { background: var(--slate-100); color: var(--slate-700); }
+  pre {
+    background: var(--slate-900); color: #f8fafc;
+    padding: 14px 16px; border-radius: 8px;
+    font-size: 12.5px; overflow-x: auto;
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+  }
+  .note {
+    background: var(--brand-50); border-left: 4px solid var(--brand);
+    padding: 12px 16px; border-radius: 0 8px 8px 0;
+    font-size: 13.5px; color: var(--slate-700);
+  }
+  @media (max-width: 640px) {
+    body { padding: 16px 12px 60px; }
+    header.title h1 { font-size: 22px; }
+    section h2 { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="title">
+  <span class="eyebrow">DEV LOG · 2026-05-28</span>
+  <h1>Phase 2 — 랜딩 페이지 (LP-01 ~ LP-05 + NT-03)</h1>
+  <p>통합 AS 플랫폼 · support.oapms.com</p>
+</header>
+
+<section>
+  <h2>오늘의 요약</h2>
+  <div class="summary">
+    <div class="card">
+      <div class="label">완료된 기능</div>
+      <div class="value success">LP-01 ~ LP-05, NT-03</div>
+    </div>
+    <div class="card">
+      <div class="label">신규 DB 테이블</div>
+      <div class="value">service_status</div>
+    </div>
+    <div class="card">
+      <div class="label">신규 라우트</div>
+      <div class="value">+11</div>
+    </div>
+    <div class="card">
+      <div class="label">마이그레이션</div>
+      <div class="value">0001 SQL</div>
+    </div>
+    <div class="card">
+      <div class="label">Placeholder</div>
+      <div class="value warn">7개</div>
+    </div>
+    <div class="card">
+      <div class="label">전역 컴포넌트</div>
+      <div class="value">EmergencyBanner</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>완료 체크리스트</h2>
+  <h3>스키마 / 데이터</h3>
+  <ul class="checklist">
+    <li><code>service_status_enum</code> pgEnum 4종 추가 (<code>db/schema/_shared.ts</code>)</li>
+    <li><code>service_status</code> 테이블 신규 (FK → users.id on delete set null)</li>
+    <li><code>db/schema/index.ts</code>에 service-status re-export</li>
+    <li><code>db/migrations/0001_eager_silver_centurion.sql</code> + 메타 스냅샷 작성</li>
+    <li><code>db/seed.ts</code>에 기본 normal 상태 row 시드 (idempotent)</li>
+  </ul>
+  <h3>서비스 / 액션</h3>
+  <ul class="checklist">
+    <li><code>lib/services/service-status.ts</code> — getLatest / listHistory / change (graceful)</li>
+    <li><code>lib/services/service-status-meta.ts</code> — client/server 공유 메타 (분리)</li>
+    <li><code>lib/services/categories.ts</code> — getProductCategories (DB 미연결 fallback)</li>
+    <li><code>app/actions/service-status-actions.ts</code> — withAuthorizedAction(['manager','admin']) + revalidatePath + audit log</li>
+  </ul>
+  <h3>홈 LP-01 (9 섹션)</h3>
+  <ul class="checklist">
+    <li>① Hero + 통합 검색 (Enter / 버튼 → <code>/search?q=...</code>)</li>
+    <li>② 인기검색어 칩 5개 (TODO phase-2-temp)</li>
+    <li>③ 카테고리 아이콘 그리드 (DB product 6, lucide 매핑)</li>
+    <li>④ 자주찾는작업 5개 (TODO phase-2-temp)</li>
+    <li>⑤ 역할별 시작하기 5개 (TODO phase-2-temp)</li>
+    <li>⑥ 서비스 상태 위젯 (normal/degraded/incident/maintenance 색·아이콘)</li>
+    <li>⑦ 최근 업데이트 EmptyState (Phase 7 안내)</li>
+    <li>⑧ CTA 3개 (일반/오류/내문의)</li>
+    <li>⑨ 푸터 (긴급 전화 카드 + 카피라이트)</li>
+  </ul>
+  <h3>GNB (LP-02) + NT-03 긴급 배너</h3>
+  <ul class="checklist">
+    <li>활성 메뉴 표시 (usePathname)</li>
+    <li>데스크탑 검색 인풋 (lg+) 추가</li>
+    <li>모바일 햄버거 메뉴 + 검색 + 세션 통합</li>
+    <li>매니저/어드민 → 어드민 메뉴 진입 버튼 노출</li>
+    <li>EmergencyBanner RSC — incident 상태일 때 layout에서 자동 sticky 노출 (XSS-safe)</li>
+  </ul>
+  <h3>매니저/어드민 + 공개 페이지</h3>
+  <ul class="checklist">
+    <li><code>/admin/service-status</code> — 현재상태 카드 + 라디오 변경 폼 + 이력 (manager+admin)</li>
+    <li>변경 확정 전 ConfirmDialog (incident는 danger tone)</li>
+    <li>admin layout 확장 (manager+admin 진입), users/hotels에는 admin-only 가드 추가</li>
+    <li><code>/status</code> — 공개 서비스 상태 + 30일 이력 (모바일 카드뷰)</li>
+  </ul>
+  <h3>GNB 메뉴 placeholder 페이지</h3>
+  <ul class="checklist">
+    <li><code>/search</code> — Phase 3 안내 + 카테고리/자주찾는작업 카드</li>
+    <li><code>/help</code>, <code>/help/[product]</code> — Phase 3 핸드북 자리잡기</li>
+    <li><code>/faq</code> — Phase 4 안내</li>
+    <li><code>/notices</code> — Phase 7 안내</li>
+    <li><code>/role/[key]</code> — Phase 9 역할별 가이드 자리잡기</li>
+    <li><code>/tickets</code>, <code>/tickets/new</code> — Phase 5/6 자리잡기</li>
+  </ul>
+  <h3>모바일 반응형 (LP-05)</h3>
+  <ul class="checklist">
+    <li>모바일 검색 인풋 text-base (iOS Safari 줌 방지)</li>
+    <li>카테고리 2열 / sm 3열 / lg 6열</li>
+    <li>자주찾는작업 / 역할 1열 → sm 2열 → lg 5열</li>
+    <li>긴급 전화문의 카드를 푸터 상단에 별도 강조</li>
+    <li>다크모드 양쪽 색상 검증</li>
+  </ul>
+</section>
+
+<section>
+  <h2>변경/생성 파일</h2>
+  <table>
+    <thead>
+      <tr><th>구분</th><th>파일</th><th>설명</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="badge brand">신규</span></td><td><code>db/schema/service-status.ts</code></td><td>service_status 테이블</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>db/migrations/0001_eager_silver_centurion.sql</code></td><td>마이그레이션</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>db/migrations/meta/0001_snapshot.json</code></td><td>drizzle 스냅샷</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>lib/services/service-status.ts</code></td><td>server-only 서비스</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>lib/services/service-status-meta.ts</code></td><td>client 공유 메타</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>lib/services/categories.ts</code></td><td>product 카테고리 조회</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>app/actions/service-status-actions.ts</code></td><td>Server Action</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>app/(admin)/admin/service-status/*</code></td><td>매니저+어드민 페이지</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>app/_components/home/*</code></td><td>홈 9 섹션 컴포넌트</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>components/layout/emergency-banner.tsx</code></td><td>NT-03 RSC 배너</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>app/status/page.tsx</code></td><td>공개 상태 페이지</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>app/search/page.tsx</code></td><td>검색 placeholder</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>app/help/*</code></td><td>help placeholder</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>app/notices/page.tsx</code></td><td>공지 placeholder</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>app/role/[key]/page.tsx</code></td><td>역할별 placeholder</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>app/faq/page.tsx</code></td><td>FAQ placeholder</td></tr>
+      <tr><td><span class="badge brand">신규</span></td><td><code>app/tickets/*</code></td><td>티켓 placeholder</td></tr>
+      <tr><td><span class="badge warn">수정</span></td><td><code>db/schema/_shared.ts</code></td><td>service_status_enum 추가</td></tr>
+      <tr><td><span class="badge warn">수정</span></td><td><code>db/schema/index.ts</code></td><td>service-status re-export</td></tr>
+      <tr><td><span class="badge warn">수정</span></td><td><code>db/seed.ts</code></td><td>기본 normal 상태 시드</td></tr>
+      <tr><td><span class="badge warn">수정</span></td><td><code>db/migrations/meta/_journal.json</code></td><td>0001 추가</td></tr>
+      <tr><td><span class="badge warn">수정</span></td><td><code>app/page.tsx</code></td><td>홈 전면 교체 (9 섹션)</td></tr>
+      <tr><td><span class="badge warn">수정</span></td><td><code>app/layout.tsx</code></td><td>EmergencyBanner 마운트</td></tr>
+      <tr><td><span class="badge warn">수정</span></td><td><code>components/layout/header.tsx</code></td><td>검색·세션·활성메뉴 보강</td></tr>
+      <tr><td><span class="badge warn">수정</span></td><td><code>app/(admin)/admin/layout.tsx</code></td><td>manager 진입 허용</td></tr>
+      <tr><td><span class="badge warn">수정</span></td><td><code>app/(admin)/admin/_components/admin-nav.tsx</code></td><td>service-status 탭 + role 분기</td></tr>
+      <tr><td><span class="badge warn">수정</span></td><td><code>app/(admin)/admin/users/*</code>, <code>hotels/page.tsx</code></td><td>admin-only 가드 추가</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>service_status 운영 흐름</h2>
+  <p class="note">
+    매니저 또는 어드민이 <code>/admin/service-status</code>에서 상태를 변경하면:
+    ① 이전 active row의 <code>is_active=false</code> + <code>ended_at=now()</code> 마감 →
+    ② 새 row INSERT →
+    ③ <code>activity_logs.action='service_status.update'</code> 기록 (fire-and-forget) →
+    ④ <code>/</code>, <code>/status</code>, <code>/admin/service-status</code> revalidatePath →
+    ⑤ 상태가 <code>incident</code>이면 <code>EmergencyBanner</code>가 RSC 단에서 자동 노출.
+  </p>
+</section>
+
+<section>
+  <h2>NT-03 긴급 배너 동작 방식</h2>
+  <p class="note">
+    <code>components/layout/emergency-banner.tsx</code>는 async RSC.
+    매 페이지 요청 시 <code>getLatestServiceStatus()</code> 호출 →
+    <code>status === 'incident'</code>인 경우만 sticky 빨간 배너 렌더 (z-50).
+    <code>message</code>는 JSX 텍스트 자식으로 렌더되어 React가 자동 escape (XSS-safe).
+    평상시 <code>normal</code>이면 <code>null</code> 반환 → DOM에 노출되지 않음.
+  </p>
+</section>
+
+<section>
+  <h2>임시값 (TODO phase-2-temp) 목록</h2>
+  <table>
+    <thead>
+      <tr><th>위치</th><th>임시값</th><th>해소 Phase</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>app/_components/home/_constants.ts</code></td><td>POPULAR_KEYWORDS 5개</td><td>Phase 5+ (popular_keywords)</td></tr>
+      <tr><td><code>app/_components/home/_constants.ts</code></td><td>QUICK_ACTIONS 5개</td><td>Phase 9 (quick_actions)</td></tr>
+      <tr><td><code>app/_components/home/_constants.ts</code></td><td>ROLE_STARTERS 5개</td><td>Phase 9 (role_starters)</td></tr>
+      <tr><td><code>app/_components/home/home-footer.tsx</code></td><td>EMERGENCY_PHONE = 02-0000-0000</td><td>OA 실제 전화번호 확정 시</td></tr>
+      <tr><td><code>app/_components/home/recent-updates.tsx</code></td><td>EmptyState (공지 미연결)</td><td>Phase 7 (notices)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>다음 Phase 진행 권장</h2>
+  <p>Phase 3 — 셀프 서치 (3~4일)</p>
+  <ul class="checklist">
+    <li class="todo"><code>articles</code> 스키마 + 마크다운 에디터</li>
+    <li class="todo"><code>/help/[product]</code> 실 구현 (목록 / 상세 / 30초 요약 / 도움됨 피드백)</li>
+    <li class="todo"><code>/search</code> 통합 검색 (도움말 / FAQ / 공지 / 장애 탭)</li>
+    <li class="todo">help.oapms.com (채널.io) 마이그레이션 방식 결정 — API 색인 vs 이관</li>
+    <li class="todo">articles 어드민 편집 (SS-06)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>리스크 / 결정 대기 사항</h2>
+  <ul class="checklist">
+    <li class="todo">DATABASE_URL 실 Neon 연결 — 사용자가 받은 후 <code>drizzle-kit migrate</code> 적용 + <code>npm run db:seed</code></li>
+    <li class="todo">긴급 전화번호 확정 — 푸터 / 모바일 강조 카드 교체</li>
+    <li class="todo">help.oapms.com 이관 정책 결정 (Phase 3 진입 전 필수)</li>
+  </ul>
+</section>
+
+</div>
+</body>
+</html>

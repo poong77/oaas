@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Providers } from '@/components/providers';
 import { Header } from '@/components/layout/header';
+import { EmergencyBanner } from '@/components/layout/emergency-banner';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className="min-h-screen antialiased">
         <Providers>
           <div className="flex min-h-screen flex-col">
+            <EmergencyBanner />
             <Header />
             <main className="flex-1">{children}</main>
           </div>

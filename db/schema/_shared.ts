@@ -47,5 +47,21 @@ export const categoryTypeEnum = pgEnum('category_type', [
   'impact',
 ]);
 
+/**
+ * service status enum (LP-03, NT-03).
+ *
+ * normal       — 모든 서비스 정상
+ * degraded     — 일부 기능 제한 (사용 가능)
+ * incident     — 장애 발생 (긴급 배너 자동 노출)
+ * maintenance  — 점검 중 (안내 배너)
+ */
+export const serviceStatusEnum = pgEnum('service_status', [
+  'normal',
+  'degraded',
+  'incident',
+  'maintenance',
+]);
+
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
 export type CategoryType = (typeof categoryTypeEnum.enumValues)[number];
+export type ServiceStatusValue = (typeof serviceStatusEnum.enumValues)[number];

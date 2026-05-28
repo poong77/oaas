@@ -21,10 +21,12 @@ import { sql } from 'drizzle-orm';
 import {
   categories,
   hotels,
+  serviceStatus,
   solutionLinkPresets,
   users,
   type NewCategory,
   type NewHotel,
+  type NewServiceStatus,
   type NewSolutionLinkPreset,
   type NewUser,
 } from './schema';
@@ -158,6 +160,25 @@ async function main() {
     .insert(users)
     .values(seedUsers)
     .onConflictDoNothing({ target: users.email });
+
+  // ─── 5. service_status (Phase 2) ────────────────────────────────
+  // 활성 상태 row가 하나도 없으면 normal 1건을 시드한다 (idempotent).
+  console.log('[seed] service_status 기본 row 확인...');
+  const existingActive = await db
+    .select({ id: serviceStatus.id })
+    .from(serviceStatus)
+    .where(sql`${serviceStatus.isActive} = true`)
+    .limit(1);
+  if (existingActive.length === 0) {
+    const seedStatus: NewServiceStatus = {
+      status: 'normal',
+      message: '모든 서비스 정상',
+    };
+    await db.insert(serviceStatus).values(seedStatus);
+    console.log('[seed]   ↳ normal 상태 1건 삽입');
+  } else {
+    console.log('[seed]   ↳ 이미 active row 존재, 스킵');
+  }
 
   console.log('\n[seed] ✅ 완료. 로그인 계정:');
   console.log('       admin@oa.local    / oa1234!  (어드민)');

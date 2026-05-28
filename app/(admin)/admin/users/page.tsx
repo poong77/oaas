@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Plus, Users as UsersIcon } from 'lucide-react';
 import { listUsers } from '@/lib/services/users';
+import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,8 @@ export default async function AdminUsersPage({
 }: {
   searchParams: SearchParams;
 }) {
+  // Phase 2: 매니저는 admin layout 진입 가능하지만 사용자 관리는 어드민 전용.
+  await requireRole(['admin']);
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
   const isActive =

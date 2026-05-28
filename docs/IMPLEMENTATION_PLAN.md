@@ -429,12 +429,13 @@ created_at, is_active
 
 **리스크**: OA PMS 호텔 계정 매핑 정책 — 시작 전 사용자와 확정 필요
 
-### Phase 2 — 랜딩 (2~3일)
-- [ ] LP-01 통합 홈 (검색창·카테고리 아이콘·자주찾는작업·역할별·서비스상태·최근 업데이트·CTA)
-- [ ] LP-02 GNB
-- [ ] LP-03 서비스 상태 위젯 (`service_status` 테이블)
-- [ ] LP-05 모바일 반응형
-- [ ] NT-03 긴급 배너 (서비스 상태 연동)
+### Phase 2 — 랜딩 (2~3일) — **완료 2026-05-28**
+- [x] LP-01 통합 홈 (검색창·카테고리 아이콘·자주찾는작업·역할별·서비스상태·최근 업데이트·CTA)
+- [x] LP-02 GNB (활성메뉴·검색·세션·어드민 진입)
+- [x] LP-03 서비스 상태 위젯 (`service_status` 테이블 + `/admin/service-status` + `/status`)
+- [x] LP-05 모바일 반응형 (sm/md/lg/xl 그리드 · iOS 줌 방지 · 햄버거 메뉴)
+- [x] NT-03 긴급 배너 (incident 상태 자동 노출 RSC · XSS-safe)
+- [x] placeholder: `/help`, `/help/[product]`, `/notices`, `/role/[key]`, `/search`, `/faq`, `/tickets`, `/tickets/new`
 
 ### Phase 3 — 셀프 서치 (3~4일)
 - [ ] `articles` 스키마 + 어드민 편집 (SS-06, 마크다운 에디터)

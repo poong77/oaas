@@ -1,5 +1,6 @@
 import { Building2 } from 'lucide-react';
 import { listHotels } from '@/lib/services/users';
+import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -19,6 +20,8 @@ export default async function AdminHotelsPage({
 }: {
   searchParams: SearchParams;
 }) {
+  // Phase 2: 호텔 마스터는 어드민 전용.
+  await requireRole(['admin']);
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
   const isActive =

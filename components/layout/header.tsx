@@ -1,18 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Menu, X, LifeBuoy, LogOut, User } from 'lucide-react';
-import { toast } from 'sonner';
+import {
+  Moon,
+  Sun,
+  Menu,
+  X,
+  LifeBuoy,
+  LogOut,
+  User,
+  Search,
+  Shield,
+} from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { useCurrentUser } from '@/lib/hooks/use-current-user';
 import { cn } from '@/lib/utils';
 
 /**
- * GNB — LP-02 기준 자리잡기.
- * 실제 라우팅·검색·로그인은 Phase 1 이후 연결.
+ * GNB — LP-02 보강.
+ *
+ * Phase 2:
+ *   - 활성 메뉴 표시 (usePathname)
+ *   - 상단 검색 인풋 (md 이상) — Enter → /search?q=
+ *   - 세션 표시 (로그인/로그아웃, 어드민/매니저는 어드민 메뉴 노출)
+ *   - 모바일 햄버거 메뉴 (검색·메뉴·세션 통합)
  */
 const NAV_ITEMS = [
   { label: '홈', href: '/' },
@@ -23,10 +38,16 @@ const NAV_ITEMS = [
   { label: '공지/업데이트', href: '/notices' },
 ];
 
+function isActiveNav(pathname: string, href: string) {
+  if (href === '/') return pathname === '/';
+  return pathname === href || pathname.startsWith(href + '/');
+}
+
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, status } = useCurrentUser();
   const confirm = useConfirmDialog();
+  const pathname = usePathname();
 
   async function handleLogout() {
     const ok = await confirm({
@@ -37,9 +58,11 @@ export function Header() {
     if (ok) await signOut({ callbackUrl: '/' });
   }
 
+  const isStaff = user?.role === 'manager' || user?.role === 'admin';
+
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
           <Link
             href="/"
@@ -50,36 +73,60 @@ export function Header() {
           </Link>
         </div>
 
-        <nav className="hidden items-center gap-1 md:flex">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-            >
-              {item.label}
-            </Link>
-          ))}
+        {/* 데스크탑 GNB */}
+        <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
+          {NAV_ITEMS.map((item) => {
+            const active = isActiveNav(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors lg:px-3',
+                  active
+                    ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <ConfirmDemoButton />
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* 데스크탑 검색 인풋 (md 이상) */}
+          <HeaderSearchInput className="hidden lg:flex" />
+
           <ThemeToggle />
           {status === 'authenticated' && user ? (
             <>
+              {isStaff && (
+                <Link
+                  href="/admin/service-status"
+                  className="hidden items-center gap-1.5 rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-100 dark:border-brand-900 dark:bg-brand-950/40 dark:text-brand-300 dark:hover:bg-brand-900/60 lg:inline-flex"
+                  title={user.role === 'admin' ? '어드민' : '매니저'}
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  {user.role === 'admin' ? '어드민' : '매니저'}
+                </Link>
+              )}
               <Link
                 href="/profile"
-                className="hidden items-center gap-1.5 rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 sm:inline-flex"
+                className="hidden items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 sm:inline-flex"
               >
                 <User className="h-3.5 w-3.5" />
-                {user.name ?? '내 프로필'}
+                <span className="max-w-[8rem] truncate">
+                  {user.name ?? '내 프로필'}
+                </span>
               </Link>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="hidden items-center gap-1.5 rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:inline-flex"
+                className="hidden items-center gap-1.5 rounded-md bg-slate-100 px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:inline-flex"
               >
-                <LogOut className="h-3.5 w-3.5" />로그아웃
+                <LogOut className="h-3.5 w-3.5" />
+                <span className="hidden lg:inline">로그아웃</span>
               </button>
             </>
           ) : (
@@ -95,6 +142,7 @@ export function Header() {
             onClick={() => setMobileOpen((v) => !v)}
             className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden"
             aria-label="메뉴 열기"
+            aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -110,48 +158,123 @@ export function Header() {
             : 'hidden',
         )}
       >
-        <nav className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-3 sm:px-6">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setMobileOpen(false)}
-              className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-            >
-              {item.label}
-            </Link>
-          ))}
-          <div className="mt-2 flex gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6">
+          <HeaderSearchInput
+            onSubmitted={() => setMobileOpen(false)}
+            className="flex"
+            autoFocus={false}
+          />
+          <nav className="flex flex-col gap-1">
+            {NAV_ITEMS.map((item) => {
+              const active = isActiveNav(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'rounded-md px-3 py-2 text-sm font-medium',
+                    active
+                      ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300'
+                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="flex flex-col gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
             {status === 'authenticated' && user ? (
               <>
-                <Link
-                  href="/profile"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-center text-sm font-medium dark:border-slate-700"
-                >
-                  내 프로필
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => { setMobileOpen(false); handleLogout(); }}
-                  className="flex-1 rounded-md bg-slate-100 px-3 py-2 text-center text-sm font-medium dark:bg-slate-800"
-                >
-                  로그아웃
-                </button>
+                {isStaff && (
+                  <Link
+                    href="/admin/service-status"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-center gap-1.5 rounded-md border border-brand-300 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 dark:border-brand-800 dark:bg-brand-950/40 dark:text-brand-300"
+                  >
+                    <Shield className="h-3.5 w-3.5" />
+                    {user.role === 'admin' ? '어드민' : '매니저'} 메뉴
+                  </Link>
+                )}
+                <div className="flex gap-2">
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-center text-sm font-medium dark:border-slate-700"
+                  >
+                    내 프로필
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex-1 rounded-md bg-slate-100 px-3 py-2 text-center text-sm font-medium dark:bg-slate-800"
+                  >
+                    로그아웃
+                  </button>
+                </div>
               </>
             ) : (
               <Link
                 href="/login"
                 onClick={() => setMobileOpen(false)}
-                className="flex-1 rounded-md bg-brand-600 px-3 py-2 text-center text-sm font-medium text-white"
+                className="rounded-md bg-brand-600 px-3 py-2 text-center text-sm font-medium text-white"
               >
                 로그인
               </Link>
             )}
           </div>
-        </nav>
+        </div>
       </div>
     </header>
+  );
+}
+
+function HeaderSearchInput({
+  className,
+  onSubmitted,
+  autoFocus,
+}: {
+  className?: string;
+  onSubmitted?: () => void;
+  autoFocus?: boolean;
+}) {
+  const router = useRouter();
+  const [q, setQ] = useState('');
+
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    onSubmitted?.();
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      role="search"
+      className={cn('items-center', className)}
+    >
+      <div className="relative flex w-full items-center">
+        <Search
+          className="pointer-events-none absolute left-2.5 h-4 w-4 text-slate-400 dark:text-slate-500"
+          aria-hidden
+        />
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          autoFocus={autoFocus}
+          placeholder="도움말 검색"
+          aria-label="도움말 검색"
+          className="h-9 w-full rounded-md border border-slate-200 bg-white pl-8 pr-3 text-sm shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 dark:border-slate-700 dark:bg-slate-900 dark:placeholder:text-slate-500 md:w-56 lg:w-64"
+        />
+      </div>
+    </form>
   );
 }
 
@@ -174,32 +297,6 @@ function ThemeToggle() {
       title={`현재: ${theme === 'system' ? `system (${resolvedTheme})` : theme}`}
     >
       {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-    </button>
-  );
-}
-
-function ConfirmDemoButton() {
-  const confirm = useConfirmDialog();
-  return (
-    <button
-      type="button"
-      onClick={async () => {
-        const ok = await confirm({
-          title: 'ConfirmDialog 데모',
-          description:
-            'window.confirm() 대체 글로벌 다이얼로그입니다. 이대로 진행할까요?',
-          confirmText: '진행',
-          cancelText: '취소',
-        });
-        if (ok) {
-          toast.success('확인됨 — Toaster + ConfirmDialog 모두 정상 동작합니다.');
-        } else {
-          toast.info('취소되었습니다.');
-        }
-      }}
-      className="hidden rounded-md border border-dashed border-brand-400 px-2.5 py-1 text-xs font-medium text-brand-600 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-950/50 lg:inline-flex"
-    >
-      데모: ConfirmDialog
     </button>
   );
 }
