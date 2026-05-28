@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Phase 3 셀프 서치 — 개발 일지 (2026-05-28)</title>
+<style>
+  :root {
+    --brand-50: #f0f9ff;
+    --brand-100: #e0f2fe;
+    --brand-200: #bae6fd;
+    --brand-500: #0ea5e9;
+    --brand-600: #0284c7;
+    --brand-700: #0369a1;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+    --emerald-500: #10b981;
+    --amber-500: #f59e0b;
+    --rose-500: #f43f5e;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+      "Pretendard", "Nanum Gothic", sans-serif;
+    background: var(--slate-50);
+    color: var(--slate-900);
+    line-height: 1.6;
+  }
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px 96px;
+  }
+  header.hero {
+    background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
+    color: white;
+    border-radius: 12px;
+    padding: 32px 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(2, 132, 199, 0.18);
+  }
+  header.hero .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  header.hero h1 { margin: 0; font-size: 24px; }
+  header.hero p { margin: 8px 0 0; opacity: 0.92; font-size: 14px; }
+  h2 {
+    font-size: 18px;
+    margin: 28px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--slate-200);
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .stat {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .stat .label { font-size: 12px; color: var(--slate-500); margin-bottom: 4px; }
+  .stat .value {
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--brand-700);
+  }
+  ul.checks { list-style: none; padding: 0; margin: 0; }
+  ul.checks li {
+    padding: 8px 12px;
+    border-bottom: 1px dashed var(--slate-200);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+  ul.checks li:last-child { border-bottom: 0; }
+  .ok { color: var(--emerald-500); }
+  .warn { color: var(--amber-500); }
+  .err { color: var(--rose-500); }
+  .pill {
+    display: inline-block;
+    padding: 1px 8px;
+    font-size: 12px;
+    border-radius: 999px;
+    background: var(--slate-100);
+    color: var(--slate-700);
+  }
+  .pill.ok { background: #dcfce7; color: #166534; }
+  .pill.warn { background: #fef3c7; color: #92400e; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid var(--slate-200);
+    padding: 8px 10px;
+    text-align: left;
+  }
+  th { background: var(--slate-100); font-weight: 600; }
+  code {
+    background: var(--slate-100);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 12px;
+  }
+  pre {
+    background: var(--slate-900);
+    color: #e2e8f0;
+    padding: 14px 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .breadcrumb {
+    font-size: 12px;
+    color: var(--slate-500);
+    margin-bottom: 6px;
+  }
+  .small { font-size: 12px; color: var(--slate-500); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="hero">
+    <span class="badge">PHASE 3 · 셀프 서치 (SS)</span>
+    <h1>아티클·검색 시스템 구축</h1>
+    <p>2026-05-28 · support.oapms.com · CTO Lead 직접 진행</p>
+  </header>
+
+  <div class="grid-3">
+    <div class="stat"><div class="label">신규 DB 테이블</div><div class="value">2개</div></div>
+    <div class="stat"><div class="label">신규/교체 페이지</div><div class="value">7개</div></div>
+    <div class="stat"><div class="label">시드 아티클</div><div class="value">6건</div></div>
+    <div class="stat"><div class="label">신규 컴포넌트</div><div class="value">11개</div></div>
+  </div>
+
+  <h2>1. 완료 체크리스트</h2>
+  <ul class="checks">
+    <li><span class="ok">✓</span> Design 문서 <code>docs/02-design/phase-3.design.md</code> 작성</li>
+    <li><span class="ok">✓</span> 신규 스키마 — <code>articles</code>, <code>article_feedback</code></li>
+    <li><span class="ok">✓</span> 마이그레이션 SQL <code>0001_phase_3_articles.sql</code> 작성</li>
+    <li><span class="ok">✓</span> <code>lib/services/articles.ts</code> + Server Actions</li>
+    <li><span class="ok">✓</span> <code>/help</code> 핸드북 허브 (제품 카드 + 인기 아티클 + Hero 검색)</li>
+    <li><span class="ok">✓</span> <code>/help/[product]</code> 제품별 가이드 (정렬/필터/페이징)</li>
+    <li><span class="ok">✓</span> <code>/help/[product]/[slug]</code> 마크다운 상세 + TOC + 도움됨 위젯</li>
+    <li><span class="ok">✓</span> <code>/search</code> 4탭 통합 검색 (도움말 ILIKE)</li>
+    <li><span class="ok">✓</span> <code>/admin/articles</code> 리스트 + 발행 토글 + 비활성</li>
+    <li><span class="ok">✓</span> <code>/admin/articles/new</code> 마크다운 split view 에디터</li>
+    <li><span class="ok">✓</span> <code>/admin/articles/[id]</code> 편집 페이지</li>
+    <li><span class="ok">✓</span> Admin Nav에 "아티클" 탭 추가 (매니저+어드민)</li>
+    <li><span class="ok">✓</span> 홈 "최근 업데이트" → 발행된 아티클 최근 3건</li>
+    <li><span class="ok">✓</span> 시드 데이터 보강 (샘플 아티클 6건, idempotent)</li>
+    <li><span class="warn">⚠</span> <code>npm install</code> + <code>drizzle-kit generate</code> + <code>db:migrate</code> + <code>db:seed</code> + <code>npm run build</code> — 사용자 직접 실행 필요 (Bash 권한 부족)</li>
+    <li><span class="warn">⚠</span> 채널.io (help.oapms.com) 마이그레이션 — 외부 링크 안내만, 인프라 미구현</li>
+  </ul>
+
+  <h2>2. 신규 DB 스키마</h2>
+  <div class="card">
+    <h3>articles</h3>
+    <p class="small">id, product_code, category_path[], slug(UQ), title, summary_30s, body_markdown, toc(jsonb), related_article_ids(uuid[]), author_id, published_at, view_count, helpful_yes/no, +공통(created_at/updated_at/is_active)</p>
+    <ul class="checks">
+      <li>인덱스: slug UNIQUE, (product_code, published_at), (is_active, published_at)</li>
+      <li>FK: author_id → users.id ON DELETE SET NULL</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>article_feedback</h3>
+    <p class="small">id, article_id(FK→articles CASCADE), user_id(FK→users SET NULL), helpful(bool), comment(text), +공통</p>
+    <ul class="checks">
+      <li>UNIQUE (article_id, user_id) WHERE user_id IS NOT NULL — 로그인 사용자 1회</li>
+      <li>비로그인 INSERT 무제한 (단순 카운터)</li>
+    </ul>
+  </div>
+
+  <h2>3. 변경/생성 파일 목록 (~40개)</h2>
+  <table>
+    <thead><tr><th>분류</th><th>경로</th><th>상태</th></tr></thead>
+    <tbody>
+      <tr><td>Design 문서</td><td>docs/02-design/phase-3.design.md</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>스키마</td><td>db/schema/articles.ts</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>스키마</td><td>db/schema/article-feedback.ts</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>스키마 index</td><td>db/schema/index.ts</td><td><span class="pill warn">수정</span></td></tr>
+      <tr><td>마이그레이션</td><td>db/migrations/0001_phase_3_articles.sql</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Service</td><td>lib/services/articles.ts</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Server Actions</td><td>app/actions/article-actions.ts</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>UI 공통</td><td>components/ui/page-header.tsx</td><td><span class="pill warn">수정 (title/desc → ReactNode)</span></td></tr>
+      <tr><td>아티클 컴포넌트</td><td>components/articles/markdown-view.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>아티클 컴포넌트</td><td>components/articles/article-toc.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>아티클 컴포넌트</td><td>components/articles/article-feedback-widget.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>아티클 컴포넌트</td><td>components/articles/article-share-bar.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>아티클 컴포넌트</td><td>components/articles/article-view-tracker.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>페이지</td><td>app/help/page.tsx</td><td><span class="pill warn">전면 재작성</span></td></tr>
+      <tr><td>페이지</td><td>app/help/[product]/page.tsx</td><td><span class="pill warn">전면 재작성</span></td></tr>
+      <tr><td>페이지</td><td>app/help/[product]/[slug]/page.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>페이지</td><td>app/search/page.tsx</td><td><span class="pill warn">전면 재작성</span></td></tr>
+      <tr><td>페이지</td><td>app/(admin)/admin/articles/page.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>페이지</td><td>app/(admin)/admin/articles/new/page.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>페이지</td><td>app/(admin)/admin/articles/[id]/page.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Help 컴포넌트</td><td>app/help/_components/help-hero-search.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Help 컴포넌트</td><td>app/help/_components/popular-article-list.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Help 컴포넌트</td><td>app/help/[product]/_components/product-filters.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Help 컴포넌트</td><td>app/help/[product]/_components/product-article-list.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Search 컴포넌트</td><td>app/search/_components/search-tabs.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Search 컴포넌트</td><td>app/search/_components/search-filters.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Admin 컴포넌트</td><td>app/(admin)/admin/articles/_components/articles-filters.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Admin 컴포넌트</td><td>app/(admin)/admin/articles/_components/articles-list-client.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Admin 컴포넌트</td><td>app/(admin)/admin/articles/_components/article-editor.tsx</td><td><span class="pill ok">신규</span></td></tr>
+      <tr><td>Admin Nav</td><td>app/(admin)/admin/_components/admin-nav.tsx</td><td><span class="pill warn">수정 (아티클 탭)</span></td></tr>
+      <tr><td>홈</td><td>app/_components/home/recent-updates.tsx</td><td><span class="pill warn">전면 재작성</span></td></tr>
+      <tr><td>시드</td><td>db/seed.ts</td><td><span class="pill warn">수정 (아티클 6건)</span></td></tr>
+      <tr><td>package.json</td><td>package.json</td><td><span class="pill warn">react-markdown, remark-gfm, rehype-* , slugify 추가</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. 외부 라이브러리 추가</h2>
+  <ul class="checks">
+    <li><code>react-markdown</code> ^9.0.1 — 마크다운 렌더 (raw HTML 차단으로 XSS-safe)</li>
+    <li><code>remark-gfm</code> ^4.0.0 — GFM 지원 (테이블/체크박스)</li>
+    <li><code>rehype-slug</code> ^6.0.0 — heading id 자동 부여 (TOC 점프)</li>
+    <li><code>rehype-autolink-headings</code> ^7.1.0 — heading wrap autolink</li>
+    <li><code>slugify</code> ^1.6.6 — slug 자동 생성 (한글 fallback 처리됨)</li>
+  </ul>
+
+  <h2>5. 사용자가 실행해야 할 명령 (Phase 3 마무리)</h2>
+  <div class="card">
+    <p class="small">메인 세션 Bash 권한이 어시스턴트에 부여되지 않아 아래 명령은 사용자가 직접 실행해주세요.</p>
+    <pre># 1. 새 패키지 설치
+npm install
+
+# 2. 마이그레이션 생성 (Drizzle이 0001 자동 생성. 이미 손으로 만든 0001 파일은 덮어쓰일 수 있음)
+npx drizzle-kit generate
+
+# 3. 마이그레이션 적용 (Neon DB)
+npm run db:migrate
+
+# 4. 시드 데이터 보강 (idempotent — 기존 데이터는 유지, 아티클 6건만 추가)
+npm run db:seed
+
+# 5. 빌드 검증
+npm run build
+
+# 6. 로컬 확인
+npm run dev
+# http://localhost:3000/help 접속
+
+# 7. 커밋 + 푸시
+git add -A
+git commit -m "feat: phase 3 — self search (articles + ILIKE search + admin CRUD)
+
+- articles / article_feedback 신규 스키마
+- /help, /help/[product], /help/[product]/[slug] 마크다운 핸드북
+- /search 4탭 통합 검색 (도움말 ILIKE)
+- /admin/articles 어드민 CRUD + 발행 토글
+- 도움됨 위젯 + TOC + 30초 요약 + 공유/인쇄
+- 시드 샘플 아티클 6건
+
+Co-Authored-By: Claude &lt;claude@anthropic.com&gt;"
+
+git push origin main</pre>
+  </div>
+
+  <h2>6. 시연 가능한 흐름</h2>
+  <ul class="checks">
+    <li>1) <code>/</code> 홈 → "최근 업데이트" 섹션에서 발행 아티클 카드 클릭 → 상세 페이지</li>
+    <li>2) <code>/help</code> → 제품 카드(PMS) 클릭 → <code>/help/pms</code> 리스트 → 아티클 카드 클릭 → 상세</li>
+    <li>3) GNB 검색창에 "결제" 입력 → <code>/search?q=결제</code> → 도움말 탭 결과</li>
+    <li>4) "장애" 탭 클릭 → service_status 검색 (최근 30일, normal 제외)</li>
+    <li>5) 상세 페이지에서 "도움됐어요" 클릭 → 카운터 증가, toast 표시</li>
+    <li>6) <code>/admin/articles</code> (manager/admin) → "새 아티클" → split view에서 작성 + 미리보기 → 발행</li>
+    <li>7) 어드민에서 발행 토글 / 비활성 / 복구 — ConfirmDialog 통한 안전 처리</li>
+  </ul>
+
+  <h2>7. 임시값 / TODO</h2>
+  <ul class="checks">
+    <li><code>TODO(phase-3-temp)</code> 검색 정렬 "관련도" — 단순 ILIKE 위치 점수. Phase 5에서 PostgreSQL tsvector로 교체.</li>
+    <li><code>TODO(phase-3-temp)</code> PDF 변환 — <code>window.print()</code>만 제공. 정식 PDF는 Phase 8 이후.</li>
+    <li><code>TODO(phase-3-temp)</code> 채널.io 마이그레이션 — 외부 링크 안내만. 이관 인프라 미구현.</li>
+    <li><code>TODO(phase-3-temp)</code> 홈 "최근 업데이트" — 현재 아티클만. Phase 7 공지 통합 시 합성.</li>
+  </ul>
+
+  <h2>8. 다음 Phase 안내</h2>
+  <div class="card">
+    <p class="small"><strong>Phase 4 (셀프 픽스 SP):</strong> FAQ + 체크리스트(checklists / checklist_steps) — 빠른 해결 가이드.</p>
+    <p class="small"><strong>승인 요청:</strong> Phase 3 빌드/마이그레이션/시드 검증 후 다음 Phase 진행 여부 사용자 확정.</p>
+  </div>
+
+  <p class="small" style="margin-top: 40px; text-align: center;">
+    OA 통합 AS — Phase 3 셀프 서치 · 작성: cto-lead · 2026-05-28
+  </p>
+</div>
+</body>
+</html>

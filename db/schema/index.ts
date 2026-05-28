@@ -22,3 +22,5 @@ export * from './categories';
 export * from './solution-links';
 export * from './activity-logs';
 export * from './service-status';
+export * from './articles';
+export * from './article-feedback';

@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react';
 import {
   Activity,
   Building2,
+  FileText,
   LogOut,
   Shield,
   Users,
@@ -29,6 +30,13 @@ const ALL_TABS: Tab[] = [
     href: '/admin/service-status',
     label: '서비스 상태',
     icon: Activity,
+    roles: ['manager', 'admin'],
+  },
+  // articles는 매니저+어드민 (Phase 3)
+  {
+    href: '/admin/articles',
+    label: '아티클',
+    icon: FileText,
     roles: ['manager', 'admin'],
   },
   // users / hotels는 어드민만
