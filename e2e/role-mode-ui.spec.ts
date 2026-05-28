@@ -92,10 +92,15 @@ test.describe('매니저 시나리오', () => {
     await page.goto('/admin/tickets');
     await page.waitForLoadState('networkidle');
 
-    // 우측 아바타 메뉴 열기 — AdminUserMenu의 trigger (aria-haspopup=menu)
-    const avatarButton = page.locator('button[aria-haspopup="menu"]').first();
+    // 사이드바 footer의 AdminUserMenu trigger (aria-haspopup=menu)
+    // admin-sidebar-layout Phase 도입 후 모바일 헤더에도 동일 trigger가 있으나 lg:hidden.
+    // dev overlay(TicketsListClient hydration mismatch 별도 이슈)가 pointer intercept할 수 있어
+    // evaluate로 DOM click 직접 호출 — React onClick 정상 trigger.
+    const avatarButton = page
+      .locator('aside[aria-label="관리자 내비게이션"] button[aria-haspopup="menu"]')
+      .first();
     await expect(avatarButton).toBeVisible();
-    await avatarButton.click();
+    await avatarButton.evaluate((el: HTMLElement) => el.click());
 
     // 드롭다운 안의 "호텔리어 시점으로 보기" 클릭
     const viewToggle = page.getByRole('button', {
