@@ -1,0 +1,2 @@
+- [Phase 7+8 completion](phase-7-8-completion.md) — notices table + chatbot FAB implemented 2026-05-28
+- [Notices schema convention](notices-naming.md) — enum vs table name must differ (notice_kind / notices)

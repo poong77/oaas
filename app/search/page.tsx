@@ -24,6 +24,15 @@ import { db } from '@/db';
 import { serviceStatus } from '@/db/schema';
 import { searchArticles, type SearchArticleHit } from '@/lib/services/articles';
 import { searchFaqs, type SearchFaqHit } from '@/lib/services/faqs';
+import {
+  searchNotices,
+  summarizeNoticeBody,
+  type SearchNoticeHit,
+} from '@/lib/services/notices';
+import {
+  NOTICE_KIND_CLASSES,
+  NOTICE_KIND_META,
+} from '@/lib/services/notices-meta';
 import { getProductCategories } from '@/lib/services/categories';
 import { SearchTabs } from './_components/search-tabs';
 import { SearchFilters } from './_components/search-filters';
@@ -61,12 +70,14 @@ export default async function SearchPage({
   // 결과 카운트는 모든 탭 한꺼번에 가져와서 뱃지로 표시 (단순 N+1)
   let helpHits: SearchArticleHit[] = [];
   let faqHits: SearchFaqHit[] = [];
+  let noticeHits: SearchNoticeHit[] = [];
   let incidentRows: IncidentRow[] = [];
 
   if (query) {
-    [helpHits, faqHits, incidentRows] = await Promise.all([
+    [helpHits, faqHits, noticeHits, incidentRows] = await Promise.all([
       searchArticles(query, { productCode: product, limit: 100 }),
       searchFaqs(query, { productCode: product, limit: 100 }),
+      searchNotices(query, { productCode: product, limit: 100 }),
       fetchRecentIncidents(query),
     ]);
   }
@@ -74,11 +85,12 @@ export default async function SearchPage({
   // 정렬 적용 (도움말 탭만)
   const sortedHelp = applySort(helpHits, sort);
   const sortedFaq = applyFaqSort(faqHits, sort);
+  const sortedNotice = applyNoticeSort(noticeHits, sort);
 
   const counts = {
     help: helpHits.length,
     faq: faqHits.length,
-    notice: 0, // Phase 7
+    notice: noticeHits.length,
     incident: incidentRows.length,
   };
 
@@ -209,15 +221,64 @@ export default async function SearchPage({
           )}
 
           {tab === 'notice' && (
-            <Card>
-              <CardContent className="p-6">
-                <EmptyState
-                  icon={<Search className="h-6 w-6" />}
-                  title="공지 검색은 Phase 7에서 추가됩니다"
-                  description="공지/업데이트 시스템이 준비되면 이 탭에서 결과가 표시됩니다."
-                />
-              </CardContent>
-            </Card>
+            <>
+              <SearchFilters
+                initial={{ product, sort }}
+                categories={categories}
+              />
+              {sortedNotice.length === 0 ? (
+                <EmptyResults query={query} kind="notice" />
+              ) : (
+                <ul className="grid gap-3">
+                  {sortedNotice.map((n) => {
+                    const meta = NOTICE_KIND_META[n.kind];
+                    const kindClass = NOTICE_KIND_CLASSES[n.kind];
+                    return (
+                      <li key={n.id}>
+                        <Link
+                          href={`/notices/${n.id}`}
+                          className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-brand-300 hover:bg-brand-50/30 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-700 dark:hover:bg-brand-950/20"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${kindClass}`}
+                            >
+                              {meta.label}
+                            </span>
+                            {n.productCode && (
+                              <Badge tone="slate" className="uppercase">
+                                {n.productCode}
+                              </Badge>
+                            )}
+                            {n.pinned && (
+                              <Badge tone="warn">고정</Badge>
+                            )}
+                            {n.score >= 2 && (
+                              <Badge tone="success">제목 일치</Badge>
+                            )}
+                          </div>
+                          <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                            <Highlight text={n.title} query={query} />
+                          </h3>
+                          <p className="line-clamp-2 text-sm text-slate-600 dark:text-slate-300">
+                            <Highlight
+                              text={summarizeNoticeBody(n.bodyMarkdown, 140)}
+                              query={query}
+                            />
+                          </p>
+                          <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
+                            {n.publishedAt && (
+                              <span>{formatDate(n.publishedAt)}</span>
+                            )}
+                            <span>조회 {n.viewCount.toLocaleString()}</span>
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </>
           )}
 
           {tab === 'incident' && (
@@ -311,6 +372,30 @@ function applySort(
   });
 }
 
+function applyNoticeSort(
+  hits: SearchNoticeHit[],
+  sort: 'relevance' | 'recent' | 'views',
+): SearchNoticeHit[] {
+  if (sort === 'recent') {
+    return [...hits].sort((a, b) => {
+      const da = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      const db = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+      return db - da;
+    });
+  }
+  if (sort === 'views') {
+    return [...hits].sort((a, b) => b.viewCount - a.viewCount);
+  }
+  // relevance: pinned 우선 → score desc → recent
+  return [...hits].sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    if (b.score !== a.score) return b.score - a.score;
+    const da = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    const db = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    return db - da;
+  });
+}
+
 function applyFaqSort(
   hits: SearchFaqHit[],
   sort: 'relevance' | 'recent' | 'views',
@@ -336,14 +421,16 @@ function EmptyResults({
   kind,
 }: {
   query: string;
-  kind?: 'incident' | 'faq';
+  kind?: 'incident' | 'faq' | 'notice';
 }) {
   const title =
     kind === 'incident'
       ? '최근 30일간 관련 장애가 없습니다'
       : kind === 'faq'
         ? `"${query}"에 대한 FAQ가 없습니다`
-        : `"${query}"에 대한 검색 결과가 없습니다`;
+        : kind === 'notice'
+          ? `"${query}"에 대한 공지가 없습니다`
+          : `"${query}"에 대한 검색 결과가 없습니다`;
   return (
     <Card>
       <CardContent className="p-6">

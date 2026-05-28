@@ -11,6 +11,7 @@ import {
   Inbox,
   ListChecks,
   LogOut,
+  Megaphone,
   Shield,
   Users,
   type LucideIcon,
@@ -47,6 +48,13 @@ const ALL_TABS: Tab[] = [
     href: '/admin/articles',
     label: '아티클',
     icon: FileText,
+    roles: ['manager', 'admin'],
+  },
+  // notices는 매니저+어드민 (Phase 7)
+  {
+    href: '/admin/notices',
+    label: '공지 관리',
+    icon: Megaphone,
     roles: ['manager', 'admin'],
   },
   // FAQ는 매니저+어드민 (Phase 4)

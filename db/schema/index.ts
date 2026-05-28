@@ -1,7 +1,7 @@
 /**
  * Drizzle 스키마 진입점.
  *
- * Phase 1 + 2 + 3 + 4 + 5 + 6 시점:
+ * Phase 1 + 2 + 3 + 4 + 5 + 6 + 7 시점:
  *   - hotels, users, categories, solution_link_presets, hotel_solution_links, activity_logs
  *   - service_status (Phase 2)
  *   - articles, article_feedback (Phase 3)
@@ -9,9 +9,9 @@
  *   - tickets, ticket_messages, ticket_attachments, ticket_form_fields,
  *     notification_logs (Phase 5)
  *   - ticket_feedback (Phase 6)
+ *   - notices (Phase 7)
  *
  * 다음 Phase에서 추가될 예정:
- *   - notices (Phase 7)
  *   - notification_templates, system_settings, quick_actions,
  *     role_starters, popular_keywords, chatbot_sessions (Phase 9+)
  *
@@ -35,3 +35,4 @@ export * from './ticket-attachments';
 export * from './ticket-form-fields';
 export * from './notification-logs';
 export * from './ticket-feedback';
+export * from './notices';

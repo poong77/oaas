@@ -111,7 +111,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
     return init.length > 0 ? init : ['email'];
   });
 
-  // 체크리스트 → 접수 흐름 컨텍스트 자동 prepend
+  // 체크리스트 / 챗봇 → 접수 흐름 컨텍스트 자동 prepend
   useEffect(() => {
     if (props.prefill?.from === 'checklist' && props.prefill.checklist) {
       const ctx = [
@@ -125,6 +125,17 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
         .filter(Boolean)
         .join('\n');
       setContent((prev) => (prev.startsWith('## 사전 진단') ? prev : ctx + prev));
+    } else if (props.prefill?.from === 'chatbot') {
+      // TODO(phase-8-temp): Phase 9+에서 chatbot_sessions 연동 시 conversation_id 포함
+      const ctx = [
+        '## 챗봇에서 해결되지 않은 문의',
+        '- 챗봇 대화 요지 (가능하면 적어주세요):',
+        '  - ',
+        '',
+        '---',
+        '',
+      ].join('\n');
+      setContent((prev) => (prev.startsWith('## 챗봇') ? prev : ctx + prev));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

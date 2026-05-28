@@ -25,6 +25,7 @@ import {
   checklists,
   faqs,
   hotels,
+  notices,
   serviceStatus,
   solutionLinkPresets,
   ticketMessages,
@@ -37,11 +38,13 @@ import {
   type NewChecklistStep,
   type NewFaq,
   type NewHotel,
+  type NewNotice,
   type NewServiceStatus,
   type NewSolutionLinkPreset,
   type NewTicket,
   type NewTicketMessage,
   type NewUser,
+  type NoticeKind,
   type TicketContactMethod,
   type TicketStatus,
   type TocEntry,
@@ -983,6 +986,150 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
   }
   console.log(
     `[seed] tickets: ${tCreated}건 신규 (메시지 ${mCreated}) / ${tSkipped}건 스킵`,
+  );
+
+  // ─── 10. notices (Phase 7) ──────────────────────────────────────
+  console.log('[seed] sample 공지 (Phase 7) 확인...');
+  type SeedNotice = {
+    kind: NoticeKind;
+    productCode: string | null;
+    title: string;
+    bodyMarkdown: string;
+    pinned: boolean;
+    banner: boolean;
+    /** banner=true일 때 시드 실행 시점 기준 +Nh 후 자동 만료. null이면 무기한 */
+    bannerUntilHoursFromNow: number | null;
+  };
+
+  const seedNotices: SeedNotice[] = [
+    {
+      kind: 'notice',
+      productCode: null,
+      title: '신규 기능 출시 — Self-Search 통합 검색 안내',
+      pinned: true,
+      banner: false,
+      bannerUntilHoursFromNow: null,
+      bodyMarkdown: [
+        '## 새로워진 통합 검색을 만나보세요',
+        '',
+        '도움말·FAQ·공지·장애 이력을 한 번에 검색할 수 있는 **Self-Search 통합 검색**이 출시되었습니다.',
+        '',
+        '## 주요 변경 사항',
+        '',
+        '- 상단 검색창에서 키워드 입력 → `/search` 에서 4개 탭으로 결과 확인',
+        '- 제품 / 정렬(관련도·최신·조회수) 필터 지원',
+        '- 결과 없을 때 바로 문의 접수 폼으로 이동',
+        '',
+        '## 사용 시나리오',
+        '',
+        '1. 결제 오류 발생 → 검색 "결제 오류" → 관련 가이드/FAQ를 30초 안에 확인',
+        '2. 해결되지 않으면 **검색 결과 하단의 "문의 접수" 버튼** 클릭',
+        '',
+        '문의는 언제든 `/tickets/new`에서 접수해주세요.',
+      ].join('\n'),
+    },
+    {
+      kind: 'release',
+      productCode: null,
+      title: 'v1.1.0 릴리즈 노트 — 이슈 클레임 UX 개선',
+      pinned: false,
+      banner: false,
+      bannerUntilHoursFromNow: null,
+      bodyMarkdown: [
+        '## v1.1.0 (Phase 5~6)',
+        '',
+        '이슈 접수와 처리 흐름이 더 빠르고 명확해졌습니다.',
+        '',
+        '### 새로운 기능',
+        '',
+        '- **티켓 카드 칸반뷰** — `/admin/tickets/kanban`',
+        '  - 드래그앤드롭으로 상태 전이 (received → in_progress → on_hold → completed)',
+        '- **티켓 피드백 위젯** — 완료된 티켓에 호텔리어가 평가/코멘트 가능',
+        '- **자동 알림** — 새 티켓 접수 / 긴급도 P1 / Dev 에스컬레이션 시 Slack 채널 자동 전송',
+        '- **첨부 파일 업로드** — 티켓 작성 시 스크린샷/로그 첨부 (Vercel Blob)',
+        '',
+        '### 개선 사항',
+        '',
+        '- 이메일/SMS 알림 템플릿 통합 (`notification_logs` 추적)',
+        '- 접수 폼 검증 강화 (제품·긴급도·영향 범위 필수)',
+        '- 모바일 카드뷰 일관성 (티켓 리스트/큐 동일 UI)',
+        '',
+        '### 다음 릴리즈 예고 (v1.2.0)',
+        '',
+        '- 공지/업데이트 시스템 (NT-01) — **본 공지가 첫 사례입니다**',
+        '- oachat.ai 챗봇 임베드 (CB-01~03)',
+      ].join('\n'),
+    },
+    {
+      kind: 'incident',
+      productCode: 'pms',
+      title: '[해제] 5/27 03:00 PMS 결제 일시 지연 안내',
+      pinned: false,
+      banner: true,
+      bannerUntilHoursFromNow: 6,
+      bodyMarkdown: [
+        '## 사건 개요',
+        '',
+        '5월 27일(월) 새벽 03:00 ~ 03:35 (약 35분) 동안 PMS 결제 승인이 평균 8~12초 지연되는 현상이 발생했습니다.',
+        '',
+        '## 영향 범위',
+        '',
+        '- 영향: 야간 체크인 6개 호텔 (총 11건 결제)',
+        '- 결제 실패: 0건 (모두 재시도 후 정상 승인)',
+        '',
+        '## 원인',
+        '',
+        'VAN사(KSNET) 측 정기 점검 중 일부 라우팅 노드의 응답 지연. OA 시스템 내부 이슈는 아니었습니다.',
+        '',
+        '## 조치',
+        '',
+        '- 03:35 VAN사 측 자동 복구 확인',
+        '- OA 모니터링 알람 설정 보강 — 향후 동일 패턴 발생 시 즉시 매니저에게 알림',
+        '',
+        '## 향후 대응',
+        '',
+        '야간 정기 점검(매주 일요일 03:00 ~ 04:00) 시간대에는 자동 재시도 로직이 결제 지연을 보완합니다. 일부 지연이 발생할 수 있는 점 참고해주세요.',
+        '',
+        '문의: support@oapms.com',
+      ].join('\n'),
+    },
+  ];
+
+  let nCreated = 0;
+  let nSkipped = 0;
+  for (const n of seedNotices) {
+    // idempotent: (kind, title) 중복 시 skip
+    const existing = await db
+      .select({ id: notices.id })
+      .from(notices)
+      .where(
+        sql`${notices.kind} = ${n.kind} AND ${notices.title} = ${n.title}`,
+      )
+      .limit(1);
+    if (existing.length > 0) {
+      nSkipped++;
+      continue;
+    }
+    const bannerUntil =
+      n.banner && n.bannerUntilHoursFromNow != null
+        ? new Date(Date.now() + n.bannerUntilHoursFromNow * 60 * 60 * 1000)
+        : null;
+    const row: NewNotice = {
+      kind: n.kind,
+      productCode: n.productCode,
+      title: n.title,
+      bodyMarkdown: n.bodyMarkdown,
+      pinned: n.pinned,
+      banner: n.banner,
+      bannerUntil,
+      publishedAt: new Date(),
+      authorId,
+    };
+    await db.insert(notices).values(row);
+    nCreated++;
+  }
+  console.log(
+    `[seed] notices: ${nCreated}건 신규 / ${nSkipped}건 스킵 (이미 존재)`,
   );
 
   console.log('\n[seed] ✅ 완료. 로그인 계정:');

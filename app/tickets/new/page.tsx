@@ -53,7 +53,9 @@ export default async function NewTicketPage({
       ? '발생한 오류·장애를 빠르게 접수합니다. 3단계 폼으로 1분이면 완료됩니다.'
       : params.from === 'checklist'
         ? '셀프 픽스로 해결되지 않은 이슈입니다. 진단 내용이 자동 첨부됩니다.'
-        : '오류 · 기능문의 · 기능개발 · 데이터수정 등 모든 유형의 문의를 접수합니다.';
+        : params.from === 'chatbot'
+          ? '챗봇으로 해결되지 않은 문의를 접수합니다. 챗봇 대화 내용을 함께 적어주시면 더 빠른 처리가 가능합니다.'
+          : '오류 · 기능문의 · 기능개발 · 데이터수정 등 모든 유형의 문의를 접수합니다.';
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">

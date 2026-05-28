@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>통합 AS — Phase 7 (공지) + Phase 8 (챗봇) 완료 (2026-05-28)</title>
+    <style>
+      :root {
+        --brand: #4f46e5;
+        --brand-50: #eef2ff;
+        --brand-100: #e0e7ff;
+        --brand-700: #4338ca;
+        --bg: #ffffff;
+        --fg: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --card: #f8fafc;
+        --success: #10b981;
+        --warn: #f59e0b;
+        --danger: #ef4444;
+        --violet: #8b5cf6;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.65;
+      }
+      .container { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; }
+      header.head { border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 28px; }
+      .eyebrow { color: var(--brand); font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+      header.head h1 { margin: 6px 0 8px; font-size: 26px; font-weight: 700; }
+      header.head .meta { color: var(--muted); font-size: 13px; }
+      h2 { font-size: 20px; margin: 32px 0 12px; padding-top: 6px; }
+      h3 { font-size: 16px; margin: 20px 0 8px; }
+      .grid { display: grid; gap: 12px; }
+      .cards { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+      .card {
+        background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+        padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+      }
+      .card .label { color: var(--muted); font-size: 12px; }
+      .card .value { font-size: 22px; font-weight: 700; }
+      .ok { color: var(--success); }
+      .warn { color: var(--warn); }
+      .danger { color: var(--danger); }
+      .violet { color: var(--violet); }
+      .brand { color: var(--brand); }
+      table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+      th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+      th { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+      ul.check { list-style: none; padding: 0; margin: 8px 0; }
+      ul.check li { padding: 4px 0 4px 24px; position: relative; }
+      ul.check li::before {
+        content: '✓'; color: var(--success); position: absolute; left: 0; font-weight: 700;
+      }
+      ul.check li.todo::before { content: '◦'; color: var(--warn); }
+      code, .code {
+        background: #f1f5f9; padding: 1px 6px; border-radius: 4px;
+        font-family: 'SF Mono', Menlo, monospace; font-size: 13px;
+      }
+      .badge {
+        display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
+      }
+      .badge.brand { background: var(--brand-100); color: var(--brand-700); }
+      .badge.violet { background: #ede9fe; color: #6d28d9; }
+      .badge.danger { background: #fee2e2; color: #b91c1c; }
+      .badge.warn { background: #fef3c7; color: #b45309; }
+      .badge.ok { background: #dcfce7; color: #166534; }
+      .file-list code { display: block; padding: 4px 8px; margin: 2px 0; background: #f8fafc; border-left: 3px solid var(--brand); }
+      .file-list code.new { border-left-color: var(--success); }
+      .file-list code.edit { border-left-color: var(--warn); }
+      .file-list .legend { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+      .demo-flow { background: var(--brand-50); border: 1px solid var(--brand-100); border-radius: 10px; padding: 14px 18px; }
+      .demo-flow ol { margin: 0; padding-left: 24px; }
+      .demo-flow li { margin: 6px 0; }
+      .note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+      .note strong { color: #92400e; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="head">
+        <div class="eyebrow">Phase 7 + Phase 8</div>
+        <h1>공지/업데이트 시스템 + 챗봇 임베드 — 통합 구현</h1>
+        <div class="meta">
+          2026-05-28 · <span class="badge brand">Phase 7</span> NT-01 ·
+          <span class="badge violet">Phase 8</span> CB-01/02/03 ·
+          <span class="badge ok">설계 + 구현 + 시드 완료</span>
+        </div>
+      </header>
+
+      <h2>요약</h2>
+      <div class="grid cards">
+        <div class="card">
+          <div class="label">신규 테이블</div>
+          <div class="value brand">1개 (notices)</div>
+          <div class="label">+ 1 enum (notice_kind)</div>
+        </div>
+        <div class="card">
+          <div class="label">신규 페이지</div>
+          <div class="value">6개</div>
+          <div class="label">/notices · /notices/[id] · /admin/notices ×4</div>
+        </div>
+        <div class="card">
+          <div class="label">보강 페이지</div>
+          <div class="value warn">4개</div>
+          <div class="label">홈 · 검색 · 어드민 nav · 긴급 배너</div>
+        </div>
+        <div class="card">
+          <div class="label">신규 컴포넌트</div>
+          <div class="value violet">5개</div>
+          <div class="label">NoticeEditor · ChatbotFab 등</div>
+        </div>
+        <div class="card">
+          <div class="label">시드 데이터</div>
+          <div class="value ok">3건 (공지)</div>
+          <div class="label">notice + release + incident</div>
+        </div>
+        <div class="card">
+          <div class="label">외부 라이브러리 추가</div>
+          <div class="value ok">0개</div>
+          <div class="label">기존 react-markdown / native iframe 활용</div>
+        </div>
+      </div>
+
+      <h2>Phase 7 — 공지/업데이트 (NT-01)</h2>
+
+      <h3>1. 데이터 모델 — <code>notices</code></h3>
+      <table>
+        <thead><tr><th>컬럼</th><th>타입</th><th>설명</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>uuid PK</td><td>gen_random_uuid()</td></tr>
+          <tr><td><code>kind</code></td><td>notice_kind enum NOT NULL</td><td>notice / release / incident</td></tr>
+          <tr><td><code>product_code</code></td><td>text NULL</td><td>null이면 전체 공지</td></tr>
+          <tr><td><code>title</code></td><td>text NOT NULL</td><td>제목 (max 200자)</td></tr>
+          <tr><td><code>body_markdown</code></td><td>text NOT NULL</td><td>마크다운 본문</td></tr>
+          <tr><td><code>pinned</code></td><td>boolean DEFAULT false</td><td>목록 상단 고정</td></tr>
+          <tr><td><code>banner</code></td><td>boolean DEFAULT false</td><td>전역 상단 띠 노출</td></tr>
+          <tr><td><code>banner_until</code></td><td>timestamptz NULL</td><td>banner 자동 해제 시각 (lazy 체크)</td></tr>
+          <tr><td><code>published_at</code></td><td>timestamptz NULL</td><td>null이면 draft</td></tr>
+          <tr><td><code>view_count</code></td><td>integer DEFAULT 0</td><td>fire-and-forget +1</td></tr>
+          <tr><td><code>author_id</code></td><td>uuid FK(users) SET NULL</td><td>작성자</td></tr>
+          <tr><td>공통</td><td>created_at / updated_at / is_active</td><td>commonColumns()</td></tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>인덱스 3개</strong>:
+        <code>(is_active, published_at desc)</code> ·
+        <code>(product_code, published_at)</code> ·
+        <code>(banner, is_active)</code>
+      </p>
+      <p class="note">
+        <strong>학습 적용:</strong> Phase 5/6의 enum 이름 충돌 경험을 반영해
+        테이블명(<code>notices</code>)과 enum명(<code>notice_kind</code>)을
+        명확하게 다르게 명명했습니다.
+      </p>
+
+      <h3>2. 호텔리어 페이지</h3>
+      <ul class="check">
+        <li><code>/notices</code> — placeholder 전면 교체. 종류·제품 필터, pinned 상단 고정, 10건/페이지, 모바일 카드뷰</li>
+        <li><code>/notices/[id]</code> — MarkdownView 본문, view_count +1, 관련 공지 3건, 인쇄/공유 액션</li>
+      </ul>
+
+      <h3>3. 어드민 페이지 (매니저+어드민)</h3>
+      <ul class="check">
+        <li><code>/admin/notices</code> — 검색·종류·제품·발행상태·정렬·페이징·StatCard. /admin/articles 동일 패턴</li>
+        <li><code>/admin/notices/new</code> + <code>/admin/notices/[id]</code> — NoticeEditor (마크다운 split-view, 핀/배너 옵션, banner_until datetime-local)</li>
+        <li>activity_logs: notice.create / update / publish / unpublish / archive / restore</li>
+      </ul>
+
+      <h3>4. 보강 — 기존 페이지</h3>
+      <table>
+        <thead><tr><th>대상</th><th>변경</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>홈 <code>RecentUpdates</code></td>
+            <td>articles 3건 → <strong>pinned notice 1건(별도 카드)</strong> + notices 2건 + articles 1건 통합 정렬. 종류 라벨(공지/릴리즈/장애/가이드) 표시</td>
+          </tr>
+          <tr>
+            <td>검색 <code>/search</code></td>
+            <td>"공지" 탭 placeholder 제거. <code>searchNotices()</code> ILIKE 검색 활성화. 카운트 뱃지 / 정렬(관련도·최신·조회수) 지원</td>
+          </tr>
+          <tr>
+            <td>어드민 nav</td>
+            <td>"공지 관리" 탭 추가 (Megaphone 아이콘, 매니저+어드민)</td>
+          </tr>
+          <tr>
+            <td>긴급 배너 <code>emergency-banner.tsx</code></td>
+            <td>service_status='incident' (빨강) <strong>+ notices.banner=true 통합 노출</strong>. kind별 색상: notice=amber / release=indigo / incident=red. 둘 다 있으면 service_status 위, notices 배너 아래로 적층</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>5. 시드 (idempotent)</h3>
+      <table>
+        <thead><tr><th>kind</th><th>제품</th><th>제목</th><th>옵션</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge brand">notice</span></td><td>전체</td><td>신규 기능 출시 — Self-Search 통합 검색 안내</td><td>pinned=true</td></tr>
+          <tr><td><span class="badge violet">release</span></td><td>전체</td><td>v1.1.0 릴리즈 노트 — 이슈 클레임 UX 개선</td><td>-</td></tr>
+          <tr><td><span class="badge danger">incident</span></td><td>PMS</td><td>[해제] 5/27 03:00 PMS 결제 일시 지연 안내</td><td>banner=true, banner_until=시드 실행 +6h</td></tr>
+        </tbody>
+      </table>
+      <p>중복 키: <code>(kind, title)</code> — 재실행 시 skip.</p>
+
+      <h2>Phase 8 — 챗봇 임베드 (CB-01 / CB-02 / CB-03)</h2>
+
+      <h3>1. 컴포넌트 구조</h3>
+      <ul class="check">
+        <li><code>components/chatbot/chatbot-fab.tsx</code> — Client Component. 우하단 FAB + 펼침 패널</li>
+        <li><code>lib/services/chatbot-meta.ts</code> — server-only. <code>OACHAT_EMBED_URL</code> 노출 (env chain 보호)</li>
+        <li><code>app/layout.tsx</code> — RSC에서 embedUrl 읽고 Client Component에 prop 전달</li>
+      </ul>
+
+      <h3>2. 동작 요약</h3>
+      <ul class="check">
+        <li>FAB: <code>fixed bottom-3/4 right-3/4 z-40</code>, 둥근 brand 색 버튼, MessageCircle 아이콘</li>
+        <li>클릭 → 패널 펼침. 데스크탑 <code>w-96 h-[600px]</code>, 모바일 풀스크린(<code>inset-0</code>)</li>
+        <li>모바일 풀스크린일 때 body scroll lock, ESC 키 닫기</li>
+        <li>OACHAT_EMBED_URL 있음 → iframe lazy mount + 로딩 스피너</li>
+        <li>OACHAT_EMBED_URL 비어있음 → fallback 카드 ("챗봇 곧 제공" + 문의 접수 버튼)</li>
+        <li>iframe sandbox: <code>allow-scripts allow-forms allow-same-origin allow-popups</code></li>
+      </ul>
+
+      <h3>3. 마운트 제외 경로</h3>
+      <p>다음 경로에서는 ChatbotFab 미노출:</p>
+      <ul class="check">
+        <li><code>/login</code> — 인증 화면 방해 방지</li>
+        <li><code>/admin/*</code> — 운영자 작업 흐름 보호</li>
+        <li><code>/profile/staff</code> — 직원 관리 UX 보호</li>
+      </ul>
+
+      <h3>4. CB-04 (P2) — from=chatbot 컨텍스트</h3>
+      <ul class="check">
+        <li>FAB의 fallback 카드 / 하단 안내 모두 <code>/tickets/new?from=chatbot</code>으로 링크</li>
+        <li><code>TicketCreateForm</code>에서 <code>from=chatbot</code>일 때 본문 상단에 "## 챗봇에서 해결되지 않은 문의" 컨텍스트 prepend</li>
+        <li><code>customFields.from</code>에 <code>'chatbot'</code> 저장 (추후 Phase 9+에서 chatbot_sessions 연동 시 활용)</li>
+      </ul>
+
+      <h2>변경/생성 파일</h2>
+      <div class="file-list">
+        <div class="legend">
+          <span class="badge ok">신규</span> · <span class="badge warn">편집</span>
+        </div>
+        <code class="new">docs/02-design/phase-7-8.design.md</code>
+        <code class="new">docs/dev-logs/2026-05-28-phase-7-8.html</code>
+
+        <code class="new">db/schema/notices.ts</code>
+        <code class="edit">db/schema/index.ts</code>
+        <code class="new">db/migrations/0005_phase7_notices_placeholder.sql</code>
+        <code class="edit">db/seed.ts</code>
+
+        <code class="new">lib/services/notices.ts</code>
+        <code class="new">lib/services/notices-meta.ts</code>
+        <code class="new">lib/services/chatbot-meta.ts</code>
+
+        <code class="new">app/actions/notice-actions.ts</code>
+
+        <code class="edit">app/notices/page.tsx</code>
+        <code class="new">app/notices/_components/notices-filters.tsx</code>
+        <code class="new">app/notices/[id]/page.tsx</code>
+        <code class="new">app/notices/[id]/_components/notice-view-bumper.tsx</code>
+        <code class="new">app/notices/[id]/_components/notice-actions-bar.tsx</code>
+
+        <code class="new">app/(admin)/admin/notices/page.tsx</code>
+        <code class="new">app/(admin)/admin/notices/new/page.tsx</code>
+        <code class="new">app/(admin)/admin/notices/[id]/page.tsx</code>
+        <code class="new">app/(admin)/admin/notices/_components/notices-admin-filters.tsx</code>
+        <code class="new">app/(admin)/admin/notices/_components/notices-list-client.tsx</code>
+        <code class="new">app/(admin)/admin/notices/_components/notice-editor.tsx</code>
+
+        <code class="edit">app/(admin)/admin/_components/admin-nav.tsx</code>
+        <code class="edit">app/_components/home/recent-updates.tsx</code>
+        <code class="edit">app/search/page.tsx</code>
+        <code class="edit">components/layout/emergency-banner.tsx</code>
+
+        <code class="new">components/chatbot/chatbot-fab.tsx</code>
+        <code class="edit">app/layout.tsx</code>
+
+        <code class="edit">app/tickets/new/page.tsx</code>
+        <code class="edit">app/tickets/new/_components/ticket-create-form.tsx</code>
+      </div>
+
+      <h2>시연 흐름</h2>
+      <div class="demo-flow">
+        <h3 style="margin-top: 0;">A. 매니저 — 공지 작성 → 발행 → 호텔리어 확인</h3>
+        <ol>
+          <li>매니저 로그인 (manager@oa.local / oa1234!)</li>
+          <li>어드민 → <span class="code">공지 관리</span> 탭 진입</li>
+          <li>"새 공지" 클릭 → 종류: <span class="badge violet">release</span> 선택 → 제목/본문 작성 → 즉시 발행</li>
+          <li>호텔리어로 전환 후 <span class="code">/</span> 홈에서 "최근 업데이트" 위젯 확인</li>
+          <li><span class="code">/notices</span> 목록 → 카드 클릭 → 상세 페이지 view_count +1 확인</li>
+        </ol>
+
+        <h3>B. 긴급 배너 — incident 공지</h3>
+        <ol>
+          <li>매니저가 "장애 공지" 작성 시 <strong>홈 배너 노출</strong> 체크 + banner_until 1시간 후 설정</li>
+          <li>모든 페이지 상단에 빨간 띠 노출 → 자세히 보기 클릭 → /notices/[id] 진입</li>
+          <li>1시간 경과 후 자동으로 띠 해제 (조회 시점 lazy 체크)</li>
+        </ol>
+
+        <h3>C. 챗봇 FAB</h3>
+        <ol>
+          <li>호텔리어가 홈/help/notices 등 어디든 우하단 챗봇 FAB 확인</li>
+          <li>클릭 → 펼침 패널 (모바일 풀스크린, 데스크탑 96x600)</li>
+          <li>OACHAT_EMBED_URL 비어있음 → fallback 카드 "챗봇 곧 제공" + 문의 접수 버튼</li>
+          <li>"문의 접수" 클릭 → <span class="code">/tickets/new?from=chatbot</span> → 본문 상단에 "챗봇에서 해결되지 않은 문의" 안내 prepend</li>
+          <li><span class="code">/admin/*</span>, <span class="code">/login</span>, <span class="code">/profile/staff</span>에서는 FAB 미노출 확인</li>
+        </ol>
+
+        <h3>D. 검색</h3>
+        <ol>
+          <li>상단 검색창에 "릴리즈" 또는 "결제 지연" 입력 → /search</li>
+          <li>"공지" 탭 클릭 → ILIKE 검색 결과 표시 (제목 일치 배지)</li>
+          <li>결과 없을 때 "문의 접수" 버튼 노출</li>
+        </ol>
+      </div>
+
+      <h2>임시값 / TODO</h2>
+      <ul class="check">
+        <li class="todo"><code>// TODO(phase-7-temp):</code> Phase 9에서 notice 발행 시 이메일/SMS 알림 자동 발송 연동</li>
+        <li class="todo"><code>// TODO(phase-8-temp):</code> OACHAT_EMBED_URL 실제 키 설정 후 fallback 카드 자동 비활성</li>
+        <li class="todo"><code>// TODO(phase-8-temp):</code> chatbot iframe sandbox — oachat.ai 도메인 화이트리스트 정책 확정 후 sandbox 조정</li>
+        <li class="todo"><code>// TODO(phase-8-temp):</code> CB-04 — Phase 9+에서 chatbot_sessions 테이블 연동 시 conversation_id 전달</li>
+      </ul>
+
+      <h2>마이그레이션 안내 (메인 세션이 실행)</h2>
+      <p class="note">
+        <strong>실행 순서:</strong>
+        <code>npx drizzle-kit generate</code>
+        → 메인 세션이 <code>db/migrations/0005_phase7_notices_placeholder.sql</code>을 실제 DDL로 덮어씀
+        → <code>npm run db:migrate</code>
+        → <code>npm run db:seed</code> (idempotent — 기존 데이터 영향 없음)
+        → <code>npm run build</code>
+        → 커밋·푸시 → Vercel 자동 배포
+      </p>
+      <p>
+        외부 라이브러리 추가 없음 → <code>npm install</code> 불필요.
+      </p>
+
+      <h2>다음 Phase 예고</h2>
+      <p>
+        <strong>Phase 9</strong> — Quick Actions / Role Starters / Popular Keywords / Notification Templates /
+        System Settings 등 어드민 마스터 데이터 편집 UI. 외부 의존성 추가 없이 RSC + Server Actions 패턴 유지.
+      </p>
+    </div>
+  </body>
+</html>
