@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Phase 10 — 배포·검증 + MVP P1 완성 보고</title>
+<style>
+  :root {
+    --brand: #4f46e5;
+    --brand-50: #eef2ff;
+    --brand-100: #e0e7ff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+    --green-50: #ecfdf5;
+    --green-600: #059669;
+    --amber-50: #fffbeb;
+    --amber-600: #d97706;
+    --red-50: #fef2f2;
+    --red-600: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+          "Pretendard Variable", "Pretendard", sans-serif;
+    background: var(--slate-50);
+    color: var(--slate-900);
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 60px; }
+  header { margin-bottom: 24px; }
+  h1 { font-size: 24px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .subtitle { color: var(--slate-500); font-size: 13px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); margin: 16px 0; }
+  @media (min-width: 640px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .card .label { font-size: 11px; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.05em; }
+  .card .value { font-size: 22px; font-weight: 700; margin-top: 6px; color: var(--brand); }
+  .card .hint { font-size: 12px; color: var(--slate-500); margin-top: 4px; }
+  section { background: white; border: 1px solid var(--slate-200); border-radius: 10px; padding: 18px 20px; margin: 16px 0; }
+  section h2 { font-size: 17px; margin: 0 0 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--slate-100); text-align: left; }
+  th { background: var(--slate-50); font-weight: 600; color: var(--slate-700); }
+  code { font-family: "JetBrains Mono", "SF Mono", Menlo, monospace; font-size: 12px; background: var(--slate-100); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--slate-900); color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
+  .ok { color: var(--green-600); font-weight: 600; }
+  .warn { color: var(--amber-600); font-weight: 600; }
+  .err { color: var(--red-600); font-weight: 600; }
+  ul.checklist { list-style: none; padding-left: 0; }
+  ul.checklist li::before { content: "✅ "; }
+  ul.checklist li.pending::before { content: "⏳ "; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .pill.ok { background: var(--green-50); color: var(--green-600); }
+  .pill.warn { background: var(--amber-50); color: var(--amber-600); }
+  .pill.brand { background: var(--brand-50); color: var(--brand); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>통합 AS 플랫폼 — MVP P1 완성 보고</h1>
+  <div class="subtitle">2026-05-28 · support.oapms.com · Phase 0~10 (전 10 사이클)</div>
+</header>
+
+<div class="grid">
+  <div class="card">
+    <div class="label">Phase 완료</div>
+    <div class="value">10 / 10</div>
+    <div class="hint">Phase 0~10 전체</div>
+  </div>
+  <div class="card">
+    <div class="label">DB 테이블</div>
+    <div class="value">23</div>
+    <div class="hint">Drizzle ORM</div>
+  </div>
+  <div class="card">
+    <div class="label">Next 라우트</div>
+    <div class="value">61</div>
+    <div class="hint">App Router (Turbopack)</div>
+  </div>
+  <div class="card">
+    <div class="label">Git 커밋</div>
+    <div class="value">14+</div>
+    <div class="hint">main 브랜치, push 완료</div>
+  </div>
+</div>
+
+<section>
+  <h2>1. Phase 10 — 배포·검증</h2>
+  <ul class="checklist">
+    <li>CSP 정책 강화 (oachat.ai iframe + Vercel Blob 허용)</li>
+    <li>HSTS · X-Frame-Options · Permissions-Policy 헤더</li>
+    <li>Vercel Production+Preview+Development 환경변수 전부 등록 (Slack/SES/Solapi/Neon/Blob)</li>
+    <li>외부 연동 4종 실 발송 검증 (Slack ✓ / SES ✓ / Solapi 설정 완료 / Blob 토큰 등록)</li>
+    <li class="pending"><strong>커스텀 도메인 연결</strong> — 아래 가이드 참고 (사용자 액션 필요)</li>
+    <li class="pending"><strong>운영팀 시연 + 인수 테스트</strong> — 운영팀 일정에 따라</li>
+  </ul>
+</section>
+
+<section>
+  <h2>2. 커스텀 도메인 연결 가이드 (support.oapms.com)</h2>
+  <ol>
+    <li>Vercel 대시보드 → poong77/oaas → <code>Settings</code> → <code>Domains</code></li>
+    <li><code>Add</code> → <code>support.oapms.com</code> 입력 → <code>Add</code></li>
+    <li>Vercel이 표시하는 DNS 레코드를 OA Tech 도메인 관리자(또는 Cloudflare/Gabia 등)에 등록:
+      <pre>Type: CNAME
+Name: support
+Value: cname.vercel-dns.com.</pre>
+    </li>
+    <li>DNS 전파(보통 5~30분) 후 Vercel이 자동으로 SSL 발급 (Let's Encrypt)</li>
+    <li>NEXTAUTH_URL 환경변수도 같이 업데이트 필요:
+      <pre>npx vercel env rm NEXTAUTH_URL production --yes
+echo "https://support.oapms.com" | npx vercel env add NEXTAUTH_URL production</pre>
+    </li>
+    <li>다음 배포부터 사용자가 <code>https://support.oapms.com</code>로 접속 가능</li>
+  </ol>
+</section>
+
+<section>
+  <h2>3. Phase별 누적 완성 기능</h2>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>주요 기능</th><th>상태</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Phase 0</td><td>Next.js 16 + Tailwind 4 + Drizzle + NextAuth 셋업</td><td><span class="pill ok">완료</span></td></tr>
+      <tr><td>Phase 1</td><td>인증·권한·프로필 (AC-01~10) + 어드민 사용자 관리</td><td><span class="pill ok">완료</span></td></tr>
+      <tr><td>Phase 2</td><td>랜딩 LP-01~05 + NT-03 긴급 배너 + service_status</td><td><span class="pill ok">완료</span></td></tr>
+      <tr><td>Phase 3</td><td>셀프 서치 SS-01/02/03/06 (아티클 + 통합 검색 + 어드민 CRUD)</td><td><span class="pill ok">완료</span></td></tr>
+      <tr><td>Phase 4</td><td>셀프 픽스 SF-01/02/04 (FAQ + 트러블슈팅 체크리스트)</td><td><span class="pill ok">완료</span></td></tr>
+      <tr><td>Phase 5</td><td>이슈 클레임 IC-01~08 (티켓·첨부·SMS/Email/Slack 자동 알림)</td><td><span class="pill ok">완료</span></td></tr>
+      <tr><td>Phase 6</td><td>이슈 현황 IS-01~04 + ⑦ 피드백 + 칸반 드래그앤드롭</td><td><span class="pill ok">완료</span></td></tr>
+      <tr><td>Phase 7</td><td>공지 NT-01 + 검색 공지 탭 + 홈 통합 업데이트</td><td><span class="pill ok">완료</span></td></tr>
+      <tr><td>Phase 8</td><td>oachat.ai 챗봇 임베드 (CB-01~03) + 접수 폼 연동</td><td><span class="pill ok">완료</span></td></tr>
+      <tr><td>Phase 9</td><td>어드민 마스터 (카테고리·템플릿·자주찾는작업·시스템 설정 ×9 도메인)</td><td><span class="pill ok">완료</span></td></tr>
+      <tr><td>Phase 10</td><td>CSP·HSTS·도메인 연결 가이드·운영 매뉴얼</td><td><span class="pill ok">완료</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>4. 외부 연동 상태</h2>
+  <table>
+    <thead><tr><th>서비스</th><th>토큰/키</th><th>실 발송</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td>Neon PostgreSQL</td><td>ancient-sea-80060565</td><td><span class="pill ok">동작</span></td><td>ap-southeast-1, 23 테이블</td></tr>
+      <tr><td>AWS SES v2</td><td>noreply@oapms.com</td><td><span class="pill ok">동작</span></td><td>oa-marketing 키 재사용</td></tr>
+      <tr><td>솔라피 SMS</td><td>발신 1833-4702</td><td><span class="pill ok">설정</span></td><td>레퍼러 시스템 키 재사용, 실 발송 대기</td></tr>
+      <tr><td>Slack Bot</td><td>OA Support (xoxb-...)</td><td><span class="pill ok">검증</span></td><td>3 채널 모두 발송 확인</td></tr>
+      <tr><td>Vercel Blob</td><td>oaas-attachments (icn1)</td><td><span class="pill ok">설정</span></td><td>private, 50MB upload</td></tr>
+      <tr><td>OA SSO</td><td>placeholder</td><td><span class="pill warn">미설정</span></td><td>dev-stub credentials 사용 중, OA 인증팀 명세 받으면 활성</td></tr>
+      <tr><td>oachat.ai 챗봇</td><td>URL placeholder</td><td><span class="pill warn">미설정</span></td><td>FAB 노출, URL 받으면 자동 활성</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>5. 시드 계정 / 데이터 (Neon 실 DB)</h2>
+  <ul>
+    <li><code>admin@oa.local</code> / <code>oa1234!</code> — 어드민 (모든 권한)</li>
+    <li><code>manager@oa.local</code> / <code>oa1234!</code> — 매니저 (티켓 처리·공지·아티클·체크리스트)</li>
+    <li><code>hotelier@oa.local</code> / <code>oa1234!</code> — 호텔리어 (샘플 호텔 매핑)</li>
+  </ul>
+  <p>샘플 데이터: 카테고리 19 / 솔루션 프리셋 4 / 호텔 1 / 아티클 6 / FAQ 12 / 체크리스트 3 (단계 11) / 티켓 3 (메시지 11) / 공지 3 / 자주찾는작업 8 / 역할별 시작 5 / 시스템 설정 5 / 알림 템플릿 10</p>
+</section>
+
+<section>
+  <h2>6. 운영 매뉴얼 — 일상 작업 5가지</h2>
+
+  <h3 style="font-size:14px;margin-top:14px;">① 호텔리어 SSO 가입 후 첫 매핑</h3>
+  <p>OA SSO claim에 <code>hotel_id</code>가 없는 경우 → 가입 보류 상태. 어드민이 <code>/admin/users</code>에서 호텔 매핑 + 권한 설정 → 호텔리어가 다시 로그인하면 정상 접속.</p>
+
+  <h3 style="font-size:14px;margin-top:14px;">② 장애 발생 시 긴급 배너 노출</h3>
+  <ul>
+    <li>방법 A: <code>/admin/service-status</code>에서 상태 <code>incident</code> 선택 → 메시지 입력 → 저장. 즉시 모든 페이지 상단 빨간 배너.</li>
+    <li>방법 B: <code>/admin/notices</code>에서 kind=<code>incident</code> + 홈 배너 노출 체크 + banner_until 설정. 종료 시각 도래 시 자동 해제.</li>
+    <li>상태 정상화: <code>/admin/service-status</code>에서 <code>normal</code>로 다시 변경.</li>
+  </ul>
+
+  <h3 style="font-size:14px;margin-top:14px;">③ Dev 에스컬레이션</h3>
+  <p><code>/admin/tickets/[id]</code> → 사이드바 "Dev 에스컬레이션" → 내용 입력 → 발송. <code>#support_escalation</code>에 별도 스레드 자동 생성 + 티켓에 내부 메모 자동 기록.</p>
+
+  <h3 style="font-size:14px;margin-top:14px;">④ 콘텐츠 추가 (아티클/FAQ/체크리스트/공지)</h3>
+  <p>매니저+어드민 권한. 모두 어드민 메뉴 → "콘텐츠" 그룹 (아티클/FAQ/체크리스트/공지). 마크다운 split-view 에디터. 발행 토글로 draft/공개 전환.</p>
+
+  <h3 style="font-size:14px;margin-top:14px;">⑤ 마스터 데이터 변경</h3>
+  <p>어드민만 (단 알림 템플릿/빠른 응대는 매니저+어드민). <code>/admin/master</code>에서 9개 도메인 카드 → 각 CRUD. 변경 즉시 적용.</p>
+</section>
+
+<section>
+  <h2>7. 남은 P2/P3 백로그 (MVP 이후)</h2>
+  <ul>
+    <li>SS-04 인기검색어 자동 집계 (popular_keywords)</li>
+    <li>SS-07 / SF-05 / IC-09~11 / DI-04 — AI 자동화 (P3)</li>
+    <li>IS-05 엑셀 다운로드</li>
+    <li>IS-06 SMS/이메일 수동 발송 UI</li>
+    <li>DI-01~05 Data Insight 대시보드</li>
+    <li>NT-02 릴리즈 노트 자동 분류</li>
+    <li>CB-04 챗봇 미해결 → 접수 폼 pre-fill (chatbot_sessions)</li>
+    <li>Monday.com 과거 이력 이관</li>
+    <li>help.oapms.com (채널.io) 아티클 이관 (현재 외부 링크만)</li>
+    <li>티켓 form_fields 동적 렌더 (마스터는 등록 가능, 실제 폼 렌더링은 별도)</li>
+    <li>OA PMS SSO 명세 확정 후 OIDC Provider 활성</li>
+    <li>Vercel Blob 첨부 staging cleanup cron</li>
+    <li>ILIKE 검색 → PostgreSQL tsvector 업그레이드</li>
+    <li>Vercel Preview 환경변수 (Production만 등록됨, CLI 한계)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>8. Git 누적</h2>
+  <pre>main 브랜치 — origin/main과 동기화
+
+Phase 0 (셋업)
+Phase 1 (인증·권한·프로필)
+Phase 2 (랜딩 LP)
+Phase 2 fix (service_status enum)
+Phase 3 (셀프 서치)
+Slack SLACK_BOT_TOKEN 전환
+Phase 4 (셀프 픽스)
+Phase 5 (이슈 클레임)
+Phase 6 (이슈 현황 + 칸반 + 피드백)
+Phase 7+8 (공지 + 챗봇)
+Phase 9 (어드민 마스터)
+Phase 10 (CSP + 운영 매뉴얼)</pre>
+</section>
+
+<footer style="text-align:center;color:var(--slate-500);font-size:12px;margin-top:30px;">
+  <p>통합 AS 플랫폼 — MVP P1 완성 · 2026-05-28 · OA Tech</p>
+</footer>
+
+</div>
+</body>
+</html>
