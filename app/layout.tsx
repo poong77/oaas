@@ -1,9 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Providers } from '@/components/providers';
-import { Header } from '@/components/layout/header';
-import { EmergencyBanner } from '@/components/layout/emergency-banner';
-import { ChatbotFab } from '@/components/chatbot/chatbot-fab';
-import { getChatbotEmbedUrl } from '@/lib/services/chatbot-meta';
+import { RoleScope } from '@/components/layout/role-scope';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -26,19 +23,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // server-side에서 env 읽고 Client Component에 prop 전달 (server-only chain 유지)
-  const chatbotEmbedUrl = getChatbotEmbedUrl();
-
+  // Header/EmergencyBanner/ChatbotFab의 노출 정책 + data-role 부여는 RoleScope가 일괄 담당한다.
+  // server-side에서 session + viewMode 쿠키를 읽어 결정 (NextAuth 미들웨어 미사용 — design.md §4 결정).
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className="min-h-screen antialiased">
         <Providers>
           <div className="flex min-h-screen flex-col">
-            <EmergencyBanner />
-            <Header />
-            <main className="flex-1">{children}</main>
+            <RoleScope>{children}</RoleScope>
           </div>
-          <ChatbotFab embedUrl={chatbotEmbedUrl} />
         </Providers>
       </body>
     </html>
