@@ -14,9 +14,8 @@
  */
 
 import { useState } from 'react';
-import { Menu, Shield } from 'lucide-react';
+import { ExternalLink, Menu, Shield } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { ViewModeToggle } from '@/components/layout/view-mode-toggle';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS, GROUP_ORDER, GROUP_LABEL } from '../_data/nav-items';
 import { AdminNavItem } from './admin-nav-item';
@@ -60,13 +59,17 @@ export function AdminMobileHeader({ userRole, className }: AdminMobileHeaderProp
               </span>
             </div>
 
-            {/* viewMode 토글 — 모바일 Sheet 최상단 진입점 */}
-            <div className="border-b border-slate-100 px-1.5 py-1 dark:border-slate-800">
-              <ViewModeToggle
-                currentRole={userRole}
-                onAfterToggle={() => setOpen(false)}
-              />
-            </div>
+            {/* 호텔리어 사이트 새 탭 바로가기 (아웃링크) */}
+            <a
+              href="https://support.oapms.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 border-b border-slate-100 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
+              <span>호텔리어 사이트 (새 탭)</span>
+            </a>
 
             <nav className="overflow-y-auto py-2">
               {GROUP_ORDER.map((group, gi) => {

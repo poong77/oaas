@@ -88,57 +88,8 @@ test.describe('매니저 시나리오', () => {
     expect(page.url()).toContain('/admin/tickets');
   });
 
-  test('T-08 / T-09: 호텔리어 시점 보기 ON → OFF 토글', async ({ page }) => {
-    await page.goto('/admin/tickets');
-    await page.waitForLoadState('networkidle');
-
-    // 사이드바 footer의 AdminUserMenu trigger (aria-haspopup=menu)
-    // admin-sidebar-layout Phase 도입 후 모바일 헤더에도 동일 trigger가 있으나 lg:hidden.
-    // dev overlay(TicketsListClient hydration mismatch 별도 이슈)가 pointer intercept할 수 있어
-    // evaluate로 DOM click 직접 호출 — React onClick 정상 trigger.
-    const avatarButton = page
-      .locator('aside[aria-label="관리자 내비게이션"] button[aria-haspopup="menu"]')
-      .first();
-    await expect(avatarButton).toBeVisible();
-    await avatarButton.evaluate((el: HTMLElement) => el.click());
-
-    // 드롭다운 안의 "호텔리어 시점으로 보기" 클릭
-    const viewToggle = page.getByRole('button', {
-      name: /호텔리어 시점으로 보기/,
-    });
-    await expect(viewToggle).toBeVisible();
-    await viewToggle.click();
-
-    // T-08 검증: amber 배너 노출
-    const banner = page.locator(
-      '[role="status"]:has-text("호텔리어 시점으로 보고 있습니다")',
-    );
-    await expect(banner).toBeVisible({ timeout: 10_000 });
-
-    // 호텔리어 헤더 GNB 노출 — T-04에서 비노출이었던 "빠른 해결" 링크가 등장해야 함.
-    // (ChatbotFab은 EXCLUDED_PREFIXES=['/admin']가 우선이라 /admin/tickets URL에선
-    //  시점 보기 ON이어도 자체 숨김. 이건 의도된 동작이므로 헤더 GNB로 검증.)
-    await expect(
-      page.getByRole('link', { name: '빠른 해결' }).first(),
-    ).toBeVisible({ timeout: 5_000 });
-
-    // data-role이 'hotelier'로 바뀜 (최소 하나의 노드는 호텔리어 톤)
-    await expect(page.locator('[data-role="hotelier"]').first()).toBeVisible();
-
-    // T-09: 배너의 "매니저 모드로 돌아가기" 클릭
-    const backButton = page.getByRole('button', {
-      name: /매니저 모드로 돌아가기/,
-    });
-    await expect(backButton).toBeVisible();
-    await backButton.click();
-
-    // 배너 사라짐
-    await expect(banner).toBeHidden({ timeout: 10_000 });
-    // 호텔리어 헤더 GNB 사라짐
-    await expect(
-      page.getByRole('link', { name: '빠른 해결' }),
-    ).toHaveCount(0);
-  });
+  // T-08 / T-09 (호텔리어 시점 보기 ON/OFF) 제거 — 시점 보기 기능 폐기 (2026-05-29).
+  // admin/manager는 호텔리어 사이트(support.oapms.com)로 가는 사이드바 외부 링크로 대체.
 });
 
 // ──────────────────────────────────────────────────────────────────

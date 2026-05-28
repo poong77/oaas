@@ -24,7 +24,6 @@ import * as React from 'react';
 import { cookies } from 'next/headers';
 import { cn } from '@/lib/utils';
 import { resolveCollapsed, SIDEBAR_COLLAPSED_COOKIE } from '@/lib/sidebar-state';
-import { VIEW_MODE_COOKIE } from '@/lib/view-mode';
 import type { UserRole } from '@/db/schema';
 import { AdminSidebar } from './admin-sidebar';
 import { AdminMobileHeader } from './admin-mobile-header';
@@ -34,27 +33,14 @@ interface AdminShellProps {
   userRole: UserRole;
 }
 
-/**
- * 사이드바 노출 여부 결정.
- * - userRole=hotelier or viewMode=hotelier → 사이드바 미노출 (호텔리어 UI)
- * - manager/admin 본인 모드 → 사이드바 노출
- */
-function shouldShowSidebar(userRole: UserRole, viewModeCookie: string | undefined): boolean {
-  if (userRole === 'hotelier') return false;
-  if (viewModeCookie === 'hotelier') return false; // 시점 보기 ON
-  return true;
-}
-
 export async function AdminShell({ children, userRole }: AdminShellProps) {
   const cookieStore = await cookies();
-  const viewModeCookie = cookieStore.get(VIEW_MODE_COOKIE)?.value;
   const collapsedCookie = cookieStore.get(SIDEBAR_COLLAPSED_COOKIE)?.value;
-
   const collapsed = resolveCollapsed(collapsedCookie);
-  const showSidebar = shouldShowSidebar(userRole, viewModeCookie);
 
-  // 매니저/어드민이 아닌 경우(=호텔리어 본인) — AdminShell이 호출될 가능성은 없음
-  // (layout.tsx의 requireRole이 차단). 방어적으로 staff만 narrow.
+  // layout.tsx의 requireRole(['manager', 'admin'])이 hotelier 진입 차단.
+  // 방어적으로 staff만 narrow (TypeScript 안전성).
+  const showSidebar = userRole !== 'hotelier';
   const staffRole = userRole === 'hotelier' ? undefined : userRole;
 
   return (

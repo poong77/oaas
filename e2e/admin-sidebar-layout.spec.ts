@@ -178,9 +178,6 @@ test.describe('데스크탑 기능 (매니저)', () => {
 
     // popup 안에 "내 프로필" / "로그아웃" 노출
     await expect(page.getByRole('menuitem', { name: /내 프로필/ })).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: /호텔리어 시점으로 보기/ }),
-    ).toBeVisible();
     await expect(page.getByRole('menuitem', { name: /로그아웃/ })).toBeVisible();
   });
 });
@@ -224,41 +221,23 @@ test.describe('회귀 — 호텔리어 (R-01)', () => {
   });
 });
 
-test.describe('회귀 — viewMode 전환 (R-02)', () => {
+test.describe('회귀 — footer 외부 링크 (R-02 대체)', () => {
   test.use({
     storageState: STORAGE_STATE_PATHS.manager,
     viewport: { width: 1440, height: 900 },
   });
 
-  test('R-02: 매니저 호텔리어 시점 보기 ON → 사이드바 unmount + 호텔리어 헤더 mount', async ({
-    page,
-  }) => {
+  test('R-02: 사이드바 footer 호텔리어 사이트 새 탭 외부링크 노출', async ({ page }) => {
     await setCollapsedCookie(page, false);
     await page.goto('/admin/tickets');
     await page.waitForLoadState('networkidle');
 
-    await expectSidebarVisible(page, 120);
-
-    // 사이드바 footer 아바타 → 시점 보기 토글
     const aside = page.locator('aside[aria-label="관리자 내비게이션"]');
-    await aside.locator('button[aria-haspopup="menu"]').click();
-
-    const viewToggle = page.getByRole('button', { name: /호텔리어 시점으로 보기/ });
-    await expect(viewToggle).toBeVisible();
-    await viewToggle.click();
-
-    // 사이드바 unmount
-    await expect(page.locator('aside[aria-label="관리자 내비게이션"]')).toHaveCount(0, {
-      timeout: 10_000,
-    });
-
-    // 호텔리어 헤더 GNB 노출
-    await expect(page.getByRole('link', { name: '빠른 해결' }).first()).toBeVisible();
-
-    // ViewModeBanner (role-mode-ui)
-    await expect(
-      page.locator('[role="status"]:has-text("호텔리어 시점으로 보고 있습니다")'),
-    ).toBeVisible();
+    const outlink = aside.getByRole('link', { name: /호텔리어 사이트/ });
+    await expect(outlink).toBeVisible();
+    await expect(outlink).toHaveAttribute('href', 'https://support.oapms.com/');
+    await expect(outlink).toHaveAttribute('target', '_blank');
+    await expect(outlink).toHaveAttribute('rel', 'noopener noreferrer');
   });
 });
 
@@ -334,9 +313,9 @@ test.describe('모바일 (매니저)', () => {
     // 햄버거 클릭
     await page.getByRole('button', { name: /메뉴 열기/ }).click();
 
-    // Sheet 안에 viewMode 토글 + 메뉴 그룹 노출
+    // Sheet 안에 호텔리어 사이트 외부링크 + 메뉴 그룹 노출
     await expect(
-      page.getByRole('button', { name: /호텔리어 시점으로 보기/ }),
+      page.getByRole('link', { name: /호텔리어 사이트/ }),
     ).toBeVisible();
 
     // 그룹 메뉴 "아티클" 클릭

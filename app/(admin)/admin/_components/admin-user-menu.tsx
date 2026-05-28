@@ -6,7 +6,6 @@
  * 통합:
  *   - 사용자 정보 (이름, 이메일, 역할 배지)
  *   - 내 프로필 → /profile
- *   - 호텔리어 시점으로 보기 토글 (ViewModeToggle)
  *   - 로그아웃 (ConfirmDialog 사용)
  *
  * 3가지 배치 모드 (placement prop):
@@ -23,7 +22,6 @@ import { useEffect, useRef, useState } from 'react';
 import { LogOut, Shield, User, ChevronDown } from 'lucide-react';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { useCurrentUser } from '@/lib/hooks/use-current-user';
-import { ViewModeToggle } from '@/components/layout/view-mode-toggle';
 import { cn } from '@/lib/utils';
 
 export type AdminUserMenuPlacement =
@@ -158,8 +156,6 @@ export function AdminUserMenu({
             <User className="h-4 w-4 text-slate-500 dark:text-slate-400" aria-hidden />
             <span className="flex-1">내 프로필</span>
           </Link>
-
-          <ViewModeToggle currentRole={user.role} onAfterToggle={() => setOpen(false)} />
 
           <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
 

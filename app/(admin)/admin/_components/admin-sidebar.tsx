@@ -102,7 +102,7 @@ export function AdminSidebar({ collapsed, userRole, className }: AdminSidebarPro
           target="_blank"
           rel="noopener noreferrer"
           title="support.oapms.com (새 탭)"
-          aria-label="support.oapms.com 새 탭으로 열기"
+          aria-label="호텔리어 사이트 (새 탭으로 열기)"
           className={cn(
             'group relative flex items-center text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200',
             collapsed ? 'justify-center px-1 py-2' : 'gap-1.5 px-2.5 py-2',
