@@ -1,0 +1,46 @@
+/**
+ * NextAuth Credentials 로그인 헬퍼.
+ *
+ * - 로그인 폼(/login)에 email/password 입력 → 제출 → 리다이렉트 대기.
+ * - 성공 시 session 쿠키가 브라우저 컨텍스트에 저장됨.
+ *
+ * 사용:
+ *   await loginViaUI(page, TEST_USERS.manager);
+ *   await page.context().storageState({ path: 'e2e/.auth/manager.json' });
+ */
+
+import type { Page } from '@playwright/test';
+import type { TEST_USERS } from '../fixtures/users';
+
+type TestUser = (typeof TEST_USERS)[keyof typeof TEST_USERS];
+
+export async function loginViaUI(page: Page, user: TestUser): Promise<void> {
+  await page.goto('/login');
+  await page.waitForLoadState('domcontentloaded');
+
+  // /login 페이지의 폼 필드 — 라벨/플레이스홀더 기반으로 안정적 선택
+  // (data-testid가 없는 경우 input[name] 또는 type 기반)
+  const emailInput = page
+    .locator('input[type="email"], input[name="email"], input[id*="email" i]')
+    .first();
+  const passwordInput = page
+    .locator('input[type="password"], input[name="password"]')
+    .first();
+
+  await emailInput.fill(user.email);
+  await passwordInput.fill(user.password);
+
+  // 제출 버튼 — type="submit" 또는 "로그인" 텍스트
+  const submitButton = page
+    .locator(
+      'button[type="submit"]:has-text("로그인"), button[type="submit"], button:has-text("로그인")',
+    )
+    .first();
+  await submitButton.click();
+
+  // 로그인 후 / 또는 /admin/tickets로 리다이렉트 — 어쨌든 /login에서 벗어나야 정상
+  await page.waitForURL(
+    (url) => !url.pathname.startsWith('/login'),
+    { timeout: 15_000 },
+  );
+}
