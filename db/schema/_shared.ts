@@ -55,7 +55,7 @@ export const categoryTypeEnum = pgEnum('category_type', [
  * incident     — 장애 발생 (긴급 배너 자동 노출)
  * maintenance  — 점검 중 (안내 배너)
  */
-export const serviceStatusEnum = pgEnum('service_status', [
+export const serviceStatusEnum = pgEnum('service_status_kind', [
   'normal',
   'degraded',
   'incident',

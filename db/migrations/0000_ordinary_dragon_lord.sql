@@ -1,4 +1,5 @@
 CREATE TYPE "public"."category_type" AS ENUM('product', 'issue_type', 'urgency', 'impact');--> statement-breakpoint
+CREATE TYPE "public"."service_status_kind" AS ENUM('normal', 'degraded', 'incident', 'maintenance');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('hotelier', 'manager', 'admin');--> statement-breakpoint
 CREATE TABLE "activity_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -79,10 +80,23 @@ CREATE TABLE "solution_link_presets" (
 	"sort_order" integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "service_status" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"status" "service_status_kind" DEFAULT 'normal' NOT NULL,
+	"message" text,
+	"started_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"ended_at" timestamp with time zone,
+	"created_by" uuid
+);
+--> statement-breakpoint
 ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "users_hotel_id_hotels_id_fk" FOREIGN KEY ("hotel_id") REFERENCES "public"."hotels"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "users_invited_by_users_id_fk" FOREIGN KEY ("invited_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "hotel_solution_links" ADD CONSTRAINT "hotel_solution_links_hotel_id_hotels_id_fk" FOREIGN KEY ("hotel_id") REFERENCES "public"."hotels"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "service_status" ADD CONSTRAINT "service_status_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "activity_logs_user_created_idx" ON "activity_logs" USING btree ("user_id","created_at");--> statement-breakpoint
 CREATE INDEX "activity_logs_action_idx" ON "activity_logs" USING btree ("action");--> statement-breakpoint
 CREATE UNIQUE INDEX "categories_type_code_uq" ON "categories" USING btree ("type","code");--> statement-breakpoint
