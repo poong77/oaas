@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut } from 'next-auth/react';
 import {
   Activity,
   Building2,
@@ -11,15 +10,13 @@ import {
   HelpCircle,
   Inbox,
   ListChecks,
-  LogOut,
   Megaphone,
   Shield,
   Users,
   type LucideIcon,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { cn } from '@/lib/utils';
+import { AdminUserMenu } from './admin-user-menu';
 import type { UserRole } from '@/db/schema';
 
 type Tab = {
@@ -86,7 +83,6 @@ const ALL_TABS: Tab[] = [
 
 export function AdminNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
-  const confirm = useConfirmDialog();
 
   const tabs = ALL_TABS.filter((t) => t.roles.includes(role));
 
@@ -117,27 +113,8 @@ export function AdminNav({ role }: { role: UserRole }) {
             </Link>
           );
         })}
-        <Link
-          href="/profile"
-          className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-        >
-          내 프로필 →
-        </Link>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={async () => {
-          const ok = await confirm({
-            title: '로그아웃 하시겠습니까?',
-            confirmText: '로그아웃',
-            tone: 'danger',
-          });
-          if (ok) await signOut({ callbackUrl: '/' });
-        }}
-      >
-        <LogOut className="h-4 w-4" />로그아웃
-      </Button>
+      <AdminUserMenu />
     </nav>
   );
 }
