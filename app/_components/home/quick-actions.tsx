@@ -1,14 +1,58 @@
 /**
- * LP-01 ④ 자주찾는작업.
+ * LP-01 ④ 자주찾는작업 (Phase 9 동적 전환).
  *
- * TODO(phase-2-temp): Phase 9에서 quick_actions 마스터 테이블로 이관.
+ * - DB의 quick_actions 테이블 row가 있으면 그것을 노출.
+ * - 빈 결과/오류 시 _constants.ts의 하드코딩 fallback (Phase 2 기본).
+ * - 아이콘은 lucide-react 이름 문자열 → `resolveIcon` 매핑.
  */
 
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { resolveIcon } from '@/components/icon-resolver';
 import { QUICK_ACTIONS } from './_constants';
+import type { QuickAction } from '@/db/schema';
 
-export function QuickActions() {
+type QuickActionView = {
+  id: string;
+  label: string;
+  description: string | null;
+  href: string;
+  icon: string | null;
+};
+
+function fromDbRow(r: QuickAction): QuickActionView {
+  return {
+    id: r.id,
+    label: r.label,
+    description: r.description,
+    href: r.linkUrl,
+    icon: r.icon,
+  };
+}
+
+// 하드코딩 fallback의 lucide 컴포넌트 → 이름 문자열 매핑 (정확한 매핑 보장).
+const FALLBACK_ICON_NAMES: Record<string, string> = {
+  '비밀번호 초기화': 'KeyRound',
+  '솔루션 링크 변경': 'Wrench',
+  '직원 추가': 'Users',
+  '문의 접수': 'HelpCircle',
+  '처리 상태 확인': 'ListChecks',
+};
+
+function fromFallback(): QuickActionView[] {
+  return QUICK_ACTIONS.map((qa, idx) => ({
+    id: `fallback-${idx}`,
+    label: qa.label,
+    description: qa.description,
+    href: qa.href,
+    icon: FALLBACK_ICON_NAMES[qa.label] ?? null,
+  }));
+}
+
+export function QuickActions({ items }: { items?: QuickAction[] }) {
+  const rows: QuickActionView[] =
+    items && items.length > 0 ? items.map(fromDbRow) : fromFallback();
+
   return (
     <section
       aria-labelledby="quick-actions-heading"
@@ -28,10 +72,10 @@ export function QuickActions() {
         </div>
 
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {QUICK_ACTIONS.map((qa) => {
-            const Icon = qa.icon;
+          {rows.map((qa) => {
+            const Icon = resolveIcon(qa.icon);
             return (
-              <li key={qa.label}>
+              <li key={qa.id}>
                 <Link
                   href={qa.href}
                   className="group flex h-full items-start gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700"
@@ -46,9 +90,11 @@ export function QuickActions() {
                       </span>
                       <ArrowRight className="h-3.5 w-3.5 text-slate-400 transition-transform group-hover:translate-x-0.5" />
                     </span>
-                    <span className="text-xs leading-snug text-slate-500 dark:text-slate-400">
-                      {qa.description}
-                    </span>
+                    {qa.description && (
+                      <span className="text-xs leading-snug text-slate-500 dark:text-slate-400">
+                        {qa.description}
+                      </span>
+                    )}
                   </span>
                 </Link>
               </li>

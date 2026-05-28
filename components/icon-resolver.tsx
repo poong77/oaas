@@ -1,0 +1,110 @@
+/**
+ * lucide-react 아이콘 이름 문자열 → 컴포넌트 변환 헬퍼.
+ *
+ * Phase 9: quick_actions / role_starters / categories.icon이 모두 문자열로 저장됨.
+ * 알려진 아이콘 화이트리스트만 노출 (런타임 트리쉐이킹 안전).
+ * 미지원 이름은 fallback (HelpCircle).
+ */
+
+import {
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  Bell,
+  BellRing,
+  BedDouble,
+  Briefcase,
+  Building2,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Database,
+  FileText,
+  Flame,
+  Globe,
+  HelpCircle,
+  Inbox,
+  Image as ImageIcon,
+  KeyRound,
+  Layers,
+  Link as LinkIcon,
+  ListChecks,
+  LogOut,
+  Mail,
+  MapPin,
+  Megaphone,
+  MessageSquare,
+  Monitor,
+  MoreHorizontal,
+  Phone,
+  Plus,
+  Search,
+  Send,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  ThumbsUp,
+  Trash2,
+  User as UserIcon,
+  Users,
+  Wrench,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react';
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  Bell,
+  BellRing,
+  BedDouble,
+  Briefcase,
+  Building2,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Database,
+  FileText,
+  Flame,
+  Globe,
+  HelpCircle,
+  Inbox,
+  Image: ImageIcon,
+  KeyRound,
+  Layers,
+  Link: LinkIcon,
+  ListChecks,
+  LogOut,
+  Mail,
+  MapPin,
+  Megaphone,
+  MessageSquare,
+  Monitor,
+  MoreHorizontal,
+  Phone,
+  Plus,
+  Search,
+  Send,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  ThumbsUp,
+  Trash2,
+  User: UserIcon,
+  Users,
+  Wrench,
+  Zap,
+};
+
+export function resolveIcon(name: string | null | undefined): LucideIcon {
+  if (!name) return HelpCircle;
+  return ICON_MAP[name] ?? HelpCircle;
+}
+
+/** 어드민 select 옵션용 — 알려진 아이콘 이름 리스트. */
+export const KNOWN_ICON_NAMES = Object.keys(ICON_MAP).sort();

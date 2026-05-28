@@ -1,7 +1,7 @@
 /**
  * Drizzle 스키마 진입점.
  *
- * Phase 1 + 2 + 3 + 4 + 5 + 6 + 7 시점:
+ * Phase 1 + 2 + 3 + 4 + 5 + 6 + 7 + 9 시점:
  *   - hotels, users, categories, solution_link_presets, hotel_solution_links, activity_logs
  *   - service_status (Phase 2)
  *   - articles, article_feedback (Phase 3)
@@ -10,10 +10,11 @@
  *     notification_logs (Phase 5)
  *   - ticket_feedback (Phase 6)
  *   - notices (Phase 7)
+ *   - notification_templates, quick_reply_templates, quick_actions,
+ *     role_starters, system_settings (Phase 9 — 어드민 마스터 데이터)
  *
  * 다음 Phase에서 추가될 예정:
- *   - notification_templates, system_settings, quick_actions,
- *     role_starters, popular_keywords, chatbot_sessions (Phase 9+)
+ *   - popular_keywords, chatbot_sessions (P2 이후)
  *
  * 공통 컬럼 헬퍼: `./_shared.ts`
  */
@@ -36,3 +37,9 @@ export * from './ticket-form-fields';
 export * from './notification-logs';
 export * from './ticket-feedback';
 export * from './notices';
+// Phase 9 — 어드민 마스터 데이터
+export * from './notification-templates';
+export * from './quick-reply-templates';
+export * from './quick-actions';
+export * from './role-starters';
+export * from './system-settings';

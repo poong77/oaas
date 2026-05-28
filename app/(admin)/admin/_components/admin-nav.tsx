@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react';
 import {
   Activity,
   Building2,
+  Database,
   FileText,
   HelpCircle,
   Inbox,
@@ -74,6 +75,13 @@ const ALL_TABS: Tab[] = [
   // users / hotels는 어드민만
   { href: '/admin/users', label: '사용자', icon: Users, roles: ['admin'] },
   { href: '/admin/hotels', label: '호텔', icon: Building2, roles: ['admin'] },
+  // 마스터 데이터 (Phase 9) — 매니저+어드민
+  {
+    href: '/admin/master',
+    label: '마스터 데이터',
+    icon: Database,
+    roles: ['manager', 'admin'],
+  },
 ];
 
 export function AdminNav({ role }: { role: UserRole }) {

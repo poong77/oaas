@@ -1,9 +1,16 @@
 /**
- * 알림 템플릿 — Phase 1 ~ Phase 5 하드코딩.
+ * 알림 템플릿 — Phase 1 ~ Phase 5 하드코딩 + Phase 9 DB wrapper.
  *
- * TODO(phase-1-temp): Phase 9에서 `notification_templates` DB로 옮겨 어드민 편집 가능하게.
- * 현재는 이벤트별 함수로 분리해두면 향후 DB 치환 시 호출부 변경 최소화.
+ * Phase 9 통합:
+ *   - 기존 `buildXxx(vars)` 빌더 함수는 그대로 유지 (HTML 본문 복잡도 분리).
+ *   - DB의 `notification_templates`에 row가 있으면 subject/text/sms를 덮어쓰는
+ *     `applyDbOverride(eventKey, channel, baseResult, vars)` 헬퍼 제공.
+ *   - 호출부는 await로 wrapper를 한 번 더 거치면 어드민 편집 본문이 반영됨.
+ *   - DB row 없거나 조회 실패 → 빌더 결과 그대로 사용 (graceful fallback).
  */
+
+import { findTemplate, renderTemplateBody } from '@/lib/services/master-templates';
+import type { NotificationChannel } from '@/db/schema';
 
 export type AccountInviteVars = {
   name: string;
@@ -190,4 +197,53 @@ export function buildTicketCompleted(vars: TicketStatusChangedVars) {
 function truncate(s: string, n: number): string {
   if (s.length <= n) return s;
   return s.slice(0, n - 1) + '…';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Phase 9 — DB override wrapper
+// ─────────────────────────────────────────────────────────────────────
+
+export type BuilderResult = {
+  subject: string;
+  html: string;
+  text: string;
+  sms: string;
+};
+
+/**
+ * DB의 notification_templates를 lookup해서 채널별 본문을 덮어쓴다.
+ *
+ * - channel === 'email'이면 subject + bodyTemplate(text 본문) 덮어씀. html은 그대로 유지.
+ * - channel === 'sms'이면 sms 텍스트 본문만 덮어씀.
+ * - DB row 없거나 빈 본문이면 base 그대로 반환.
+ *
+ * @param eventKey 'ticket.received' 등
+ * @param vars renderTemplateBody용 변수 맵
+ * @param base buildXxx() 결과
+ */
+export async function applyDbOverride(
+  eventKey: string,
+  vars: Record<string, string | number | null | undefined>,
+  base: BuilderResult,
+): Promise<BuilderResult> {
+  try {
+    const [emailRow, smsRow] = await Promise.all([
+      findTemplate('email' as NotificationChannel, eventKey),
+      findTemplate('sms' as NotificationChannel, eventKey),
+    ]);
+
+    let { subject, html, text, sms } = base;
+    if (emailRow) {
+      if (emailRow.subject) subject = renderTemplateBody(emailRow.subject, vars);
+      if (emailRow.bodyTemplate)
+        text = renderTemplateBody(emailRow.bodyTemplate, vars);
+    }
+    if (smsRow?.bodyTemplate) {
+      sms = renderTemplateBody(smsRow.bodyTemplate, vars);
+    }
+    return { subject, html, text, sms };
+  } catch (err) {
+    console.warn('[templates.applyDbOverride] DB lookup 실패, fallback 사용:', err);
+    return base;
+  }
 }

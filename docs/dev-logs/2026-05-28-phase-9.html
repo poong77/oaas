@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Phase 9 — 어드민 마스터 데이터 (2026-05-28)</title>
+    <style>
+      :root {
+        --brand-50: #eef2ff;
+        --brand-100: #e0e7ff;
+        --brand-500: #6366f1;
+        --brand-600: #4f46e5;
+        --brand-700: #4338ca;
+        --slate-50: #f8fafc;
+        --slate-200: #e2e8f0;
+        --slate-500: #64748b;
+        --slate-700: #334155;
+        --slate-900: #0f172a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        background: var(--slate-50);
+        color: var(--slate-900);
+        margin: 0;
+        padding: 24px;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid var(--slate-200);
+        border-radius: 16px;
+        padding: 32px;
+      }
+      header {
+        border-bottom: 2px solid var(--brand-600);
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        color: var(--brand-700);
+      }
+      h2 {
+        margin: 32px 0 12px;
+        font-size: 18px;
+        color: var(--slate-900);
+        border-left: 4px solid var(--brand-600);
+        padding-left: 10px;
+      }
+      h3 {
+        margin: 20px 0 8px;
+        font-size: 15px;
+        color: var(--slate-700);
+      }
+      .meta {
+        font-size: 13px;
+        color: var(--slate-500);
+      }
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin: 16px 0 24px;
+      }
+      .card {
+        background: var(--brand-50);
+        border: 1px solid var(--brand-100);
+        border-radius: 10px;
+        padding: 14px;
+      }
+      .card .label {
+        font-size: 11px;
+        color: var(--slate-500);
+        margin-bottom: 4px;
+      }
+      .card .value {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--brand-700);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin: 8px 0 16px;
+      }
+      th, td {
+        border: 1px solid var(--slate-200);
+        padding: 8px 10px;
+        text-align: left;
+      }
+      th { background: var(--slate-50); color: var(--slate-700); }
+      code {
+        background: var(--slate-50);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: var(--brand-700);
+      }
+      ul, ol { padding-left: 22px; }
+      li { margin: 4px 0; }
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: var(--brand-100);
+        color: var(--brand-700);
+        margin-right: 6px;
+      }
+      .note {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        margin: 8px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Phase 9 — 어드민 마스터 데이터 편집</h1>
+        <p class="meta">작성일 2026-05-28 · 통합 AS 플랫폼 · support.oapms.com</p>
+      </header>
+
+      <div class="summary">
+        <div class="card"><div class="label">신규 DB 테이블</div><div class="value">5</div></div>
+        <div class="card"><div class="label">신규 어드민 페이지</div><div class="value">19</div></div>
+        <div class="card"><div class="label">Services</div><div class="value">8</div></div>
+        <div class="card"><div class="label">Server Actions</div><div class="value">15+</div></div>
+        <div class="card"><div class="label">시드 row(추가)</div><div class="value">31</div></div>
+      </div>
+
+      <h2>1. 신규 테이블</h2>
+      <table>
+        <thead>
+          <tr><th>테이블</th><th>주요 컬럼</th><th>용도</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>notification_templates</code></td><td>channel, event_key, subject, body_template</td><td>SMS/이메일 알림 본문 (어드민 편집)</td></tr>
+          <tr><td><code>quick_reply_templates</code></td><td>title, content, category, sort_order</td><td>매니저 응대 정형 문구</td></tr>
+          <tr><td><code>quick_actions</code></td><td>label, icon, link_url, visible</td><td>홈 ④ 카드 (DB 동적)</td></tr>
+          <tr><td><code>role_starters</code></td><td>role_key(uq), label, icon, article_ids[]</td><td>홈 ⑤ 카드</td></tr>
+          <tr><td><code>system_settings</code></td><td>key(uq), value(jsonb), updated_by</td><td>어드민 전용 key-value 설정</td></tr>
+        </tbody>
+      </table>
+      <p class="note">
+        Phase 5/6 학습 적용 — enum 이름과 테이블 이름 충돌 회피 위해 신규 enum 추가 없이 모두 text 컬럼으로 처리. 기존 <code>notification_channel</code> enum만 재사용.
+      </p>
+
+      <h2>2. 어드민 페이지 9개</h2>
+      <ul>
+        <li><code>/admin/master</code> — 인덱스 (9개 카드, system-settings는 어드민만)</li>
+        <li><code>/admin/master/categories?type=...</code> — 4 탭 인라인 편집</li>
+        <li><code>/admin/master/notification-templates</code> + <code>/new</code> + <code>/[id]</code></li>
+        <li><code>/admin/master/quick-replies</code> + <code>/new</code> + <code>/[id]</code></li>
+        <li><code>/admin/master/quick-actions</code> + <code>/new</code> + <code>/[id]</code></li>
+        <li><code>/admin/master/role-starters</code> + <code>/[id]</code> (인덱스에 신규 폼 통합)</li>
+        <li><code>/admin/master/solution-links</code> + <code>/new</code> + <code>/[id]</code></li>
+        <li><code>/admin/master/system-settings</code> — 어드민 only, key-value 인라인</li>
+        <li><code>/admin/master/form-fields</code> + <code>/new</code> + <code>/[id]</code></li>
+      </ul>
+
+      <h2>3. Services / Server Actions</h2>
+      <table>
+        <thead><tr><th>도메인</th><th>Service</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>categories</td><td><code>lib/services/master-categories.ts</code></td><td><code>createCategoryAction</code> 외</td></tr>
+          <tr><td>templates</td><td><code>master-templates.ts</code></td><td><code>upsertTemplateAction</code></td></tr>
+          <tr><td>quick replies</td><td><code>master-quick-replies.ts</code></td><td><code>upsertQuickReplyAction</code></td></tr>
+          <tr><td>quick actions</td><td><code>master-quick-actions.ts</code></td><td><code>upsertQuickActionAction</code></td></tr>
+          <tr><td>role starters</td><td><code>master-role-starters.ts</code></td><td><code>upsertRoleStarterAction</code></td></tr>
+          <tr><td>solution links</td><td><code>master-solution-links.ts</code></td><td><code>upsertSolutionLinkPresetAction</code></td></tr>
+          <tr><td>system settings</td><td><code>master-system-settings.ts</code></td><td><code>upsertSystemSettingAction</code> (어드민)</td></tr>
+          <tr><td>form fields</td><td><code>master-form-fields.ts</code></td><td><code>upsertFormFieldAction</code></td></tr>
+        </tbody>
+      </table>
+      <p>모든 Action: <code>requireRole</code> → 입력 검증(zod) → 서비스 호출 → <code>logActivity('master.&lt;domain&gt;.&lt;verb&gt;')</code> (fire-and-forget) → <code>revalidatePath</code>.</p>
+
+      <h2>4. 홈 동적 전환</h2>
+      <p>
+        <code>app/page.tsx</code>에서 <code>listVisibleQuickActions()</code>, <code>listActiveRoleStarters()</code> 호출 → 빈 결과/오류 시 기존 <code>_constants.ts</code> 하드코딩 fallback. 아이콘은 <code>components/icon-resolver.tsx</code>로 lucide 이름 문자열 → 컴포넌트 매핑.
+      </p>
+      <p class="note">
+        시연 흐름: 어드민이 <code>/admin/master/quick-actions/new</code>에서 신규 카드 추가 → 홈 새로고침 시 즉시 노출. <code>visible=false</code>로 토글하면 어드민에서는 보이지만 홈에서는 숨김.
+      </p>
+
+      <h2>5. <code>lib/notifications/templates.ts</code> DB 통합</h2>
+      <p>
+        기존 <code>buildXxx(vars)</code> 빌더 함수는 그대로 유지. 호출부는 결과를 <code>applyDbOverride(eventKey, vars, base)</code>에 통과시키면 DB 템플릿이 있을 때 subject/text/sms를 덮어쓴다. DB row 없으면 base 그대로 반환 (graceful).
+      </p>
+
+      <h2>6. 시드 보강</h2>
+      <ul>
+        <li>notification_templates: 10건 (event 5종 × email+sms)</li>
+        <li>quick_actions: 8건 (기존 5개 + 서비스 상태/공지/검색 3종 추가)</li>
+        <li>role_starters: 5건 (front/sales/housekeeping/manager/new_open)</li>
+        <li>system_settings: 5건 (max_upload_mb / rate_limit / slack_channels / business_hours / contact_phone)</li>
+        <li>quick_reply_templates: 3건 (접수 확인 / 재현 요청 / P1 긴급)</li>
+      </ul>
+      <p>모두 idempotent — 재실행 시 0건 신규.</p>
+
+      <h2>7. 어드민 Nav</h2>
+      <p>
+        <code>admin-nav.tsx</code>에 단일 항목 <code>마스터 데이터 → /admin/master</code> (Database 아이콘) 추가. 매니저+어드민 노출. 기존 8개 메뉴는 그대로 유지.
+      </p>
+
+      <h2>8. 마이그레이션</h2>
+      <p>파일: <code>db/migrations/0006_phase9_master_placeholder.sql</code></p>
+      <p>placeholder 형식. 메인 세션이 <code>drizzle-kit generate</code> 또는 <code>push</code>로 정식 SQL로 재생성 예정.</p>
+
+      <h2>9. 임시값 / TODO</h2>
+      <ul>
+        <li><strong>Article 매핑 UI</strong> — <code>role_starters.article_ids</code>는 현재 빈 배열로 시드. 어드민 UI에서 articles 선택기 추가 필요 (Phase 9.1+).</li>
+        <li><strong>알림 발송부 통합</strong> — <code>lib/notifications/index.ts</code> 등 실제 발송 위치에서 <code>applyDbOverride</code> 호출 통합은 후속 작업 (Phase 9.1). 현재 wrapper는 준비됨.</li>
+        <li><strong>options JSON 편집 UX</strong> — form-fields의 select 옵션은 raw JSON textarea. 향후 row 편집기로 개선.</li>
+        <li><strong>activity_logs 확장 필드</strong> — <code>action</code> prefix를 <code>master.</code>로 통일 (감사 로그 쿼리 시 prefix 기반 필터링 가능).</li>
+        <li><strong>icon picker</strong> — 현재 datalist 자동완성. 시각적 아이콘 grid picker는 추후.</li>
+      </ul>
+
+      <h2>10. 검증 체크리스트</h2>
+      <ul>
+        <li>[ ] <code>drizzle-kit push</code> 통과 (5 테이블 생성)</li>
+        <li>[ ] <code>npm run build</code> 통과 (라우트 +19개)</li>
+        <li>[ ] <code>db:seed</code> 재실행 시 모두 스킵 (idempotent)</li>
+        <li>[ ] <code>/admin/master</code> 진입 (매니저+어드민)</li>
+        <li>[ ] system-settings는 매니저 진입 시 notFound</li>
+        <li>[ ] quick_actions에 신규 추가 → 홈 즉시 반영</li>
+        <li>[ ] visible=false 토글 후 홈에서 사라지는지 확인</li>
+        <li>[ ] notification template 편집 후 activity_logs에 <code>master.template.upsert</code> 기록 확인</li>
+      </ul>
+
+      <hr style="border:none;border-top:1px solid var(--slate-200);margin:32px 0;" />
+      <p class="meta" style="text-align:center;">
+        Phase 9 — 어드민 마스터 데이터 편집 완료 · 다음 Phase: P2 (popular_keywords, chatbot_sessions, role 페이지 등)
+      </p>
+    </div>
+  </body>
+</html>

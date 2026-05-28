@@ -26,8 +26,13 @@ import {
   faqs,
   hotels,
   notices,
+  notificationTemplates,
+  quickActions,
+  quickReplyTemplates,
+  roleStarters,
   serviceStatus,
   solutionLinkPresets,
+  systemSettings,
   ticketMessages,
   tickets,
   users,
@@ -39,8 +44,13 @@ import {
   type NewFaq,
   type NewHotel,
   type NewNotice,
+  type NewNotificationTemplate,
+  type NewQuickAction,
+  type NewQuickReplyTemplate,
+  type NewRoleStarter,
   type NewServiceStatus,
   type NewSolutionLinkPreset,
+  type NewSystemSetting,
   type NewTicket,
   type NewTicketMessage,
   type NewUser,
@@ -1130,6 +1140,356 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
   }
   console.log(
     `[seed] notices: ${nCreated}건 신규 / ${nSkipped}건 스킵 (이미 존재)`,
+  );
+
+  // ─── 11. notification_templates (Phase 9) ──────────────────────
+  console.log('[seed] notification_templates (Phase 9) 확인...');
+  type SeedTpl = {
+    channel: 'sms' | 'email' | 'slack';
+    eventKey: string;
+    subject: string | null;
+    bodyTemplate: string;
+    description: string;
+  };
+  const seedTemplates: SeedTpl[] = [
+    {
+      channel: 'email',
+      eventKey: 'ticket.received',
+      subject: '[OA 통합 AS] 접수 완료 — {{ticket_no}}',
+      bodyTemplate:
+        '{{reporter_name}}님, 문의가 접수되었습니다.\n티켓 번호: {{ticket_no}}\n제목: {{title}}\n진행상황: {{ticket_url}}',
+      description: '신규 티켓 접수 시 호텔리어에게 이메일 발송',
+    },
+    {
+      channel: 'sms',
+      eventKey: 'ticket.received',
+      subject: null,
+      bodyTemplate:
+        '[OA 통합 AS] 접수 완료. 티켓 {{ticket_no}}. {{title}} {{ticket_url}}',
+      description: '신규 티켓 접수 SMS',
+    },
+    {
+      channel: 'email',
+      eventKey: 'ticket.in_progress',
+      subject: '[OA 통합 AS] 처리중 — {{ticket_no}}',
+      bodyTemplate:
+        '{{reporter_name}}님, 티켓 {{ticket_no}}이(가) 처리 단계로 전환되었습니다.\n{{ticket_url}}',
+      description: '티켓 처리중 전환 알림',
+    },
+    {
+      channel: 'sms',
+      eventKey: 'ticket.in_progress',
+      subject: null,
+      bodyTemplate:
+        '[OA 통합 AS] {{ticket_no}} 처리중. {{title}} {{ticket_url}}',
+      description: '티켓 처리중 SMS',
+    },
+    {
+      channel: 'email',
+      eventKey: 'ticket.completed',
+      subject: '[OA 통합 AS] 처리 완료 — {{ticket_no}}',
+      bodyTemplate:
+        '{{reporter_name}}님, 티켓 {{ticket_no}}이(가) 완료되었습니다.\n{{ticket_url}}',
+      description: '티켓 완료 알림',
+    },
+    {
+      channel: 'sms',
+      eventKey: 'ticket.completed',
+      subject: null,
+      bodyTemplate:
+        '[OA 통합 AS] {{ticket_no}} 처리 완료. {{title}} {{ticket_url}}',
+      description: '티켓 완료 SMS',
+    },
+    {
+      channel: 'email',
+      eventKey: 'account.invite',
+      subject: '[OA 통합 AS] {{name}}님, 계정이 생성되었습니다',
+      bodyTemplate:
+        '{{name}}님, 통합 AS 플랫폼에 초대되었습니다.\n이메일: {{email}}\n임시 비밀번호: {{temp_password}}\n로그인: {{login_url}}\n첫 로그인 후 반드시 비밀번호를 변경해주세요.',
+      description: '계정 초대 이메일',
+    },
+    {
+      channel: 'sms',
+      eventKey: 'account.invite',
+      subject: null,
+      bodyTemplate:
+        '[OA 통합 AS] {{name}}님 계정 생성. 임시비번: {{temp_password}} (첫 로그인 후 변경) {{login_url}}',
+      description: '계정 초대 SMS',
+    },
+    {
+      channel: 'email',
+      eventKey: 'account.password_reset',
+      subject: '[OA 통합 AS] 비밀번호가 초기화되었습니다',
+      bodyTemplate:
+        '{{name}}님 비밀번호가 초기화되었습니다.\n임시 비밀번호: {{temp_password}}\n로그인: {{login_url}}\n로그인 후 즉시 변경해주세요.',
+      description: '비밀번호 초기화 이메일',
+    },
+    {
+      channel: 'sms',
+      eventKey: 'account.password_reset',
+      subject: null,
+      bodyTemplate:
+        '[OA 통합 AS] 비밀번호가 초기화됐어요. 임시비번: {{temp_password}} 로그인 후 즉시 변경 {{login_url}}',
+      description: '비밀번호 초기화 SMS',
+    },
+  ];
+  let tplCreated = 0;
+  for (const t of seedTemplates) {
+    const row: NewNotificationTemplate = {
+      channel: t.channel,
+      eventKey: t.eventKey,
+      subject: t.subject,
+      bodyTemplate: t.bodyTemplate,
+      description: t.description,
+    };
+    const ret = await db
+      .insert(notificationTemplates)
+      .values(row)
+      .onConflictDoNothing({
+        target: [
+          notificationTemplates.channel,
+          notificationTemplates.eventKey,
+        ],
+      })
+      .returning({ id: notificationTemplates.id });
+    if (ret.length > 0) tplCreated++;
+  }
+  console.log(
+    `[seed] notification_templates: ${tplCreated}건 신규 / ${seedTemplates.length - tplCreated}건 스킵`,
+  );
+
+  // ─── 12. quick_actions (Phase 9) ────────────────────────────────
+  console.log('[seed] quick_actions (Phase 9) 확인...');
+  type SeedQA = {
+    label: string;
+    description: string;
+    icon: string;
+    linkUrl: string;
+    sortOrder: number;
+  };
+  const seedQuickActions: SeedQA[] = [
+    {
+      label: '비밀번호 초기화',
+      description: '로그인 비밀번호를 초기화합니다.',
+      icon: 'KeyRound',
+      linkUrl: '/profile',
+      sortOrder: 10,
+    },
+    {
+      label: '솔루션 링크 변경',
+      description: 'PMS·Keyless 등 솔루션 링크를 관리합니다.',
+      icon: 'Wrench',
+      linkUrl: '/profile',
+      sortOrder: 20,
+    },
+    {
+      label: '직원 추가',
+      description: '본인 숙소 직원 계정을 추가합니다.',
+      icon: 'Users',
+      linkUrl: '/profile/staff',
+      sortOrder: 30,
+    },
+    {
+      label: '문의 접수',
+      description: '오류·기능문의를 새 티켓으로 접수합니다.',
+      icon: 'HelpCircle',
+      linkUrl: '/tickets/new',
+      sortOrder: 40,
+    },
+    {
+      label: '처리 상태 확인',
+      description: '내가 접수한 문의의 처리 상태를 확인합니다.',
+      icon: 'ListChecks',
+      linkUrl: '/tickets',
+      sortOrder: 50,
+    },
+    {
+      label: '서비스 상태',
+      description: '현재 서비스 상태와 장애 이력을 확인합니다.',
+      icon: 'Activity',
+      linkUrl: '/status',
+      sortOrder: 60,
+    },
+    {
+      label: '공지/업데이트',
+      description: '최근 공지·릴리즈노트·장애 이력.',
+      icon: 'Megaphone',
+      linkUrl: '/notices',
+      sortOrder: 70,
+    },
+    {
+      label: '통합 검색',
+      description: '아티클·FAQ·공지를 한 번에 검색합니다.',
+      icon: 'Search',
+      linkUrl: '/search',
+      sortOrder: 80,
+    },
+  ];
+  let qaCreated = 0;
+  let qaSkipped = 0;
+  for (const qa of seedQuickActions) {
+    const existing = await db
+      .select({ id: quickActions.id })
+      .from(quickActions)
+      .where(sql`${quickActions.label} = ${qa.label}`)
+      .limit(1);
+    if (existing.length > 0) {
+      qaSkipped++;
+      continue;
+    }
+    const row: NewQuickAction = { ...qa, visible: true };
+    await db.insert(quickActions).values(row);
+    qaCreated++;
+  }
+  console.log(
+    `[seed] quick_actions: ${qaCreated}건 신규 / ${qaSkipped}건 스킵`,
+  );
+
+  // ─── 13. role_starters (Phase 9) ────────────────────────────────
+  console.log('[seed] role_starters (Phase 9) 확인...');
+  const seedRoleStarters: NewRoleStarter[] = [
+    {
+      roleKey: 'front',
+      label: '프론트',
+      description:
+        '체크인·체크아웃·키 발급 등 프론트 데스크 업무 가이드',
+      icon: 'BellRing',
+      sortOrder: 10,
+    },
+    {
+      roleKey: 'sales',
+      label: '예약·판매',
+      description: '예약 등록·요금 관리·OTA 연동 가이드',
+      icon: 'Briefcase',
+      sortOrder: 20,
+    },
+    {
+      roleKey: 'housekeeping',
+      label: '하우스키핑',
+      description: '객실 정리 상태·동기화·키오스크 가이드',
+      icon: 'BedDouble',
+      sortOrder: 30,
+    },
+    {
+      roleKey: 'manager',
+      label: '관리자',
+      description: '직원·권한·매출 리포트 등 호텔 관리자 가이드',
+      icon: 'ShieldCheck',
+      sortOrder: 40,
+    },
+    {
+      roleKey: 'new_open',
+      label: '신규 오픈',
+      description: '신규 호텔 오픈 셋업 체크리스트와 초기 설정',
+      icon: 'Sparkles',
+      sortOrder: 50,
+    },
+  ];
+  let rsCreated = 0;
+  for (const rs of seedRoleStarters) {
+    const ret = await db
+      .insert(roleStarters)
+      .values(rs)
+      .onConflictDoNothing({ target: roleStarters.roleKey })
+      .returning({ id: roleStarters.id });
+    if (ret.length > 0) rsCreated++;
+  }
+  console.log(
+    `[seed] role_starters: ${rsCreated}건 신규 / ${seedRoleStarters.length - rsCreated}건 스킵`,
+  );
+
+  // ─── 14. system_settings (Phase 9) ──────────────────────────────
+  console.log('[seed] system_settings (Phase 9) 확인...');
+  const seedSettings: Array<NewSystemSetting & { description: string }> = [
+    {
+      key: 'max_upload_mb',
+      value: 50,
+      description: '티켓 첨부 파일 최대 용량(MB)',
+    },
+    {
+      key: 'rate_limit_login_per_min',
+      value: 5,
+      description: '로그인 엔드포인트 분당 시도 제한',
+    },
+    {
+      key: 'slack_channels',
+      value: {
+        tickets_new: '#cs-tickets-new',
+        tickets_p1: '#cs-tickets-p1',
+        dev_escalate: '#cs-dev-escalate',
+      },
+      description: 'Slack Webhook 전송 채널 매핑',
+    },
+    {
+      key: 'business_hours',
+      value: {
+        start: '09:00',
+        end: '19:00',
+        timezone: 'Asia/Seoul',
+      },
+      description: '운영팀 영업 시간 (UI 안내용)',
+    },
+    {
+      key: 'contact_phone',
+      value: '02-1234-5678',
+      description: '대표 문의 전화번호',
+    },
+  ];
+  let ssCreated = 0;
+  for (const s of seedSettings) {
+    const ret = await db
+      .insert(systemSettings)
+      .values(s)
+      .onConflictDoNothing({ target: systemSettings.key })
+      .returning({ id: systemSettings.id });
+    if (ret.length > 0) ssCreated++;
+  }
+  console.log(
+    `[seed] system_settings: ${ssCreated}건 신규 / ${seedSettings.length - ssCreated}건 스킵`,
+  );
+
+  // ─── 15. quick_reply_templates (Phase 9) ────────────────────────
+  console.log('[seed] quick_reply_templates (Phase 9) 확인...');
+  const seedQuickReplies: NewQuickReplyTemplate[] = [
+    {
+      title: '접수 확인 응대',
+      content:
+        '안녕하세요, 문의 접수 확인했습니다. 운영팀에서 빠르게 확인 후 답변드리겠습니다. 잠시만 기다려주세요.',
+      category: '일반',
+      sortOrder: 10,
+    },
+    {
+      title: '재현 단계 요청',
+      content:
+        '확인을 위해 다음 정보가 필요합니다. 1) 발생 시각 2) 사용 단말/브라우저 3) 재현 단계(클릭 순서). 추가로 알려주세요.',
+      category: '일반',
+      sortOrder: 20,
+    },
+    {
+      title: 'P1 긴급 1차 응대',
+      content:
+        '긴급 상황 확인했습니다. 즉시 출동/원격 점검 시작합니다. 도착/응답까지 10분 내외 예상되며, 그 사이 비상 대응(예: 비상 마스터키, 수기 체크인)으로 운영 부탁드립니다.',
+      category: 'P1',
+      sortOrder: 30,
+    },
+  ];
+  let qrCreated = 0;
+  let qrSkipped = 0;
+  for (const qr of seedQuickReplies) {
+    const existing = await db
+      .select({ id: quickReplyTemplates.id })
+      .from(quickReplyTemplates)
+      .where(sql`${quickReplyTemplates.title} = ${qr.title}`)
+      .limit(1);
+    if (existing.length > 0) {
+      qrSkipped++;
+      continue;
+    }
+    await db.insert(quickReplyTemplates).values(qr);
+    qrCreated++;
+  }
+  console.log(
+    `[seed] quick_reply_templates: ${qrCreated}건 신규 / ${qrSkipped}건 스킵`,
   );
 
   console.log('\n[seed] ✅ 완료. 로그인 계정:');

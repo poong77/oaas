@@ -17,6 +17,8 @@
 
 import { getProductCategories } from '@/lib/services/categories';
 import { getLatestServiceStatus } from '@/lib/services/service-status';
+import { listVisibleQuickActions } from '@/lib/services/master-quick-actions';
+import { listActiveRoleStarters } from '@/lib/services/master-role-starters';
 import { HomeHero } from './_components/home/home-hero';
 import { CategoryGrid } from './_components/home/category-grid';
 import { QuickActions } from './_components/home/quick-actions';
@@ -35,17 +37,20 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  const [categories, latestStatus] = await Promise.all([
-    getProductCategories(),
-    getLatestServiceStatus(),
-  ]);
+  const [categories, latestStatus, quickActionRows, roleStarterRows] =
+    await Promise.all([
+      getProductCategories(),
+      getLatestServiceStatus(),
+      listVisibleQuickActions(),
+      listActiveRoleStarters(),
+    ]);
 
   return (
     <>
       <HomeHero />
       <CategoryGrid categories={categories} />
-      <QuickActions />
-      <RoleStarters />
+      <QuickActions items={quickActionRows} />
+      <RoleStarters items={roleStarterRows} />
       <ServiceStatusWidget latest={latestStatus} />
       <RecentUpdates />
       <HomeCTA />
