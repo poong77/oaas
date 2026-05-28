@@ -8,6 +8,7 @@ import {
   Building2,
   FileText,
   HelpCircle,
+  Inbox,
   ListChecks,
   LogOut,
   Shield,
@@ -27,6 +28,13 @@ type Tab = {
 };
 
 const ALL_TABS: Tab[] = [
+  // 티켓 큐 (Phase 5) — 매니저+어드민, 최상단
+  {
+    href: '/admin/tickets',
+    label: '티켓 큐',
+    icon: Inbox,
+    roles: ['manager', 'admin'],
+  },
   // service-status는 매니저+어드민
   {
     href: '/admin/service-status',

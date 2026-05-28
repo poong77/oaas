@@ -27,6 +27,8 @@ import {
   hotels,
   serviceStatus,
   solutionLinkPresets,
+  ticketMessages,
+  tickets,
   users,
   type ChecklistStepAction,
   type NewArticle,
@@ -37,7 +39,11 @@ import {
   type NewHotel,
   type NewServiceStatus,
   type NewSolutionLinkPreset,
+  type NewTicket,
+  type NewTicketMessage,
   type NewUser,
+  type TicketContactMethod,
+  type TicketStatus,
   type TocEntry,
 } from './schema';
 
@@ -742,6 +748,241 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
   }
   console.log(
     `[seed] checklists: ${clCreated}건 신규 (단계 ${stepCreated}) / ${clSkipped}건 스킵 (이미 존재)`,
+  );
+
+  // ─── 9. tickets + ticket_messages (Phase 5) ─────────────────────
+  console.log('[seed] sample 티켓 (Phase 5) 확인...');
+  const [hotelierRow] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(sql`${users.email} = 'hotelier@oa.local'`);
+  const [adminUserRow] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(sql`${users.email} = 'admin@oa.local'`);
+  const reporterId = hotelierRow?.id ?? null;
+  const managerUserId = managerRow?.id ?? null;
+  const adminUserId = adminUserRow?.id ?? null;
+  const sampleHotelId = hotelRow?.id ?? null;
+
+  type SeedMessage = {
+    /** 작성자 키 — 'hotelier' / 'manager' / 'admin' / null(system) */
+    authorKey: 'hotelier' | 'manager' | 'admin' | null;
+    kind: 'public' | 'internal_memo' | 'status_change' | 'system';
+    content: string;
+    metadata?: Record<string, unknown>;
+  };
+  type SeedTicket = {
+    /** AS-YYYY-NNNNNN — 시드는 고정 번호로 idempotency 확보 */
+    ticketNo: string;
+    productCode: string;
+    issueType: string;
+    urgency: string;
+    impactScope?: string;
+    title: string;
+    content: string;
+    status: TicketStatus;
+    channel: 'web' | 'phone' | 'chatbot';
+    contactMethods: TicketContactMethod[];
+    assignee: 'manager' | 'admin' | null;
+    messages: SeedMessage[];
+  };
+
+  const year = new Date().getFullYear();
+  const seedTickets: SeedTicket[] = [
+    {
+      ticketNo: `AS-${year}-900001`,
+      productCode: 'pms',
+      issueType: 'error',
+      urgency: 'p2',
+      impactScope: 'single_hotel',
+      title: 'PMS 룸차트에서 예약 드래그가 안 됩니다',
+      content: [
+        '## 증상',
+        '오전 9시부터 룸차트에서 예약 박스를 드래그하면 1초 정도 후에 원래 위치로 돌아갑니다.',
+        '',
+        '## 재현 단계',
+        '1. PMS 로그인',
+        '2. 룸차트 화면 진입',
+        '3. 임의의 예약 박스 클릭 후 다른 객실로 드래그',
+        '',
+        '## 시도해본 것',
+        '- 브라우저 캐시 삭제 (Chrome)',
+        '- 다른 브라우저 (Edge)로 시도 — 동일 증상',
+      ].join('\n'),
+      status: 'in_progress',
+      channel: 'web',
+      contactMethods: ['email', 'sms'],
+      assignee: 'manager',
+      messages: [
+        {
+          authorKey: 'manager',
+          kind: 'public',
+          content:
+            '안녕하세요, 룸차트 드래그 이슈 확인했습니다. 다른 단말에서도 같은 증상이 나타나는지 확인 부탁드립니다.',
+        },
+        {
+          authorKey: 'hotelier',
+          kind: 'public',
+          content:
+            '프런트 데스크 PC 2대 모두 동일합니다. 객실 부서 PC에서는 정상 동작합니다.',
+        },
+        {
+          authorKey: 'manager',
+          kind: 'internal_memo',
+          content:
+            '프런트 PC만 영향. 사내 네트워크 분리 정책 + 최근 보안 패치 이후 발생 추정. 인프라팀에 확인 요청.',
+        },
+      ],
+    },
+    {
+      ticketNo: `AS-${year}-900002`,
+      productCode: 'keyless',
+      issueType: 'outage',
+      urgency: 'p1',
+      impactScope: 'all_hotels',
+      title: '카드키 발급기 전체 장애',
+      content: [
+        '## 긴급 장애',
+        '체크인 카운터의 카드키 발급기 4대 모두 응답 없음.',
+        '체크인 대기 게스트 5팀.',
+        '',
+        '비상 마스터키로 응대 중이지만 즉시 복구가 필요합니다.',
+      ].join('\n'),
+      status: 'completed',
+      channel: 'phone',
+      contactMethods: ['sms'],
+      assignee: 'admin',
+      messages: [
+        {
+          authorKey: 'admin',
+          kind: 'public',
+          content:
+            '긴급 출동 시작했습니다. 도착까지 10분 소요 예상. 그동안 비상 마스터키 + 수기 체크인 진행 부탁드립니다.',
+        },
+        {
+          authorKey: 'admin',
+          kind: 'internal_memo',
+          content:
+            'Dev 채널 에스컬 완료 (스레드 ts=fake-1234). 단말 펌웨어 v2.4.1 롤백 + 락 마스터 재동기화.',
+        },
+        {
+          authorKey: 'admin',
+          kind: 'public',
+          content:
+            '발급기 펌웨어 롤백 + 락 마스터 재동기화 완료. 모든 발급기 정상화. 게스트 대기 시간 12분 보상은 매니저 재량으로 조치 부탁드립니다.',
+        },
+      ],
+    },
+    {
+      ticketNo: `AS-${year}-900003`,
+      productCode: 'cms',
+      issueType: 'feature_inquiry',
+      urgency: 'p3',
+      impactScope: 'single_hotel',
+      title: 'OTA 부킹닷컴 요금 일괄 변경은 어디서 하나요?',
+      content: [
+        '여름 성수기를 앞두고 부킹닷컴 요금을 평일 15%, 주말 25% 인상하려고 합니다.',
+        '한꺼번에 적용할 수 있는 메뉴가 있을까요? 매일 수동으로 입력하면 너무 오래 걸려서요.',
+      ].join('\n'),
+      status: 'received',
+      channel: 'web',
+      contactMethods: ['email'],
+      assignee: null,
+      messages: [],
+    },
+  ];
+
+  function resolveAuthorId(key: SeedMessage['authorKey']): string | null {
+    if (key === 'hotelier') return reporterId;
+    if (key === 'manager') return managerUserId;
+    if (key === 'admin') return adminUserId;
+    return null;
+  }
+  function resolveAssigneeId(key: SeedTicket['assignee']): string | null {
+    if (key === 'manager') return managerUserId;
+    if (key === 'admin') return adminUserId;
+    return null;
+  }
+
+  let tCreated = 0;
+  let tSkipped = 0;
+  let mCreated = 0;
+  for (const seed of seedTickets) {
+    // idempotent: 동일 ticket_no가 있으면 스킵
+    const existing = await db
+      .select({ id: tickets.id })
+      .from(tickets)
+      .where(sql`${tickets.ticketNo} = ${seed.ticketNo}`)
+      .limit(1);
+    if (existing.length > 0) {
+      tSkipped++;
+      continue;
+    }
+
+    const row: NewTicket = {
+      ticketNo: seed.ticketNo,
+      hotelId: sampleHotelId,
+      reporterId,
+      productCode: seed.productCode,
+      issueType: seed.issueType,
+      urgency: seed.urgency,
+      impactScope: seed.impactScope ?? null,
+      title: seed.title,
+      content: seed.content,
+      customFields: { seed: true },
+      status: seed.status,
+      assigneeId: resolveAssigneeId(seed.assignee),
+      channel: seed.channel,
+      contactMethods: seed.contactMethods,
+    };
+    const [created] = await db
+      .insert(tickets)
+      .values(row)
+      .returning({ id: tickets.id });
+    if (!created) continue;
+    tCreated++;
+
+    // 시스템 접수 이벤트 1건은 무조건 첫 메시지로 추가
+    const baseMessages: NewTicketMessage[] = [
+      {
+        ticketId: created.id,
+        authorId: reporterId,
+        kind: 'system',
+        content: '티켓이 접수되었습니다.',
+        metadata: { eventKey: 'ticket.received', seed: true },
+      },
+    ];
+    // 상태가 received가 아니면 status_change 자취도 추가
+    if (seed.status !== 'received') {
+      baseMessages.push({
+        ticketId: created.id,
+        authorId: resolveAssigneeId(seed.assignee) ?? managerUserId,
+        kind: 'status_change',
+        content: `접수 → ${
+          seed.status === 'in_progress'
+            ? '처리중'
+            : seed.status === 'on_hold'
+              ? '보류'
+              : '완료'
+        }`,
+        metadata: { from: 'received', to: seed.status, seed: true },
+      });
+    }
+    for (const m of seed.messages) {
+      baseMessages.push({
+        ticketId: created.id,
+        authorId: resolveAuthorId(m.authorKey),
+        kind: m.kind,
+        content: m.content,
+        metadata: m.metadata ?? {},
+      });
+    }
+    await db.insert(ticketMessages).values(baseMessages);
+    mCreated += baseMessages.length;
+  }
+  console.log(
+    `[seed] tickets: ${tCreated}건 신규 (메시지 ${mCreated}) / ${tSkipped}건 스킵`,
   );
 
   console.log('\n[seed] ✅ 완료. 로그인 계정:');

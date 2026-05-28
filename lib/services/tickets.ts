@@ -1,0 +1,1158 @@
+/**
+ * tickets 데이터 액세스 + 발급 + 알림 트리거 (Server 전용).
+ *
+ * Phase 5 IC-01~IC-08 / IS-01~IS-02 / IS-04.
+ *
+ * 핵심 함수:
+ *   - generateTicketNo()           — 'AS-YYYY-NNNNNN' 발급 (retry 1회)
+ *   - createTicket(input)          — 티켓 생성 + 첨부 매핑 + 알림 일괄 (Slack/SMS/Email)
+ *   - listTickets({...})           — 큐·내 문의 공용 (권한별 필터는 호출부에서)
+ *   - getTicketById(id, viewer)    — 상세 + 메시지 + 첨부 (viewer가 호텔리어면 internal_memo 제외)
+ *   - addMessage({...})            — 답변/내부 메모 추가
+ *   - changeStatus({...})          — 상태 전환 + status_change 메시지 자동
+ *   - assignTicket({...})          — 담당자 배정
+ *   - escalateToDev({...})         — Slack #dev-escalation 발송 + 메시지 기록
+ */
+
+import 'server-only';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
+
+import { db } from '@/db';
+import {
+  hotels,
+  tickets,
+  ticketMessages,
+  ticketAttachments,
+  users,
+  categories,
+  type Ticket,
+  type TicketMessage,
+  type TicketAttachment,
+  type TicketStatus,
+  type TicketChannel,
+  type TicketContactMethod,
+  type TicketMessageKind,
+  type NewTicket,
+  type NewTicketMessage,
+  type NewTicketAttachment,
+} from '@/db/schema';
+import { env } from '@/lib/env';
+import { notifyEmail, notifySlack, notifySms } from '@/lib/notifications';
+import {
+  buildTicketCompleted,
+  buildTicketInProgress,
+  buildTicketReceived,
+} from '@/lib/notifications/templates';
+import {
+  buildTicketEscalateBlocks,
+  buildTicketNewBlocks,
+  buildTicketUrgentBlocks,
+  type TicketSummaryForSlack,
+} from '@/lib/notifications/slack';
+
+// AuthorizedUser는 lib/permissions.ts에서 사용 — schema에는 없어 별도 import.
+// 순환 import 회피 위해 inline 타입 사용.
+type ViewerLike = {
+  id: string;
+  role: 'hotelier' | 'manager' | 'admin';
+  hotelId: string | null;
+};
+
+// ─────────────────────────────────────────────────────────────────────
+// 라벨 헬퍼 (categories.code → label)
+// ─────────────────────────────────────────────────────────────────────
+
+type CategoryLabelMap = Record<string, string>;
+
+export async function loadCategoryLabelMaps(): Promise<{
+  product: CategoryLabelMap;
+  issueType: CategoryLabelMap;
+  urgency: CategoryLabelMap;
+  impact: CategoryLabelMap;
+}> {
+  const empty: {
+    product: Record<string, string>;
+    issueType: Record<string, string>;
+    urgency: Record<string, string>;
+    impact: Record<string, string>;
+  } = { product: {}, issueType: {}, urgency: {}, impact: {} };
+  if (!db) return empty;
+  try {
+    const rows = await db
+      .select({
+        type: categories.type,
+        code: categories.code,
+        label: categories.label,
+      })
+      .from(categories);
+    const out = { ...empty };
+    for (const r of rows) {
+      if (r.type === 'product') out.product[r.code] = r.label;
+      else if (r.type === 'issue_type') out.issueType[r.code] = r.label;
+      else if (r.type === 'urgency') out.urgency[r.code] = r.label;
+      else if (r.type === 'impact') out.impact[r.code] = r.label;
+    }
+    return out;
+  } catch (err) {
+    console.error('[tickets.loadCategoryLabelMaps] 실패:', err);
+    return empty;
+  }
+}
+
+export { STATUS_LABEL } from './tickets-meta';
+import { STATUS_LABEL } from './tickets-meta';
+
+// ─────────────────────────────────────────────────────────────────────
+// 티켓 번호 발급
+// ─────────────────────────────────────────────────────────────────────
+
+export async function generateTicketNo(): Promise<string> {
+  if (!db) {
+    return `AS-${new Date().getFullYear()}-000001`;
+  }
+  const year = new Date().getFullYear();
+  const prefix = `AS-${year}-`;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const rows = (await db.execute(
+        sql`
+          SELECT COALESCE(
+            MAX(CAST(SUBSTRING(ticket_no FROM ${prefix.length + 1}) AS INTEGER)),
+            0
+          )::int AS max_no
+          FROM tickets
+          WHERE ticket_no LIKE ${prefix + '%'}
+        `,
+      )) as unknown as { rows: Array<{ max_no: number }> } | Array<{ max_no: number }>;
+      // neon-http drizzle 결과는 보통 배열 그 자체 (rows 래핑 X)
+      const arr = Array.isArray(rows)
+        ? rows
+        : (rows as { rows: Array<{ max_no: number }> }).rows;
+      const currentMax = Number(arr?.[0]?.max_no ?? 0);
+      const next = currentMax + 1 + attempt; // 충돌 시 +1
+      return `${prefix}${String(next).padStart(6, '0')}`;
+    } catch (err) {
+      console.warn('[tickets.generateTicketNo] retry', attempt, err);
+    }
+  }
+  // 최후 fallback: timestamp
+  return `${prefix}${String(Date.now() % 1000000).padStart(6, '0')}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 신규 접수
+// ─────────────────────────────────────────────────────────────────────
+
+export type CreateTicketInput = {
+  hotelId: string | null;
+  reporterId: string | null;
+  productCode: string;
+  issueType: string;
+  urgency: string;
+  impactScope?: string | null;
+  title: string;
+  /** markdown */
+  content: string;
+  customFields?: Record<string, unknown>;
+  channel?: TicketChannel;
+  contactMethods?: TicketContactMethod[];
+  /** Vercel Blob에 이미 업로드된 첨부 메타. 티켓 생성 시 ticketId 매핑. */
+  attachments?: Array<{
+    blobUrl: string;
+    pathname: string;
+    originalName: string;
+    mimeType?: string | null;
+    sizeBytes: number;
+  }>;
+};
+
+export type CreateTicketResult =
+  | {
+      ok: true;
+      ticketId: string;
+      ticketNo: string;
+    }
+  | { ok: false; message: string };
+
+export async function createTicket(
+  input: CreateTicketInput,
+): Promise<CreateTicketResult> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+
+  try {
+    const ticketNo = await generateTicketNo();
+
+    const values: NewTicket = {
+      ticketNo,
+      hotelId: input.hotelId,
+      reporterId: input.reporterId,
+      productCode: input.productCode,
+      issueType: input.issueType,
+      urgency: input.urgency,
+      impactScope: input.impactScope ?? null,
+      title: input.title,
+      content: input.content,
+      customFields: input.customFields ?? {},
+      channel: input.channel ?? 'web',
+      contactMethods: input.contactMethods ?? [],
+      status: 'received',
+    };
+
+    const [created] = await db
+      .insert(tickets)
+      .values(values)
+      .returning({ id: tickets.id, ticketNo: tickets.ticketNo });
+
+    if (!created) return { ok: false, message: 'INSERT_FAILED' };
+
+    // 첨부 매핑
+    if (input.attachments && input.attachments.length > 0) {
+      const attachmentRows: NewTicketAttachment[] = input.attachments.map(
+        (a) => ({
+          ticketId: created.id,
+          blobUrl: a.blobUrl,
+          pathname: a.pathname,
+          originalName: a.originalName,
+          mimeType: a.mimeType ?? null,
+          sizeBytes: a.sizeBytes,
+          uploaderId: input.reporterId,
+        }),
+      );
+      await db.insert(ticketAttachments).values(attachmentRows);
+    }
+
+    // 시스템 메시지 1건 — 접수 사실 기록
+    await db.insert(ticketMessages).values({
+      ticketId: created.id,
+      authorId: input.reporterId,
+      kind: 'system',
+      content: '티켓이 접수되었습니다.',
+      metadata: { eventKey: 'ticket.received' },
+    });
+
+    // 알림 fire-and-forget
+    void dispatchTicketReceivedNotifications(created.id, created.ticketNo);
+
+    return { ok: true, ticketId: created.id, ticketNo: created.ticketNo };
+  } catch (err) {
+    console.error('[tickets.createTicket] 실패:', err);
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
+    };
+  }
+}
+
+/**
+ * 접수 직후 SMS·Email·Slack 알림 발송 (별도 트랜잭션 외부에서).
+ * 실패해도 메인 로직에는 영향 없음.
+ */
+async function dispatchTicketReceivedNotifications(
+  ticketId: string,
+  ticketNo: string,
+): Promise<void> {
+  if (!db) return;
+  try {
+    const ticketRow = await getTicketRaw(ticketId);
+    if (!ticketRow) return;
+
+    const labels = await loadCategoryLabelMaps();
+    const productLabel = labels.product[ticketRow.productCode] ?? ticketRow.productCode;
+    const issueTypeLabel = labels.issueType[ticketRow.issueType] ?? ticketRow.issueType;
+    const urgencyLabel = labels.urgency[ticketRow.urgency] ?? ticketRow.urgency;
+    const impactLabel = ticketRow.impactScope
+      ? (labels.impact[ticketRow.impactScope] ?? ticketRow.impactScope)
+      : null;
+
+    // 호텔명·접수자 정보
+    let hotelName: string | null = null;
+    let reporterName: string | null = null;
+    let reporterEmail: string | null = null;
+    let reporterPhone: string | null = null;
+    if (ticketRow.hotelId) {
+      const h = await db
+        .select({ name: hotels.name })
+        .from(hotels)
+        .where(eq(hotels.id, ticketRow.hotelId))
+        .limit(1);
+      hotelName = h[0]?.name ?? null;
+    }
+    if (ticketRow.reporterId) {
+      const u = await db
+        .select({
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+        })
+        .from(users)
+        .where(eq(users.id, ticketRow.reporterId))
+        .limit(1);
+      reporterName = u[0]?.name ?? null;
+      reporterEmail = u[0]?.email ?? null;
+      reporterPhone = u[0]?.phone ?? null;
+    }
+
+    // 첨부 개수
+    const attachmentRows = await db
+      .select({ id: ticketAttachments.id })
+      .from(ticketAttachments)
+      .where(eq(ticketAttachments.ticketId, ticketId));
+    const attachmentCount = attachmentRows.length;
+
+    const baseUrl = env.PUBLIC_BASE_URL || env.NEXTAUTH_URL || 'http://localhost:3000';
+    const ticketUrl = `${baseUrl.replace(/\/$/, '')}/tickets/${ticketId}`;
+    const adminTicketUrl = `${baseUrl.replace(/\/$/, '')}/admin/tickets/${ticketId}`;
+
+    // ── 호텔리어 SMS/Email (contactMethods 따라) ──────────────────
+    const contactMethods = Array.isArray(ticketRow.contactMethods)
+      ? ticketRow.contactMethods
+      : [];
+    if (
+      reporterName &&
+      (contactMethods.includes('email') || contactMethods.includes('sms'))
+    ) {
+      const tpl = buildTicketReceived({
+        reporterName,
+        ticketNo,
+        title: ticketRow.title,
+        productLabel,
+        issueTypeLabel,
+        urgencyLabel,
+        ticketUrl,
+      });
+      if (contactMethods.includes('email') && reporterEmail) {
+        await notifyEmail(
+          {
+            to: reporterEmail,
+            subject: tpl.subject,
+            html: tpl.html,
+            text: tpl.text,
+          },
+          { eventKey: 'ticket.received', ticketId },
+        );
+      }
+      if (contactMethods.includes('sms') && reporterPhone) {
+        await notifySms(
+          { to: reporterPhone, text: tpl.sms },
+          { eventKey: 'ticket.received', ticketId },
+        );
+      }
+    }
+
+    // ── Slack 알림 ──────────────────────────────────────────────
+    const summary: TicketSummaryForSlack = {
+      ticketNo,
+      title: ticketRow.title,
+      productLabel,
+      issueTypeLabel,
+      urgencyLabel,
+      impactLabel,
+      hotelName,
+      reporterName,
+      reporterEmail,
+      reporterPhone,
+      contentExcerpt: ticketRow.content.slice(0, 400),
+      attachmentCount,
+      link: adminTicketUrl,
+    };
+
+    await notifySlack(
+      {
+        channel: 'new',
+        fallbackText: `[새 티켓] ${ticketNo} ${ticketRow.title}`,
+        blocks: buildTicketNewBlocks(summary),
+      },
+      { eventKey: 'ticket.new_slack', ticketId },
+    );
+
+    if (ticketRow.urgency === 'p1') {
+      await notifySlack(
+        {
+          channel: 'urgent',
+          fallbackText: `[P1 긴급] ${ticketNo} ${ticketRow.title}`,
+          blocks: buildTicketUrgentBlocks(summary),
+        },
+        { eventKey: 'ticket.urgent_slack', ticketId },
+      );
+    }
+  } catch (err) {
+    console.warn(
+      '[tickets.dispatchTicketReceivedNotifications] 실패:',
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 조회
+// ─────────────────────────────────────────────────────────────────────
+
+async function getTicketRaw(id: string): Promise<Ticket | null> {
+  if (!db) return null;
+  try {
+    const rows = await db
+      .select()
+      .from(tickets)
+      .where(eq(tickets.id, id))
+      .limit(1);
+    return rows[0] ?? null;
+  } catch (err) {
+    console.error('[tickets.getTicketRaw] 실패:', err);
+    return null;
+  }
+}
+
+export type TicketListItem = Pick<
+  Ticket,
+  | 'id'
+  | 'ticketNo'
+  | 'title'
+  | 'productCode'
+  | 'issueType'
+  | 'urgency'
+  | 'impactScope'
+  | 'status'
+  | 'channel'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'dueDate'
+  | 'reporterId'
+  | 'assigneeId'
+  | 'hotelId'
+> & {
+  hotelName: string | null;
+  reporterName: string | null;
+  assigneeName: string | null;
+  /** 공개 메시지(=답변) 카운트. */
+  messageCount: number;
+};
+
+export type ListTicketsParams = {
+  q?: string;
+  status?: TicketStatus | 'all';
+  productCode?: string;
+  issueType?: string;
+  urgency?: string;
+  assigneeId?: string | 'unassigned' | 'mine';
+  /** 호텔리어/내 문의 보기 — reporter_id 또는 hotel_id 기반. */
+  reporterId?: string;
+  hotelId?: string;
+  sortBy?: 'created_at' | 'updated_at' | 'urgency' | 'due_date';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  pageSize?: number;
+};
+
+export type ListTicketsResult = {
+  items: TicketListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export async function listTickets(
+  params: ListTicketsParams = {},
+  viewer?: ViewerLike,
+): Promise<ListTicketsResult> {
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(5, params.pageSize ?? 20));
+  const offset = (page - 1) * pageSize;
+  if (!db) return { items: [], total: 0, page, pageSize };
+
+  const conditions: SQL[] = [eq(tickets.isActive, true)];
+
+  if (params.status && params.status !== 'all') {
+    conditions.push(eq(tickets.status, params.status));
+  }
+  if (params.productCode) conditions.push(eq(tickets.productCode, params.productCode));
+  if (params.issueType) conditions.push(eq(tickets.issueType, params.issueType));
+  if (params.urgency) conditions.push(eq(tickets.urgency, params.urgency));
+
+  if (params.assigneeId === 'unassigned') {
+    conditions.push(sql`${tickets.assigneeId} IS NULL`);
+  } else if (params.assigneeId === 'mine' && viewer) {
+    conditions.push(eq(tickets.assigneeId, viewer.id));
+  } else if (
+    params.assigneeId &&
+    params.assigneeId !== 'mine' &&
+    params.assigneeId !== 'unassigned'
+  ) {
+    conditions.push(eq(tickets.assigneeId, params.assigneeId));
+  }
+
+  if (params.reporterId) {
+    conditions.push(eq(tickets.reporterId, params.reporterId));
+  }
+  if (params.hotelId) {
+    conditions.push(eq(tickets.hotelId, params.hotelId));
+  }
+
+  if (params.q && params.q.trim()) {
+    const pattern = `%${params.q.trim()}%`;
+    const search = or(
+      ilike(tickets.title, pattern),
+      ilike(tickets.ticketNo, pattern),
+      ilike(tickets.content, pattern),
+    );
+    if (search) conditions.push(search);
+  }
+
+  const whereExpr =
+    conditions.length === 0
+      ? undefined
+      : conditions.length === 1
+        ? conditions[0]
+        : and(...conditions);
+
+  const sortColumn =
+    params.sortBy === 'updated_at'
+      ? tickets.updatedAt
+      : params.sortBy === 'urgency'
+        ? tickets.urgency
+        : params.sortBy === 'due_date'
+          ? tickets.dueDate
+          : tickets.createdAt;
+  const orderExpr =
+    (params.sortOrder ?? 'desc') === 'asc'
+      ? asc(sortColumn)
+      : desc(sortColumn);
+
+  try {
+    // 메인 조회 (조인 4개)
+    const reporters = users; // alias
+    // alias 위한 SQL 작성 (drizzle alias 사용)
+    // 같은 users 테이블에 두 번 조인할 수 있으나 코드 단순화를 위해 별도 쿼리로 assignee 이름 lookup.
+    const items = await db
+      .select({
+        id: tickets.id,
+        ticketNo: tickets.ticketNo,
+        title: tickets.title,
+        productCode: tickets.productCode,
+        issueType: tickets.issueType,
+        urgency: tickets.urgency,
+        impactScope: tickets.impactScope,
+        status: tickets.status,
+        channel: tickets.channel,
+        createdAt: tickets.createdAt,
+        updatedAt: tickets.updatedAt,
+        dueDate: tickets.dueDate,
+        reporterId: tickets.reporterId,
+        assigneeId: tickets.assigneeId,
+        hotelId: tickets.hotelId,
+        hotelName: hotels.name,
+        reporterName: reporters.name,
+      })
+      .from(tickets)
+      .leftJoin(hotels, eq(tickets.hotelId, hotels.id))
+      .leftJoin(reporters, eq(tickets.reporterId, reporters.id))
+      .where(whereExpr)
+      .orderBy(orderExpr, desc(tickets.createdAt))
+      .limit(pageSize)
+      .offset(offset);
+
+    // assignee 이름 매핑
+    const assigneeIds = Array.from(
+      new Set(items.map((it) => it.assigneeId).filter((v): v is string => !!v)),
+    );
+    const assigneeMap: Record<string, string> = {};
+    if (assigneeIds.length > 0) {
+      const rows = await db
+        .select({ id: users.id, name: users.name })
+        .from(users)
+        .where(inArray(users.id, assigneeIds));
+      for (const r of rows) assigneeMap[r.id] = r.name;
+    }
+
+    // 메시지 카운트 (kind=public만)
+    const ids = items.map((it) => it.id);
+    const messageCountMap: Record<string, number> = {};
+    if (ids.length > 0) {
+      const rows = await db
+        .select({
+          ticketId: ticketMessages.ticketId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(ticketMessages)
+        .where(
+          and(
+            eq(ticketMessages.kind, 'public'),
+            eq(ticketMessages.isActive, true),
+            inArray(ticketMessages.ticketId, ids),
+          ),
+        )
+        .groupBy(ticketMessages.ticketId);
+      for (const r of rows) messageCountMap[r.ticketId] = Number(r.count);
+    }
+
+    const totalRows = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tickets)
+      .where(whereExpr);
+    const total = Number(totalRows[0]?.count ?? 0);
+
+    return {
+      items: items.map((it) => ({
+        ...it,
+        assigneeName: it.assigneeId ? (assigneeMap[it.assigneeId] ?? null) : null,
+        messageCount: messageCountMap[it.id] ?? 0,
+      })),
+      total,
+      page,
+      pageSize,
+    };
+  } catch (err) {
+    console.error('[tickets.listTickets] 실패:', err);
+    return { items: [], total: 0, page, pageSize };
+  }
+}
+
+export type TicketDetail = Ticket & {
+  hotelName: string | null;
+  reporterName: string | null;
+  reporterEmail: string | null;
+  reporterPhone: string | null;
+  assigneeName: string | null;
+  messages: Array<TicketMessage & { authorName: string | null; authorRole: string | null }>;
+  attachments: TicketAttachment[];
+};
+
+/**
+ * id 기준 상세. viewer가 호텔리어면 internal_memo 메시지 자동 제외.
+ */
+export async function getTicketDetail(
+  id: string,
+  viewer?: ViewerLike,
+): Promise<TicketDetail | null> {
+  if (!db) return null;
+  try {
+    const ticketRow = await getTicketRaw(id);
+    if (!ticketRow) return null;
+
+    // 호텔리어 권한 체크 (본인 또는 같은 호텔)
+    if (viewer?.role === 'hotelier') {
+      const ownsByReporter = ticketRow.reporterId === viewer.id;
+      const ownsByHotel =
+        viewer.hotelId !== null &&
+        ticketRow.hotelId !== null &&
+        ticketRow.hotelId === viewer.hotelId;
+      if (!ownsByReporter && !ownsByHotel) {
+        return null;
+      }
+    }
+
+    // 호텔명·접수자·담당자
+    let hotelName: string | null = null;
+    let reporterName: string | null = null;
+    let reporterEmail: string | null = null;
+    let reporterPhone: string | null = null;
+    let assigneeName: string | null = null;
+
+    if (ticketRow.hotelId) {
+      const h = await db
+        .select({ name: hotels.name })
+        .from(hotels)
+        .where(eq(hotels.id, ticketRow.hotelId))
+        .limit(1);
+      hotelName = h[0]?.name ?? null;
+    }
+    if (ticketRow.reporterId) {
+      const u = await db
+        .select({
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+        })
+        .from(users)
+        .where(eq(users.id, ticketRow.reporterId))
+        .limit(1);
+      reporterName = u[0]?.name ?? null;
+      reporterEmail = u[0]?.email ?? null;
+      reporterPhone = u[0]?.phone ?? null;
+    }
+    if (ticketRow.assigneeId) {
+      const u = await db
+        .select({ name: users.name })
+        .from(users)
+        .where(eq(users.id, ticketRow.assigneeId))
+        .limit(1);
+      assigneeName = u[0]?.name ?? null;
+    }
+
+    // 메시지 (kind 필터)
+    const allowedKinds: TicketMessageKind[] =
+      viewer?.role === 'hotelier'
+        ? ['public', 'status_change']
+        : ['public', 'internal_memo', 'status_change', 'system'];
+    const messageRows = await db
+      .select({
+        message: ticketMessages,
+        authorName: users.name,
+        authorRole: users.role,
+      })
+      .from(ticketMessages)
+      .leftJoin(users, eq(ticketMessages.authorId, users.id))
+      .where(
+        and(
+          eq(ticketMessages.ticketId, id),
+          eq(ticketMessages.isActive, true),
+          inArray(ticketMessages.kind, allowedKinds),
+        ),
+      )
+      .orderBy(asc(ticketMessages.createdAt));
+
+    // 첨부
+    const attachmentRows = await db
+      .select()
+      .from(ticketAttachments)
+      .where(
+        and(
+          eq(ticketAttachments.ticketId, id),
+          eq(ticketAttachments.isActive, true),
+        ),
+      )
+      .orderBy(asc(ticketAttachments.createdAt));
+
+    return {
+      ...ticketRow,
+      hotelName,
+      reporterName,
+      reporterEmail,
+      reporterPhone,
+      assigneeName,
+      messages: messageRows.map((r) => ({
+        ...r.message,
+        authorName: r.authorName,
+        authorRole: r.authorRole,
+      })),
+      attachments: attachmentRows,
+    };
+  } catch (err) {
+    console.error('[tickets.getTicketDetail] 실패:', err);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 메시지 / 상태 / 담당자 / 에스컬
+// ─────────────────────────────────────────────────────────────────────
+
+export type AddMessageInput = {
+  ticketId: string;
+  authorId: string;
+  kind: TicketMessageKind;
+  content: string;
+};
+
+export async function addMessage(
+  input: AddMessageInput,
+): Promise<{ ok: boolean; messageId?: string; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    const row: NewTicketMessage = {
+      ticketId: input.ticketId,
+      authorId: input.authorId,
+      kind: input.kind,
+      content: input.content,
+      metadata: {},
+    };
+    const [created] = await db
+      .insert(ticketMessages)
+      .values(row)
+      .returning({ id: ticketMessages.id });
+    // 티켓 updated_at 갱신 위해 명시적 update
+    await db
+      .update(tickets)
+      .set({ updatedAt: new Date() })
+      .where(eq(tickets.id, input.ticketId));
+    return { ok: true, messageId: created?.id };
+  } catch (err) {
+    console.error('[tickets.addMessage] 실패:', err);
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
+    };
+  }
+}
+
+export type ChangeStatusInput = {
+  ticketId: string;
+  actorId: string;
+  nextStatus: TicketStatus;
+};
+
+export async function changeStatus(
+  input: ChangeStatusInput,
+): Promise<{ ok: boolean; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    const current = await getTicketRaw(input.ticketId);
+    if (!current) return { ok: false, message: 'NOT_FOUND' };
+    if (current.status === input.nextStatus) {
+      return { ok: true };
+    }
+    await db
+      .update(tickets)
+      .set({ status: input.nextStatus })
+      .where(eq(tickets.id, input.ticketId));
+
+    await db.insert(ticketMessages).values({
+      ticketId: input.ticketId,
+      authorId: input.actorId,
+      kind: 'status_change',
+      content: `${STATUS_LABEL[current.status]} → ${STATUS_LABEL[input.nextStatus]}`,
+      metadata: { from: current.status, to: input.nextStatus },
+    });
+
+    // 호텔리어 알림 (in_progress / completed)
+    void dispatchStatusChangeNotifications(
+      input.ticketId,
+      current.status,
+      input.nextStatus,
+    );
+
+    return { ok: true };
+  } catch (err) {
+    console.error('[tickets.changeStatus] 실패:', err);
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
+    };
+  }
+}
+
+async function dispatchStatusChangeNotifications(
+  ticketId: string,
+  from: TicketStatus,
+  to: TicketStatus,
+): Promise<void> {
+  if (!db) return;
+  // in_progress / completed만 호텔리어에게 알림
+  if (to !== 'in_progress' && to !== 'completed') return;
+  try {
+    const t = await getTicketRaw(ticketId);
+    if (!t || !t.reporterId) return;
+    const reporter = await db
+      .select({
+        name: users.name,
+        email: users.email,
+        phone: users.phone,
+      })
+      .from(users)
+      .where(eq(users.id, t.reporterId))
+      .limit(1);
+    const r = reporter[0];
+    if (!r) return;
+
+    const contactMethods = Array.isArray(t.contactMethods) ? t.contactMethods : [];
+    const baseUrl = env.PUBLIC_BASE_URL || env.NEXTAUTH_URL || 'http://localhost:3000';
+    const ticketUrl = `${baseUrl.replace(/\/$/, '')}/tickets/${ticketId}`;
+
+    let assigneeName: string | null = null;
+    if (t.assigneeId) {
+      const a = await db
+        .select({ name: users.name })
+        .from(users)
+        .where(eq(users.id, t.assigneeId))
+        .limit(1);
+      assigneeName = a[0]?.name ?? null;
+    }
+
+    const baseVars = {
+      reporterName: r.name,
+      ticketNo: t.ticketNo,
+      title: t.title,
+      fromLabel: STATUS_LABEL[from],
+      toLabel: STATUS_LABEL[to],
+      ticketUrl,
+      managerName: assigneeName,
+    };
+    const tpl =
+      to === 'in_progress'
+        ? buildTicketInProgress(baseVars)
+        : buildTicketCompleted(baseVars);
+    const eventKey = `ticket.${to}`;
+
+    if (contactMethods.includes('email') && r.email) {
+      await notifyEmail(
+        {
+          to: r.email,
+          subject: tpl.subject,
+          html: tpl.html,
+          text: tpl.text,
+        },
+        { eventKey, ticketId },
+      );
+    }
+    if (contactMethods.includes('sms') && r.phone) {
+      await notifySms(
+        { to: r.phone, text: tpl.sms },
+        { eventKey, ticketId },
+      );
+    }
+  } catch (err) {
+    console.warn(
+      '[tickets.dispatchStatusChangeNotifications] 실패:',
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
+export type AssignTicketInput = {
+  ticketId: string;
+  actorId: string;
+  assigneeId: string | null;
+  dueDate?: Date | null;
+};
+
+export async function assignTicket(
+  input: AssignTicketInput,
+): Promise<{ ok: boolean; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    const current = await getTicketRaw(input.ticketId);
+    if (!current) return { ok: false, message: 'NOT_FOUND' };
+    await db
+      .update(tickets)
+      .set({
+        assigneeId: input.assigneeId,
+        dueDate: input.dueDate ?? current.dueDate,
+      })
+      .where(eq(tickets.id, input.ticketId));
+
+    // 시스템 메시지로 기록 (kind=system)
+    let label: string;
+    if (input.assigneeId === null) {
+      label = '담당자 배정이 해제되었습니다.';
+    } else if (current.assigneeId === input.assigneeId) {
+      label = '담당자 정보가 갱신되었습니다.';
+    } else {
+      label = '담당자가 변경되었습니다.';
+    }
+    await db.insert(ticketMessages).values({
+      ticketId: input.ticketId,
+      authorId: input.actorId,
+      kind: 'system',
+      content: label,
+      metadata: {
+        eventKey: 'ticket.assignee_change',
+        from: current.assigneeId,
+        to: input.assigneeId,
+      },
+    });
+
+    return { ok: true };
+  } catch (err) {
+    console.error('[tickets.assignTicket] 실패:', err);
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
+    };
+  }
+}
+
+export type EscalateToDevInput = {
+  ticketId: string;
+  actorId: string;
+  reason: string;
+};
+
+export async function escalateToDev(
+  input: EscalateToDevInput,
+): Promise<{ ok: boolean; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    const t = await getTicketRaw(input.ticketId);
+    if (!t) return { ok: false, message: 'NOT_FOUND' };
+
+    const labels = await loadCategoryLabelMaps();
+    const productLabel = labels.product[t.productCode] ?? t.productCode;
+    const issueTypeLabel = labels.issueType[t.issueType] ?? t.issueType;
+    const urgencyLabel = labels.urgency[t.urgency] ?? t.urgency;
+    const impactLabel = t.impactScope
+      ? (labels.impact[t.impactScope] ?? t.impactScope)
+      : null;
+
+    let hotelName: string | null = null;
+    if (t.hotelId) {
+      const h = await db
+        .select({ name: hotels.name })
+        .from(hotels)
+        .where(eq(hotels.id, t.hotelId))
+        .limit(1);
+      hotelName = h[0]?.name ?? null;
+    }
+    let reporterName: string | null = null;
+    let reporterEmail: string | null = null;
+    let reporterPhone: string | null = null;
+    if (t.reporterId) {
+      const u = await db
+        .select({
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+        })
+        .from(users)
+        .where(eq(users.id, t.reporterId))
+        .limit(1);
+      reporterName = u[0]?.name ?? null;
+      reporterEmail = u[0]?.email ?? null;
+      reporterPhone = u[0]?.phone ?? null;
+    }
+
+    let escalatorName: string | null = null;
+    const ec = await db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, input.actorId))
+      .limit(1);
+    escalatorName = ec[0]?.name ?? null;
+
+    const baseUrl = env.PUBLIC_BASE_URL || env.NEXTAUTH_URL || 'http://localhost:3000';
+    const adminTicketUrl = `${baseUrl.replace(/\/$/, '')}/admin/tickets/${input.ticketId}`;
+
+    // Slack 발송
+    await notifySlack(
+      {
+        channel: 'dev',
+        fallbackText: `[Dev 에스컬] ${t.ticketNo} ${t.title}`,
+        blocks: buildTicketEscalateBlocks({
+          ticketNo: t.ticketNo,
+          title: t.title,
+          productLabel,
+          issueTypeLabel,
+          urgencyLabel,
+          impactLabel,
+          hotelName,
+          reporterName,
+          reporterEmail,
+          reporterPhone,
+          contentExcerpt: t.content.slice(0, 400),
+          attachmentCount: 0,
+          link: adminTicketUrl,
+          escalatorName,
+          reason: input.reason,
+        }),
+      },
+      { eventKey: 'ticket.escalated_dev', ticketId: input.ticketId },
+    );
+
+    // 내부 메모로 에스컬 이력 기록
+    await db.insert(ticketMessages).values({
+      ticketId: input.ticketId,
+      authorId: input.actorId,
+      kind: 'internal_memo',
+      content: `🛠 **Dev 에스컬레이션 발송됨**\n\n${input.reason}`,
+      metadata: { eventKey: 'ticket.escalated_dev' },
+    });
+
+    return { ok: true };
+  } catch (err) {
+    console.error('[tickets.escalateToDev] 실패:', err);
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
+    };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 요약 통계 (큐 상단 카드)
+// ─────────────────────────────────────────────────────────────────────
+
+export async function getTicketQueueSummary(): Promise<{
+  p1Urgent: number;
+  inProgress: number;
+  pending: number;
+  todayCompleted: number;
+}> {
+  const empty = { p1Urgent: 0, inProgress: 0, pending: 0, todayCompleted: 0 };
+  if (!db) return empty;
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [p1Row] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.isActive, true),
+          eq(tickets.urgency, 'p1'),
+          inArray(tickets.status, ['received', 'in_progress', 'on_hold']),
+        ),
+      );
+    const [inProgressRow] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.isActive, true),
+          eq(tickets.status, 'in_progress'),
+        ),
+      );
+    const [pendingRow] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tickets)
+      .where(
+        and(eq(tickets.isActive, true), eq(tickets.status, 'received')),
+      );
+    const [todayDoneRow] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.isActive, true),
+          eq(tickets.status, 'completed'),
+          sql`${tickets.updatedAt} >= ${today.toISOString()}`,
+        ),
+      );
+
+    return {
+      p1Urgent: Number(p1Row?.count ?? 0),
+      inProgress: Number(inProgressRow?.count ?? 0),
+      pending: Number(pendingRow?.count ?? 0),
+      todayCompleted: Number(todayDoneRow?.count ?? 0),
+    };
+  } catch (err) {
+    console.error('[tickets.getTicketQueueSummary] 실패:', err);
+    return empty;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 매니저 목록 (담당자 select용)
+// ─────────────────────────────────────────────────────────────────────
+
+export async function listAssignableManagers() {
+  if (!db) return [];
+  try {
+    return await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+      })
+      .from(users)
+      .where(
+        and(
+          eq(users.isActive, true),
+          inArray(users.role, ['manager', 'admin']),
+        ),
+      )
+      .orderBy(asc(users.role), asc(users.name));
+  } catch (err) {
+    console.error('[tickets.listAssignableManagers] 실패:', err);
+    return [];
+  }
+}

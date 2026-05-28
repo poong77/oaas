@@ -12,7 +12,13 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   // bcryptjs / drizzle 등 server-only 라이브러리 외부 처리
-  serverExternalPackages: ['bcryptjs', '@neondatabase/serverless'],
+  serverExternalPackages: [
+    'bcryptjs',
+    '@neondatabase/serverless',
+    'solapi',
+    '@slack/web-api',
+    '@vercel/blob',
+  ],
   async headers() {
     return [
       {

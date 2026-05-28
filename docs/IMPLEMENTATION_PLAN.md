@@ -450,16 +450,21 @@ created_at, is_active
 - [ ] SF-02 트러블슈팅 체크리스트 (단계별 분기)
 - [ ] SF-04 어드민 편집
 
-### Phase 5 — 이슈 클레임 (4~5일)
-- [ ] `tickets`, `ticket_messages`, `ticket_attachments`, `ticket_form_fields` 스키마
-- [ ] S3 Presigned URL API + 업로드 컴포넌트
-- [ ] IC-01 3단계 접수폼 (제품·유형·영향범위·제목·내용)
-- [ ] IC-02 첨부 (최대 50MB)
-- [ ] IC-03 연락수단 선택
-- [ ] IC-06 티켓 자동 생성 + 솔라피/SES 접수확인 + Slack `#as-new` 알림 (P1은 `#as-urgent`)
-- [ ] IC-04 전화 접수 (관리자 수기 입력)
-- [ ] IC-07 내부 메모
-- [ ] IC-08 Dev 에스컬레이션 (Slack `#dev-escalation`)
+### Phase 5 — 이슈 클레임 (4~5일) — **완료 2026-05-28**
+- [x] `tickets`, `ticket_messages`, `ticket_attachments`, `ticket_form_fields`, `notification_logs` 스키마
+- [x] Vercel Blob 업로드 API + 첨부 업로더 컴포넌트 (S3 대신 Blob 선택)
+- [x] IC-01 3단계 접수폼 (제품·유형·영향범위·긴급도·제목·내용)
+- [x] IC-02 첨부 (최대 50MB, 총 200MB)
+- [x] IC-03 연락수단 선택 (SMS·이메일)
+- [x] IC-06 티켓 자동 생성 + 솔라피/SES 접수확인 + Slack `#as-new` 알림 (P1은 `#as-urgent` 동시 발송)
+- [x] IC-04 전화 접수 (`/admin/tickets/new-by-phone`, 호텔·호텔리어 매핑 + Blob 첨부)
+- [x] IC-07 내부 메모 (호텔리어 비공개, 서버단 자동 필터)
+- [x] IC-08 Dev 에스컬레이션 (Slack `#dev-escalation` + internal_memo 자동 기록)
+- [x] IS-01 내 문의 (본인 + 같은 호텔)
+- [x] IS-02 티켓 상세 + 추가 답변 (completed 시 폼 숨김)
+- [x] IS-04 매니저 큐 (상태 탭 + 4종 필터 + 검색 + 요약 카드)
+- [x] 매니저/어드민 헤더 + admin-nav에 "티켓 큐" 메뉴
+- [x] 시드: 샘플 티켓 3건 + 메시지 9~10건 (idempotent)
 
 ### Phase 6 — 이슈 현황 (2~3일)
 - [ ] IS-01 내 문의 목록

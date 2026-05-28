@@ -28,10 +28,15 @@ export const env = {
   SES_FROM_EMAIL: process.env.SES_FROM_EMAIL ?? '',
   S3_BUCKET: process.env.S3_BUCKET ?? '',
 
+  // Vercel Blob (Phase 5 — 첨부 파일 업로드)
+  BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN ?? '',
+
   // Slack (Phase 5)
   SLACK_WEBHOOK_NEW: process.env.SLACK_WEBHOOK_NEW ?? '',
   SLACK_WEBHOOK_URGENT: process.env.SLACK_WEBHOOK_URGENT ?? '',
   SLACK_WEBHOOK_DEV: process.env.SLACK_WEBHOOK_DEV ?? '',
+  /** support.oapms.com URL — 알림 본문의 티켓 링크 생성에 사용. */
+  PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL ?? process.env.NEXTAUTH_URL ?? '',
 
   // Chatbot (Phase 8)
   OACHAT_EMBED_URL: process.env.OACHAT_EMBED_URL ?? '',
