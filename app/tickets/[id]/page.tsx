@@ -31,8 +31,10 @@ import { requireAuth } from '@/lib/permissions';
 import {
   STATUS_LABEL,
   getTicketDetail,
+  getFeedback,
   loadCategoryLabelMaps,
 } from '@/lib/services/tickets';
+import { FeedbackWidget } from './_components/feedback-widget';
 import type { TicketStatus } from '@/db/schema';
 import { TicketThread } from './_components/ticket-thread';
 import { ReplyForm } from './_components/reply-form';
@@ -100,6 +102,12 @@ export default async function HotelierTicketDetailPage({
     }),
     loadCategoryLabelMaps(),
   ]);
+
+  // 완료 상태 + 본인이 reporter면 피드백 위젯 표시
+  const showFeedback =
+    ticket?.status === 'completed' &&
+    ticket?.reporterId === user.id;
+  const existingFeedback = showFeedback ? await getFeedback(id) : null;
 
   if (!ticket) {
     notFound();
@@ -291,6 +299,22 @@ export default async function HotelierTicketDetailPage({
           />
         </CardContent>
       </Card>
+
+      {showFeedback && (
+        <FeedbackWidget
+          ticketId={ticket.id}
+          ticketNo={ticket.ticketNo}
+          existing={
+            existingFeedback
+              ? {
+                  rating: existingFeedback.rating,
+                  comment: existingFeedback.comment,
+                  createdAt: existingFeedback.createdAt.toISOString(),
+                }
+              : null
+          }
+        />
+      )}
 
       {ticket.status === 'completed' && (
         <div className="flex justify-end">

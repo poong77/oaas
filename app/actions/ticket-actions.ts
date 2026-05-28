@@ -28,9 +28,14 @@ import {
   changeStatus,
   createTicket,
   escalateToDev,
+  submitFeedback,
   type CreateTicketInput,
 } from '@/lib/services/tickets';
-import type { TicketContactMethod, TicketStatus } from '@/db/schema';
+import type {
+  TicketContactMethod,
+  TicketFeedbackRating,
+  TicketStatus,
+} from '@/db/schema';
 
 const CONTACT_METHODS = ['sms', 'email'] as const;
 const URGENCY_CODES = ['p1', 'p2', 'p3'] as const;
@@ -427,6 +432,100 @@ export async function escalateToDevAction(
       targetType: 'ticket',
       targetId: parsed.data.ticketId,
     });
+    revalidatePath(`/admin/tickets/${parsed.data.ticketId}`);
+  }
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Phase 6 — 칸반 드래그앤드롭 (IS-04 칸반)
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * 칸반에서 카드 드래그앤드롭으로 상태 변경.
+ *
+ * 기존 changeStatusAction과 비교:
+ *   - 권한·검증·호출 함수 동일
+ *   - activity_logs action만 `ticket.kanban_moved`로 구분 (운영 분석 용)
+ *   - revalidatePath에 `/admin/tickets/kanban` 추가
+ *
+ * 분리 이유: 상태 변경의 "맥락"을 감사 로그로 추적 가능하게 (리스트뷰 vs 칸반).
+ */
+export async function moveTicketStatusAction(
+  formData: FormData,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const parsed = StatusSchema.safeParse({
+    ticketId: formData.get('ticketId'),
+    nextStatus: formData.get('nextStatus'),
+  });
+  if (!parsed.success) return { ok: false, message: '잘못된 요청' };
+
+  const result = await changeStatus({
+    ticketId: parsed.data.ticketId,
+    actorId: user.id,
+    nextStatus: parsed.data.nextStatus as TicketStatus,
+  });
+  if (result.ok) {
+    logActivity({
+      userId: user.id,
+      action: 'ticket.kanban_moved',
+      targetType: 'ticket',
+      targetId: parsed.data.ticketId,
+      payload: { to: parsed.data.nextStatus },
+    });
+    revalidatePath('/admin/tickets');
+    revalidatePath('/admin/tickets/kanban');
+    revalidatePath(`/admin/tickets/${parsed.data.ticketId}`);
+    revalidatePath(`/tickets/${parsed.data.ticketId}`);
+  }
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Phase 6 — ⑦ 호텔리어 피드백
+// ─────────────────────────────────────────────────────────────────────
+
+const RATING_CODES = ['resolved', 'partial', 'unresolved'] as const;
+
+const FeedbackSchema = z.object({
+  ticketId: z.string().uuid(),
+  rating: z.enum(RATING_CODES),
+  comment: z.string().max(2000).optional().nullable(),
+});
+
+export async function submitFeedbackAction(
+  formData: FormData,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireAuth();
+  const parsed = FeedbackSchema.safeParse({
+    ticketId: formData.get('ticketId'),
+    rating: formData.get('rating'),
+    comment: (formData.get('comment') ?? '').toString().trim() || null,
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message:
+        parsed.error.issues[0]?.message ?? '평가 값을 확인해주세요',
+    };
+  }
+
+  const result = await submitFeedback({
+    ticketId: parsed.data.ticketId,
+    rating: parsed.data.rating as TicketFeedbackRating,
+    comment: parsed.data.comment ?? null,
+    userId: user.id,
+  });
+  if (result.ok) {
+    logActivity({
+      userId: user.id,
+      action: 'ticket.feedback_submitted',
+      targetType: 'ticket',
+      targetId: parsed.data.ticketId,
+      payload: { rating: parsed.data.rating },
+    });
+    revalidatePath(`/tickets/${parsed.data.ticketId}`);
     revalidatePath(`/admin/tickets/${parsed.data.ticketId}`);
   }
   return result;

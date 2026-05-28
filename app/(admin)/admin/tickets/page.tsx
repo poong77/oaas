@@ -20,6 +20,7 @@ import type { TicketStatus } from '@/db/schema';
 import { TicketsFilters } from './_components/tickets-filters';
 import { TicketsListClient } from './_components/tickets-list-client';
 import { TicketsSummaryCards } from './_components/tickets-summary-cards';
+import { ListKanbanToggle } from './_components/list-kanban-toggle';
 
 export const metadata = { title: '티켓 큐 — OA 통합 AS' };
 export const dynamic = 'force-dynamic';
@@ -106,7 +107,12 @@ export default async function AdminTicketsQueuePage({
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title="티켓 큐"
+        title={
+          <span className="inline-flex items-center gap-2">
+            <span>티켓 큐</span>
+            <ListKanbanToggle />
+          </span>
+        }
         description={`총 ${ticketsResult.total}건의 티켓이 필터 조건에 해당합니다.`}
         actions={
           <div className="flex flex-wrap items-center gap-2">

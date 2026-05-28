@@ -27,9 +27,11 @@ import { requireRole } from '@/lib/permissions';
 import {
   STATUS_LABEL,
   getTicketDetail,
+  getFeedback,
   listAssignableManagers,
   loadCategoryLabelMaps,
 } from '@/lib/services/tickets';
+import { RATING_LABEL, RATING_TONE } from '@/lib/services/tickets-meta';
 import type { TicketStatus } from '@/db/schema';
 import { TicketThread } from '@/app/tickets/[id]/_components/ticket-thread';
 import { AdminTicketActions } from './_components/admin-ticket-actions';
@@ -87,7 +89,7 @@ export default async function AdminTicketDetailPage({
   const { id } = await params;
   const user = await requireRole(['manager', 'admin']);
 
-  const [ticket, labels, managers] = await Promise.all([
+  const [ticket, labels, managers, feedback] = await Promise.all([
     getTicketDetail(id, {
       id: user.id,
       role: user.role,
@@ -95,6 +97,7 @@ export default async function AdminTicketDetailPage({
     }),
     loadCategoryLabelMaps(),
     listAssignableManagers(),
+    getFeedback(id),
   ]);
 
   if (!ticket) {
@@ -274,6 +277,29 @@ export default async function AdminTicketDetailPage({
               />
             </CardContent>
           </Card>
+
+          {feedback && (
+            <Card className="border-emerald-200 bg-emerald-50/40 dark:border-emerald-900 dark:bg-emerald-950/20">
+              <CardContent className="flex flex-col gap-2 p-4">
+                <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                  호텔리어 피드백
+                </span>
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <Badge tone={RATING_TONE[feedback.rating]}>
+                    {RATING_LABEL[feedback.rating]}
+                  </Badge>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    {fmtDateTime(feedback.createdAt)}
+                  </span>
+                </div>
+                {feedback.comment && (
+                  <p className="whitespace-pre-wrap rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                    {feedback.comment}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <AdminTicketActions
             ticketId={ticket.id}

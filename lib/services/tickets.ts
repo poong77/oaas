@@ -33,11 +33,14 @@ import {
   tickets,
   ticketMessages,
   ticketAttachments,
+  ticketFeedback,
   users,
   categories,
   type Ticket,
   type TicketMessage,
   type TicketAttachment,
+  type TicketFeedback,
+  type TicketFeedbackRating,
   type TicketStatus,
   type TicketChannel,
   type TicketContactMethod,
@@ -45,6 +48,7 @@ import {
   type NewTicket,
   type NewTicketMessage,
   type NewTicketAttachment,
+  type NewTicketFeedback,
 } from '@/db/schema';
 import { env } from '@/lib/env';
 import { notifyEmail, notifySlack, notifySms } from '@/lib/notifications';
@@ -1126,6 +1130,232 @@ export async function getTicketQueueSummary(): Promise<{
   } catch (err) {
     console.error('[tickets.getTicketQueueSummary] 실패:', err);
     return empty;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// IS-04 칸반뷰: 컬럼별 그룹핑 조회 (Phase 6)
+// ─────────────────────────────────────────────────────────────────────
+
+export type TicketKanbanCard = Pick<
+  Ticket,
+  | 'id'
+  | 'ticketNo'
+  | 'title'
+  | 'productCode'
+  | 'urgency'
+  | 'status'
+  | 'createdAt'
+  | 'dueDate'
+  | 'assigneeId'
+  | 'hotelId'
+> & {
+  hotelName: string | null;
+  assigneeName: string | null;
+};
+
+export type ListKanbanFilters = {
+  urgency?: string | null;
+  productCode?: string | null;
+  /** true면 viewer.id == assigneeId 인 티켓만. */
+  mineOnly?: boolean;
+};
+
+export type ListKanbanResult = Record<TicketStatus, TicketKanbanCard[]>;
+
+/**
+ * 칸반뷰 전용. 페이지네이션 없음. `completed`만 최근 30일.
+ *
+ * 성능: 4개 status 단위로 분리 쿼리하지 않고 1번 쿼리로 모두 가져온 뒤
+ *       메모리에서 그룹핑. 대량 트래픽 시 status별 limit 적용 고려.
+ */
+export async function listAllTicketsForKanban(
+  viewer?: ViewerLike,
+  filters: ListKanbanFilters = {},
+): Promise<ListKanbanResult> {
+  const empty: ListKanbanResult = {
+    received: [],
+    in_progress: [],
+    on_hold: [],
+    completed: [],
+  };
+  if (!db) return empty;
+
+  const conditions: SQL[] = [eq(tickets.isActive, true)];
+
+  if (filters.urgency) conditions.push(eq(tickets.urgency, filters.urgency));
+  if (filters.productCode)
+    conditions.push(eq(tickets.productCode, filters.productCode));
+  if (filters.mineOnly && viewer) {
+    conditions.push(eq(tickets.assigneeId, viewer.id));
+  }
+
+  // completed 컬럼은 최근 30일만 — completed가 아닌 status는 무조건 포함.
+  // SQL: (status != 'completed') OR (status='completed' AND created_at >= now() - interval '30 days')
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  conditions.push(
+    sql`(${tickets.status} <> 'completed' OR ${tickets.createdAt} >= ${thirtyDaysAgo.toISOString()})`,
+  );
+
+  const whereExpr =
+    conditions.length === 1 ? conditions[0] : and(...conditions);
+
+  try {
+    const rows = await db
+      .select({
+        id: tickets.id,
+        ticketNo: tickets.ticketNo,
+        title: tickets.title,
+        productCode: tickets.productCode,
+        urgency: tickets.urgency,
+        status: tickets.status,
+        createdAt: tickets.createdAt,
+        dueDate: tickets.dueDate,
+        assigneeId: tickets.assigneeId,
+        hotelId: tickets.hotelId,
+        hotelName: hotels.name,
+      })
+      .from(tickets)
+      .leftJoin(hotels, eq(tickets.hotelId, hotels.id))
+      .where(whereExpr)
+      .orderBy(desc(tickets.createdAt))
+      // 안전 상한 — 컬럼당 평균 200건 이상이면 리스트뷰 사용 권장
+      .limit(800);
+
+    // assignee 이름 매핑
+    const assigneeIds = Array.from(
+      new Set(rows.map((r) => r.assigneeId).filter((v): v is string => !!v)),
+    );
+    const assigneeMap: Record<string, string> = {};
+    if (assigneeIds.length > 0) {
+      const userRows = await db
+        .select({ id: users.id, name: users.name })
+        .from(users)
+        .where(inArray(users.id, assigneeIds));
+      for (const u of userRows) assigneeMap[u.id] = u.name;
+    }
+
+    const out: ListKanbanResult = {
+      received: [],
+      in_progress: [],
+      on_hold: [],
+      completed: [],
+    };
+    for (const r of rows) {
+      const card: TicketKanbanCard = {
+        ...r,
+        assigneeName: r.assigneeId
+          ? (assigneeMap[r.assigneeId] ?? null)
+          : null,
+      };
+      out[r.status as TicketStatus].push(card);
+    }
+    return out;
+  } catch (err) {
+    console.error('[tickets.listAllTicketsForKanban] 실패:', err);
+    return empty;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ⑦ 피드백 (Phase 6)
+// ─────────────────────────────────────────────────────────────────────
+
+export type SubmitFeedbackInput = {
+  ticketId: string;
+  rating: TicketFeedbackRating;
+  comment?: string | null;
+  userId: string;
+};
+
+export type SubmitFeedbackResult = {
+  ok: boolean;
+  message?: string;
+  feedbackId?: string;
+};
+
+/**
+ * 호텔리어 피드백 제출.
+ *
+ * 동작:
+ *   1) 본인이 reporter인 티켓인지 검증 (FORBIDDEN 방지)
+ *   2) 티켓 상태가 completed인지 검증 (중간 상태에서 제출 차단)
+ *   3) 기존 활성 피드백을 비활성 처리
+ *   4) 새 피드백 insert
+ *
+ * 호출부에서는 권한(`requireAuth`) 통과 후 userId 전달. submitFeedback 내부는
+ * "이 티켓의 reporter인지"까지만 추가 검증.
+ */
+export async function submitFeedback(
+  input: SubmitFeedbackInput,
+): Promise<SubmitFeedbackResult> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    const t = await getTicketRaw(input.ticketId);
+    if (!t) return { ok: false, message: 'NOT_FOUND' };
+    if (t.reporterId !== input.userId) {
+      return { ok: false, message: 'FORBIDDEN' };
+    }
+    if (t.status !== 'completed') {
+      return {
+        ok: false,
+        message: '완료된 티켓만 평가할 수 있습니다.',
+      };
+    }
+
+    // 기존 활성 피드백을 비활성 처리
+    await db
+      .update(ticketFeedback)
+      .set({ isActive: false })
+      .where(
+        and(
+          eq(ticketFeedback.ticketId, input.ticketId),
+          eq(ticketFeedback.isActive, true),
+        ),
+      );
+
+    const row: NewTicketFeedback = {
+      ticketId: input.ticketId,
+      rating: input.rating,
+      comment: input.comment?.trim() || null,
+      submittedBy: input.userId,
+    };
+    const [created] = await db
+      .insert(ticketFeedback)
+      .values(row)
+      .returning({ id: ticketFeedback.id });
+
+    return { ok: true, feedbackId: created?.id };
+  } catch (err) {
+    console.error('[tickets.submitFeedback] 실패:', err);
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
+    };
+  }
+}
+
+/** 최신 활성 피드백 1건. */
+export async function getFeedback(
+  ticketId: string,
+): Promise<TicketFeedback | null> {
+  if (!db) return null;
+  try {
+    const rows = await db
+      .select()
+      .from(ticketFeedback)
+      .where(
+        and(
+          eq(ticketFeedback.ticketId, ticketId),
+          eq(ticketFeedback.isActive, true),
+        ),
+      )
+      .orderBy(desc(ticketFeedback.createdAt))
+      .limit(1);
+    return rows[0] ?? null;
+  } catch (err) {
+    console.error('[tickets.getFeedback] 실패:', err);
+    return null;
   }
 }
 
