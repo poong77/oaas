@@ -115,8 +115,10 @@
 | 3 | `app/(admin)/faqs` FAQ 답변 | 어드민 | full | ● | — | ● | — |
 | 4 | `app/(admin)/checklists/steps` 단계 | 어드민 | full | ● | — | ● | — |
 | 5 | `app/(admin)/quick-replies` 템플릿 | 매니저/어드민 | full | ● | — | ● | — |
-| 6 | `app/tickets/new` 문제 상세 | 호텔리어 | **lite** | 최소 | ✅ | × | — |
-| 7 | `app/tickets/[id]` 추가 답변 | 호텔리어 | lite | 최소 | ✅ | × | — |
+| 6 | `app/tickets/new` 문제 상세 | 호텔리어 | **full** ⓘ | 전체 | ✅ | ● | — |
+| 7 | `app/tickets/[id]` 추가 답변 | 호텔리어 | **full** ⓘ | 전체 | ✅ | ● | — |
+
+> ⓘ **mode 변경 (2026-05-29)**: 사용자 요청으로 호텔리어 신규/답변도 풀 톨바 적용. 모바일 sticky bottom 톨바는 mode 무관 모든 모드에서 노출되도록 변경 (mobile-bottom-toolbar 조건 제거).
 | 8 | `app/(admin)/tickets` 공개 답변 | 매니저/어드민 | full | ● | — | ● | **✅** |
 | 9 | `app/(admin)/tickets` 내부 메모 | 매니저/어드민 | full | ● + Slack 발송 | — | ● | — |
 | 10 | `app/(admin)/master/system-settings` | 어드민 | full | ● | — | ● | — |
@@ -545,3 +547,50 @@ app/(admin)/admin/help/editor/          [신규, Phase 5]
 - Tiptap Next.js 가이드: https://tiptap.dev/docs/editor/getting-started/install/nextjs
 - tiptap-markdown: https://github.com/aguingand/tiptap-markdown
 - rehype-sanitize: https://github.com/rehypejs/rehype-sanitize
+
+---
+
+## 후속 변경 사항 (2026-05-29 추가)
+
+### 1. 풀스택 톨바 업그레이드 (commit 935d07c)
+사용자 요청으로 오아 마케팅 블로그 톨바 수준의 풀스택 기능 추가. `mode='full'`에서 자동 노출.
+
+**신규 패키지** (7개):
+- `@tiptap/extension-text-style`, `extension-color`, `extension-text-align`
+- `@tiptap/extension-font-family`, `extension-youtube`, `extension-horizontal-rule`
+- `rehype-raw` (인라인 스타일 렌더링용)
+- 커스텀 `lib/editor/font-size-extension.ts`
+
+**추가 톨바 기능**:
+- 폰트 패밀리 select (기본/고딕/명조/코드)
+- 폰트 사이즈 select (12·14·16·18·20·24·32)
+- 텍스트 색상 swatch popup (8색)
+- 형광펜 multicolor swatch (4색)
+- 정렬 4가지 (좌·중·우·양쪽)
+- YouTube 비디오 삽입 (prompt URL)
+- 구분선 (HR), 인라인 코드 + 코드 블록 분리
+
+**저장 호환성**: `tiptap-markdown { html: true }` — 마크다운 외 기능은 HTML 인라인으로 보존. `markdown-view`에 `rehype-raw` + `rehype-sanitize` 화이트리스트 추가.
+
+### 2. P1 보안·UX fix (commit 7d64036)
+- **iframe 도메인 화이트리스트**: `markdown-view.tsx`에 `rehypeIframeAllowlist` 커스텀 plugin 추가. YouTube/YouTube-NoCookie/Vimeo만 허용, 외 도메인은 안전 안내 div로 대체
+- **모바일 톨바 회귀 해소**: `mobile-bottom-toolbar`의 `mode === 'lite'` 조건 제거. 모든 모드에서 모바일 viewport 노출. 상단 풀톨바는 `md:flex hidden`으로 모바일 숨김(중복 방지)
+
+### 3. 후속 리팩터링 (commit b3027f5)
+- `components/editor/placeholders/hotelier-guide.tsx` — "예시 채우기" 버튼 컴포넌트 분리 (variant: 'new-ticket' / 'reply')
+- `lib/editor/editor-keymap.ts` — `createEditorShortcutHandler` 팩토리 (F1·Cmd+?·Cmd+S 단축키 로직 모듈화)
+- `lib/editor/editor-permissions.ts` — `EditorCapabilities` 매트릭스 + `getEditorCapabilities(mode)` + `canUseFontFamily/Color/TextAlign/Youtube/Table` 헬퍼
+- `app/api/cron/cleanup-drafts/route.ts` — Vercel Cron endpoint (`CRON_SECRET` Bearer 인증)
+- `vercel.json` — crons 등록: 매일 18:00 UTC (= 03:00 KST) → `cleanupOldDrafts(30)` 호출
+
+### 4. 미구현 (후속 PR 권장)
+- **슬래시 커맨드 시스템** — Tiptap suggestion API 기반. 큰 작업이라 별도 PR. 현재 `Cmd+/` 빠른답변 패널로 대체 가능
+- **호텔리어 모바일 UX 최적화** — 풀톨바를 풀로 다 보여주는 게 모바일에서 과한지 검토 (현재 모바일은 상단 풀톨바 hidden + bottom 톨바만, 충분)
+- **이메일 발송 시 마크다운 외부 도구 호환성 안내** — html: true 모드의 인라인 스타일이 외부 export 시 잔존함을 dev-rules에 명시
+
+### 5. 검증 이력
+| 시점 | E2E | Match Rate |
+|------|-----|-----------|
+| Phase 1~5 완료 (82f6c6b) | 24/24 ✅ (54.8s) | 97% |
+| 풀스택 톨바 + P1 fix (7d64036) | 24/24 ✅ (50.6s) | 98% |
+| 후속 리팩터링 (b3027f5) | 미검증 (push 후 CI) | ~99% 예상 |
