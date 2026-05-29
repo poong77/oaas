@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2026-05-29 — 리치 에디터 통합 (rich-editor)</title>
+<style>
+  :root {
+    --brand-50: #f5f3ff;
+    --brand-100: #ede9fe;
+    --brand-500: #8b5cf6;
+    --brand-600: #7c3aed;
+    --brand-700: #6d28d9;
+    --brand-900: #4c1d95;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif;
+    background: var(--slate-50);
+    color: var(--slate-900);
+    line-height: 1.6;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+  header { padding: 24px 0; border-bottom: 3px solid var(--brand-500); margin-bottom: 24px; }
+  h1 { margin: 0 0 4px; font-size: 22px; color: var(--brand-700); }
+  h2 { font-size: 17px; color: var(--brand-700); margin: 24px 0 8px; }
+  h3 { font-size: 14px; color: var(--slate-700); margin: 12px 0 6px; }
+  .meta { color: var(--slate-500); font-size: 13px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .card.brand { border-left: 3px solid var(--brand-500); }
+  .card.success { border-left: 3px solid #10b981; }
+  .card.warn { border-left: 3px solid #f59e0b; }
+  .card.danger { border-left: 3px solid #ef4444; }
+  .stat-num { font-size: 24px; font-weight: 700; color: var(--brand-700); }
+  .stat-label { font-size: 12px; color: var(--slate-500); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--slate-200); padding: 6px 8px; text-align: left; }
+  th { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+  td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  ul.check { list-style: none; padding-left: 0; }
+  ul.check li::before { content: "✅ "; }
+  ul.todo li::before { content: "⏳ "; }
+  ul.risk li::before { content: "⚠ "; }
+  code { background: var(--slate-100); padding: 2px 5px; border-radius: 3px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, monospace; }
+  kbd { background: var(--slate-100); border: 1px solid var(--slate-300); padding: 1px 4px; border-radius: 3px; font-size: 11px; font-family: monospace; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge.ok { background: #d1fae5; color: #065f46; }
+  .badge.info { background: var(--brand-100); color: var(--brand-700); }
+  @media (max-width: 640px) {
+    h1 { font-size: 19px; }
+    .grid { grid-template-columns: 1fr; }
+    th, td { font-size: 12px; padding: 4px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>리치 에디터 통합 (rich-editor)</h1>
+  <p class="meta">📅 2026-05-29 · Phase 1~5 단일 세션 진행 · 빌드 ✅ 통과</p>
+</header>
+
+<section>
+  <h2>📊 한눈에 보기</h2>
+  <div class="grid">
+    <div class="card brand">
+      <div class="stat-num">10</div>
+      <div class="stat-label">적용 페이지 (Plan 10곳 달성)</div>
+    </div>
+    <div class="card success">
+      <div class="stat-num">37+</div>
+      <div class="stat-label">신규·수정 파일</div>
+    </div>
+    <div class="card success">
+      <div class="stat-num">0</div>
+      <div class="stat-label">데이터 마이그레이션 (마크다운 컬럼 유지)</div>
+    </div>
+    <div class="card brand">
+      <div class="stat-num">+1</div>
+      <div class="stat-label">신규 DB 테이블 (editor_drafts)</div>
+    </div>
+    <div class="card success">
+      <div class="stat-num">5</div>
+      <div class="stat-label">완료 Phase (1·2·3·4·5)</div>
+    </div>
+    <div class="card warn">
+      <div class="stat-num">9</div>
+      <div class="stat-label">npm 취약점 (transitive, 별도 검토)</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>🎯 Phase 별 핵심</h2>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>핵심</th><th>결과</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. 인프라</strong></td>
+        <td>Tiptap v3 + tiptap-markdown 호환성 검증 (React 19 + Next 16) · RichEditor 공용 컴포넌트 · /api/drafts CRUD · /api/upload Rate Limit + editor prefix · brand-* CSS</td>
+        <td><span class="badge ok">완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>2. 필수 5곳</strong></td>
+        <td>공지·아티클·FAQ·체크리스트·빠른답변 — split-view 1700행 인라인 패턴 제거, RichEditor 1줄 교체</td>
+        <td><span class="badge ok">완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>3. 티켓 + 매니저 기능</strong></td>
+        <td>티켓 4곳 + 대리접수 1곳 · 이미지·링크 모달 · 빠른답변 패널 (Cmd+/) · SMS 미리보기 · 단축키 도움말 · 호텔리어 placeholder · 발송 helper (solapi/ses/slack)</td>
+        <td><span class="badge ok">완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>4. 자동저장 완성</strong></td>
+        <td>draft 복구 다이얼로그 (페이지 진입 시 자동) · 발행 후 draft 자동 삭제 (7곳 부모) · 모바일 sticky bottom 톨바 (iOS visualViewport)</td>
+        <td><span class="badge ok">완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>5. 운영자 가이드</strong></td>
+        <td>/admin/help/editor 페이지 · 본 HTML 일지</td>
+        <td><span class="badge ok">완료</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>📁 변경 파일 요약</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>🆕 신규 컴포넌트 (15)</h3>
+      <ul style="margin: 4px 0; padding-left: 18px; font-size: 12px;">
+        <li>rich-editor.tsx · 톨바 4 (full/lite/mobile/button) · 패널 3 (save-indicator/quick-reply/sms-preview)</li>
+        <li>모달 4 (image-upload/link-input/shortcut-help/draft-restore)</li>
+        <li>hook 1 (use-auto-save) · sandbox 2</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🆕 신규 lib (8)</h3>
+      <ul style="margin: 4px 0; padding-left: 18px; font-size: 12px;">
+        <li>editor/ — markdown-to-plain/html/slack-mrkdwn, draft-key, draft-client, extract-image-urls, tiptap-types</li>
+        <li>rate-limit · services/editor-drafts</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🆕 신규 API (2)</h3>
+      <ul style="margin: 4px 0; padding-left: 18px; font-size: 12px;">
+        <li><code>/api/drafts</code> — GET / PUT / DELETE (본인 draft)</li>
+        <li><code>/api/quick-replies</code> — GET (매니저+어드민)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🆕 신규 DB (1)</h3>
+      <ul style="margin: 4px 0; padding-left: 18px; font-size: 12px;">
+        <li><code>editor_drafts</code> 테이블 (10 columns / 3 indexes / 1 FK)</li>
+        <li>마이그레이션 SQL: <code>0008_tiresome_young_avengers.sql</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>✏️ 수정 (9)</h3>
+      <ul style="margin: 4px 0; padding-left: 18px; font-size: 12px;">
+        <li><code>app/api/upload/route.ts</code> · <code>app/globals.css</code> · <code>db/schema/index.ts</code> · <code>package.json</code> · <code>package-lock.json</code></li>
+        <li>발송 모듈 3: <code>lib/notifications/{solapi,ses,slack}.ts</code></li>
+        <li><code>docs/IMPLEMENTATION_PLAN.md</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📄 적용 페이지 (10)</h3>
+      <ul style="margin: 4px 0; padding-left: 18px; font-size: 12px;">
+        <li>Phase 2: notice/article/faq/checklist-step/quick-reply</li>
+        <li>Phase 3: 호텔리어 신규/추가답변, 매니저 공개/내부 토글, 대리접수</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>⌨ 단축키 (full 모드)</h2>
+  <table>
+    <thead><tr><th>키</th><th>동작</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">F1 / Cmd + ?</td><td>단축키 도움말 모달</td></tr>
+      <tr><td class="mono">Cmd + S</td><td>임시 저장 (즉시 draft)</td></tr>
+      <tr><td class="mono">Cmd + /</td><td>빠른답변 패널 열기</td></tr>
+      <tr><td class="mono">Ctrl + 1~9</td><td>빠른답변 즉시 삽입 (패널 내)</td></tr>
+      <tr><td class="mono">Cmd + B / I / U / K</td><td>굵게 / 기울임 / 밑줄 / 링크</td></tr>
+      <tr><td class="mono">Cmd + Alt + 1~3</td><td>제목 1~3</td></tr>
+      <tr><td class="mono">Cmd + Shift + 7/8/9</td><td>번호 / 글머리 / 체크리스트</td></tr>
+      <tr><td class="mono">Cmd + Z / Cmd + Shift + Z</td><td>실행취소 / 재실행</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>🔍 운영 테스트 체크리스트 (수동)</h2>
+  <div class="card">
+    <ul class="check" style="margin: 0; padding-left: 18px;">
+      <li>10곳 페이지 모두 RichEditor 마운트 + WYSIWYG 입력 정상</li>
+      <li>이미지 업로드: 톨바 클릭 → 모달 → 파일 선택 → 본문에 삽입</li>
+      <li>이미지 리사이즈: 2000px 이상 파일 업로드 → 1600px로 축소 확인</li>
+      <li>링크 입력: Cmd+K → 모달 → URL → 적용 / 편집 / 제거</li>
+      <li>빠른답변: Cmd+/ → 패널 → 검색 → ↑↓ → Enter / Ctrl+1~9</li>
+      <li>변수 치환: <code>{{호텔명}}</code> 포함 템플릿 삽입 시 자동 치환 (매니저 답변 시점)</li>
+      <li>SMS 미리보기: 공개 답변 본문 입력 → 토글 펼침 → 카운터 + plain text</li>
+      <li>자동 저장: 본문 입력 → 30초 후 "저장됨" 표시</li>
+      <li>draft 복구: 작성 도중 탭 닫고 재진입 → 다이얼로그 노출 → 복구 동작</li>
+      <li>draft 자동 삭제: 발행 후 재진입 → 다이얼로그 안 뜸</li>
+      <li>호텔리어 placeholder: <code>/tickets/new</code> 본문 빈 상태 → "예시 채우기" 클릭 → 템플릿 prefill</li>
+      <li>모바일 톨바: 모바일 viewport(&lt; 768px) + lite 모드 + 에디터 focus → 하단 톨바 노출</li>
+      <li>단축키 도움말: F1 또는 Cmd+? → 모달</li>
+      <li>다크모드: 모든 모달·패널·톨바 다크 톤 가독성 확인</li>
+      <li>viewMode 전환: 매니저 → 호텔리어 시점 → 톨바 색상 자동 변경 (brand-* cascade)</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>📦 신규 npm 의존성</h2>
+  <table>
+    <thead><tr><th>패키지</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">@tiptap/react · starter-kit · extension-image · -link · -table · -table-row · -table-cell · -table-header · -underline · -highlight · -task-list · -task-item · -placeholder · -suggestion</td><td>Tiptap v3 핵심 + 확장 14개</td></tr>
+      <tr><td class="mono">tiptap-markdown</td><td>WYSIWYG ↔ 마크다운 양방향</td></tr>
+      <tr><td class="mono">rehype-sanitize</td><td>호텔리어 입력 본문 XSS 방어 (옵션)</td></tr>
+      <tr><td class="mono">marked</td><td>SES 이메일 발송용 마크다운 → HTML 변환</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>⚠ 알려진 제약 (의도된 범위)</h2>
+  <div class="card warn">
+    <ul class="risk" style="margin: 0; padding-left: 18px; font-size: 13px;">
+      <li><strong>영상 첨부 미지원</strong> — 톨바에 미노출. 후속 결정 (Mux / Cloudflare Stream / YouTube 임베드 중 택1)</li>
+      <li><strong>system-settings 제외</strong> — value 필드가 JSON/string 입력이라 RichEditor 부적합 (대신 phone-ticket-form 추가로 10곳 유지)</li>
+      <li><strong>슬래시 커맨드 메뉴</strong> — Tiptap suggestion 기반 메뉴는 미구현. 빠른답변은 Cmd+/ 패널로 대체. 후속에서 슬래시 메뉴 보강 가능</li>
+      <li><strong>@멘션</strong> — 내부 메모 매니저 간 멘션은 미구현. 후속 PR (mentions JSONB + suggestion)</li>
+      <li><strong>답변 수정 이력</strong> — Phase 외 (ticket_message_versions 후속)</li>
+      <li><strong>npm 9개 취약점</strong> — transitive 의존성. <code>npm audit fix</code> 실행 여부 별도 결정</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>🚀 다음 단계 (사용자 결정 필요)</h2>
+  <div class="card brand">
+    <ol style="margin: 0; padding-left: 18px;">
+      <li>DB 마이그레이션 적용: <code>npm run db:push</code> (editor_drafts 테이블 생성)</li>
+      <li>dev 서버에서 10곳 + sandbox 동작 확인 (운영 테스트 체크리스트 참조)</li>
+      <li>git commit 분리: 단일 vs 의미 단위 (docs / phase-1 인프라 / phase-2 5곳 / phase-3 티켓+helper / phase-4 자동저장 / phase-5 가이드)</li>
+      <li>npm audit 검토 — 취약점 분류 후 fix 결정</li>
+      <li>운영 매뉴얼 안내: <code>/admin/help/editor</code> 페이지를 매니저 교육에 활용</li>
+    </ol>
+  </div>
+</section>
+
+<footer style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--slate-200); color: var(--slate-500); font-size: 12px; text-align: center;">
+  통합 AS 플랫폼 · support.oapms.com · 2026-05-29 · rich-editor v1.0
+</footer>
+
+</div>
+</body>
+</html>
