@@ -4,7 +4,7 @@
  * Phase 5 IC-01~IC-08 / IS-01~IS-02 / IS-04.
  *
  * 핵심 함수:
- *   - generateTicketNo(bump)       — 'AS-YYYY-NNNNNN' 발급. bump는 INSERT 충돌 재시도 시 +N
+ *   - generateTicketNo()           — 'AS-YYYY-NNNNNN' 발급. ticket_no_counter 테이블 atomic UPSERT (race-free)
  *   - createTicket(input)          — 티켓 생성 + 첨부 매핑 + 알림 일괄 (Slack/SMS/Email)
  *   - listTickets({...})           — 큐·내 문의 공용 (권한별 필터는 호출부에서)
  *   - getTicketById(id, viewer)    — 상세 + 메시지 + 첨부 (viewer가 호텔리어면 internal_memo 제외)
@@ -120,44 +120,44 @@ import { STATUS_LABEL } from './tickets-meta';
 // 티켓 번호 발급
 // ─────────────────────────────────────────────────────────────────────
 
-export async function generateTicketNo(bump = 0): Promise<string> {
-  if (!db) {
-    return `AS-${new Date().getFullYear()}-000001`;
-  }
+/**
+ * 'AS-YYYY-NNNNNN' atomic 채번.
+ *
+ * ticket_no_counter(year, last_no) 테이블에 INSERT ... ON CONFLICT DO UPDATE RETURNING으로
+ * Postgres 단일 statement 내에서 atomic increment. Neon read replica lag 무관.
+ * 연도별 독립 카운터 — 새해 자동으로 1부터 시작.
+ */
+export async function generateTicketNo(): Promise<string> {
   const year = new Date().getFullYear();
   const prefix = `AS-${year}-`;
-  // 시드 데이터(900001~)와 운영 번호가 섞이지 않도록, 시드 영역(>=900000)은 MAX 계산에서 제외.
-  const SEED_FLOOR = 900000;
-
-  for (let selectAttempt = 0; selectAttempt < 3; selectAttempt++) {
-    try {
-      const rows = (await db.execute(
-        sql`
-          SELECT COALESCE(
-            MAX(CAST(SUBSTRING(ticket_no FROM ${prefix.length + 1}) AS INTEGER)),
-            0
-          )::int AS max_no
-          FROM tickets
-          WHERE ticket_no LIKE ${prefix + '%'}
-            AND CAST(SUBSTRING(ticket_no FROM ${prefix.length + 1}) AS INTEGER) < ${SEED_FLOOR}
-        `,
-      )) as unknown as { rows: Array<{ max_no: number }> } | Array<{ max_no: number }>;
-      // neon-http drizzle 결과는 보통 배열 그 자체 (rows 래핑 X)
-      const arr = Array.isArray(rows)
-        ? rows
-        : (rows as { rows: Array<{ max_no: number }> }).rows;
-      const currentMax = Number(arr?.[0]?.max_no ?? 0);
-      // bump 폭 = 10. Neon read replica lag로 currentMax이 stale인 경우
-      // 첫 시도가 충돌해도 10건 단위로 건너뛰며 시도하여 충돌 확률 감소.
-      // retry 5회 × 폭 10 = 최대 50건 슬롯 시도. 동시 INSERT 50건 미만 안전.
-      const next = currentMax + 1 + bump * 10;
-      return `${prefix}${String(next).padStart(6, '0')}`;
-    } catch (err) {
-      console.warn('[tickets.generateTicketNo] retry', selectAttempt, err);
-    }
+  if (!db) {
+    return `${prefix}000001`;
   }
-  // 최후 fallback: timestamp
-  return `${prefix}${String(Date.now() % 1000000).padStart(6, '0')}`;
+
+  try {
+    const rows = (await db.execute(
+      sql`
+        INSERT INTO ticket_no_counter (year, last_no)
+        VALUES (${year}, 1)
+        ON CONFLICT (year) DO UPDATE
+          SET last_no = ticket_no_counter.last_no + 1
+        RETURNING last_no
+      `,
+    )) as unknown as { rows: Array<{ last_no: number }> } | Array<{ last_no: number }>;
+    // neon-http drizzle 결과는 보통 배열 그 자체 (rows 래핑 X)
+    const arr = Array.isArray(rows)
+      ? rows
+      : (rows as { rows: Array<{ last_no: number }> }).rows;
+    const next = Number(arr?.[0]?.last_no ?? 0);
+    if (!next || next <= 0) {
+      throw new Error('ticket_no_counter returned invalid last_no');
+    }
+    return `${prefix}${String(next).padStart(6, '0')}`;
+  } catch (err) {
+    console.error('[tickets.generateTicketNo] atomic UPSERT 실패:', err);
+    // 최후 fallback: timestamp 기반 (충돌 가능하나 retry로 흡수)
+    return `${prefix}${String(Date.now() % 1000000).padStart(6, '0')}`;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -200,12 +200,14 @@ export async function createTicket(
 ): Promise<CreateTicketResult> {
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
 
-  const MAX_INSERT_ATTEMPTS = 10; // bump 폭 10 × retry 10 = 100건 슬롯. Neon replica lag 대비 여유.
+  // ticket_no_counter atomic UPSERT가 race-free이므로 재시도 불필요.
+  // fallback timestamp 채번이 충돌할 극단적 케이스에만 1회 더 시도.
+  const MAX_INSERT_ATTEMPTS = 2;
   let created: { id: string; ticketNo: string } | undefined;
   let lastErr: unknown = null;
 
   for (let attempt = 0; attempt < MAX_INSERT_ATTEMPTS; attempt++) {
-    const ticketNo = await generateTicketNo(attempt);
+    const ticketNo = await generateTicketNo();
     const values: NewTicket = {
       ticketNo,
       hotelId: input.hotelId,
@@ -243,7 +245,7 @@ export async function createTicket(
         return { ok: false, message: msg || 'INTERNAL_ERROR' };
       }
       console.warn(
-        `[tickets.createTicket] ticket_no 충돌 재시도 ${attempt + 1}/${MAX_INSERT_ATTEMPTS}: ${ticketNo}`,
+        `[tickets.createTicket] ticket_no 충돌 재시도 ${attempt + 1}/${MAX_INSERT_ATTEMPTS}: ${ticketNo} (fallback timestamp 채번 충돌 가능성)`,
       );
     }
   }

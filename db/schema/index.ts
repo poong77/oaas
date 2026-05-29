@@ -49,3 +49,5 @@ export * from './editor-drafts';
 // 동의어 사전 마스터 (검색 보강)
 export * from './term-groups';
 export * from './term-synonyms';
+// 티켓 채번 카운터 (race-free atomic UPSERT)
+export * from './ticket-no-counter';
