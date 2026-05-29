@@ -63,7 +63,7 @@ function rehypeIframeAllowlist() {
  * 스타일: Tailwind prose 대신 직접 스타일 (다크모드 + 통일 토큰).
  */
 
-// 인라인 스타일·color·align·font-family·font-size·YouTube iframe 화이트리스트
+// 인라인 스타일·color·align·font-family·font-size·YouTube iframe·하이라이트 화이트리스트
 const sanitizeSchema = {
   ...defaultSchema,
   attributes: {
@@ -73,11 +73,14 @@ const sanitizeSchema = {
       'style',
       'className',
       'class',
+      'data-color', // Tiptap Highlight multicolor
+      'data-text-align', // (옵션) 일부 정렬 익스텐션
     ],
     span: [
       ...((defaultSchema.attributes?.span as string[] | undefined) ?? []),
       'style',
     ],
+    mark: ['style', 'data-color', 'className', 'class'],
     div: [
       ...((defaultSchema.attributes?.div as string[] | undefined) ?? []),
       'style',
@@ -87,6 +90,8 @@ const sanitizeSchema = {
     h2: [['style']],
     h3: [['style']],
     p: [['style']],
+    li: ['style', 'data-checked', 'data-type'],
+    ul: ['style', 'data-type'],
     iframe: [
       'src',
       'width',
@@ -97,7 +102,7 @@ const sanitizeSchema = {
       'title',
     ],
   },
-  tagNames: [...(defaultSchema.tagNames ?? []), 'iframe'],
+  tagNames: [...(defaultSchema.tagNames ?? []), 'iframe', 'mark', 'u'],
   // style 속성은 css 파싱이 무거우니 화이트리스트 패턴은 별도 적용 안 함 (브라우저가 자체 안전 처리)
 };
 
@@ -125,8 +130,11 @@ export function MarkdownView({
           [
             rehypeAutolinkHeadings,
             {
-              behavior: 'wrap',
-              properties: { className: 'heading-anchor' },
+              // 'wrap'은 heading 안에 a를 넣어 색·밑줄을 오염시킴.
+              // 'append'는 heading 옆에 별도 # 링크 추가하여 heading 스타일 보존.
+              behavior: 'append',
+              properties: { className: 'heading-anchor', ariaHidden: true, tabIndex: -1 },
+              content: [],
             },
           ],
         ]}
@@ -231,6 +239,30 @@ export function MarkdownView({
           ),
           hr: ({ ...props }) => (
             <hr {...props} className="my-6 border-slate-200 dark:border-slate-700" />
+          ),
+          mark: ({ children, ...props }) => {
+            // Tiptap Highlight: data-color 속성 또는 style background-color
+            const dataColor = (props as { 'data-color'?: string })['data-color'];
+            const styleProp = (props as { style?: React.CSSProperties }).style;
+            const bg = dataColor || styleProp?.backgroundColor;
+            return (
+              <mark
+                {...props}
+                style={{
+                  ...styleProp,
+                  backgroundColor: bg || '#fef08a', // 기본 노란색
+                  padding: '0 0.15em',
+                  borderRadius: '0.2em',
+                }}
+              >
+                {children}
+              </mark>
+            );
+          },
+          u: ({ children, ...props }) => (
+            <u {...props} className="underline underline-offset-2">
+              {children}
+            </u>
           ),
           table: ({ children, ...props }) => (
             <div className="my-4 overflow-x-auto">
