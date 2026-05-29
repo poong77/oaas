@@ -192,6 +192,58 @@
 
 ---
 
+## 5-bis. 공통 인프라 — 리치 에디터 (rich-editor)
+
+> 텍스트 입력 10곳에 Tiptap WYSIWYG 리치 에디터 통합. 저장 포맷은 마크다운 유지(컬럼 무변경).
+> 자세한 내용은 `docs/01-plan/features/rich-editor.plan.md`.
+
+| 항목 | 결정 |
+|:-|:-|
+| 에디터 | **Tiptap v3.x + tiptap-markdown** (입력 WYSIWYG, 저장 마크다운) |
+| 적용 범위 | 10곳 (필수 5 + 권장 5) — notice/article/faq/checklist-step/quick-reply + 티켓 4종 + system-settings |
+| 저장 포맷 | 마크다운 (기존 `*_markdown` 컬럼 유지, **마이그레이션 0**) |
+| 렌더링 | 기존 `components/articles/markdown-view.tsx` 재사용 |
+| 이미지 업로드 | 기존 `/api/upload` + `purpose='editor'` 분기 + Rate Limit (분당 30회) |
+| 첨부 | 이미지(jpg/png/webp/gif) + PDF, 개당 10MB. 영상 Phase 1 제외 |
+| 자동 저장 | localStorage 2초 + `editor_drafts` 테이블 30초 |
+| 신규 테이블 | `editor_drafts` (id, user_id, scope, target_id, draft_key, content_markdown, metadata, ...) |
+| 단축키 | Cmd+Enter / Cmd+S / Cmd+/ / 슬래시 커맨드 / Cmd+? 도움말 |
+| 슬래시 커맨드 | 빠른답변(`/q`) · SMS 미리보기(`/sms`) · 변수 칩(`/customer` 등) · 헤딩/표/이미지/링크 |
+| SMS 미리보기 | 매니저 답변 화면 사이드 패널 (140자 카운터, 80자 초과 LMS 안내) |
+| 발송 변환 helper | `markdown-to-plain`(SMS) / `markdown-to-html`(SES) / `markdown-to-slack-mrkdwn`(Slack) |
+| brand-* 토큰 | role-mode-ui cascade 활용 — viewMode 전환 시 톨바 자동 적응 |
+| 호텔리어 placeholder | "예시 채우기 ↳" 인터랙티브 토글 |
+| Phase | 1(인프라) 1.5일 / 2(필수 5곳) 1일 / 3(권장 5곳+매니저) 1.5일 / 4(호텔리어+모바일) 1일 / 5(QA·문서) 0.5일 — **총 5.5일** |
+
+### 신규 DB 컬럼 추가 (`editor_drafts` 1개 테이블)
+
+```ts
+// db/schema/editor-drafts.ts
+editor_drafts (
+  id uuid PK,
+  user_id uuid FK users(id) ON DELETE CASCADE,
+  scope varchar(50),                  // 'article'|'notice'|'faq'|'checklist-step'|'quick-reply'|'ticket-message'|'system-setting'
+  target_id uuid,                     // 기존 편집 시 PK, 신규는 null
+  draft_key varchar(200),             // 'scope:targetId' 또는 'scope:new:nonce' (UNIQUE per user)
+  content_markdown text,
+  metadata text,                      // JSON (선택 메타)
+  created_at, updated_at, is_active
+)
+```
+
+### 신규 API
+- `POST/PUT/GET/DELETE /api/drafts/[scope]/[id]` — 본인 draft CRUD
+- `/api/upload` 수정 — `purpose='editor'` 분기 + Rate Limit
+
+### 후속 결정 (Phase 1 이후)
+- 영상 처리 (A Blob 원본 / B Mux / C YouTube 링크만)
+- @멘션 (내부 메모 매니저 간)
+- 답변 수정 이력 (`ticket_message_versions`)
+- AI 작성 보조 (IC-09/10) 통합
+- 글 작성 페이지 사이드바 자동 접힘
+
+---
+
 ## 6. 어드민 마스터 데이터 편집 메뉴 (`/admin/master`)
 
 > 핵심 요구사항: **대부분의 DB 항목을 어드민이 별도 메뉴와 세부 탭에서 편집 가능**.
