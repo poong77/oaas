@@ -1,17 +1,17 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition, type ReactNode } from 'react';
-import { Eye, Save, Upload } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Save, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { MarkdownView } from '@/components/articles/markdown-view';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { RichEditor } from '@/components/editor/rich-editor';
+import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
 import type { ProductCategoryView } from '@/lib/services/categories';
 import type { NoticeKind } from '@/db/schema';
 import { NOTICE_KIND_META } from '@/lib/services/notices-meta';
@@ -62,9 +62,6 @@ export function NoticeEditor({
     initial?.bannerUntilIso ?? '',
   );
 
-  const [activeTab, setActiveTab] = useState<'edit' | 'preview' | 'split'>(
-    'split',
-  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   async function submit(publish: boolean) {
@@ -113,6 +110,8 @@ export function NoticeEditor({
           : await updateNoticeAction(initial!.id, undefined, formData);
 
       if (result.ok && result.id) {
+        // 발행 성공 → 편집 모드 draft 자동 삭제 (신규는 nonce 모름, 자연 만료)
+        await deleteDraftAfterPublish('notice', initial?.id ?? null);
         toast.success(
           mode === 'create'
             ? publish
@@ -231,60 +230,21 @@ export function NoticeEditor({
         </CardContent>
       </Card>
 
-      {/* 본문 split view */}
+      {/* 본문 RichEditor */}
       <Card>
         <CardContent className="flex flex-col gap-3 p-5">
-          <div className="flex items-center justify-between">
-            <Label>본문 (Markdown) *</Label>
-            <div className="flex items-center gap-1 rounded-md border border-slate-200 p-0.5 text-xs dark:border-slate-700">
-              <TabButton
-                active={activeTab === 'edit'}
-                onClick={() => setActiveTab('edit')}
-              >
-                작성
-              </TabButton>
-              <TabButton
-                active={activeTab === 'split'}
-                onClick={() => setActiveTab('split')}
-              >
-                양쪽
-              </TabButton>
-              <TabButton
-                active={activeTab === 'preview'}
-                onClick={() => setActiveTab('preview')}
-              >
-                <Eye className="h-3 w-3" />
-                미리보기
-              </TabButton>
-            </div>
-          </div>
-
-          <div
-            className={
-              activeTab === 'split' ? 'grid gap-3 lg:grid-cols-2' : 'grid gap-3'
-            }
-          >
-            {(activeTab === 'edit' || activeTab === 'split') && (
-              <Textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                rows={20}
-                placeholder={`## 변경 사항\n\n- 항목 1\n- 항목 2\n\n## 영향 범위\n\n...`}
-                className="font-mono text-sm"
-              />
-            )}
-            {(activeTab === 'preview' || activeTab === 'split') && (
-              <div className="min-h-[20rem] overflow-auto rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-950">
-                {body.trim() ? (
-                  <MarkdownView source={body} />
-                ) : (
-                  <p className="text-sm text-slate-400">
-                    본문을 입력하면 이곳에 미리보기가 표시됩니다.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          <Label>본문 *</Label>
+          <RichEditor
+            mode="full"
+            value={body}
+            onChange={setBody}
+            minHeight={400}
+            placeholder="공지 본문을 작성하세요. 헤딩·목록·코드 블록 등 사용 가능합니다."
+            autoSave={{
+              scope: 'notice',
+              targetId: initial?.id ?? null,
+            }}
+          />
           {fieldErrors.bodyMarkdown && (
             <FieldError msg={fieldErrors.bodyMarkdown} />
           )}
@@ -311,30 +271,6 @@ export function NoticeEditor({
         {pending && <span className="text-xs text-slate-500">저장 중...</span>}
       </div>
     </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1 rounded px-2 py-1 font-medium transition-colors ${
-        active
-          ? 'bg-brand-600 text-white'
-          : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 

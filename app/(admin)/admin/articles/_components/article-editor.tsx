@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition, type ReactNode } from 'react';
-import { Eye, Save, Sparkles, Upload } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Save, Sparkles, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { MarkdownView } from '@/components/articles/markdown-view';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { RichEditor } from '@/components/editor/rich-editor';
+import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
 import type { ProductCategoryView } from '@/lib/services/categories';
 import {
   checkSlugAvailable,
@@ -61,9 +62,6 @@ export function ArticleEditor({
     initial?.relatedArticleIds?.join(', ') ?? '',
   );
 
-  const [activeTab, setActiveTab] = useState<'edit' | 'preview' | 'split'>(
-    'split',
-  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   async function handleSuggestSlug() {
@@ -124,6 +122,7 @@ export function ArticleEditor({
           : await updateArticleAction(initial!.id, undefined, formData);
 
       if (result.ok && result.id) {
+        await deleteDraftAfterPublish('article', initial?.id ?? null);
         toast.success(
           mode === 'create'
             ? publish
@@ -260,62 +259,21 @@ export function ArticleEditor({
         </CardContent>
       </Card>
 
-      {/* 본문 split view */}
+      {/* 본문 RichEditor */}
       <Card>
         <CardContent className="flex flex-col gap-3 p-5">
-          <div className="flex items-center justify-between">
-            <Label>본문 (Markdown) *</Label>
-            <div className="flex items-center gap-1 rounded-md border border-slate-200 p-0.5 text-xs dark:border-slate-700">
-              <TabButton
-                active={activeTab === 'edit'}
-                onClick={() => setActiveTab('edit')}
-              >
-                작성
-              </TabButton>
-              <TabButton
-                active={activeTab === 'split'}
-                onClick={() => setActiveTab('split')}
-              >
-                양쪽
-              </TabButton>
-              <TabButton
-                active={activeTab === 'preview'}
-                onClick={() => setActiveTab('preview')}
-              >
-                <Eye className="h-3 w-3" />
-                미리보기
-              </TabButton>
-            </div>
-          </div>
-
-          <div
-            className={
-              activeTab === 'split'
-                ? 'grid gap-3 lg:grid-cols-2'
-                : 'grid gap-3'
-            }
-          >
-            {(activeTab === 'edit' || activeTab === 'split') && (
-              <Textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                rows={24}
-                placeholder={`## 제목\n\n본문을 마크다운으로 작성하세요.\n\n## 다음 섹션\n\n- 리스트도 가능\n- ## / ### 헤딩은 자동 TOC 생성`}
-                className="font-mono text-sm"
-              />
-            )}
-            {(activeTab === 'preview' || activeTab === 'split') && (
-              <div className="min-h-[24rem] overflow-auto rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-950">
-                {body.trim() ? (
-                  <MarkdownView source={body} />
-                ) : (
-                  <p className="text-sm text-slate-400">
-                    본문을 입력하면 이곳에 미리보기가 표시됩니다.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          <Label>본문 *</Label>
+          <RichEditor
+            mode="full"
+            value={body}
+            onChange={setBody}
+            minHeight={480}
+            placeholder="아티클 본문을 작성하세요. ## / ### 헤딩은 자동 TOC 생성."
+            autoSave={{
+              scope: 'article',
+              targetId: initial?.id ?? null,
+            }}
+          />
           {fieldErrors.bodyMarkdown && (
             <FieldError msg={fieldErrors.bodyMarkdown} />
           )}
@@ -348,30 +306,6 @@ export function ArticleEditor({
         )}
       </div>
     </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1 rounded px-2 py-1 font-medium transition-colors ${
-        active
-          ? 'bg-brand-600 text-white'
-          : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 

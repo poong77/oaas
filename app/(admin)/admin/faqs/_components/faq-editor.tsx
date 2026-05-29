@@ -1,16 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition, type ReactNode } from 'react';
-import { Eye, Save } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { MarkdownView } from '@/components/articles/markdown-view';
+import { RichEditor } from '@/components/editor/rich-editor';
+import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
 import type { ProductCategoryView } from '@/lib/services/categories';
 import {
   createFaqAction,
@@ -52,9 +52,6 @@ export function FaqEditor({
     initial?.sortOrder !== undefined ? String(initial.sortOrder) : '0',
   );
 
-  const [activeTab, setActiveTab] = useState<'edit' | 'preview' | 'split'>(
-    'split',
-  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   function submit() {
@@ -73,6 +70,7 @@ export function FaqEditor({
           : await updateFaqAction(initial!.id, undefined, formData);
 
       if (result.ok && result.id) {
+        await deleteDraftAfterPublish('faq', initial?.id ?? null);
         toast.success(mode === 'create' ? 'FAQ가 생성되었습니다' : '저장되었습니다');
         if (mode === 'create') {
           router.push(`/admin/faqs/${result.id}`);
@@ -157,59 +155,18 @@ export function FaqEditor({
 
       <Card>
         <CardContent className="flex flex-col gap-3 p-5">
-          <div className="flex items-center justify-between">
-            <Label>답변 (Markdown) *</Label>
-            <div className="flex items-center gap-1 rounded-md border border-slate-200 p-0.5 text-xs dark:border-slate-700">
-              <TabButton
-                active={activeTab === 'edit'}
-                onClick={() => setActiveTab('edit')}
-              >
-                작성
-              </TabButton>
-              <TabButton
-                active={activeTab === 'split'}
-                onClick={() => setActiveTab('split')}
-              >
-                양쪽
-              </TabButton>
-              <TabButton
-                active={activeTab === 'preview'}
-                onClick={() => setActiveTab('preview')}
-              >
-                <Eye className="h-3 w-3" />
-                미리보기
-              </TabButton>
-            </div>
-          </div>
-
-          <div
-            className={
-              activeTab === 'split'
-                ? 'grid gap-3 lg:grid-cols-2'
-                : 'grid gap-3'
-            }
-          >
-            {(activeTab === 'edit' || activeTab === 'split') && (
-              <Textarea
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                rows={16}
-                placeholder={'답변을 마크다운으로 작성하세요.\n\n- 짧고 명확하게\n- 단계가 있으면 번호 매김\n- 관련 링크 적극 활용'}
-                className="font-mono text-sm"
-              />
-            )}
-            {(activeTab === 'preview' || activeTab === 'split') && (
-              <div className="min-h-[20rem] overflow-auto rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-950">
-                {answer.trim() ? (
-                  <MarkdownView source={answer} />
-                ) : (
-                  <p className="text-sm text-slate-400">
-                    답변을 입력하면 미리보기가 표시됩니다.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          <Label>답변 *</Label>
+          <RichEditor
+            mode="full"
+            value={answer}
+            onChange={setAnswer}
+            minHeight={320}
+            placeholder="답변을 작성하세요. 짧고 명확하게, 단계가 있으면 번호 매김, 관련 링크 적극 활용."
+            autoSave={{
+              scope: 'faq',
+              targetId: initial?.id ?? null,
+            }}
+          />
           {fieldErrors.answerMarkdown && (
             <FieldError msg={fieldErrors.answerMarkdown} />
           )}
@@ -226,30 +183,6 @@ export function FaqEditor({
         )}
       </div>
     </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1 rounded px-2 py-1 font-medium transition-colors ${
-        active
-          ? 'bg-brand-600 text-white'
-          : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 
