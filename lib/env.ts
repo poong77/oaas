@@ -40,6 +40,9 @@ export const env = {
 
   // Chatbot (Phase 8)
   OACHAT_EMBED_URL: process.env.OACHAT_EMBED_URL ?? '',
+
+  // Cron 인증 (rich-editor 후속 — editor_drafts 30일 정리)
+  CRON_SECRET: process.env.CRON_SECRET ?? '',
 } as const;
 
 export function isDbConfigured(): boolean {

@@ -39,6 +39,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { RichEditor } from '@/components/editor/rich-editor';
+import { HotelierGuideButton } from '@/components/editor/placeholders/hotelier-guide';
 import { createTicketAction } from '@/app/actions/ticket-actions';
 import {
   AttachmentUploader,
@@ -399,28 +400,11 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
                   title="자세한 내용"
                   error={fieldError('content')}
                 />
-                {!content.trim() && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setContent(
-                        [
-                          '**발생 시간**: ',
-                          '',
-                          '**객실/위치**: ',
-                          '',
-                          '**증상**: ',
-                          '',
-                          '**시도해본 조치**: ',
-                          '',
-                        ].join('\n'),
-                      )
-                    }
-                    className="text-xs text-brand-600 hover:text-brand-700 hover:underline dark:text-brand-400"
-                  >
-                    예시 채우기 ↳
-                  </button>
-                )}
+                <HotelierGuideButton
+                  variant="new-ticket"
+                  hidden={!!content.trim()}
+                  onApply={setContent}
+                />
               </div>
               <RichEditor
                 mode="full"

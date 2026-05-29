@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
@@ -31,6 +31,7 @@ import { ImageUploadDialog } from './dialogs/image-upload-dialog';
 import { LinkInputDialog } from './dialogs/link-input-dialog';
 import { ShortcutHelpModal } from './dialogs/shortcut-help-modal';
 import { DraftRestoreDialog } from './dialogs/draft-restore-dialog';
+import { createEditorShortcutHandler } from '@/lib/editor/editor-keymap';
 
 export interface RichEditorProps {
   /** 마크다운 문자열 (controlled) */
@@ -193,35 +194,18 @@ export function RichEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, mounted, autoSave?.scope, autoSave?.targetId]);
 
-  // Cmd+S 핸들러 — 자동저장 활성화 시 즉시 flush
-  // F1 / Cmd+? — 단축키 도움말 모달 (에디터 focus 시)
-  const handleEditorShortcut = useCallback(
-    (e: KeyboardEvent) => {
-      const inEditor = editor?.isFocused ?? false;
-      // 도움말: F1은 항상, Cmd+? 또는 Cmd+/ 는 충돌 회피 위해 에디터 focus 시
-      if (e.key === 'F1') {
-        e.preventDefault();
-        setHelpModalOpen(true);
-        return;
-      }
-      if (inEditor && (e.metaKey || e.ctrlKey) && (e.key === '?' || (e.shiftKey && e.key === '/'))) {
-        e.preventDefault();
-        setHelpModalOpen(true);
-        return;
-      }
-      // Cmd+S — 자동저장 flush
-      if (autoSave && inEditor && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        void autoSaveResult.flushNow();
-      }
-    },
-    [editor, autoSave, autoSaveResult],
-  );
-
+  // 단축키 핸들러 — lib/editor/editor-keymap.ts에서 팩토리 임포트
   useEffect(() => {
-    window.addEventListener('keydown', handleEditorShortcut);
-    return () => window.removeEventListener('keydown', handleEditorShortcut);
-  }, [handleEditorShortcut]);
+    const handler = createEditorShortcutHandler({
+      editor,
+      handlers: {
+        onOpenHelp: () => setHelpModalOpen(true),
+        onFlushSave: autoSave ? () => autoSaveResult.flushNow() : undefined,
+      },
+    });
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [editor, autoSave, autoSaveResult]);
 
   return (
     <div
