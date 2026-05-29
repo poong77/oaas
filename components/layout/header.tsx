@@ -58,7 +58,7 @@ export function Header() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/oatech-logo.svg"
+              src="/oatech-logo.png"
               alt="OAtech"
               className="h-6 w-auto dark:brightness-110"
             />
