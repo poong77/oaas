@@ -44,3 +44,5 @@ export * from './quick-reply-templates';
 export * from './quick-actions';
 export * from './role-starters';
 export * from './system-settings';
+// 공통 인프라 — 리치 에디터 자동 저장
+export * from './editor-drafts';

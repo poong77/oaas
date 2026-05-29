@@ -76,3 +76,115 @@
     @apply bg-slate-950 text-slate-100;
   }
 }
+
+/*
+ * ─────────────────────────────────────────────────────────────────
+ * RichEditor — Tiptap ProseMirror 영역 스타일
+ *
+ * - prose 플러그인 미사용 (의존성 0). 직접 스타일링으로 통합AS markdown-view 톤과 일치.
+ * - 다크모드 분기.
+ * - 헤딩·목록·인용·코드·표·체크리스트·이미지·링크 모두 brand-* 활용 가능 부분에 자동 적용 (viewMode 적응).
+ * - Placeholder 표시 (Tiptap @tiptap/extension-placeholder의 emptyEditorClass='is-editor-empty').
+ *
+ * @see components/editor/rich-editor.tsx
+ * @see docs/01-plan/features/rich-editor.plan.md §8 (브랜드 톤 통합)
+ * ─────────────────────────────────────────────────────────────────
+ */
+.ProseMirror {
+  @apply text-sm leading-7 outline-none;
+}
+.ProseMirror > * + * {
+  @apply mt-3;
+}
+.ProseMirror h1 {
+  @apply mt-6 mb-3 text-xl font-bold text-slate-900 dark:text-slate-100;
+}
+.ProseMirror h2 {
+  @apply mt-5 mb-2 text-lg font-bold text-slate-900 dark:text-slate-100;
+}
+.ProseMirror h3 {
+  @apply mt-4 mb-2 text-base font-semibold text-slate-900 dark:text-slate-100;
+}
+.ProseMirror p {
+  @apply leading-7 text-slate-800 dark:text-slate-200;
+}
+.ProseMirror ul,
+.ProseMirror ol {
+  @apply my-2 pl-6;
+}
+.ProseMirror ul {
+  @apply list-disc;
+}
+.ProseMirror ol {
+  @apply list-decimal;
+}
+.ProseMirror li > p {
+  @apply my-0;
+}
+.ProseMirror blockquote {
+  @apply my-3 border-l-4 border-brand-300 bg-brand-50/50 px-3 py-2 italic text-slate-700 dark:border-brand-700 dark:bg-brand-950/30 dark:text-slate-300;
+}
+.ProseMirror code {
+  @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.875em] text-rose-700 dark:bg-slate-800 dark:text-rose-300;
+}
+.ProseMirror pre {
+  @apply my-3 overflow-x-auto rounded-md bg-slate-900 p-3 text-xs leading-5 text-slate-100;
+}
+.ProseMirror pre code {
+  @apply bg-transparent p-0 text-slate-100;
+}
+.ProseMirror a {
+  @apply text-brand-700 underline underline-offset-2 hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200;
+}
+.ProseMirror strong {
+  @apply font-bold text-slate-900 dark:text-slate-100;
+}
+.ProseMirror em {
+  @apply italic;
+}
+.ProseMirror s {
+  @apply text-slate-500 line-through;
+}
+.ProseMirror mark {
+  @apply rounded bg-amber-200 px-1 text-amber-900 dark:bg-amber-700/40 dark:text-amber-100;
+}
+.ProseMirror hr {
+  @apply my-4 border-t border-slate-200 dark:border-slate-700;
+}
+.ProseMirror img {
+  @apply my-3 max-w-full rounded-md;
+}
+/* 표 */
+.ProseMirror table {
+  @apply my-3 w-full border-collapse text-xs;
+}
+.ProseMirror th,
+.ProseMirror td {
+  @apply border border-slate-300 px-2 py-1 align-top dark:border-slate-700;
+}
+.ProseMirror th {
+  @apply bg-slate-100 font-semibold dark:bg-slate-800;
+}
+/* 체크리스트 (TaskList) */
+.ProseMirror ul[data-type='taskList'] {
+  @apply list-none pl-0;
+}
+.ProseMirror ul[data-type='taskList'] li {
+  @apply flex items-start gap-2;
+}
+.ProseMirror ul[data-type='taskList'] li > label {
+  @apply mt-1 shrink-0;
+}
+.ProseMirror ul[data-type='taskList'] li > div {
+  @apply flex-1;
+}
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  @apply pointer-events-none float-left h-0 text-slate-400 dark:text-slate-600;
+  content: attr(data-placeholder);
+}
+/* 포커스 시 visible outline */
+.ProseMirror:focus-within {
+  @apply outline-none;
+}
+
