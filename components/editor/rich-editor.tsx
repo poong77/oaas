@@ -231,7 +231,8 @@ export function RichEditor({
       )}
       data-editor-mode={mode}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50/50 px-2 py-1 dark:border-slate-800 dark:bg-slate-900/50">
+      {/* 상단 톨바 — 모바일에서는 숨김 (대신 bottom toolbar 노출, lite/full 모두) */}
+      <div className="hidden flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50/50 px-2 py-1 md:flex dark:border-slate-800 dark:bg-slate-900/50">
         {mode === 'full' ? (
           <FullToolbar
             editor={editor}
@@ -326,15 +327,13 @@ export function RichEditor({
         }}
         onClose={() => setDraftCandidate(null)}
       />
-      {/* 모바일 sticky bottom 톨바 — lite 모드에서만 (호텔리어 중심) */}
-      {mode === 'lite' && (
-        <MobileBottomToolbar
-          editor={editor}
-          onRequestImageUpload={() => setImageDialogOpen(true)}
-          onRequestLinkInput={() => setLinkDialogOpen(true)}
-          onRequestHelp={() => setHelpModalOpen(true)}
-        />
-      )}
+      {/* 모바일 sticky bottom 톨바 — 모든 모드 (모바일 viewport에서만 노출됨) */}
+      <MobileBottomToolbar
+        editor={editor}
+        onRequestImageUpload={() => setImageDialogOpen(true)}
+        onRequestLinkInput={() => setLinkDialogOpen(true)}
+        onRequestHelp={() => setHelpModalOpen(true)}
+      />
     </div>
   );
 }

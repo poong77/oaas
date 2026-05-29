@@ -6,7 +6,51 @@ import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import { visit } from 'unist-util-visit';
+import type { Root, Element } from 'hast';
 import { cn } from '@/lib/utils';
+
+/**
+ * iframe src 도메인 화이트리스트 필터.
+ * YouTube/YouTube-NoCookie/Vimeo 외 iframe은 안전한 안내 div로 대체.
+ */
+const ALLOWED_IFRAME_DOMAINS = [
+  'youtube.com',
+  'www.youtube.com',
+  'youtube-nocookie.com',
+  'www.youtube-nocookie.com',
+  'player.vimeo.com',
+];
+
+function rehypeIframeAllowlist() {
+  return (tree: Root) => {
+    visit(tree, 'element', (node: Element) => {
+      if (node.tagName !== 'iframe') return;
+      const src = node.properties?.src;
+      if (typeof src !== 'string') {
+        node.tagName = 'div';
+        node.properties = {};
+        node.children = [{ type: 'text', value: '[빈 iframe 차단됨]' }];
+        return;
+      }
+      try {
+        const url = new URL(src);
+        const ok = ALLOWED_IFRAME_DOMAINS.includes(url.hostname);
+        if (!ok) {
+          node.tagName = 'div';
+          node.properties = {
+            className: 'rounded border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900',
+          };
+          node.children = [{ type: 'text', value: `[차단된 iframe: ${url.hostname}]` }];
+        }
+      } catch {
+        node.tagName = 'div';
+        node.properties = {};
+        node.children = [{ type: 'text', value: '[잘못된 iframe URL 차단됨]' }];
+      }
+    });
+  };
+}
 
 /**
  * 마크다운 렌더 — RSC에서 그대로 사용 가능.
@@ -75,6 +119,7 @@ export function MarkdownView({
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[
           rehypeRaw,
+          rehypeIframeAllowlist, // iframe src 도메인 화이트리스트 (sanitize 전에)
           [rehypeSanitize, sanitizeSchema],
           rehypeSlug,
           [
