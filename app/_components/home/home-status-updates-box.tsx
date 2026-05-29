@@ -14,7 +14,6 @@ import {
   AlertTriangle,
   ArrowUpRight,
   CheckCircle2,
-  Pin,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
@@ -190,55 +189,35 @@ export async function HomeStatusUpdatesBox({ latest }: { latest: LatestStatus })
         <ArrowUpRight className="hidden h-3.5 w-3.5 shrink-0 text-slate-400 transition-colors group-hover:text-brand-500 sm:block" />
       </Link>
 
-      {/* 최근 업데이트 */}
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          최근 업데이트
-        </h3>
-        <Link
-          href="/notices"
-          className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400"
-        >
-          전체 공지 →
-        </Link>
-      </div>
-
+      {/* 최근 업데이트 — 한 줄 row(칩 + 제목 + 날짜) */}
       {shown.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-slate-200 px-3 py-4 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+        <p className="rounded-lg border border-dashed border-slate-200 px-3 py-3 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
           아직 발행된 공지가 없습니다.
         </p>
       ) : (
-        <ul className="flex flex-col gap-1.5">
+        <ul className="flex flex-col gap-0.5">
           {shown.map((item) => (
             <li key={`${item.source}-${item.id}`}>
               <Link
                 href={item.href}
-                className="flex flex-col gap-1 rounded-lg border border-transparent px-2.5 py-2 hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
+                className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
-                <div className="flex items-center gap-1.5">
-                  {item.pinned && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                      <Pin className="h-2.5 w-2.5" />
-                      고정
-                    </span>
+                <span
+                  className={cn(
+                    'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                    item.labelClass,
                   )}
-                  <span
-                    className={cn(
-                      'inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium',
-                      item.labelClass,
-                    )}
-                  >
-                    {item.label}
-                  </span>
-                  {item.publishedAt && (
-                    <span className="ml-auto text-[10px] text-slate-400">
-                      {formatDate(item.publishedAt)}
-                    </span>
-                  )}
-                </div>
-                <p className="line-clamp-1 text-xs font-medium text-slate-800 dark:text-slate-100 sm:text-sm">
+                >
+                  {item.label}
+                </span>
+                <p className="min-w-0 flex-1 truncate text-xs font-medium text-slate-800 dark:text-slate-100 sm:text-sm">
                   {item.title}
                 </p>
+                {item.publishedAt && (
+                  <span className="shrink-0 text-[10px] text-slate-400 sm:text-xs">
+                    {formatDate(item.publishedAt)}
+                  </span>
+                )}
               </Link>
             </li>
           ))}
