@@ -23,7 +23,6 @@ import * as MRS from '@/lib/services/master-role-starters';
 import * as MSL from '@/lib/services/master-solution-links';
 import * as MSS from '@/lib/services/master-system-settings';
 import * as MFF from '@/lib/services/master-form-fields';
-import type { CategoryType } from '@/db/schema';
 
 export type ActionResult = {
   ok: boolean;
@@ -673,5 +672,3 @@ export async function setFormFieldActiveAction(
   return r;
 }
 
-// 타입 export
-export type { CategoryType };
