@@ -29,6 +29,7 @@ export type ThreadMessage = {
 function fmtDateTime(d: Date | string): string {
   const date = new Date(d);
   return date.toLocaleString('ko-KR', {
+    timeZone: 'Asia/Seoul',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',

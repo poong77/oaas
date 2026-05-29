@@ -24,7 +24,7 @@ function formatRelativeTime(ms: number): string {
   if (min < 60) return `${min}분 전`;
   const hr = Math.floor(min / 60);
   if (hr < 24) return `${hr}시간 전`;
-  return new Date(ms).toLocaleString('ko-KR');
+  return new Date(ms).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 }
 
 export function SaveIndicator({ status, lastSavedAt, className }: SaveIndicatorProps) {

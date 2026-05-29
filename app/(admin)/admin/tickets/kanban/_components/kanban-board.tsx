@@ -77,6 +77,7 @@ function relativeKo(d: string | Date | null | undefined): string {
   const diffD = Math.round(diffH / 24);
   if (diffD < 30) return `${diffD}일 전`;
   return new Date(d).toLocaleDateString('ko-KR', {
+    timeZone: 'Asia/Seoul',
     month: 'short',
     day: 'numeric',
   });

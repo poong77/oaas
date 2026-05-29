@@ -69,6 +69,7 @@ function fmtDateTime(d: Date | string | null): string {
   if (!d) return '-';
   const date = new Date(d);
   return date.toLocaleString('ko-KR', {
+    timeZone: 'Asia/Seoul',
     year: 'numeric',
     month: 'short',
     day: 'numeric',

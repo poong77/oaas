@@ -30,6 +30,7 @@ function fmtDate(d: Date | null | string): string {
   if (!d) return '-';
   const date = new Date(d);
   return date.toLocaleString('ko-KR', {
+    timeZone: 'Asia/Seoul',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
