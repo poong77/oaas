@@ -147,7 +147,10 @@ export async function generateTicketNo(bump = 0): Promise<string> {
         ? rows
         : (rows as { rows: Array<{ max_no: number }> }).rows;
       const currentMax = Number(arr?.[0]?.max_no ?? 0);
-      const next = currentMax + 1 + bump; // 외부 INSERT 충돌 재시도 시 bump>=1
+      // bump 폭 = 10. Neon read replica lag로 currentMax이 stale인 경우
+      // 첫 시도가 충돌해도 10건 단위로 건너뛰며 시도하여 충돌 확률 감소.
+      // retry 5회 × 폭 10 = 최대 50건 슬롯 시도. 동시 INSERT 50건 미만 안전.
+      const next = currentMax + 1 + bump * 10;
       return `${prefix}${String(next).padStart(6, '0')}`;
     } catch (err) {
       console.warn('[tickets.generateTicketNo] retry', selectAttempt, err);
@@ -197,7 +200,7 @@ export async function createTicket(
 ): Promise<CreateTicketResult> {
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
 
-  const MAX_INSERT_ATTEMPTS = 5;
+  const MAX_INSERT_ATTEMPTS = 10; // bump 폭 10 × retry 10 = 100건 슬롯. Neon replica lag 대비 여유.
   let created: { id: string; ticketNo: string } | undefined;
   let lastErr: unknown = null;
 
