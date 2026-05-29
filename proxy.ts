@@ -24,19 +24,22 @@ const PROTECTED_PREFIXES = ['/admin', '/profile', '/tickets'];
 export default auth((req) => {
   const { pathname, search } = req.nextUrl;
 
+  // 서버 컴포넌트(RoleScope 등)가 현재 경로를 읽을 수 있도록 x-pathname 주입
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-pathname', pathname);
+
   const isProtected = PROTECTED_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),
   );
-  if (!isProtected) return NextResponse.next();
 
-  if (!req.auth) {
+  if (isProtected && !req.auth) {
     const callbackUrl = `${pathname}${search}`;
     const url = new URL('/login', req.nextUrl.origin);
     url.searchParams.set('callbackUrl', callbackUrl);
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  return NextResponse.next({ request: { headers: requestHeaders } });
 });
 
 // 정적 파일·NextAuth API는 제외

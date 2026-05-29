@@ -13,8 +13,9 @@
  * @see docs/02-design/features/admin-sidebar-layout.design.md §3.5
  */
 
+import Link from 'next/link';
 import { useState } from 'react';
-import { Menu, Shield } from 'lucide-react';
+import { ExternalLink, Menu, Shield } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS, GROUP_ORDER, GROUP_LABEL } from '../_data/nav-items';
@@ -57,6 +58,19 @@ export function AdminMobileHeader({ userRole, className }: AdminMobileHeaderProp
               <span className="ml-2 text-sm font-semibold text-brand-700 dark:text-brand-300">
                 {roleLabel}
               </span>
+            </div>
+
+            <div className="border-b border-slate-100 px-1.5 py-1.5 dark:border-slate-800">
+              <Link
+                href="/"
+                target="_blank"
+                rel="noopener"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <ExternalLink className="h-4 w-4" aria-hidden />
+                <span>바로가기</span>
+              </Link>
             </div>
 
             <nav className="overflow-y-auto py-2">

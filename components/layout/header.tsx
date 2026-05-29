@@ -10,11 +10,9 @@ import {
   Menu,
   X,
   LifeBuoy,
-  ListChecks,
   LogOut,
   User,
   Search,
-  Shield,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
@@ -59,8 +57,6 @@ export function Header() {
     if (ok) await signOut({ callbackUrl: '/' });
   }
 
-  const isStaff = user?.role === 'manager' || user?.role === 'admin';
-
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 lg:px-8">
@@ -102,26 +98,6 @@ export function Header() {
           <ThemeToggle />
           {status === 'authenticated' && user ? (
             <>
-              {isStaff && (
-                <>
-                  <Link
-                    href="/admin/tickets"
-                    className="hidden items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/60 lg:inline-flex"
-                    title="티켓 큐"
-                  >
-                    <ListChecks className="h-3.5 w-3.5" />
-                    티켓 큐
-                  </Link>
-                  <Link
-                    href="/admin/service-status"
-                    className="hidden items-center gap-1.5 rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-100 dark:border-brand-900 dark:bg-brand-950/40 dark:text-brand-300 dark:hover:bg-brand-900/60 lg:inline-flex"
-                    title={user.role === 'admin' ? '어드민' : '매니저'}
-                  >
-                    <Shield className="h-3.5 w-3.5" />
-                    {user.role === 'admin' ? '어드민' : '매니저'}
-                  </Link>
-                </>
-              )}
               <Link
                 href="/profile"
                 className="hidden items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 sm:inline-flex"
@@ -198,26 +174,6 @@ export function Header() {
           <div className="flex flex-col gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
             {status === 'authenticated' && user ? (
               <>
-                {isStaff && (
-                  <>
-                    <Link
-                      href="/admin/tickets"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center justify-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
-                    >
-                      <ListChecks className="h-3.5 w-3.5" />
-                      티켓 큐
-                    </Link>
-                    <Link
-                      href="/admin/service-status"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center justify-center gap-1.5 rounded-md border border-brand-300 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 dark:border-brand-800 dark:bg-brand-950/40 dark:text-brand-300"
-                    >
-                      <Shield className="h-3.5 w-3.5" />
-                      {user.role === 'admin' ? '어드민' : '매니저'} 메뉴
-                    </Link>
-                  </>
-                )}
                 <div className="flex gap-2">
                   <Link
                     href="/profile"

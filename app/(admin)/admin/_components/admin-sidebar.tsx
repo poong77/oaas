@@ -18,7 +18,8 @@
  * @see docs/02-design/features/admin-sidebar-layout.design.md §3.2
  */
 
-import { Shield } from 'lucide-react';
+import Link from 'next/link';
+import { ExternalLink, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS, GROUP_ORDER, GROUP_LABEL } from '../_data/nav-items';
 import { AdminNavItem } from './admin-nav-item';
@@ -61,6 +62,23 @@ export function AdminSidebar({ collapsed, userRole, className }: AdminSidebarPro
             {userRole === 'admin' ? '어드민' : '매니저'}
           </span>
         )}
+      </div>
+
+      {/* 2-b. 프론트(호텔리어 영역) 바로가기 */}
+      <div className="shrink-0 border-b border-slate-100 px-1 py-1 dark:border-slate-800">
+        <Link
+          href="/"
+          target="_blank"
+          rel="noopener"
+          title="support.oapms.com 바로가기"
+          className={cn(
+            'group flex items-center rounded-md text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
+            collapsed ? 'h-8 w-full justify-center' : 'h-8 px-2',
+          )}
+        >
+          <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          {!collapsed && <span className="ml-1.5 truncate">바로가기</span>}
+        </Link>
       </div>
 
       {/* 3. 그룹 + 메뉴 */}
