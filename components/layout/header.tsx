@@ -22,7 +22,6 @@ const NAV_ITEMS = [
   { label: '홈', href: '/' },
   { label: '빠른 해결', href: '/faq' },
   { label: '제품별 가이드', href: '/help' },
-  { label: '서비스 상태', href: '/status' },
   { label: '문의 접수', href: '/tickets/new' },
   { label: '공지/업데이트', href: '/notices' },
 ];
