@@ -1,18 +1,18 @@
 /**
  * LP-01 통합 홈 — Phase 2.
  *
- * 9 섹션:
- *   ① Hero + 통합 검색
- *   ② 인기검색어 칩 (Hero 내부)
- *   ③ 카테고리 그리드 (DB product 6개)
- *   ④ 자주찾는작업 (하드코딩)
- *   ⑤ 역할별 시작하기 (하드코딩)
- *   ⑥ 서비스 상태 위젯 (DB)
- *   ⑦ 최근 업데이트 (EmptyState, Phase 7)
- *   ⑧ CTA 3개
- *   ⑨ 푸터
+ * 구성:
+ *   ① Hero (좌: 검색 / 우: 서비스 상태 + 최근 업데이트 박스)
+ *   ② 카테고리 그리드 (DB product)
+ *   ③ 자주찾는작업 (DB)
+ *   ④ 역할별 시작하기 (DB)
+ *   ⑤ CTA 3개
+ *   ⑥ 푸터
  *
- * DB 호출이 있으므로 force-dynamic. DB 미연결 시에는 fallback으로 렌더.
+ * 변경 이력:
+ *   - 2026-05-29: 서비스 상태/최근 업데이트를 Hero 우측 박스로 통합. 하단 중복 섹션 제거.
+ *
+ * DB 호출이 있으므로 force-dynamic.
  */
 
 import { getProductCategories } from '@/lib/services/categories';
@@ -20,11 +20,10 @@ import { getLatestServiceStatus } from '@/lib/services/service-status';
 import { listVisibleQuickActions } from '@/lib/services/master-quick-actions';
 import { listActiveRoleStarters } from '@/lib/services/master-role-starters';
 import { HomeHero } from './_components/home/home-hero';
+import { HomeStatusUpdatesBox } from './_components/home/home-status-updates-box';
 import { CategoryGrid } from './_components/home/category-grid';
 import { QuickActions } from './_components/home/quick-actions';
 import { RoleStarters } from './_components/home/role-starters';
-import { ServiceStatusWidget } from './_components/home/service-status-widget';
-import { RecentUpdates } from './_components/home/recent-updates';
 import { HomeCTA } from './_components/home/home-cta';
 import { HomeFooter } from './_components/home/home-footer';
 
@@ -47,12 +46,15 @@ export default async function HomePage() {
 
   return (
     <>
-      <HomeHero />
+      <HomeHero
+        sidebar={
+          /* HomeStatusUpdatesBox는 async 서버 컴포넌트 — JSX로 직접 전달 */
+          <HomeStatusUpdatesBox latest={latestStatus} />
+        }
+      />
       <CategoryGrid categories={categories} />
       <QuickActions items={quickActionRows} />
       <RoleStarters items={roleStarterRows} />
-      <ServiceStatusWidget latest={latestStatus} />
-      <RecentUpdates />
       <HomeCTA />
       <HomeFooter />
     </>

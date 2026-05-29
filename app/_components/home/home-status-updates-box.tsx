@@ -1,0 +1,261 @@
+/**
+ * LP-01 Hero 우측 컴팩트 박스.
+ *
+ * - 상단: 서비스 상태 1줄 (정상이어도 항상 노출)
+ * - 하단: 최근 업데이트 2건 (pinned 우선 → notices → articles 통합 정렬)
+ *
+ * Hero와 같은 줄에 들어가는 컴팩트 위젯이므로 자체 패딩/배경만 가진다.
+ * (전체 섹션의 패딩/배경은 부모 Hero가 담당)
+ */
+
+import Link from 'next/link';
+import {
+  AlertOctagon,
+  AlertTriangle,
+  ArrowUpRight,
+  CheckCircle2,
+  Pin,
+  Wrench,
+  type LucideIcon,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { ServiceStatusValue } from '@/db/schema';
+import {
+  SERVICE_STATUS_META,
+  type getLatestServiceStatus,
+} from '@/lib/services/service-status';
+import {
+  listPinnedPublishedNotices,
+  listRecentPublishedNotices,
+} from '@/lib/services/notices';
+import { listRecentPublishedArticles } from '@/lib/services/articles';
+import {
+  NOTICE_KIND_CLASSES,
+  NOTICE_KIND_META,
+} from '@/lib/services/notices-meta';
+import type { NoticeKind } from '@/db/schema';
+
+type LatestStatus = Awaited<ReturnType<typeof getLatestServiceStatus>>;
+
+const ICON_BY_STATUS: Record<ServiceStatusValue, LucideIcon> = {
+  normal: CheckCircle2,
+  degraded: AlertTriangle,
+  incident: AlertOctagon,
+  maintenance: Wrench,
+};
+
+const STATUS_DOT_CLASS: Record<ServiceStatusValue, string> = {
+  normal: 'bg-emerald-500',
+  degraded: 'bg-amber-500',
+  incident: 'bg-red-500',
+  maintenance: 'bg-brand-500',
+};
+
+const STATUS_TEXT_CLASS: Record<ServiceStatusValue, string> = {
+  normal: 'text-emerald-700 dark:text-emerald-300',
+  degraded: 'text-amber-700 dark:text-amber-300',
+  incident: 'text-red-700 dark:text-red-300',
+  maintenance: 'text-brand-700 dark:text-brand-300',
+};
+
+const STATUS_BG_CLASS: Record<ServiceStatusValue, string> = {
+  normal:
+    'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/60 dark:bg-emerald-950/30',
+  degraded:
+    'border-amber-200 bg-amber-50/70 dark:border-amber-900/60 dark:bg-amber-950/30',
+  incident:
+    'border-red-200 bg-red-50/70 dark:border-red-900/60 dark:bg-red-950/30',
+  maintenance:
+    'border-brand-200 bg-brand-50/70 dark:border-brand-900/60 dark:bg-brand-950/30',
+};
+
+type UpdateItem = {
+  source: 'notice' | 'article';
+  id: string;
+  href: string;
+  label: string;
+  labelClass: string;
+  title: string;
+  publishedAt: Date | string | null;
+  pinned: boolean;
+};
+
+export async function HomeStatusUpdatesBox({ latest }: { latest: LatestStatus }) {
+  // pinned 1 + notices 2 + articles 1 통합 → 최대 2건
+  const [pinnedNotices, recentNotices, recentArticles] = await Promise.all([
+    listPinnedPublishedNotices(1),
+    listRecentPublishedNotices(2),
+    listRecentPublishedArticles(1),
+  ]);
+
+  const pinnedIds = new Set(pinnedNotices.map((n) => n.id));
+  const items: UpdateItem[] = [];
+
+  for (const n of pinnedNotices) {
+    items.push({
+      source: 'notice',
+      id: n.id,
+      href: `/notices/${n.id}`,
+      label: NOTICE_KIND_META[n.kind as NoticeKind].label,
+      labelClass: NOTICE_KIND_CLASSES[n.kind as NoticeKind],
+      title: n.title,
+      publishedAt: n.publishedAt,
+      pinned: true,
+    });
+  }
+
+  const pool: UpdateItem[] = [];
+  for (const n of recentNotices) {
+    if (pinnedIds.has(n.id)) continue;
+    pool.push({
+      source: 'notice',
+      id: n.id,
+      href: `/notices/${n.id}`,
+      label: NOTICE_KIND_META[n.kind as NoticeKind].label,
+      labelClass: NOTICE_KIND_CLASSES[n.kind as NoticeKind],
+      title: n.title,
+      publishedAt: n.publishedAt,
+      pinned: false,
+    });
+  }
+  for (const a of recentArticles) {
+    pool.push({
+      source: 'article',
+      id: a.id,
+      href: `/help/${a.productCode}/${a.slug}`,
+      label: `가이드 · ${a.productCode}`,
+      labelClass:
+        'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+      title: a.title,
+      publishedAt: a.publishedAt,
+      pinned: false,
+    });
+  }
+  pool.sort((a, b) => {
+    const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    return tb - ta;
+  });
+
+  // pinned 우선 채우고 총 2건
+  for (const item of pool) {
+    if (items.length >= 2) break;
+    items.push(item);
+  }
+  const shown = items.slice(0, 2);
+
+  const StatusIcon = ICON_BY_STATUS[latest.status];
+  const statusMeta = SERVICE_STATUS_META[latest.status];
+  const statusMessage =
+    latest.message?.trim() ||
+    (latest.status === 'normal'
+      ? '모든 시스템이 정상 동작 중입니다.'
+      : statusMeta.label);
+
+  return (
+    <aside
+      aria-label="서비스 상태 및 최근 업데이트"
+      className="flex w-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 sm:p-5"
+    >
+      {/* 서비스 상태 (1줄) */}
+      <Link
+        href="/status"
+        className={cn(
+          'group flex items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-colors',
+          STATUS_BG_CLASS[latest.status],
+        )}
+      >
+        <span
+          className={cn(
+            'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white shadow-sm',
+            STATUS_DOT_CLASS[latest.status],
+          )}
+          aria-hidden
+        >
+          <StatusIcon className="h-4 w-4" />
+        </span>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <span
+            className={cn(
+              'shrink-0 text-xs font-bold sm:text-sm',
+              STATUS_TEXT_CLASS[latest.status],
+            )}
+          >
+            {statusMeta.label}
+          </span>
+          <span className="truncate text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
+            {statusMessage}
+          </span>
+        </div>
+        <ArrowUpRight className="hidden h-3.5 w-3.5 shrink-0 text-slate-400 transition-colors group-hover:text-brand-500 sm:block" />
+      </Link>
+
+      {/* 최근 업데이트 */}
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          최근 업데이트
+        </h3>
+        <Link
+          href="/notices"
+          className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400"
+        >
+          전체 공지 →
+        </Link>
+      </div>
+
+      {shown.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-slate-200 px-3 py-4 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+          아직 발행된 공지가 없습니다.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-1.5">
+          {shown.map((item) => (
+            <li key={`${item.source}-${item.id}`}>
+              <Link
+                href={item.href}
+                className="flex flex-col gap-1 rounded-lg border border-transparent px-2.5 py-2 hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
+              >
+                <div className="flex items-center gap-1.5">
+                  {item.pinned && (
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                      <Pin className="h-2.5 w-2.5" />
+                      고정
+                    </span>
+                  )}
+                  <span
+                    className={cn(
+                      'inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                      item.labelClass,
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                  {item.publishedAt && (
+                    <span className="ml-auto text-[10px] text-slate-400">
+                      {formatDate(item.publishedAt)}
+                    </span>
+                  )}
+                </div>
+                <p className="line-clamp-1 text-xs font-medium text-slate-800 dark:text-slate-100 sm:text-sm">
+                  {item.title}
+                </p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </aside>
+  );
+}
+
+function formatDate(d: Date | string | null): string {
+  if (!d) return '';
+  const date = typeof d === 'string' ? new Date(d) : d;
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: '2-digit',
+    month: '2-digit',
+    day: '2-digit',
+  });
+}
