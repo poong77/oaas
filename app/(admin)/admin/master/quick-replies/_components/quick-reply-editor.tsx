@@ -1,13 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { RichEditor } from '@/components/editor/rich-editor';
+import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
 import {
   upsertQuickReplyAction,
   setQuickReplyActiveAction,
@@ -24,12 +25,26 @@ export function QuickReplyEditor({
   const [pending, startTransition] = useTransition();
   const isEdit = !!item;
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // controlled 입력으로 전환 (RichEditor의 onChange 통합 위해)
+  const [title, setTitle] = useState(item?.title ?? '');
+  const [category, setCategory] = useState(item?.category ?? '');
+  const [content, setContent] = useState(item?.content ?? '');
+  const [sortOrder, setSortOrder] = useState<string>(
+    item?.sortOrder !== undefined ? String(item.sortOrder) : '100',
+  );
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+    const fd = new FormData();
+    fd.set('title', title.trim());
+    fd.set('category', category.trim());
+    fd.set('content', content);
+    fd.set('sortOrder', sortOrder.trim() || '100');
+
     startTransition(async () => {
       const res = await upsertQuickReplyAction(item?.id ?? null, undefined, fd);
       if (res.ok) {
+        await deleteDraftAfterPublish('quick-reply', item?.id ?? null);
         toast.success('저장되었습니다');
         if (!isEdit && res.id) {
           router.push(`/admin/master/quick-replies/${res.id}`);
@@ -66,43 +81,51 @@ export function QuickReplyEditor({
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <Label>제목</Label>
+          <Label htmlFor="qr-title">제목</Label>
           <Input
-            name="title"
-            defaultValue={item?.title ?? ''}
+            id="qr-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             required
             placeholder="결제 오류 1차 응대"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <Label>카테고리 (선택)</Label>
+          <Label htmlFor="qr-category">카테고리 (선택)</Label>
           <Input
-            name="category"
-            defaultValue={item?.category ?? ''}
+            id="qr-category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
             placeholder="결제 / 카드키 / 일반 등"
           />
         </div>
       </div>
       <div className="flex flex-col gap-1">
         <Label>본문</Label>
-        <Textarea
-          name="content"
-          defaultValue={item?.content ?? ''}
-          rows={8}
-          required
+        <RichEditor
+          mode="lite"
+          value={content}
+          onChange={setContent}
+          minHeight={180}
+          placeholder="자주 쓰는 응대 문구를 작성하세요. {{호텔명}} {{호텔리어명}} {{티켓번호}} 변수가 매니저 발송 시 치환됩니다."
+          autoSave={{
+            scope: 'quick-reply',
+            targetId: item?.id ?? null,
+          }}
         />
       </div>
       <div className="flex flex-col gap-1">
-        <Label>정렬</Label>
+        <Label htmlFor="qr-sort">정렬</Label>
         <Input
-          name="sortOrder"
+          id="qr-sort"
           type="number"
-          defaultValue={item?.sortOrder ?? 100}
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
           className="w-24"
         />
       </div>
       <div className="flex items-center gap-2">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending || !content.trim()}>
           저장
         </Button>
         {isEdit && (

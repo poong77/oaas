@@ -24,10 +24,15 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { put } from '@vercel/blob';
 import { getCurrentUser } from '@/lib/permissions';
 import { env } from '@/lib/env';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+/** Rate Limit: editor 분당 30회 / ticket 첨부 분당 20회 */
+const RATE_LIMIT_PER_MINUTE = { editor: 30, ticket: 20 } as const;
+/** purpose 화이트리스트 — pathname 분기에 사용 */
+const ALLOWED_PURPOSES = new Set(['ticket', 'editor']);
 
 const ALLOWED_MIME_PREFIX = [
   'image/', // jpg, png, gif, webp, heic
@@ -143,13 +148,35 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const purpose = (formData.get('purpose')?.toString() ?? 'ticket').replace(
-    /[^a-z]/gi,
-    '',
-  );
+  const rawPurpose = (formData.get('purpose')?.toString() ?? 'ticket')
+    .replace(/[^a-z]/gi, '')
+    .toLowerCase();
+  const purpose: 'ticket' | 'editor' = ALLOWED_PURPOSES.has(rawPurpose)
+    ? (rawPurpose as 'ticket' | 'editor')
+    : 'ticket';
+
+  // Rate Limit (사용자별) — editor는 분당 30회, ticket 첨부는 분당 20회
+  const rlMax = RATE_LIMIT_PER_MINUTE[purpose];
+  const rl = checkRateLimit(`upload:${purpose}:${user.id}`, rlMax);
+  if (!rl.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: `업로드 횟수 제한을 초과했습니다 (분당 ${rlMax}회). ${rl.retryAfter}초 후 다시 시도해주세요.`,
+      },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+    );
+  }
+
   const uniq = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const safeName = sanitizePathSegment(file.name || 'file');
-  const pathname = `tickets/_staging/${purpose}/${user.id}/${uniq}-${safeName}`;
+  // purpose별 pathname 분기:
+  //   - 'editor' → editor/{userId}/{uniq}-{name}     (본문 임베드 이미지·PDF)
+  //   - 'ticket' → tickets/_staging/{purpose}/{userId}/{uniq}-{name}  (티켓 첨부)
+  const pathname =
+    purpose === 'editor'
+      ? `editor/${user.id}/${uniq}-${safeName}`
+      : `tickets/_staging/${purpose}/${user.id}/${uniq}-${safeName}`;
 
   try {
     const result = await put(pathname, file, {

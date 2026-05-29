@@ -6,6 +6,7 @@
  * - 활성 단계 리스트 + 인라인 편집 + 신규 추가
  * - 위/아래 화살표로 step_no swap
  * - 비활성/복구 가능 (물리 삭제 금지)
+ * - 단계 본문은 RichEditor 통합 (Phase 2)
  */
 
 import { useRouter } from 'next/navigation';
@@ -25,10 +26,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MarkdownView } from '@/components/articles/markdown-view';
+import { RichEditor } from '@/components/editor/rich-editor';
+import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import {
   archiveStepAction,
@@ -123,6 +125,8 @@ export function ChecklistStepsEditor({
         ? await createStepAction(checklistId, formData)
         : await updateStepAction(editingId!, checklistId, formData);
       if (result.ok) {
+        // 편집 모드 draft 삭제 (신규 단계는 nonce 모름, 자연 만료)
+        await deleteDraftAfterPublish('checklist-step', editingId);
         toast.success(creating ? '단계가 추가되었습니다' : '단계가 저장되었습니다');
         cancel();
         router.refresh();
@@ -194,6 +198,7 @@ export function ChecklistStepsEditor({
           onSubmit={submitForm}
           onCancel={cancel}
           pending={pending}
+          targetId={null}
         />
       )}
 
@@ -218,6 +223,7 @@ export function ChecklistStepsEditor({
                 onSubmit={submitForm}
                 onCancel={cancel}
                 pending={pending}
+                targetId={step.id}
               />
             ) : (
               <Card className={step.isActive ? '' : 'opacity-60'}>
@@ -333,6 +339,7 @@ function StepForm({
   onSubmit,
   onCancel,
   pending,
+  targetId,
 }: {
   mode: 'create' | 'edit';
   form: StepFormState;
@@ -340,6 +347,8 @@ function StepForm({
   onSubmit: () => void;
   onCancel: () => void;
   pending: boolean;
+  /** 편집 시 step.id, 신규 시 null (자동저장 scope 분기) */
+  targetId: string | null;
 }) {
   return (
     <Card className="border-brand-300 dark:border-brand-700">
@@ -356,16 +365,17 @@ function StepForm({
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <Label htmlFor="step-body">본문 (선택, Markdown)</Label>
-          <Textarea
-            id="step-body"
+          <Label>본문 (선택)</Label>
+          <RichEditor
+            mode="full"
             value={form.bodyMarkdown}
-            onChange={(e) =>
-              setForm({ ...form, bodyMarkdown: e.target.value })
-            }
-            rows={4}
+            onChange={(md) => setForm({ ...form, bodyMarkdown: md })}
+            minHeight={160}
             placeholder="부가 설명이나 확인 방법을 적어주세요."
-            className="font-mono text-sm"
+            autoSave={{
+              scope: 'checklist-step',
+              targetId,
+            }}
           />
         </div>
 

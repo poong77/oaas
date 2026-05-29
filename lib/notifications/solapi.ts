@@ -8,9 +8,11 @@
  */
 
 import { env } from '@/lib/env';
+import { markdownToPlain } from '@/lib/editor/markdown-to-plain';
 
 export type SendSmsInput = {
   to: string;
+  /** SMS 본문. 마크다운이 섞여 있어도 발송 직전 plain text로 자동 변환됨. */
   text: string;
 };
 
@@ -64,8 +66,12 @@ export async function sendSms(input: SendSmsInput): Promise<SendSmsResult> {
       }
     | null;
 
+  // RichEditor 도입(Phase 1+) 후 본문에 마크다운이 섞일 수 있어 발송 직전 plain 변환.
+  // 이미 plain인 입력에도 안전 (멱등).
+  const safeText = markdownToPlain(input.text);
+
   if (!client || !env.SOLAPI_SENDER) {
-    console.log('[SMS STUB]', { to: input.to, text: input.text });
+    console.log('[SMS STUB]', { to: input.to, text: safeText });
     return { ok: true, messageId: 'stub-sms-' + Date.now(), stub: true };
   }
 
@@ -73,7 +79,7 @@ export async function sendSms(input: SendSmsInput): Promise<SendSmsResult> {
     const message = {
       to: input.to,
       from: env.SOLAPI_SENDER,
-      text: input.text,
+      text: safeText,
     };
     // SDK 버전에 따라 send / sendOne 호출 시그니처가 다를 수 있어 안전하게 분기.
     const result = client.send

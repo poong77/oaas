@@ -5,13 +5,15 @@
  *
  * - completed 상태에선 폼을 숨기고 안내 노출.
  * - 제출 후 router.refresh()로 메시지 타임라인 갱신.
+ * - Phase 3: RichEditor lite 통합 + 자동 저장
  */
 
 import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { RichEditor } from '@/components/editor/rich-editor';
+import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
 import { addPublicMessageAction } from '@/app/actions/ticket-actions';
 
 export function ReplyForm({
@@ -44,6 +46,7 @@ export function ReplyForm({
         setError(result.message ?? '저장 실패');
         return;
       }
+      await deleteDraftAfterPublish('ticket-message', ticketId);
       setContent('');
       router.refresh();
     });
@@ -59,18 +62,20 @@ export function ReplyForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <Textarea
+      <RichEditor
+        mode="full"
         value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="추가로 알려주실 내용을 작성해주세요"
-        rows={4}
+        onChange={setContent}
+        minHeight={180}
+        placeholder="추가로 알려주실 내용을 작성해주세요."
         disabled={pending}
+        autoSave={{
+          scope: 'ticket-message',
+          targetId: ticketId,
+        }}
       />
       {error && <p className="text-xs text-red-500">{error}</p>}
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          마크다운 표기가 지원됩니다.
-        </p>
+      <div className="flex items-center justify-end">
         <Button type="submit" disabled={pending}>
           {pending ? '저장 중...' : '답변 등록'}
           <Send className="h-4 w-4" />
