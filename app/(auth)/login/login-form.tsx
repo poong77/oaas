@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { LifeBuoy, Lock, Mail } from 'lucide-react';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { defaultLandingFor } from '@/lib/auth-landing';
 
 export function LoginForm({
   callbackUrl,
@@ -40,7 +41,6 @@ export function LoginForm({
         email,
         password,
         redirect: false,
-        callbackUrl: callbackUrl || '/',
       });
       if (!res || res.error) {
         const msg =
@@ -52,7 +52,11 @@ export function LoginForm({
         return;
       }
       toast.success('로그인되었습니다');
-      router.push(res.url || callbackUrl || '/');
+      // 역할별 기본 도착지 계산 (callbackUrl이 있으면 그 경로 우선)
+      const session = await getSession();
+      const destination =
+        callbackUrl || defaultLandingFor(session?.user?.role);
+      router.push(destination);
       router.refresh();
     });
   }

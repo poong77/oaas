@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
+import { defaultLandingFor } from '@/lib/auth-landing';
 import { LoginForm } from './login-form';
 
 export const metadata = { title: '로그인 — OA 통합 AS' };
@@ -15,7 +16,7 @@ export default async function LoginPage({
   const session = await auth();
   const params = await searchParams;
   if (session?.user) {
-    redirect(params.callbackUrl || '/');
+    redirect(params.callbackUrl || defaultLandingFor(session.user.role));
   }
 
   const devStubEnabled =
