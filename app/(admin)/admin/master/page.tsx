@@ -8,6 +8,7 @@ import Link from 'next/link';
 import {
   ArrowRight,
   Bell,
+  BookA,
   Database,
   HelpCircle,
   Layers,
@@ -99,6 +100,14 @@ const ITEMS: MasterItem[] = [
     description:
       '업로드 한도·로그인 Rate Limit·Slack 채널·영업 시간 등 key-value.',
     icon: Settings,
+    adminOnly: true,
+  },
+  {
+    href: '/admin/master/synonyms',
+    label: '동의어 사전',
+    description:
+      '검색 동의어 그룹·이형어 관리. 통합 검색 시 자동 확장 (예: "결제" ↔ "페이먼트").',
+    icon: BookA,
     adminOnly: true,
   },
 ];
