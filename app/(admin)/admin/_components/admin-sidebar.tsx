@@ -7,9 +7,7 @@
  *   1. 토글 버튼 (상단) — 접기/펼치기
  *   2. 역할 뱃지 (Shield + 어드민/매니저)
  *   3. 그룹 + 메뉴 (NAV_ITEMS, AdminNavItem 매핑)
- *   4. footer:
- *      - support.oapms.com 새 탭 외부 링크 (아웃링크)
- *      - AdminUserMenu
+ *   4. footer: AdminUserMenu
  *
  * 너비: 펼침 120px / 접힘 28px (사용자 요청 — 기존 240/56 절반).
  *
@@ -20,7 +18,7 @@
  * @see docs/02-design/features/admin-sidebar-layout.design.md §3.2
  */
 
-import { ExternalLink, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS, GROUP_ORDER, GROUP_LABEL } from '../_data/nav-items';
 import { AdminNavItem } from './admin-nav-item';
@@ -94,37 +92,10 @@ export function AdminSidebar({ collapsed, userRole, className }: AdminSidebarPro
         })}
       </nav>
 
-      {/* 4. footer: 외부 링크 + 사용자 메뉴 */}
+      {/* 4. footer: 사용자 메뉴 */}
       <div className="shrink-0 border-t border-slate-100 dark:border-slate-800">
-        {/* 호텔리어 사이트 새 탭 바로가기 (아웃링크) */}
-        <a
-          href="https://support.oapms.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="support.oapms.com (새 탭)"
-          aria-label="호텔리어 사이트 (새 탭으로 열기)"
-          className={cn(
-            'group relative flex items-center text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200',
-            collapsed ? 'justify-center px-1 py-2' : 'gap-1.5 px-2.5 py-2',
-          )}
-        >
-          <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
-          {!collapsed && <span className="truncate">호텔리어 사이트</span>}
-          {/* 접힘 hover tooltip */}
-          {collapsed && (
-            <span
-              role="tooltip"
-              className="pointer-events-none absolute left-full top-1/2 ml-2 hidden -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-xs text-white shadow-md group-hover:block group-focus-visible:block dark:bg-slate-100 dark:text-slate-900"
-            >
-              호텔리어 사이트 (새 탭)
-            </span>
-          )}
-        </a>
-
-        <div className="border-t border-slate-100 dark:border-slate-800">
-          {/* TODO[sidebar-daily-kpi]: 오늘 처리한 티켓 카운터 (footer 영역) */}
-          <AdminUserMenu placement={collapsed ? 'sidebar-collapsed' : 'sidebar-expanded'} />
-        </div>
+        {/* TODO[sidebar-daily-kpi]: 오늘 처리한 티켓 카운터 (footer 영역) */}
+        <AdminUserMenu placement={collapsed ? 'sidebar-collapsed' : 'sidebar-expanded'} />
       </div>
     </aside>
   );
