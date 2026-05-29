@@ -62,6 +62,23 @@ export const serviceStatusEnum = pgEnum('service_status_kind', [
   'maintenance',
 ]);
 
+/**
+ * term group category enum — term_groups.category.
+ * 동의어 사전 그룹의 도메인 분류 (어드민 필터·관리용).
+ */
+export const termGroupCategoryEnum = pgEnum('term_group_category', [
+  'operation', // 운영: 체크인/체크아웃/예약/객실/요금
+  'housekeeping', // 청소: 하우스키핑/턴다운/린넨
+  'fnb', // 식음료: 조식/룸서비스/미니바
+  'frontdesk', // 프런트: FD/리셉션/컨시어지/벨맨
+  'pms', // PMS 운영 용어: 룸 차지/배정/오버부킹/객단가
+  'product', // OA 제품: PMS/CMS/Keyless/Kiosk/웹서비스
+  'issue', // 장애 유형: 결제 실패/네트워크/카드 미인식
+  'role', // 직무: 매니저/총지배인/객실팀장
+  'misc', // 기타
+]);
+
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
 export type CategoryType = (typeof categoryTypeEnum.enumValues)[number];
 export type ServiceStatusValue = (typeof serviceStatusEnum.enumValues)[number];
+export type TermGroupCategory = (typeof termGroupCategoryEnum.enumValues)[number];

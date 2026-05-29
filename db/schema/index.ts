@@ -46,3 +46,6 @@ export * from './role-starters';
 export * from './system-settings';
 // 공통 인프라 — 리치 에디터 자동 저장
 export * from './editor-drafts';
+// 동의어 사전 마스터 (검색 보강)
+export * from './term-groups';
+export * from './term-synonyms';
