@@ -40,7 +40,7 @@ export function LoginForm({
         email,
         password,
         redirect: false,
-        callbackUrl: callbackUrl || '/profile',
+        callbackUrl: callbackUrl || '/',
       });
       if (!res || res.error) {
         const msg =
@@ -52,7 +52,7 @@ export function LoginForm({
         return;
       }
       toast.success('로그인되었습니다');
-      router.push(res.url || callbackUrl || '/profile');
+      router.push(res.url || callbackUrl || '/');
       router.refresh();
     });
   }

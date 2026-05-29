@@ -15,7 +15,7 @@ export default async function LoginPage({
   const session = await auth();
   const params = await searchParams;
   if (session?.user) {
-    redirect(params.callbackUrl || '/profile');
+    redirect(params.callbackUrl || '/');
   }
 
   const devStubEnabled =
