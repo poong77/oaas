@@ -13,9 +13,9 @@ import { useState, useTransition, type FormEvent } from 'react';
 import { AlertCircle, Headset, Send } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { RichEditor } from '@/components/editor/rich-editor';
 import { createTicketByPhoneAction } from '@/app/actions/ticket-actions';
 import {
   AttachmentUploader,
@@ -271,13 +271,17 @@ export function PhoneTicketForm({
               title="통화 내용 (재현·증상·요청사항)"
               error={fieldErrors.content}
             />
-            <Textarea
+            <RichEditor
+              mode="full"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={10}
-              placeholder="통화 도중 들은 내용을 가능한 한 그대로 받아적어주세요. 시간·재현 단계·고객 발언을 그대로 옮기면 후속 처리가 빨라집니다."
+              onChange={setContent}
+              minHeight={220}
+              placeholder="통화 도중 들은 내용을 그대로 받아적어주세요. 시간·재현 단계·고객 발언을 옮기면 후속 처리가 빨라집니다."
               disabled={pending}
-              className="font-mono text-sm"
+              autoSave={{
+                scope: 'ticket-message',
+                targetId: null,
+              }}
             />
           </div>
 

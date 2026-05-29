@@ -36,9 +36,9 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { RichEditor } from '@/components/editor/rich-editor';
 import { createTicketAction } from '@/app/actions/ticket-actions';
 import {
   AttachmentUploader,
@@ -393,23 +393,46 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
             </div>
 
             <div>
-              <SectionLabel
-                required
-                title="자세한 내용 (마크다운 가능)"
-                error={fieldError('content')}
-              />
-              <Textarea
+              <div className="mb-1.5 flex items-center justify-between">
+                <SectionLabel
+                  required
+                  title="자세한 내용"
+                  error={fieldError('content')}
+                />
+                {!content.trim() && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setContent(
+                        [
+                          '**발생 시간**: ',
+                          '',
+                          '**객실/위치**: ',
+                          '',
+                          '**증상**: ',
+                          '',
+                          '**시도해본 조치**: ',
+                          '',
+                        ].join('\n'),
+                      )
+                    }
+                    className="text-xs text-brand-600 hover:text-brand-700 hover:underline dark:text-brand-400"
+                  >
+                    예시 채우기 ↳
+                  </button>
+                )}
+              </div>
+              <RichEditor
+                mode="lite"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder={[
-                  '언제부터 발생했나요?',
-                  '재현 단계 (1, 2, 3...)',
-                  '기대한 결과와 실제 결과',
-                  '시도해본 조치',
-                ].join('\n')}
-                rows={10}
+                onChange={setContent}
+                minHeight={220}
+                placeholder="언제부터 발생했나요? 재현 단계, 기대 결과, 시도해본 조치를 적어주세요."
                 disabled={pending}
-                className="min-h-[180px] font-mono text-sm"
+                autoSave={{
+                  scope: 'ticket-message',
+                  targetId: null,
+                }}
               />
               <div className="mt-1 flex justify-between text-[11px] text-slate-400">
                 <span>발생 시각·재현 단계·기대 결과를 적어주시면 처리가 빨라집니다.</span>

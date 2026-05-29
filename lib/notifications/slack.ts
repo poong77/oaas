@@ -11,6 +11,7 @@
  */
 
 import { env } from '@/lib/env';
+import { markdownToSlackMrkdwn } from '@/lib/editor/markdown-to-slack-mrkdwn';
 
 export type SlackChannelKey = 'new' | 'urgent' | 'dev';
 
@@ -129,7 +130,7 @@ export function buildTicketNewBlocks(t: TicketSummaryForSlack): SlackBlock[] {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `>${t.contentExcerpt.replace(/\n/g, '\n>')}`,
+        text: `>${markdownToSlackMrkdwn(t.contentExcerpt).replace(/\n/g, '\n>')}`,
       },
     },
     {
@@ -169,7 +170,7 @@ export function buildTicketUrgentBlocks(t: TicketSummaryForSlack): SlackBlock[] 
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `>${t.contentExcerpt.replace(/\n/g, '\n>')}`,
+        text: `>${markdownToSlackMrkdwn(t.contentExcerpt).replace(/\n/g, '\n>')}`,
       },
     },
     {
@@ -216,14 +217,14 @@ export function buildTicketEscalateBlocks(
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*에스컬 사유*\n>${t.reason.replace(/\n/g, '\n>')}`,
+        text: `*에스컬 사유*\n>${markdownToSlackMrkdwn(t.reason).replace(/\n/g, '\n>')}`,
       },
     },
     {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*원본 요약*\n>${t.contentExcerpt.replace(/\n/g, '\n>')}`,
+        text: `*원본 요약*\n>${markdownToSlackMrkdwn(t.contentExcerpt).replace(/\n/g, '\n>')}`,
       },
     },
     {

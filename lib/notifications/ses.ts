@@ -13,12 +13,21 @@ import {
   type SendEmailCommandInput,
 } from '@aws-sdk/client-sesv2';
 import { env } from '@/lib/env';
+import { markdownToHtml } from '@/lib/editor/markdown-to-html';
+import { markdownToPlain } from '@/lib/editor/markdown-to-plain';
 
 export type SendEmailInput = {
   to: string | string[];
   subject: string;
-  html: string;
+  /**
+   * HTML 본문. `markdown`이 함께 또는 단독 제공된 경우 무시되고 변환 결과 사용.
+   */
+  html?: string;
   text?: string;
+  /**
+   * 마크다운 본문 (RichEditor 호출자 편의). 제공 시 자동으로 html + text(미지정 시) 생성.
+   */
+  markdown?: string;
   /** 미지정 시 env.SES_FROM_EMAIL */
   from?: string;
 };
@@ -48,12 +57,22 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   const client = getClient();
   const fromAddress = input.from ?? env.SES_FROM_EMAIL;
 
+  // 본문 변환: markdown 제공 시 우선, 없으면 html + text 그대로
+  const html = input.markdown
+    ? markdownToHtml(input.markdown)
+    : (input.html ?? '');
+  const text = input.text ?? (input.markdown ? markdownToPlain(input.markdown) : undefined);
+
   if (!client || !fromAddress) {
     console.log('[EMAIL STUB] (AWS 키 또는 SES_FROM_EMAIL 미설정)', {
       to: input.to,
       subject: input.subject,
     });
     return { ok: true, messageId: 'stub-' + Date.now(), stub: true };
+  }
+
+  if (!html) {
+    return { ok: false, error: 'html 또는 markdown 본문이 필요합니다' };
   }
 
   const toAddresses = Array.isArray(input.to) ? input.to : [input.to];
@@ -65,10 +84,8 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
       Simple: {
         Subject: { Data: input.subject, Charset: 'UTF-8' },
         Body: {
-          Html: { Data: input.html, Charset: 'UTF-8' },
-          ...(input.text
-            ? { Text: { Data: input.text, Charset: 'UTF-8' } }
-            : {}),
+          Html: { Data: html, Charset: 'UTF-8' },
+          ...(text ? { Text: { Data: text, Charset: 'UTF-8' } } : {}),
         },
       },
     },
