@@ -60,7 +60,7 @@ export function Header() {
             <img
               src="/oatech-logo.png"
               alt="OAtech"
-              className="h-6 w-auto dark:brightness-110"
+              className="h-5 w-auto dark:brightness-110"
             />
           </Link>
         </div>
