@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PLACEHOLDER — 실제 OAtech 브랜드 로고 SVG로 덮어써주세요.
+  높이는 24px (h-6) 기준으로 렌더되며, viewBox 비율은 자유롭게 설정해도 됩니다.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" role="img" aria-label="OAtech">
+  <text x="0" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        font-size="40" font-weight="900" fill="#009A3D" letter-spacing="-1">OAtech</text>
+</svg>

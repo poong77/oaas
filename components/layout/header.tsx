@@ -1,32 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
-import {
-  Moon,
-  Sun,
-  Menu,
-  X,
-  LifeBuoy,
-  LogOut,
-  User,
-  Search,
-} from 'lucide-react';
+import { Moon, Sun, Menu, X, LogOut, User } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { useCurrentUser } from '@/lib/hooks/use-current-user';
 import { cn } from '@/lib/utils';
 
 /**
- * GNB — LP-02 보강.
+ * GNB — LP-02.
  *
- * Phase 2:
- *   - 활성 메뉴 표시 (usePathname)
- *   - 상단 검색 인풋 (md 이상) — Enter → /search?q=
- *   - 세션 표시 (로그인/로그아웃, 어드민/매니저는 어드민 메뉴 노출)
- *   - 모바일 햄버거 메뉴 (검색·메뉴·세션 통합)
+ * - 활성 메뉴 표시 (usePathname)
+ * - 세션 표시 (로그인/로그아웃)
+ * - 모바일 햄버거 메뉴
+ * - 검색 인풋은 홈 hero 검색으로 일원화되어 GNB에서 제거됨.
  */
 const NAV_ITEMS = [
   { label: '홈', href: '/' },
@@ -60,13 +50,18 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
           <Link
             href="/"
-            className="flex items-center gap-2 text-base font-semibold tracking-tight"
+            aria-label="OAtech 홈으로"
+            className="flex items-center"
           >
-            <LifeBuoy className="h-5 w-5 text-brand-600 dark:text-brand-400" />
-            <span>OA 통합 AS</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/oatech-logo.svg"
+              alt="OAtech"
+              className="h-6 w-auto dark:brightness-110"
+            />
           </Link>
         </div>
 
@@ -92,9 +87,6 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* 데스크탑 검색 인풋 (md 이상) */}
-          <HeaderSearchInput className="hidden lg:flex" />
-
           <ThemeToggle />
           {status === 'authenticated' && user ? (
             <>
@@ -146,11 +138,6 @@ export function Header() {
         )}
       >
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6">
-          <HeaderSearchInput
-            onSubmitted={() => setMobileOpen(false)}
-            className="flex"
-            autoFocus={false}
-          />
           <nav className="flex flex-col gap-1">
             {NAV_ITEMS.map((item) => {
               const active = isActiveNav(pathname, item.href);
@@ -207,51 +194,6 @@ export function Header() {
         </div>
       </div>
     </header>
-  );
-}
-
-function HeaderSearchInput({
-  className,
-  onSubmitted,
-  autoFocus,
-}: {
-  className?: string;
-  onSubmitted?: () => void;
-  autoFocus?: boolean;
-}) {
-  const router = useRouter();
-  const [q, setQ] = useState('');
-
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const trimmed = q.trim();
-    if (!trimmed) return;
-    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
-    onSubmitted?.();
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      role="search"
-      className={cn('items-center', className)}
-    >
-      <div className="relative flex w-full items-center">
-        <Search
-          className="pointer-events-none absolute left-2.5 h-4 w-4 text-slate-400 dark:text-slate-500"
-          aria-hidden
-        />
-        <input
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          autoFocus={autoFocus}
-          placeholder="도움말 검색"
-          aria-label="도움말 검색"
-          className="h-9 w-full rounded-md border border-slate-200 bg-white pl-8 pr-3 text-sm shadow-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 dark:border-slate-700 dark:bg-slate-900 dark:placeholder:text-slate-500 md:w-56 lg:w-64"
-        />
-      </div>
-    </form>
   );
 }
 
