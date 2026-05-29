@@ -54,17 +54,25 @@ export const listAgentSelectableChannels = unstable_cache(
   { revalidate: 300, tags: ['ticket-channels'] },
 );
 
-/** 티켓 상세 라벨 표시용 (비활성 포함, 과거 데이터 라벨 보존). */
-export const getAllTicketChannelsMap = unstable_cache(
-  async () => {
-    const rows = await listTicketChannels({ includeInactive: true });
-    const map = new Map<string, TicketChannelRow>();
-    for (const row of rows) map.set(row.code, row);
-    return map;
-  },
-  ['ticket-channels:all-map'],
+/**
+ * 캐시 내부 — array만 캐싱. Map은 serialization 불가능하여
+ * Next 16의 unstable_cache가 plain object로 변환 → `.get is not a function` throw.
+ */
+const _getAllTicketChannelsArray = unstable_cache(
+  () => listTicketChannels({ includeInactive: true }),
+  ['ticket-channels:all-list'],
   { revalidate: 300, tags: ['ticket-channels'] },
 );
+
+/** 티켓 상세 라벨 표시용 (비활성 포함, 과거 데이터 라벨 보존). */
+export async function getAllTicketChannelsMap(): Promise<
+  Map<string, TicketChannelRow>
+> {
+  const rows = await _getAllTicketChannelsArray();
+  const map = new Map<string, TicketChannelRow>();
+  for (const row of rows) map.set(row.code, row);
+  return map;
+}
 
 export async function getTicketChannelById(
   id: string,

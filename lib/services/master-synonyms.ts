@@ -217,7 +217,75 @@ export type SynonymIndex = {
  * - revalidateTag('synonyms')로 즉시 무효화 가능 (변경 액션에서 호출)
  * - 그룹 비활성이면 동의어 무시
  */
-export const loadSynonymIndex = unstable_cache(
+/**
+ * 캐시 내부 — Map/Set 직렬화 불가능. Next 16 unstable_cache는 plain object로 변환하여
+ * `.get is not a function` throw 유발. 따라서 raw rows만 캐싱하고 함수 호출 시점에 Map 구성.
+ */
+type _SynonymIndexRaw = {
+  groups: Array<{ id: string; canonicalTerm: string; suggestedCategoryId: string | null }>;
+  synonyms: Array<{ groupId: string; term: string }>;
+};
+
+const _loadSynonymRaw = unstable_cache(
+  async (): Promise<_SynonymIndexRaw> => {
+    if (!db) return { groups: [], synonyms: [] };
+    try {
+      const groups = await db
+        .select({
+          id: termGroups.id,
+          canonicalTerm: termGroups.canonicalTerm,
+          suggestedCategoryId: termGroups.suggestedCategoryId,
+        })
+        .from(termGroups)
+        .where(eq(termGroups.isActive, true));
+      const synonyms = await db
+        .select({
+          groupId: termSynonyms.groupId,
+          term: termSynonyms.term,
+        })
+        .from(termSynonyms)
+        .where(eq(termSynonyms.isActive, true));
+      return { groups, synonyms };
+    } catch (err) {
+      console.error('[master-synonyms._loadSynonymRaw] 실패:', err);
+      return { groups: [], synonyms: [] };
+    }
+  },
+  ['synonym-index:v2-raw'],
+  { revalidate: 300, tags: [SYNONYMS_CACHE_TAG] },
+);
+
+export async function loadSynonymIndex(): Promise<SynonymIndex> {
+  const { groups, synonyms } = await _loadSynonymRaw();
+  const termToGroupIds = new Map<string, Set<string>>();
+  const groupIdToTerms = new Map<string, string[]>();
+  const groupIdToSuggestedCategoryId = new Map<string, string>();
+
+  const activeGroupIds = new Set(groups.map((g) => g.id));
+  for (const g of groups) {
+    groupIdToTerms.set(g.id, [g.canonicalTerm]);
+    if (g.suggestedCategoryId) {
+      groupIdToSuggestedCategoryId.set(g.id, g.suggestedCategoryId);
+    }
+    const key = normalizeTerm(g.canonicalTerm);
+    if (!termToGroupIds.has(key)) termToGroupIds.set(key, new Set());
+    termToGroupIds.get(key)!.add(g.id);
+  }
+  for (const s of synonyms) {
+    if (!activeGroupIds.has(s.groupId)) continue;
+    const arr = groupIdToTerms.get(s.groupId);
+    if (!arr) continue;
+    arr.push(s.term);
+    const key = normalizeTerm(s.term);
+    if (!termToGroupIds.has(key)) termToGroupIds.set(key, new Set());
+    termToGroupIds.get(key)!.add(s.groupId);
+  }
+  return { termToGroupIds, groupIdToTerms, groupIdToSuggestedCategoryId };
+}
+
+// 이하 원본 unstable_cache 블록은 위 _loadSynonymRaw + loadSynonymIndex로 대체됨.
+// 아래 deprecated 블록은 빌드 시 dead code (호출되지 않음) — 호환 유지용 stub.
+const _deprecatedLoadSynonymIndex = unstable_cache(
   async (): Promise<SynonymIndex> => {
     const termToGroupIds = new Map<string, Set<string>>();
     const groupIdToTerms = new Map<string, string[]>();
