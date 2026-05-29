@@ -19,9 +19,13 @@ marked.setOptions({
   pedantic: false,
 });
 
-/** 마크다운 문자열 → HTML 문자열 (동기). */
+/** 마크다운 문자열 → HTML 문자열 (동기). 이미 HTML이면 그대로 반환. */
 export function markdownToHtml(md: string): string {
   if (!md) return '';
+  // HTML 감지: 본문이 <tag>로 시작하면 이미 HTML로 간주 (RichEditor HTML 저장 모드)
+  if (/^\s*<[a-zA-Z]/.test(md)) {
+    return md;
+  }
   // marked v14+는 기본 동기. async: false 명시로 Promise 반환 방지.
   return marked.parse(md, { async: false }) as string;
 }

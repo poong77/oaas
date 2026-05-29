@@ -21,8 +21,24 @@
 export function markdownToPlain(md: string): string {
   if (!md) return '';
 
+  // 0) HTML 태그 strip — RichEditor가 HTML로 저장하므로 우선 처리
+  //    <br>, </p>, </div>, </h1~6>, </li> 는 개행으로
+  //    나머지 태그는 제거
+  let cleaned = md
+    .replace(/<\/?(?:script|style|iframe)[^>]*>[\s\S]*?<\/(?:script|style|iframe)>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    // HTML entities 디코딩 (간단)
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
   return (
-    md
+    cleaned
       // 1) 코드 블록 ```code``` (먼저 처리 — 내부 마크다운 보존 위해)
       .replace(/```[a-zA-Z0-9]*\n?([\s\S]*?)```/g, (_, code: string) => code.trim())
       // 2) 인라인 코드 `code`

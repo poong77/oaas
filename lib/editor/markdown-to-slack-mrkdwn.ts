@@ -21,11 +21,32 @@
 export function markdownToSlackMrkdwn(md: string): string {
   if (!md) return '';
 
+  // 0) HTML 입력 감지 — RichEditor HTML 저장 모드 대응
+  //    HTML 태그를 Slack mrkdwn에 가깝게 변환 (간단 처리)
+  let input = md;
+  if (/<[a-zA-Z][^>]*>/.test(input)) {
+    input = input
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n')
+      .replace(/<(b|strong)[^>]*>([\s\S]*?)<\/(b|strong)>/gi, '*$2*')
+      .replace(/<(i|em)[^>]*>([\s\S]*?)<\/(i|em)>/gi, '_$2_')
+      .replace(/<s[^>]*>([\s\S]*?)<\/s>/gi, '~$1~')
+      .replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '`$1`')
+      .replace(/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, '<$1|$2>')
+      .replace(/<[^>]+>/g, '') // 나머지 태그 제거 (style·color·align 등은 Slack 표현 불가)
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+  }
+
   // 코드 블록은 변환에서 제외해야 내용 보존됨 → 토큰화 후 마지막에 복원
   const codeBlocks: string[] = [];
   const inlineCodes: string[] = [];
 
-  let out = md
+  let out = input
     // 1) 코드 블록 토큰화 ```...```
     .replace(/```[a-zA-Z0-9]*\n?([\s\S]*?)```/g, (_, code: string) => {
       const idx = codeBlocks.length;

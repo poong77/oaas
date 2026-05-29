@@ -140,9 +140,11 @@ export function RichEditor({
       },
     },
     onUpdate: ({ editor }) => {
-      const md = editor.storage.markdown.getMarkdown();
-      valueRef.current = md;
-      onChange(md);
+      // HTML로 저장 — 폰트·색상·정렬·폰트사이즈 등 인라인 스타일 보존.
+      // tiptap-markdown serializer는 표준 마크다운만 지원하여 스타일 손실됨.
+      const html = editor.getHTML();
+      valueRef.current = html;
+      onChange(html);
     },
   });
 
@@ -152,9 +154,10 @@ export function RichEditor({
   useEffect(() => {
     if (!editor) return;
     if (!mounted) return;
-    const current = editor.storage.markdown.getMarkdown() as string;
+    const current = editor.getHTML();
     if (current !== value) {
       // emitUpdate: false → 외부 동기화 시 onChange 재발화 방지
+      // Tiptap setContent는 HTML/마크다운 자동 인식 (기존 마크다운 본문 호환)
       editor.commands.setContent(value, { emitUpdate: false });
     }
   }, [editor, value, mounted]);
