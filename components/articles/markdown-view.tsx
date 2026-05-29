@@ -2,6 +2,8 @@
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import { cn } from '@/lib/utils';
@@ -10,11 +12,51 @@ import { cn } from '@/lib/utils';
  * 마크다운 렌더 — RSC에서 그대로 사용 가능.
  *
  * 보안:
- *   - react-markdown 기본 설정은 raw HTML을 렌더하지 않음 (XSS 방어 기본).
- *   - GFM, slug 자동 anchor + autolink (TOC 점프 지원).
+ *   - rehype-raw로 HTML 파싱 (RichEditor 풀스택 톨바의 인라인 스타일 보존 위함)
+ *   - rehype-sanitize 화이트리스트로 XSS 방어 (style·color·align·font 속성만 허용)
+ *   - GFM, slug 자동 anchor + autolink (TOC 점프 지원)
  *
  * 스타일: Tailwind prose 대신 직접 스타일 (다크모드 + 통일 토큰).
  */
+
+// 인라인 스타일·color·align·font-family·font-size·YouTube iframe 화이트리스트
+const sanitizeSchema = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    '*': [
+      ...(defaultSchema.attributes?.['*'] ?? []),
+      'style',
+      'className',
+      'class',
+    ],
+    span: [
+      ...((defaultSchema.attributes?.span as string[] | undefined) ?? []),
+      'style',
+    ],
+    div: [
+      ...((defaultSchema.attributes?.div as string[] | undefined) ?? []),
+      'style',
+      'data-youtube-video',
+    ],
+    h1: [['style']],
+    h2: [['style']],
+    h3: [['style']],
+    p: [['style']],
+    iframe: [
+      'src',
+      'width',
+      'height',
+      'allow',
+      'allowfullscreen',
+      'frameborder',
+      'title',
+    ],
+  },
+  tagNames: [...(defaultSchema.tagNames ?? []), 'iframe'],
+  // style 속성은 css 파싱이 무거우니 화이트리스트 패턴은 별도 적용 안 함 (브라우저가 자체 안전 처리)
+};
+
 export function MarkdownView({
   source,
   className,
@@ -32,6 +74,8 @@ export function MarkdownView({
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[
+          rehypeRaw,
+          [rehypeSanitize, sanitizeSchema],
           rehypeSlug,
           [
             rehypeAutolinkHeadings,

@@ -63,10 +63,10 @@ export function ReplyForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
       <RichEditor
-        mode="lite"
+        mode="full"
         value={content}
         onChange={setContent}
-        minHeight={140}
+        minHeight={180}
         placeholder="추가로 알려주실 내용을 작성해주세요."
         disabled={pending}
         autoSave={{

@@ -15,6 +15,12 @@ import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
+import { TextAlign } from '@tiptap/extension-text-align';
+import { FontFamily } from '@tiptap/extension-font-family';
+import Youtube from '@tiptap/extension-youtube';
+import { FontSize } from '@/lib/editor/font-size-extension';
 import { cn } from '@/lib/utils';
 import { FullToolbar } from './toolbar/full-toolbar';
 import { LiteToolbar } from './toolbar/lite-toolbar';
@@ -83,7 +89,7 @@ export function RichEditor({
         // codeBlock·heading·blockquote 등은 StarterKit 기본 포함
       }),
       Markdown.configure({
-        html: false,
+        html: true, // 폰트사이즈·색상·정렬 등 마크다운 외 기능을 HTML로 보존
         breaks: true,
         tightLists: true,
         linkify: true,
@@ -99,7 +105,7 @@ export function RichEditor({
         },
       }),
       Underline,
-      Highlight.configure({ multicolor: false }),
+      Highlight.configure({ multicolor: true }),
       TaskList,
       TaskItem.configure({ nested: true }),
       Placeholder.configure({ placeholder, emptyEditorClass: 'is-editor-empty' }),
@@ -107,6 +113,22 @@ export function RichEditor({
       TableRow,
       TableHeader,
       TableCell,
+      // 풀스택 톨바용 확장 (full 모드에서 사용)
+      TextStyle,
+      Color,
+      FontFamily,
+      FontSize,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+        alignments: ['left', 'center', 'right', 'justify'],
+        defaultAlignment: 'left',
+      }),
+      Youtube.configure({
+        controls: true,
+        nocookie: true,
+        modestBranding: true,
+        HTMLAttributes: { class: 'editor-youtube' },
+      }),
     ],
     content: value,
     editable: !disabled,

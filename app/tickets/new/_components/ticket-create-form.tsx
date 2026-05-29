@@ -423,10 +423,10 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
                 )}
               </div>
               <RichEditor
-                mode="lite"
+                mode="full"
                 value={content}
                 onChange={setContent}
-                minHeight={220}
+                minHeight={260}
                 placeholder="언제부터 발생했나요? 재현 단계, 기대 결과, 시도해본 조치를 적어주세요."
                 disabled={pending}
                 autoSave={{

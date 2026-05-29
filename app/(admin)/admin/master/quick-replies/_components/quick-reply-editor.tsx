@@ -103,10 +103,10 @@ export function QuickReplyEditor({
       <div className="flex flex-col gap-1">
         <Label>본문</Label>
         <RichEditor
-          mode="full"
+          mode="lite"
           value={content}
           onChange={setContent}
-          minHeight={240}
+          minHeight={180}
           placeholder="자주 쓰는 응대 문구를 작성하세요. {{호텔명}} {{호텔리어명}} {{티켓번호}} 변수가 매니저 발송 시 치환됩니다."
           autoSave={{
             scope: 'quick-reply',
