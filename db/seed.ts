@@ -33,6 +33,8 @@ import {
   serviceStatus,
   solutionLinkPresets,
   systemSettings,
+  termGroups,
+  termSynonyms,
   ticketChannels,
   ticketMessages,
   tickets,
@@ -1520,6 +1522,676 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
   }
   console.log(
     `[seed] ticket_channels: ${tcCreated}건 신규 / ${tcSkipped}건 스킵`,
+  );
+
+  // ─── 17. term_groups + term_synonyms (synonyms-master) ────────────
+  console.log('[seed] term_groups 확인...');
+
+  // categories 조회 — 추천 카테고리 매핑용
+  const categoryRows = await db
+    .select({ id: categories.id, type: categories.type, code: categories.code })
+    .from(categories);
+  const catId = (type: string, code: string): string | null => {
+    const found = categoryRows.find((r) => r.type === type && r.code === code);
+    return found?.id ?? null;
+  };
+
+  type SeedGroup = {
+    canonicalTerm: string;
+    category:
+      | 'operation'
+      | 'housekeeping'
+      | 'fnb'
+      | 'frontdesk'
+      | 'pms'
+      | 'product'
+      | 'issue'
+      | 'role'
+      | 'misc';
+    description?: string;
+    suggestedCategoryId?: string | null;
+    sortOrder: number;
+    synonyms: { term: string; language?: 'ko' | 'en' }[];
+  };
+
+  const seedGroups: SeedGroup[] = [
+    // ── operation (9) ─────────────────────────────────────────
+    {
+      canonicalTerm: '체크인',
+      category: 'operation',
+      sortOrder: 110,
+      synonyms: [
+        { term: 'CI', language: 'en' },
+        { term: 'check-in', language: 'en' },
+        { term: 'check in', language: 'en' },
+        { term: '입실', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '체크아웃',
+      category: 'operation',
+      sortOrder: 120,
+      synonyms: [
+        { term: 'CO', language: 'en' },
+        { term: 'check-out', language: 'en' },
+        { term: 'check out', language: 'en' },
+        { term: '퇴실', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '예약',
+      category: 'operation',
+      sortOrder: 130,
+      synonyms: [
+        { term: 'reservation', language: 'en' },
+        { term: 'booking', language: 'en' },
+        { term: '부킹', language: 'ko' },
+        { term: '예약건', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '객실',
+      category: 'operation',
+      sortOrder: 140,
+      synonyms: [
+        { term: 'room', language: 'en' },
+        { term: '룸', language: 'ko' },
+        { term: '호실', language: 'ko' },
+        { term: '방', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '요금',
+      category: 'operation',
+      sortOrder: 150,
+      synonyms: [
+        { term: 'rate', language: 'en' },
+        { term: '가격', language: 'ko' },
+        { term: '단가', language: 'ko' },
+        { term: '요율', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '노쇼',
+      category: 'operation',
+      sortOrder: 160,
+      synonyms: [
+        { term: 'no-show', language: 'en' },
+        { term: 'no show', language: 'en' },
+        { term: 'NS', language: 'en' },
+        { term: '미투숙', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '워크인',
+      category: 'operation',
+      sortOrder: 170,
+      synonyms: [
+        { term: 'walk-in', language: 'en' },
+        { term: 'walk in', language: 'en' },
+        { term: 'WI', language: 'en' },
+        { term: '현장 투숙', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '얼리 체크인',
+      category: 'operation',
+      sortOrder: 180,
+      synonyms: [
+        { term: 'early CI', language: 'en' },
+        { term: 'ECI', language: 'en' },
+        { term: 'early check-in', language: 'en' },
+        { term: '조기 입실', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '레이트 체크아웃',
+      category: 'operation',
+      sortOrder: 190,
+      synonyms: [
+        { term: 'late CO', language: 'en' },
+        { term: 'LCO', language: 'en' },
+        { term: 'late check-out', language: 'en' },
+        { term: '늦은 퇴실', language: 'ko' },
+      ],
+    },
+
+    // ── housekeeping (5) ──────────────────────────────────────
+    {
+      canonicalTerm: '객실 청소',
+      category: 'housekeeping',
+      sortOrder: 210,
+      synonyms: [
+        { term: '하우스키핑', language: 'ko' },
+        { term: 'housekeeping', language: 'en' },
+        { term: 'HK', language: 'en' },
+        { term: '청소', language: 'ko' },
+        { term: '룸 클리닝', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '턴다운',
+      category: 'housekeeping',
+      sortOrder: 220,
+      synonyms: [
+        { term: 'turn-down', language: 'en' },
+        { term: 'turn down', language: 'en' },
+        { term: 'TD', language: 'en' },
+        { term: '야간정리', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '린넨',
+      category: 'housekeeping',
+      sortOrder: 230,
+      synonyms: [
+        { term: 'linen', language: 'en' },
+        { term: '침구', language: 'ko' },
+        { term: '시트', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '객실 점검',
+      category: 'housekeeping',
+      sortOrder: 240,
+      synonyms: [
+        { term: 'inspection', language: 'en' },
+        { term: '인스펙션', language: 'ko' },
+        { term: '룸체크', language: 'ko' },
+        { term: '점검', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '미니바',
+      category: 'housekeeping',
+      sortOrder: 250,
+      synonyms: [
+        { term: 'minibar', language: 'en' },
+        { term: 'mini bar', language: 'en' },
+        { term: 'MB', language: 'en' },
+        { term: '미니 바', language: 'ko' },
+      ],
+    },
+
+    // ── fnb (4) ───────────────────────────────────────────────
+    {
+      canonicalTerm: '조식',
+      category: 'fnb',
+      sortOrder: 310,
+      synonyms: [
+        { term: 'breakfast', language: 'en' },
+        { term: 'BF', language: 'en' },
+        { term: '아침 식사', language: 'ko' },
+        { term: '아침', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '룸서비스',
+      category: 'fnb',
+      sortOrder: 320,
+      synonyms: [
+        { term: 'room service', language: 'en' },
+        { term: 'RS', language: 'en' },
+        { term: '인룸 다이닝', language: 'ko' },
+        { term: 'in-room dining', language: 'en' },
+      ],
+    },
+    {
+      canonicalTerm: '식음료',
+      category: 'fnb',
+      sortOrder: 330,
+      synonyms: [
+        { term: 'F&B', language: 'en' },
+        { term: 'FB', language: 'en' },
+        { term: 'food and beverage', language: 'en' },
+        { term: '에프앤비', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '라운지',
+      category: 'fnb',
+      sortOrder: 340,
+      synonyms: [
+        { term: 'lounge', language: 'en' },
+        { term: '라운지바', language: 'ko' },
+        { term: '라운지 바', language: 'ko' },
+      ],
+    },
+
+    // ── frontdesk (4) ─────────────────────────────────────────
+    {
+      canonicalTerm: '프런트',
+      category: 'frontdesk',
+      sortOrder: 410,
+      synonyms: [
+        { term: 'FD', language: 'en' },
+        { term: 'front desk', language: 'en' },
+        { term: '리셉션', language: 'ko' },
+        { term: 'reception', language: 'en' },
+        { term: '프론트', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '컨시어지',
+      category: 'frontdesk',
+      sortOrder: 420,
+      synonyms: [
+        { term: 'concierge', language: 'en' },
+        { term: '컨시', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '벨맨',
+      category: 'frontdesk',
+      sortOrder: 430,
+      synonyms: [
+        { term: 'bellman', language: 'en' },
+        { term: 'bell', language: 'en' },
+        { term: '벨보이', language: 'ko' },
+        { term: 'bellboy', language: 'en' },
+      ],
+    },
+    {
+      canonicalTerm: '게스트',
+      category: 'frontdesk',
+      sortOrder: 440,
+      synonyms: [
+        { term: 'guest', language: 'en' },
+        { term: '고객', language: 'ko' },
+        { term: '손님', language: 'ko' },
+        { term: '투숙객', language: 'ko' },
+      ],
+    },
+
+    // ── pms (6) ───────────────────────────────────────────────
+    {
+      canonicalTerm: '룸 배정',
+      category: 'pms',
+      sortOrder: 510,
+      synonyms: [
+        { term: 'room assignment', language: 'en' },
+        { term: '배방', language: 'ko' },
+        { term: '배정', language: 'ko' },
+        { term: 'assign', language: 'en' },
+      ],
+    },
+    {
+      canonicalTerm: '룸 차지',
+      category: 'pms',
+      sortOrder: 520,
+      synonyms: [
+        { term: 'room charge', language: 'en' },
+        { term: '룸챠지', language: 'ko' },
+        { term: '객실 청구', language: 'ko' },
+        { term: 'charge', language: 'en' },
+      ],
+    },
+    {
+      canonicalTerm: '오버부킹',
+      category: 'pms',
+      sortOrder: 530,
+      synonyms: [
+        { term: 'overbooking', language: 'en' },
+        { term: 'OB', language: 'en' },
+        { term: '초과예약', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '객실 등급',
+      category: 'pms',
+      sortOrder: 540,
+      synonyms: [
+        { term: 'room type', language: 'en' },
+        { term: 'RT', language: 'en' },
+        { term: '룸타입', language: 'ko' },
+        { term: '룸 타입', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '점유율',
+      category: 'pms',
+      sortOrder: 550,
+      synonyms: [
+        { term: 'occupancy', language: 'en' },
+        { term: 'OCC', language: 'en' },
+        { term: '객실 점유율', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '객단가',
+      category: 'pms',
+      sortOrder: 560,
+      synonyms: [
+        { term: 'ADR', language: 'en' },
+        { term: 'average daily rate', language: 'en' },
+        { term: '평균 객실 단가', language: 'ko' },
+      ],
+    },
+
+    // ── product (5) ───────────────────────────────────────────
+    {
+      canonicalTerm: 'PMS',
+      category: 'product',
+      suggestedCategoryId: catId('product', 'pms'),
+      sortOrder: 610,
+      synonyms: [
+        { term: 'Property Management System', language: 'en' },
+        { term: '자산관리시스템', language: 'ko' },
+        { term: 'OA PMS', language: 'en' },
+        { term: '피엠에스', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: 'CMS',
+      category: 'product',
+      suggestedCategoryId: catId('product', 'cms'),
+      sortOrder: 620,
+      synonyms: [
+        { term: 'Channel Manager', language: 'en' },
+        { term: '채널매니저', language: 'ko' },
+        { term: '채널관리시스템', language: 'ko' },
+        { term: '씨엠에스', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: 'Keyless',
+      category: 'product',
+      suggestedCategoryId: catId('product', 'keyless'),
+      sortOrder: 630,
+      synonyms: [
+        { term: '키리스', language: 'ko' },
+        { term: '모바일키', language: 'ko' },
+        { term: 'mobile key', language: 'en' },
+        { term: '무인체크인', language: 'ko' },
+        { term: '모바일 키', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: 'Kiosk',
+      category: 'product',
+      suggestedCategoryId: catId('product', 'kiosk'),
+      sortOrder: 640,
+      synonyms: [
+        { term: '키오스크', language: 'ko' },
+        { term: '무인 단말', language: 'ko' },
+        { term: '자율 단말', language: 'ko' },
+        { term: 'self check-in kiosk', language: 'en' },
+      ],
+    },
+    {
+      canonicalTerm: '웹서비스',
+      category: 'product',
+      suggestedCategoryId: catId('product', 'web'),
+      sortOrder: 650,
+      synonyms: [
+        { term: 'booking engine', language: 'en' },
+        { term: '부킹엔진', language: 'ko' },
+        { term: 'BE', language: 'en' },
+        { term: '웹 부킹엔진', language: 'ko' },
+      ],
+    },
+
+    // ── issue (8) ─────────────────────────────────────────────
+    {
+      canonicalTerm: '결제 실패',
+      category: 'issue',
+      suggestedCategoryId: catId('issue_type', 'error'),
+      sortOrder: 710,
+      synonyms: [
+        { term: 'payment failed', language: 'en' },
+        { term: '결제 오류', language: 'ko' },
+        { term: '결제 안됨', language: 'ko' },
+        { term: '카드 거절', language: 'ko' },
+        { term: '승인 거절', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '네트워크 끊김',
+      category: 'issue',
+      suggestedCategoryId: catId('issue_type', 'outage'),
+      sortOrder: 720,
+      synonyms: [
+        { term: 'network down', language: 'en' },
+        { term: '인터넷 끊김', language: 'ko' },
+        { term: '통신 장애', language: 'ko' },
+        { term: '망 장애', language: 'ko' },
+        { term: '회선 장애', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '카드 미인식',
+      category: 'issue',
+      suggestedCategoryId: catId('issue_type', 'error'),
+      sortOrder: 730,
+      synonyms: [
+        { term: 'card not detected', language: 'en' },
+        { term: '키카드 인식 안됨', language: 'ko' },
+        { term: '키 인식 오류', language: 'ko' },
+        { term: 'NFC 오류', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '동기화 오류',
+      category: 'issue',
+      suggestedCategoryId: catId('issue_type', 'error'),
+      sortOrder: 740,
+      synonyms: [
+        { term: 'sync error', language: 'en' },
+        { term: '싱크 오류', language: 'ko' },
+        { term: '동기화 실패', language: 'ko' },
+        { term: 'sync failed', language: 'en' },
+      ],
+    },
+    {
+      canonicalTerm: '로그인 안됨',
+      category: 'issue',
+      suggestedCategoryId: catId('issue_type', 'error'),
+      sortOrder: 750,
+      synonyms: [
+        { term: 'login failed', language: 'en' },
+        { term: '로그인 오류', language: 'ko' },
+        { term: '로그인 안 됨', language: 'ko' },
+        { term: '인증 실패', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '화면 멈춤',
+      category: 'issue',
+      suggestedCategoryId: catId('issue_type', 'outage'),
+      sortOrder: 760,
+      synonyms: [
+        { term: 'freeze', language: 'en' },
+        { term: '멈춤', language: 'ko' },
+        { term: '응답 없음', language: 'ko' },
+        { term: '다운', language: 'ko' },
+        { term: '먹통', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '프린터 오류',
+      category: 'issue',
+      suggestedCategoryId: catId('issue_type', 'error'),
+      sortOrder: 770,
+      synonyms: [
+        { term: 'printer error', language: 'en' },
+        { term: '영수증 안 나옴', language: 'ko' },
+        { term: '프린트 안됨', language: 'ko' },
+        { term: '출력 안됨', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '데이터 누락',
+      category: 'issue',
+      suggestedCategoryId: catId('issue_type', 'data_fix'),
+      sortOrder: 780,
+      synonyms: [
+        { term: 'data missing', language: 'en' },
+        { term: '누락', language: 'ko' },
+        { term: '안 나옴', language: 'ko' },
+        { term: '안 보임', language: 'ko' },
+      ],
+    },
+
+    // ── role (5) ──────────────────────────────────────────────
+    {
+      canonicalTerm: '매니저',
+      category: 'role',
+      sortOrder: 810,
+      synonyms: [
+        { term: 'MGR', language: 'en' },
+        { term: 'manager', language: 'en' },
+        { term: '책임자', language: 'ko' },
+        { term: '매니져', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '객실팀장',
+      category: 'role',
+      sortOrder: 820,
+      synonyms: [
+        { term: 'housekeeping manager', language: 'en' },
+        { term: 'HKM', language: 'en' },
+        { term: '하우스키핑 매니저', language: 'ko' },
+        { term: '객실 팀장', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: 'F&B 매니저',
+      category: 'role',
+      sortOrder: 830,
+      synonyms: [
+        { term: 'FBM', language: 'en' },
+        { term: '식음료 매니저', language: 'ko' },
+        { term: 'F&B M', language: 'en' },
+        { term: '에프앤비 매니저', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '총지배인',
+      category: 'role',
+      sortOrder: 840,
+      synonyms: [
+        { term: 'GM', language: 'en' },
+        { term: 'general manager', language: 'en' },
+        { term: '지배인', language: 'ko' },
+        { term: '총괄', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: '당직',
+      category: 'role',
+      sortOrder: 850,
+      synonyms: [
+        { term: 'duty', language: 'en' },
+        { term: 'night manager', language: 'en' },
+        { term: '야간 매니저', language: 'ko' },
+        { term: 'MOD', language: 'en' },
+      ],
+    },
+
+    // ── misc (4) ──────────────────────────────────────────────
+    {
+      canonicalTerm: 'VIP',
+      category: 'misc',
+      sortOrder: 910,
+      synonyms: [
+        { term: '브이아이피', language: 'ko' },
+        { term: '귀빈', language: 'ko' },
+        { term: 'VIP 게스트', language: 'en' },
+      ],
+    },
+    {
+      canonicalTerm: '블록',
+      category: 'misc',
+      sortOrder: 920,
+      synonyms: [
+        { term: 'block', language: 'en' },
+        { term: '단체 블록', language: 'ko' },
+        { term: 'group block', language: 'en' },
+        { term: '단체예약', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: 'OOO',
+      category: 'misc',
+      sortOrder: 930,
+      synonyms: [
+        { term: 'out of order', language: 'en' },
+        { term: '사용불가 객실', language: 'ko' },
+        { term: '수리중 객실', language: 'ko' },
+      ],
+    },
+    {
+      canonicalTerm: 'OS',
+      category: 'misc',
+      sortOrder: 940,
+      synonyms: [
+        { term: 'out of service', language: 'en' },
+        { term: '일시 정지 객실', language: 'ko' },
+      ],
+    },
+  ];
+
+  let tgCreated = 0;
+  let tgSkipped = 0;
+  let tsCreated = 0;
+  for (const g of seedGroups) {
+    const existing = await db
+      .select({ id: termGroups.id })
+      .from(termGroups)
+      .where(sql`${termGroups.canonicalTerm} = ${g.canonicalTerm}`)
+      .limit(1);
+
+    let groupId: string;
+    if (existing.length > 0) {
+      tgSkipped++;
+      groupId = existing[0]!.id;
+    } else {
+      const [inserted] = await db
+        .insert(termGroups)
+        .values({
+          canonicalTerm: g.canonicalTerm,
+          category: g.category,
+          description: g.description ?? null,
+          suggestedCategoryId: g.suggestedCategoryId ?? null,
+          sortOrder: g.sortOrder,
+        })
+        .returning({ id: termGroups.id });
+      groupId = inserted!.id;
+      tgCreated++;
+    }
+
+    // 동의어 INSERT (중복은 unique 인덱스로 차단 → onConflict)
+    let synSortOrder = 10;
+    for (const syn of g.synonyms) {
+      try {
+        await db
+          .insert(termSynonyms)
+          .values({
+            groupId,
+            term: syn.term,
+            language: syn.language ?? 'ko',
+            sortOrder: synSortOrder,
+          })
+          .onConflictDoNothing({
+            target: [
+              termSynonyms.groupId,
+              termSynonyms.term,
+              termSynonyms.language,
+            ],
+          });
+        tsCreated++;
+        synSortOrder += 10;
+      } catch (err) {
+        console.warn(
+          `[seed] term_synonyms 삽입 실패 (${g.canonicalTerm} / ${syn.term}):`,
+          err instanceof Error ? err.message : err,
+        );
+      }
+    }
+  }
+  console.log(
+    `[seed] term_groups: ${tgCreated}건 신규 / ${tgSkipped}건 스킵, term_synonyms: ${tsCreated}건 INSERT 시도`,
   );
 
   console.log('\n[seed] ✅ 완료. 로그인 계정:');
