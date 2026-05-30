@@ -19,6 +19,45 @@
 }
 
 /*
+ * 헤더 운영상태 배지 → #contact 푸터 도착 시 강조 효과.
+ *   - Spotlight Ring : box-shadow 기반 brand-500 링이 0→6px outset로 퍼졌다가 fade-out
+ *   - Micro Bounce  : 칼럼이 4px 위로 살짝 튀었다가 원위치
+ * :target 가상클래스로 첫 진입 시 1회 자동 발동, 동일 hash 재클릭 시에는 재생되지 않음
+ * (사용자가 이미 위치를 인지한 상태이므로 충분).
+ */
+@keyframes spotlight-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-brand-500) 0%, transparent);
+  }
+  25% {
+    box-shadow: 0 0 0 6px color-mix(in oklab, var(--color-brand-500) 50%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-brand-500) 0%, transparent);
+  }
+}
+
+@keyframes micro-bounce {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+  70% { transform: translateY(-1px); }
+  100% { transform: translateY(0); }
+}
+
+#contact:target [data-contact-highlight] {
+  border-radius: 0.5rem;
+  animation:
+    spotlight-ring 1.5s ease-out 0.1s forwards,
+    micro-bounce 0.6s ease-out 0.15s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #contact:target [data-contact-highlight] {
+    animation: none;
+  }
+}
+
+/*
  * 디자인 토큰 — 메인 컬러는 brand-* 로 노출.
  *
  * 역할별 동적 분기 (role-mode-ui):
