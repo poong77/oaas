@@ -47,36 +47,55 @@ export function BusinessStatusBadge({
     status.status,
   );
 
+  /*
+   * hash-only(#contact 등)는 일반 <a>로 처리 — Next.js Link가 hash navigation을 router로 처리하면서
+   * 동일 hash를 반복 클릭할 때마다 URL에 hash를 누적 append하는 이슈가 있음.
+   * 브라우저 기본 동작은 동일 hash 재클릭 시 history entry를 추가하지 않으므로 안전.
+   */
+  const isHashOnly = linkTo.startsWith('#');
+
   if (size === 'sm') {
-    return (
-      <Link
-        href={linkTo}
-        className={
-          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition hover:opacity-90 ' +
-          TONE_CLASS[tone]
-        }
-        aria-label={`운영 상태: ${status.label}`}
-      >
+    const cls =
+      'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition hover:opacity-90 ' +
+      TONE_CLASS[tone];
+    const label = `운영 상태: ${status.label}`;
+    const inner = (
+      <>
         <Icon className="h-3.5 w-3.5" />
         <span>{status.label}</span>
+      </>
+    );
+    return isHashOnly ? (
+      <a href={linkTo} className={cls} aria-label={label}>
+        {inner}
+      </a>
+    ) : (
+      <Link href={linkTo} className={cls} aria-label={label}>
+        {inner}
       </Link>
     );
   }
 
   // md
-  return (
-    <Link
-      href={linkTo}
-      className={
-        'inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition hover:bg-slate-50 dark:hover:bg-slate-800 ' +
-        BORDER_CLASS[tone]
-      }
-    >
+  const cls =
+    'inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition hover:bg-slate-50 dark:hover:bg-slate-800 ' +
+    BORDER_CLASS[tone];
+  const inner = (
+    <>
       <Icon className="h-3.5 w-3.5" />
       <span className="font-semibold">{status.label}</span>
       <span className="text-xs text-slate-500 dark:text-slate-400">
         {subline(status)}
       </span>
+    </>
+  );
+  return isHashOnly ? (
+    <a href={linkTo} className={cls}>
+      {inner}
+    </a>
+  ) : (
+    <Link href={linkTo} className={cls}>
+      {inner}
     </Link>
   );
 }
