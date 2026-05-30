@@ -16,6 +16,17 @@
 /** ARS 메뉴 항목 (예: { num: '1', label: '시스템 사용 문의' }) */
 export type ArsItem = { num: string; label: string };
 
+/**
+ * 운영 상태별 아이콘 (lucide-react 컴포넌트 이름).
+ * 어드민 마스터에서 편집 가능. 화이트리스트는 `lib/business-hours/state-icons.ts`.
+ */
+export type StateIcons = {
+  open: string;
+  lunch: string;
+  intake_closed: string;
+  closed: string;
+};
+
 export type BusinessHoursInput = {
   /** 'HH:MM' or 'HH:MM:SS' — PostgreSQL time 컬럼 raw 문자열 그대로 받음 */
   weekdayOpen: string;
@@ -38,6 +49,8 @@ export type BusinessHoursInput = {
   faxNumber: string | null;
   /** 회사 웹사이트 (예: www.oapms.com) — footer 표시 */
   websiteUrl: string | null;
+  /** 상태별 아이콘 (어드민 편집 가능) — 화이트리스트는 state-icons.ts */
+  stateIcons: StateIcons;
   /** IANA timezone, 기본 'Asia/Seoul' */
   timezone: string;
   /**
@@ -95,6 +108,8 @@ export type BusinessStatusResult = {
     faxNumber: string | null;
     websiteUrl: string | null;
   };
+  /** 상태별 아이콘 이름 — 어드민 마스터에서 설정 (lucide 컴포넌트 이름) */
+  stateIcons: StateIcons;
   /** 디버그용 — 정책 기준으로 계산된 effective 시각 */
   debug: {
     localDate: string; // 'YYYY-MM-DD' KST
@@ -225,6 +240,7 @@ export function calculateBusinessStatus(args: {
       emergencyPhone: hours.emergencyPhone,
       emergencyNote: hours.emergencyNote,
       contact: extractContact(hours),
+      stateIcons: hours.stateIcons,
       debug: { localDate, localTime, weekday },
     };
   }
@@ -242,6 +258,7 @@ export function calculateBusinessStatus(args: {
       emergencyPhone: hours.emergencyPhone,
       emergencyNote: hours.emergencyNote,
       contact: extractContact(hours),
+      stateIcons: hours.stateIcons,
       debug: { localDate, localTime, weekday },
     };
   }
@@ -259,6 +276,7 @@ export function calculateBusinessStatus(args: {
     emergencyPhone: hours.emergencyPhone,
     emergencyNote: hours.emergencyNote,
     contact: extractContact(hours),
+      stateIcons: hours.stateIcons,
     debug: { localDate, localTime, weekday },
   };
 }
@@ -286,6 +304,7 @@ function makeClosedResult(args: {
     emergencyPhone: args.hours.emergencyPhone,
     emergencyNote: args.hours.emergencyNote,
     contact: extractContact(args.hours),
+    stateIcons: args.hours.stateIcons,
     debug: args.debug,
   };
 }
@@ -298,6 +317,11 @@ function extractContact(hours: BusinessHoursInput): BusinessStatusResult['contac
     faxNumber: hours.faxNumber,
     websiteUrl: hours.websiteUrl,
   };
+}
+
+/** Helper: 결과에서 상태별 아이콘만 추출. status-preview/badge가 사용. */
+export function extractStateIcons(hours: BusinessHoursInput): StateIcons {
+  return hours.stateIcons;
 }
 
 /** 'HH:MM' or 'HH:MM:SS' → 자정 이후 분(minute) */

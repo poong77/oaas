@@ -21,6 +21,11 @@ import {
   shortenActiveOverride,
   upsertBusinessHoursDefault,
 } from '@/lib/services/business-hours';
+import {
+  DEFAULT_STATE_ICONS,
+  STATE_ICON_MAP,
+  type StateIcons,
+} from '@/lib/business-hours/state-icons';
 
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DATE_REGEX = /^\d{4}-(0\d|1[0-2])-(0\d|[12]\d|3[01])$/;
@@ -32,6 +37,20 @@ const DATE_REGEX = /^\d{4}-(0\d|1[0-2])-(0\d|[12]\d|3[01])$/;
 const ArsItemSchema = z.object({
   num: z.string().min(1).max(4),
   label: z.string().min(1).max(60),
+});
+
+/** 화이트리스트에 있는 아이콘 이름만 허용 */
+const IconNameSchema = z
+  .string()
+  .refine((v) => Object.prototype.hasOwnProperty.call(STATE_ICON_MAP, v), {
+    message: '허용되지 않은 아이콘',
+  });
+
+const StateIconsSchema = z.object({
+  open: IconNameSchema,
+  lunch: IconNameSchema,
+  intake_closed: IconNameSchema,
+  closed: IconNameSchema,
 });
 
 const DefaultSchema = z
@@ -64,6 +83,8 @@ const DefaultSchema = z
     arsItems: z.array(ArsItemSchema).max(10),
     faxNumber: z.string().max(40).nullable(),
     websiteUrl: z.string().max(200).nullable(),
+    // 운영 상태 아이콘 4종
+    stateIcons: StateIconsSchema,
   })
   .refine((d) => d.weekdayClose > d.weekdayOpen, {
     message: '운영 종료 시각은 시작보다 늦어야 합니다',
@@ -134,6 +155,19 @@ export async function updateBusinessHoursDefaultAction(
     }
   }
 
+  // 운영 상태 아이콘 4종 (form은 각 상태별 select)
+  const stateIcons: StateIcons = {
+    open: (((formData.get('icon_open') ?? '') as string).trim() ||
+      DEFAULT_STATE_ICONS.open),
+    lunch: (((formData.get('icon_lunch') ?? '') as string).trim() ||
+      DEFAULT_STATE_ICONS.lunch),
+    intake_closed:
+      (((formData.get('icon_intake_closed') ?? '') as string).trim() ||
+        DEFAULT_STATE_ICONS.intake_closed),
+    closed: (((formData.get('icon_closed') ?? '') as string).trim() ||
+      DEFAULT_STATE_ICONS.closed),
+  };
+
   const raw = {
     weekdayOpen: ((formData.get('weekdayOpen') ?? '') as string).trim(),
     weekdayClose: ((formData.get('weekdayClose') ?? '') as string).trim(),
@@ -152,6 +186,7 @@ export async function updateBusinessHoursDefaultAction(
     arsItems,
     faxNumber: (((formData.get('faxNumber') ?? '') as string).trim() || null),
     websiteUrl: (((formData.get('websiteUrl') ?? '') as string).trim() || null),
+    stateIcons,
   };
 
   const parsed = DefaultSchema.safeParse(raw);
@@ -180,6 +215,7 @@ export async function updateBusinessHoursDefaultAction(
       arsItems: parsed.data.arsItems,
       faxNumber: parsed.data.faxNumber,
       websiteUrl: parsed.data.websiteUrl,
+      stateIcons: parsed.data.stateIcons,
     },
     user.id,
   );

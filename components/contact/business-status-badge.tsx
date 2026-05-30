@@ -11,8 +11,6 @@
  */
 
 import Link from 'next/link';
-import { CircleAlert, Coffee, DoorClosed, Headset } from 'lucide-react';
-
 import { useBusinessStatus } from '@/lib/hooks/use-business-status';
 import type { BusinessStatusResult } from '@/lib/business-hours/calculate';
 import {
@@ -20,6 +18,7 @@ import {
   formatRemaining,
   formatTimeKst,
 } from '@/lib/business-hours/format';
+import { resolveStateIcon } from '@/lib/business-hours/state-icons';
 
 type Size = 'sm' | 'md';
 
@@ -43,6 +42,11 @@ export function BusinessStatusBadge({
 
   const tone = toneFor(status);
 
+  const Icon = resolveStateIcon(
+    status.stateIcons[status.status],
+    status.status,
+  );
+
   if (size === 'sm') {
     return (
       <Link
@@ -53,7 +57,7 @@ export function BusinessStatusBadge({
         }
         aria-label={`운영 상태: ${status.label}`}
       >
-        <Dot tone={tone} />
+        <Icon className="h-3.5 w-3.5" />
         <span>{status.label}</span>
       </Link>
     );
@@ -68,7 +72,7 @@ export function BusinessStatusBadge({
         BORDER_CLASS[tone]
       }
     >
-      <Dot tone={tone} />
+      <Icon className="h-3.5 w-3.5" />
       <span className="font-semibold">{status.label}</span>
       <span className="text-xs text-slate-500 dark:text-slate-400">
         {subline(status)}
@@ -103,18 +107,6 @@ const BORDER_CLASS: Record<Tone, string> = {
   warn: 'border-orange-200 text-orange-700 dark:border-orange-900 dark:text-orange-300',
   closed: 'border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300',
 };
-
-function Dot({ tone }: { tone: Tone }) {
-  const Icon =
-    tone === 'open'
-      ? Headset
-      : tone === 'lunch'
-        ? Coffee
-        : tone === 'warn'
-          ? CircleAlert
-          : DoorClosed;
-  return <Icon className="h-3.5 w-3.5" />;
-}
 
 function subline(s: BusinessStatusResult): string {
   if (s.status === 'open') {

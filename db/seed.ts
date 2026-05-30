@@ -2382,6 +2382,12 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
     ],
     faxNumber: '0505-300-4702',
     websiteUrl: 'www.oapms.com',
+    stateIcons: {
+      open: 'Headset',
+      lunch: 'Coffee',
+      intake_closed: 'CircleAlert',
+      closed: 'DoorClosed',
+    },
   };
 
   if (existingBhd.length === 0) {

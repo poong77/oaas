@@ -26,6 +26,15 @@ import {
 import type { BusinessHoursDefault } from '@/db/schema';
 import type { ArsItem } from '@/lib/business-hours/calculate';
 import { toHHMM } from '@/lib/business-hours/format';
+import {
+  DEFAULT_STATE_ICONS,
+  STATE_ICON_MAP,
+  STATE_ICON_OPTIONS,
+  STATE_LABEL_KR,
+  normalizeStateIcons,
+  type BusinessStatusKind,
+  type StateIcons,
+} from '@/lib/business-hours/state-icons';
 
 type Props = {
   defaults: BusinessHoursDefault | null;
@@ -41,6 +50,11 @@ export function BusinessHoursForm({ defaults }: Props) {
   );
   const [arsItems, setArsItems] = useState<ArsItem[]>(
     Array.isArray(defaults?.arsItems) ? (defaults!.arsItems as ArsItem[]) : [],
+  );
+  const [stateIcons, setStateIcons] = useState<StateIcons>(
+    defaults?.stateIcons
+      ? normalizeStateIcons(defaults.stateIcons)
+      : DEFAULT_STATE_ICONS,
   );
 
   useEffect(() => {
@@ -269,6 +283,40 @@ export function BusinessHoursForm({ defaults }: Props) {
         </div>
       </fieldset>
 
+      {/* 운영 상태 아이콘 (호텔리어 배지·미리보기에 사용) */}
+      <fieldset className="rounded-md border border-slate-200 p-4 dark:border-slate-700">
+        <legend className="px-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
+          운영 상태 아이콘
+        </legend>
+        <p className="px-1 pt-1 text-xs text-slate-500 dark:text-slate-400">
+          헤더 배지(14px) · 사이드바·푸터(14px) · 어드민 미리보기(20px)에 자동 적용됩니다.
+          아래 후보 중 하나를 선택하세요 (각 4종, lucide-react 화이트리스트).
+        </p>
+        <div className="flex flex-col gap-3 pt-3">
+          {(
+            ['open', 'lunch', 'intake_closed', 'closed'] as const
+          ).map((status) => (
+            <IconRow
+              key={status}
+              status={status}
+              selected={stateIcons[status]}
+              onSelect={(name) =>
+                setStateIcons({ ...stateIcons, [status]: name })
+              }
+            />
+          ))}
+        </div>
+        {/* form submit용 hidden — zod 4필드 검증 */}
+        <input type="hidden" name="icon_open" value={stateIcons.open} />
+        <input type="hidden" name="icon_lunch" value={stateIcons.lunch} />
+        <input
+          type="hidden"
+          name="icon_intake_closed"
+          value={stateIcons.intake_closed}
+        />
+        <input type="hidden" name="icon_closed" value={stateIcons.closed} />
+      </fieldset>
+
       <div className="flex items-center justify-end gap-2 pt-1">
         <Button type="submit" disabled={pending}>
           <Save className="h-4 w-4" />
@@ -276,6 +324,55 @@ export function BusinessHoursForm({ defaults }: Props) {
         </Button>
       </div>
     </form>
+  );
+}
+
+function IconRow({
+  status,
+  selected,
+  onSelect,
+}: {
+  status: BusinessStatusKind;
+  selected: string;
+  onSelect: (name: string) => void;
+}) {
+  const SelectedIcon = STATE_ICON_MAP[selected] ?? STATE_ICON_MAP.Headset;
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-md border border-slate-100 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-900/30">
+      <div className="flex w-44 items-center gap-2 shrink-0">
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+          {SelectedIcon ? <SelectedIcon className="h-4 w-4" /> : null}
+        </span>
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+          {STATE_LABEL_KR[status]}
+        </span>
+      </div>
+      <div className="flex flex-1 flex-wrap gap-1.5">
+        {STATE_ICON_OPTIONS[status].map((name) => {
+          const Icon = STATE_ICON_MAP[name];
+          if (!Icon) return null;
+          const isSelected = selected === name;
+          return (
+            <button
+              key={name}
+              type="button"
+              onClick={() => onSelect(name)}
+              title={name}
+              aria-pressed={isSelected}
+              className={
+                'inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs transition ' +
+                (isSelected
+                  ? 'border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-400 dark:bg-brand-950/40 dark:text-brand-200'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800')
+              }
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span className="font-mono text-[10px]">{name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

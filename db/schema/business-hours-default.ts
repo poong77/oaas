@@ -24,12 +24,19 @@
 import { boolean, jsonb, pgTable, text, time, uuid } from 'drizzle-orm/pg-core';
 import { commonColumns } from './_shared';
 import { users } from './users';
+import {
+  DEFAULT_STATE_ICONS,
+  type StateIcons,
+} from '@/lib/business-hours/state-icons';
 
 /**
  * ARS 메뉴 항목 — `business_hours_default.ars_items` jsonb 형식.
  * 예: [{ num: '1', label: '시스템 사용 문의' }, ...]
  */
 export type ArsItem = { num: string; label: string };
+
+// 운영 상태 아이콘 매핑 — `lib/business-hours/state-icons.ts` 정의 재export
+export type { StateIcons };
 
 export const businessHoursDefault = pgTable('business_hours_default', {
   ...commonColumns(),
@@ -63,6 +70,15 @@ export const businessHoursDefault = pgTable('business_hours_default', {
   faxNumber: text('fax_number'),
   /** 회사 웹사이트 (예: www.oapms.com) — footer 표시 */
   websiteUrl: text('website_url'),
+  /**
+   * 운영 상태별 아이콘 (lucide-react 컴포넌트 이름).
+   * 어드민이 마스터 > 운영시간 > 현재 운영시간 탭에서 편집.
+   * 화이트리스트는 `lib/business-hours/state-icons.ts` 참조.
+   */
+  stateIcons: jsonb('state_icons')
+    .notNull()
+    .default(DEFAULT_STATE_ICONS)
+    .$type<StateIcons>(),
   /** IANA timezone — 기본 Asia/Seoul */
   timezone: text('timezone').notNull().default('Asia/Seoul'),
   /** 마지막 수정 어드민 */

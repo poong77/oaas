@@ -39,8 +39,13 @@ import {
   type BusinessHoursInput,
   type BusinessStatusResult,
   type HolidayInfo,
+  type StateIcons,
 } from '@/lib/business-hours/calculate';
 import { todayKst, toHHMM } from '@/lib/business-hours/format';
+import {
+  DEFAULT_STATE_ICONS,
+  normalizeStateIcons,
+} from '@/lib/business-hours/state-icons';
 import { sendSlack, type SlackBlock } from '@/lib/notifications/slack';
 
 // ─────────────────────────────────────────────────────────────────
@@ -64,6 +69,7 @@ export type BusinessHoursDefaultWriteInput = {
   arsItems?: ArsItem[];
   faxNumber?: string | null;
   websiteUrl?: string | null;
+  stateIcons?: StateIcons;
   timezone?: string;
 };
 
@@ -114,6 +120,7 @@ export async function upsertBusinessHoursDefault(
       arsItems: input.arsItems ?? [],
       faxNumber: input.faxNumber ?? null,
       websiteUrl: input.websiteUrl ?? null,
+      stateIcons: input.stateIcons ?? DEFAULT_STATE_ICONS,
       timezone: input.timezone ?? 'Asia/Seoul',
       updatedBy: userId,
     };
@@ -164,6 +171,7 @@ function snapshotDefault(row: BusinessHoursDefault) {
     arsItems: row.arsItems,
     faxNumber: row.faxNumber,
     websiteUrl: row.websiteUrl,
+    stateIcons: row.stateIcons,
     timezone: row.timezone,
   };
 }
@@ -974,6 +982,7 @@ export async function loadBusinessHoursContext(
     arsItems: defaults.arsItems,
     faxNumber: defaults.faxNumber,
     websiteUrl: defaults.websiteUrl,
+    stateIcons: normalizeStateIcons(defaults.stateIcons),
     timezone: defaults.timezone,
   };
 

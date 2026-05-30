@@ -5,7 +5,7 @@
  * 호텔리어 컨택 패널과 동일한 calculateBusinessStatus 결과를 사용 → preview-truth 1:1 보장.
  */
 
-import { CircleAlert, Coffee, DoorClosed, Headset, Phone } from 'lucide-react';
+import { Phone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { BusinessStatusResult } from '@/lib/business-hours/calculate';
@@ -14,19 +14,20 @@ import {
   formatRemaining,
   formatTimeKst,
 } from '@/lib/business-hours/format';
+import { resolveStateIcon } from '@/lib/business-hours/state-icons';
 
 type Props = {
   status: BusinessStatusResult | null;
 };
 
-const STATUS_META: Record<
+const STATUS_TONE: Record<
   BusinessStatusResult['status'],
-  { label: string; icon: typeof Headset; tone: 'open' | 'soft' | 'warn' | 'closed' }
+  'open' | 'soft' | 'warn' | 'closed'
 > = {
-  open: { label: '운영 중', icon: Headset, tone: 'open' },
-  lunch: { label: '점심시간', icon: Coffee, tone: 'soft' },
-  intake_closed: { label: '접수 마감 (운영 중)', icon: CircleAlert, tone: 'warn' },
-  closed: { label: '운영 외', icon: DoorClosed, tone: 'closed' },
+  open: 'open',
+  lunch: 'soft',
+  intake_closed: 'warn',
+  closed: 'closed',
 };
 
 const TONE_CLASS: Record<'open' | 'soft' | 'warn' | 'closed', string> = {
@@ -50,15 +51,18 @@ export function StatusPreview({ status }: Props) {
     );
   }
 
-  const meta = STATUS_META[status.status];
-  const Icon = meta.icon;
+  const tone = STATUS_TONE[status.status];
+  const Icon = resolveStateIcon(
+    status.stateIcons[status.status],
+    status.status,
+  );
 
   return (
     <Card>
       <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${TONE_CLASS[meta.tone]}`}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${TONE_CLASS[tone]}`}
           >
             <Icon className="h-5 w-5" />
           </span>
