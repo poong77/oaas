@@ -5,7 +5,7 @@
  * 호텔리어 컨택 패널과 동일한 calculateBusinessStatus 결과를 사용 → preview-truth 1:1 보장.
  */
 
-import { CircleDot, Coffee, Moon, OctagonAlert, Phone } from 'lucide-react';
+import { CircleDot, Coffee, DoorClosed, OctagonAlert, Phone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { BusinessStatusResult } from '@/lib/business-hours/calculate';
@@ -26,7 +26,7 @@ const STATUS_META: Record<
   open: { label: '운영 중', icon: CircleDot, tone: 'open' },
   lunch: { label: '점심시간', icon: Coffee, tone: 'soft' },
   intake_closed: { label: '접수 마감 (운영 중)', icon: OctagonAlert, tone: 'warn' },
-  closed: { label: '운영 외', icon: Moon, tone: 'closed' },
+  closed: { label: '운영 외', icon: DoorClosed, tone: 'closed' },
 };
 
 const TONE_CLASS: Record<'open' | 'soft' | 'warn' | 'closed', string> = {

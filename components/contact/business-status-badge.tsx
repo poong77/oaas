@@ -11,7 +11,7 @@
  */
 
 import Link from 'next/link';
-import { CircleDot, Coffee, Moon, OctagonAlert } from 'lucide-react';
+import { CircleDot, Coffee, DoorClosed, OctagonAlert } from 'lucide-react';
 
 import { useBusinessStatus } from '@/lib/hooks/use-business-status';
 import type { BusinessStatusResult } from '@/lib/business-hours/calculate';
@@ -112,7 +112,7 @@ function Dot({ tone }: { tone: Tone }) {
         ? Coffee
         : tone === 'warn'
           ? OctagonAlert
-          : Moon;
+          : DoorClosed;
   return <Icon className="h-3 w-3" />;
 }
 
