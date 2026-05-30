@@ -113,7 +113,7 @@ function Dot({ tone }: { tone: Tone }) {
         : tone === 'warn'
           ? CircleAlert
           : DoorClosed;
-  return <Icon className="h-3 w-3" />;
+  return <Icon className="h-3.5 w-3.5" />;
 }
 
 function subline(s: BusinessStatusResult): string {
