@@ -54,25 +54,25 @@ export function BusinessHoursForm({ defaults }: Props) {
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
-      {/* 평일 영업 */}
+      {/* 평일 운영 */}
       <section className="grid gap-3 sm:grid-cols-2">
         <Field
           id="weekdayOpen"
-          label="평일 영업 시작"
+          label="평일 운영 시작"
           required
           defaultValue={toHHMM(defaults?.weekdayOpen) || '10:00'}
           type="time"
           error={state.fieldErrors?.weekdayOpen}
-          help="평일 영업을 시작하는 시각"
+          help="평일 운영을 시작하는 시각"
         />
         <Field
           id="weekdayClose"
-          label="평일 영업 종료"
+          label="평일 운영 종료"
           required
           defaultValue={toHHMM(defaults?.weekdayClose) || '18:40'}
           type="time"
           error={state.fieldErrors?.weekdayClose}
-          help="평일 영업이 끝나는 시각"
+          help="평일 운영이 끝나는 시각"
         />
       </section>
 
@@ -103,7 +103,7 @@ export function BusinessHoursForm({ defaults }: Props) {
         defaultValue={toHHMM(defaults?.intakeDeadline)}
         type="time"
         error={state.fieldErrors?.intakeDeadline}
-        help="영업 종료보다 빠를 수 있습니다 (예: 18:00 마감, 18:40 종료)"
+        help="운영 종료보다 빠를 수 있습니다 (예: 18:00 마감, 18:40 종료)"
       />
 
       {/* 휴무 정책 */}
@@ -133,7 +133,7 @@ export function BusinessHoursForm({ defaults }: Props) {
       {/* 긴급전화 */}
       <fieldset className="rounded-md border border-slate-200 p-4 dark:border-slate-700">
         <legend className="px-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
-          영업시간 외 긴급전화
+          운영시간 외 긴급전화
         </legend>
         <div className="grid gap-3 pt-2 sm:grid-cols-2">
           <Field

@@ -59,7 +59,7 @@ Plan에서 확정된 G1~G7 + P1·P2·P3 모든 항목의 구현 명세를 확정
 |:-|:-|:-:|
 | `app/(admin)/admin/master/business-hours/page.tsx` | 메인 (4탭 라우팅) | P1·P2 |
 | `_components/tab-bar.tsx` | 탭 네비 (카운트 뱃지) | P1·P2 |
-| `_components/status-preview.tsx` | 실시간 영업상태 미리보기 | P1 |
+| `_components/status-preview.tsx` | 실시간 운영상태 미리보기 | P1 |
 | `_components/business-hours-form.tsx` | 탭 ① 편집 폼 (시간 + 휴무 + 긴급 + 연락처) | P1·P3 |
 | `_components/holidays-section.tsx` | 탭 ③ 리스트 + 인라인 추가 + 양력 복제 | P1·P3 |
 | `_components/overrides-section.tsx` | 탭 ② 상태별 그룹 + 신규 폼 + 단축 인라인 | P2·P3 |
@@ -103,7 +103,7 @@ export const businessHoursDefault = pgTable('business_hours_default', {
   saturdayClosed: boolean('saturday_closed').notNull().default(true),
   sundayClosed: boolean('sunday_closed').notNull().default(true),
   holidaysClosed: boolean('holidays_closed').notNull().default(true),
-  // 긴급전화 (영업 외)
+  // 긴급전화 (운영 외)
   emergencyPhone: text('emergency_phone'),
   emergencyNote: text('emergency_note'),
   // 연락처 — P3-W 일원화 (system_settings에서 이전)
@@ -185,8 +185,8 @@ function calculateBusinessStatus(args: {
 2. `holidaysClosed && todayHoliday` → closed, label=`${name} 휴무`
 3. `weekday===0 && sundayClosed` → closed, label=`일요일 휴무`
 4. `weekday===6 && saturdayClosed` → closed, label=`토요일 휴무`
-5. `now < open` → closed, label=`영업 시작 전`, nextOpenAt=today open
-6. `now >= close` → closed, label=`영업 종료`, nextOpenAt=다음 영업일
+5. `now < open` → closed, label=`운영 시작 전`, nextOpenAt=today open
+6. `now >= close` → closed, label=`운영 종료`, nextOpenAt=다음 운영일
 7. `lunchStart <= now < lunchEnd` → status='lunch', nextOpenAt=lunchEnd
 8. `intakeDeadline !== null && now >= intakeDeadline` → status='intake_closed'
 9. otherwise → status='open'
@@ -221,7 +221,7 @@ function mergeOverrideIntoHours(base, ovr): BusinessHoursInput {
 }
 ```
 
-### 3.4 다음 영업일 찾기 (`findNextOpenDate`)
+### 3.4 다음 운영일 찾기 (`findNextOpenDate`)
 
 내일부터 30일 lookahead, 주말·공휴일 자동 건너뜀. recurring=true 공휴일은 월/일만 매칭.
 
@@ -361,7 +361,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ t
 ### 7.2 탭 ① 운영시간 폼 구조
 
 ```
-[평일 영업] 시작 [10:00] / 종료 [18:40]
+[평일 운영] 시작 [10:00] / 종료 [18:40]
 [점심]     시작 [12:00] / 종료 [13:00]
 [접수 마감] [18:00]
 
@@ -370,7 +370,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ t
   ☑ 일요일 휴무
   ☑ 공휴일 자동 휴무
 
-[영업시간 외 긴급전화 fieldset]
+[운영시간 외 긴급전화 fieldset]
   번호 [070-8028-0919]
   안내문구 [단순 금액 정정 불가]
 
@@ -395,8 +395,8 @@ ARS는 state(`useState<ArsItem[]>`)로 관리하고 hidden input에 `JSON.string
                           [+ 신규 예약]
 
 [진행 중 그룹]
-  ─ 2026-02-16~18 [진행 중] [단축영업] 영업 10:00~14:00 · 접수12:00
-    설 연휴 단축영업
+  ─ 2026-02-16~18 [진행 중] [단축운영] 운영 10:00~14:00 · 접수12:00
+    설 연휴 단축운영
     [종료일 단축]
   ─ ...
 
@@ -411,7 +411,7 @@ ARS는 state(`useState<ArsItem[]>`)로 관리하고 hidden input에 `JSON.string
 ```
 
 **신규 예약 폼** (인라인 펼침):
-- 유형 Select: 단축영업/임시휴무/자유설정
+- 유형 Select: 단축운영/임시휴무/자유설정
 - 시작일/종료일 date input
 - 시간 5필드 (kind='closed'면 숨김)
 - 사유 textarea (필수)
@@ -437,7 +437,7 @@ ARS는 state(`useState<ArsItem[]>`)로 관리하고 hidden input에 `JSON.string
 [History 아이콘] 변경 이력 (최근 N건)
 
 ▣ 운영시간 수정 [default.update] 2026-05-30 14:30  by 김매니저
-  영업 종료: 18:40 → 19:00 · 점심 시작: 12:00 → 12:30
+  운영 종료: 18:40 → 19:00 · 점심 시작: 12:00 → 12:30
 ▣ 예약 자동 적용 [override.applied] [시스템] 2026-05-30 00:01
   cron 자동 처리 (2026-05-30)
 ▣ 공휴일 추가 [holiday.create] 2026-05-29 11:20  by 박어드민
@@ -451,13 +451,13 @@ ARS는 state(`useState<ArsItem[]>`)로 관리하고 hidden input에 `JSON.string
 // size='sm' (헤더용)
 <Link href="/help">
   <Dot tone="open" />
-  영업 중
+  운영 중
 </Link>
 
 // size='md' (사이드바·푸터용)
 <Link href="#hours" className="...border...">
   <Dot tone="open" />
-  영업 중
+  운영 중
   <span>접수 마감 2h 20m</span>
 </Link>
 ```
@@ -466,7 +466,7 @@ ARS는 state(`useState<ArsItem[]>`)로 관리하고 hidden input에 `JSON.string
 
 ```
 ┌─ sticky top-20 ────────────────────┐
-│ 🟢 영업 중 · 접수 마감 2h 20m       │
+│ 🟢 운영 중 · 접수 마감 2h 20m       │
 ├────────────────────────────────────┤
 │ 💬 챗봇으로 바로 물어보기 (옵션)    │
 │ 📅 이슈 접수하기                    │
@@ -477,19 +477,19 @@ ARS는 state(`useState<ArsItem[]>`)로 관리하고 hidden input에 `JSON.string
 │    3️⃣ 경영·회계 기타                │
 │ ✉️ as@oapms.com                     │
 ├────────────────────────────────────┤
-│ ⚠️ 영업시간 외 긴급                 │
+│ ⚠️ 운영시간 외 긴급                 │
 │    070-8028-0919                    │
 │    단순 금액 정정 불가              │
 └────────────────────────────────────┘
 ```
 
-영업 외 시간엔 긴급전화 박스 amber 강조.
+운영 외 시간엔 긴급전화 박스 amber 강조.
 
 ### 7.8 호텔리어 — ContactPanel variant=footer
 
 ```
 [가로 4열 grid]
-[영업 상태] [대표전화 + ARS] [이메일·긴급] [빠른 해결]
+[운영 상태] [대표전화 + ARS] [이메일·긴급] [빠른 해결]
 
 [하단 가로선 + 동적 안내문]
 평일 10:00–18:40 · 점심 12:00–13:00 · 토·일·공휴일 휴무 · Fax 0505-300-4702 · www.oapms.com
@@ -601,7 +601,7 @@ UTC 15:01 = KST 00:01.
   intakeDeadline: '18:00',
   saturdayClosed: true, sundayClosed: true, holidaysClosed: true,
   emergencyPhone: '070-8028-0919',
-  emergencyNote: '영업시간 외 긴급전화 (단순 금액 정정 불가)',
+  emergencyNote: '운영시간 외 긴급전화 (단순 금액 정정 불가)',
   timezone: 'Asia/Seoul',
   // P3-W
   mainPhone: '1833-4702',
@@ -672,10 +672,10 @@ npm run db:seed                                    # 연락처 backfill
 
 | # | 시나리오 | 기대 결과 |
 |:-:|:-|:-|
-| 1 | 평일 14:00 홈 진입 | 헤더 배지 "🟢 영업 중", footer 운영시간 안내문 노출 |
+| 1 | 평일 14:00 홈 진입 | 헤더 배지 "🟢 운영 중", footer 운영시간 안내문 노출 |
 | 2 | 평일 12:30 / | /help 진입 | 사이드바 ContactPanel "🟡 점심시간 · 13:00 재개" |
-| 3 | 평일 18:30 (접수마감 18:00 이후) | "🟠 접수 마감 (영업 중) · 당일 접수 마감" |
-| 4 | 평일 19:00 (종료 후) | "🔴 영업 종료 · 다음 5/31 (월) 10:00" |
+| 3 | 평일 18:30 (접수마감 18:00 이후) | "🟠 접수 마감 (운영 중) · 당일 접수 마감" |
+| 4 | 평일 19:00 (종료 후) | "🔴 운영 종료 · 다음 5/31 (월) 10:00" |
 | 5 | 토요일 14:00 | "🔴 토요일 휴무" |
 | 6 | 공휴일 (5/5 어린이날) | "🔴 어린이날 휴무" |
 | 7 | active override 임시휴무 적용일 | "🔴 {reason} (임시 휴무)" |

@@ -100,7 +100,7 @@ const ITEMS: MasterItem[] = [
     href: '/admin/master/business-hours',
     label: '운영시간',
     description:
-      '평일 영업·점심·접수마감·긴급전화·공휴일을 관리합니다. 호텔리어 컨택 패널 실시간 영업상태에 반영.',
+      '평일 운영·점심·접수마감·긴급전화·공휴일을 관리합니다. 호텔리어 컨택 패널 실시간 운영상태에 반영.',
     icon: Clock,
     adminOnly: true,
     badge: '실시간 반영',

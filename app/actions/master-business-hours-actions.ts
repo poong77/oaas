@@ -66,7 +66,7 @@ const DefaultSchema = z
     websiteUrl: z.string().max(200).nullable(),
   })
   .refine((d) => d.weekdayClose > d.weekdayOpen, {
-    message: '영업 종료 시각은 시작보다 늦어야 합니다',
+    message: '운영 종료 시각은 시작보다 늦어야 합니다',
     path: ['weekdayClose'],
   })
   .refine(
@@ -91,7 +91,7 @@ const DefaultSchema = z
   .refine(
     (d) => !d.intakeDeadline || (d.intakeDeadline as string) <= d.weekdayClose,
     {
-      message: '접수 마감은 영업 종료 이전이어야 합니다',
+      message: '접수 마감은 운영 종료 이전이어야 합니다',
       path: ['intakeDeadline'],
     },
   );
@@ -280,7 +280,7 @@ const OverrideSchema = z
       );
     },
     {
-      message: '단축영업/자유 설정은 최소 한 개의 시간을 입력하세요',
+      message: '단축운영/자유 설정은 최소 한 개의 시간을 입력하세요',
       path: ['weekdayOpen'],
     },
   )
@@ -290,7 +290,7 @@ const OverrideSchema = z
       !d.weekdayClose ||
       (d.weekdayClose as string) > (d.weekdayOpen as string),
     {
-      message: '영업 종료는 시작보다 늦어야 합니다',
+      message: '운영 종료는 시작보다 늦어야 합니다',
       path: ['weekdayClose'],
     },
   );

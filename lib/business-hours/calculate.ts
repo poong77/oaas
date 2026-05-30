@@ -3,7 +3,7 @@
  *
  * 호텔리어 컨택 패널(BusinessStatusBadge)과 관리자 미리보기 양쪽에서 공유한다.
  * 입력: 현재 시각(UTC Date) + 운영시간 정책(BusinessHoursInput) + 공휴일 리스트.
- * 출력: 상태(open/lunch/intake_closed/closed) + 부가 정보 (남은 시간·다음 영업 시각).
+ * 출력: 상태(open/lunch/intake_closed/closed) + 부가 정보 (남은 시간·다음 운영 시각).
  *
  * Timezone은 항상 정책의 `timezone`(기본 'Asia/Seoul') 기준으로 비교한다.
  * native Date를 KST 벽시계 시각으로 정확히 매핑하기 위해 sv-SE 로케일을 사용 —
@@ -60,10 +60,10 @@ export type HolidayInfo = {
 };
 
 export type BusinessStatus =
-  | 'open' // 영업 중 (접수 가능)
-  | 'lunch' // 점심시간 (영업 중이지만 응대 지연)
-  | 'intake_closed' // 영업 중이지만 당일 접수 마감 (예: 18:00~18:40)
-  | 'closed'; // 영업 외
+  | 'open' // 운영 중 (접수 가능)
+  | 'lunch' // 점심시간 (운영 중이지만 응대 지연)
+  | 'intake_closed' // 운영 중이지만 당일 접수 마감 (예: 18:00~18:40)
+  | 'closed'; // 운영 외
 
 export type ClosedReason =
   | 'before_open' // 오픈 전
@@ -75,13 +75,13 @@ export type ClosedReason =
 export type BusinessStatusResult = {
   status: BusinessStatus;
   closedReason: ClosedReason;
-  /** 사용자 표시 라벨 — "영업 중", "점심시간", "영업 종료", "공휴일 휴무" 등 */
+  /** 사용자 표시 라벨 — "운영 중", "점심시간", "운영 종료", "공휴일 휴무" 등 */
   label: string;
-  /** 영업 종료까지 남은 ms (status='open' | 'intake_closed' | 'lunch'일 때만) */
+  /** 운영 종료까지 남은 ms (status='open' | 'intake_closed' | 'lunch'일 때만) */
   msUntilClose: number | null;
   /** 접수 마감까지 남은 ms (status='open'이고 intake_deadline이 설정된 경우만) */
   msUntilIntakeClose: number | null;
-  /** 다음 영업 시작 시각 — status='closed' | 'lunch'일 때 */
+  /** 다음 운영 시작 시각 — status='closed' | 'lunch'일 때 */
   nextOpenAt: Date | null;
   /** 오늘이 공휴일이면 이름 (휴무 처리 여부와 무관하게 정보 제공) */
   todayHolidayName: string | null;
@@ -183,7 +183,7 @@ export function calculateBusinessStatus(args: {
   if (nowMin < openMin) {
     return makeClosedResult({
       reason: 'before_open',
-      label: '영업 시작 전',
+      label: '운영 시작 전',
       nextOpenAt: combineLocalDateTime(localDate, hours.weekdayOpen, hours.timezone),
       hours,
       todayHolidayName,
@@ -195,7 +195,7 @@ export function calculateBusinessStatus(args: {
   if (nowMin >= closeMin) {
     return makeClosedResult({
       reason: 'after_close',
-      label: '영업 종료',
+      label: '운영 종료',
       nextOpenAt: findNextOpenDate(now, hours, holidays),
       hours,
       todayHolidayName,
@@ -229,12 +229,12 @@ export function calculateBusinessStatus(args: {
     };
   }
 
-  // 접수 마감 후 ~ 영업 종료 전
+  // 접수 마감 후 ~ 운영 종료 전
   if (intakeMin !== null && nowMin >= intakeMin) {
     return {
       status: 'intake_closed',
       closedReason: null,
-      label: '접수 마감 (영업 중)',
+      label: '접수 마감 (운영 중)',
       msUntilClose: (closeMin - nowMin) * 60_000,
       msUntilIntakeClose: null,
       nextOpenAt: null,
@@ -246,11 +246,11 @@ export function calculateBusinessStatus(args: {
     };
   }
 
-  // 영업 중 + 접수 가능
+  // 운영 중 + 접수 가능
   return {
     status: 'open',
     closedReason: null,
-    label: '영업 중',
+    label: '운영 중',
     msUntilClose: (closeMin - nowMin) * 60_000,
     msUntilIntakeClose:
       intakeMin !== null ? (intakeMin - nowMin) * 60_000 : null,
@@ -375,9 +375,9 @@ function findHolidayForDate(
 }
 
 /**
- * 다음 영업 시작 시각 — 휴무일을 건너뛰며 최대 30일 lookahead.
+ * 다음 운영 시작 시각 — 휴무일을 건너뛰며 최대 30일 lookahead.
  *
- * 단순화: 영업 시작 시각은 항상 weekdayOpen 사용 (월~금 동일 가정).
+ * 단순화: 운영 시작 시각은 항상 weekdayOpen 사용 (월~금 동일 가정).
  */
 function findNextOpenDate(
   now: Date,
@@ -385,7 +385,7 @@ function findNextOpenDate(
   holidays: HolidayInfo[],
 ): Date | null {
   // 오늘 점심 후 또는 오픈 전이면 오늘 weekdayOpen/lunchEnd 반환 (위에서 이미 분기).
-  // 여기는 "다음 영업일" 계산이므로 오늘 영업 끝났거나 휴무인 케이스만 진입.
+  // 여기는 "다음 운영일" 계산이므로 오늘 운영 끝났거나 휴무인 케이스만 진입.
   const { localDate } = extractLocalParts(now, hours.timezone);
 
   const [y, m, d] = localDate.split('-').map(Number);

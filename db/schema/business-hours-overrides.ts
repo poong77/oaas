@@ -14,7 +14,7 @@
  * 변경 이력은 `activity_logs(action='business_hours.override.{create|cancel|applied|expired}')`.
  *
  * kind:
- *   - short_hours: 단축영업 (weekday_close 등 일부 시각만 변경)
+ *   - short_hours: 단축운영 (weekday_close 등 일부 시각만 변경)
  *   - closed:      임시휴무 (시간 필드 무시)
  *   - custom:      자유 설정 (모든 시각 재정의)
  */

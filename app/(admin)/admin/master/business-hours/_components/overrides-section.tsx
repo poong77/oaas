@@ -45,7 +45,7 @@ type Props = {
 const INITIAL: OverrideActionState = { ok: false };
 
 const KIND_LABEL: Record<BusinessHoursOverride['kind'], string> = {
-  short_hours: '단축영업',
+  short_hours: '단축운영',
   closed: '임시휴무',
   custom: '자유 설정',
 };
@@ -85,7 +85,7 @@ export function OverridesSection({ overrides }: Props) {
                   예약 변경 ({overrides.length}건)
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  특정 기간만 단축영업·임시휴무를 적용합니다. 매일 00:01 cron이
+                  특정 기간만 단축운영·임시휴무를 적용합니다. 매일 00:01 cron이
                   자동으로 활성화/만료 처리합니다.
                 </p>
               </div>
@@ -406,7 +406,7 @@ function AddOverrideForm({ onSuccess }: { onSuccess: () => void }) {
               setKind(e.target.value as BusinessHoursOverride['kind'])
             }
           >
-            <option value="short_hours">단축영업</option>
+            <option value="short_hours">단축운영</option>
             <option value="closed">임시휴무</option>
             <option value="custom">자유 설정</option>
           </Select>
@@ -448,8 +448,8 @@ function AddOverrideForm({ onSuccess }: { onSuccess: () => void }) {
           <legend className="px-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
             적용 시간 (비워두면 평상시 값 유지)
           </legend>
-          <TimeField name="weekdayOpen" label="영업 시작" />
-          <TimeField name="weekdayClose" label="영업 종료" />
+          <TimeField name="weekdayOpen" label="운영 시작" />
+          <TimeField name="weekdayClose" label="운영 종료" />
           <TimeField name="lunchStart" label="점심 시작" />
           <TimeField name="lunchEnd" label="점심 종료" />
           <TimeField name="intakeDeadline" label="접수 마감" />
@@ -476,7 +476,7 @@ function AddOverrideForm({ onSuccess }: { onSuccess: () => void }) {
           required
           maxLength={200}
           rows={2}
-          placeholder="설 연휴 단축영업 / 사옥 점검 임시휴무 등"
+          placeholder="설 연휴 단축운영 / 사옥 점검 임시휴무 등"
           aria-invalid={!!state.fieldErrors?.reason}
         />
         {state.fieldErrors?.reason ? (

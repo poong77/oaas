@@ -150,7 +150,7 @@ function SidebarPanel({
         </section>
       )}
 
-      {/* 긴급전화 — 영업 외 시간 강조 */}
+      {/* 긴급전화 — 운영 외 시간 강조 */}
       {emergencyPhone && (
         <section
           className={
@@ -167,7 +167,7 @@ function SidebarPanel({
                 : 'text-slate-500 dark:text-slate-400')
             }
           >
-            영업시간 외 긴급
+            운영시간 외 긴급
           </span>
           <a
             href={`tel:${emergencyPhone.replace(/-/g, '')}`}
@@ -220,10 +220,10 @@ function FooterPanel({
   return (
     <footer className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
-        {/* 영업상태 */}
+        {/* 운영상태 */}
         <div className="flex flex-col gap-2">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            영업 상태
+            운영 상태
           </h3>
           <BusinessStatusBadge size="md" linkTo="/help#hours" />
         </div>
@@ -276,7 +276,7 @@ function FooterPanel({
             >
               <Phone className="h-4 w-4 text-amber-600" />
               <span className="font-semibold">{emergencyPhone}</span>
-              <span className="text-xs text-slate-500">영업 외 긴급</span>
+              <span className="text-xs text-slate-500">운영 외 긴급</span>
             </a>
           )}
         </div>

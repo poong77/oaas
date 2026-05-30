@@ -1,5 +1,5 @@
 /**
- * 실시간 영업상태 미리보기 카드.
+ * 실시간 운영상태 미리보기 카드.
  *
  * 어드민이 운영시간을 수정한 직후 결과를 즉시 확인할 수 있도록 페이지 상단에 표시.
  * 호텔리어 컨택 패널과 동일한 calculateBusinessStatus 결과를 사용 → preview-truth 1:1 보장.
@@ -23,10 +23,10 @@ const STATUS_META: Record<
   BusinessStatusResult['status'],
   { label: string; icon: typeof CircleDot; tone: 'open' | 'soft' | 'warn' | 'closed' }
 > = {
-  open: { label: '영업 중', icon: CircleDot, tone: 'open' },
+  open: { label: '운영 중', icon: CircleDot, tone: 'open' },
   lunch: { label: '점심시간', icon: Coffee, tone: 'soft' },
-  intake_closed: { label: '접수 마감 (영업 중)', icon: OctagonAlert, tone: 'warn' },
-  closed: { label: '영업 외', icon: Moon, tone: 'closed' },
+  intake_closed: { label: '접수 마감 (운영 중)', icon: OctagonAlert, tone: 'warn' },
+  closed: { label: '운영 외', icon: Moon, tone: 'closed' },
 };
 
 const TONE_CLASS: Record<'open' | 'soft' | 'warn' | 'closed', string> = {
@@ -96,20 +96,20 @@ function describe(s: BusinessStatusResult): string {
     const intake = s.msUntilIntakeClose;
     const close = s.msUntilClose;
     if (intake !== null && intake > 0) {
-      return `접수 마감까지 ${formatRemaining(intake)} · 영업 종료까지 ${formatRemaining(close ?? 0)}`;
+      return `접수 마감까지 ${formatRemaining(intake)} · 운영 종료까지 ${formatRemaining(close ?? 0)}`;
     }
-    return `영업 종료까지 ${formatRemaining(close ?? 0)}`;
+    return `운영 종료까지 ${formatRemaining(close ?? 0)}`;
   }
   if (s.status === 'lunch') {
     const next = s.nextOpenAt;
     return next ? `${formatTimeKst(next)} 응대 재개 예정` : '점심시간 중입니다';
   }
   if (s.status === 'intake_closed') {
-    return `당일 접수는 마감되었습니다. 영업 종료까지 ${formatRemaining(s.msUntilClose ?? 0)}`;
+    return `당일 접수는 마감되었습니다. 운영 종료까지 ${formatRemaining(s.msUntilClose ?? 0)}`;
   }
   // closed
   if (s.nextOpenAt) {
-    return `다음 영업: ${formatDateTimeKst(s.nextOpenAt)}`;
+    return `다음 운영: ${formatDateTimeKst(s.nextOpenAt)}`;
   }
-  return '다음 영업일을 결정할 수 없습니다 — 정책 확인이 필요합니다';
+  return '다음 운영일을 결정할 수 없습니다 — 정책 확인이 필요합니다';
 }

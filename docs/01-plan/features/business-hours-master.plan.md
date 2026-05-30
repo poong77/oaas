@@ -12,7 +12,7 @@
 
 ### 1.1 발견된 문제
 
-- **호텔리어가 "지금 영업 중인가" 알기 어려움**: 모든 페이지에서 영업 상태 안내 없음 → 새벽 인시던트 시 전화 폭주 또는 응대 지연
+- **호텔리어가 "지금 운영 중인가" 알기 어려움**: 모든 페이지에서 운영 상태 안내 없음 → 새벽 인시던트 시 전화 폭주 또는 응대 지연
 - **연락처(대표전화·이메일·ARS·Fax·웹)가 코드 하드코딩**: ContactPanel 컴포넌트 내 상수 → 어드민이 운영 중 변경 불가능
 - **`system_settings.business_hours` / `contact_phone` 키가 시드되지만 어디서도 안 읽음**: 유령 데이터 + 잘못된 값(`09:00~19:00`, `02-1234-5678`)이 DB에 적재
 - **운영시간 정책의 일시적 변경(설/추석 단축, 사옥 점검 임시휴무) 처리 방법 없음**: 매니저가 매번 수동 공지
@@ -30,10 +30,10 @@
 |:-:|:-|:-|
 | **G1** | 운영시간 정책 단일 테이블 — 어드민 1행 편집 | `business_hours_default` 1행, `/admin/master/business-hours` 탭 ① 편집 동작 |
 | **G2** | 공휴일 별도 관리 (양력 매년 반복 + 음력 매년 등록) | `business_holidays` + UI 탭 ③ + 2026 시드 19종 |
-| **G3** | 일시적 운영시간 변경 예약 가능 (단축영업/임시휴무/자유설정) | `business_hours_overrides` + cron 자동 활성화/만료 |
+| **G3** | 일시적 운영시간 변경 예약 가능 (단축운영/임시휴무/자유설정) | `business_hours_overrides` + cron 자동 활성화/만료 |
 | **G4** | 변경 이력 완전 추적 (사람 + 시각 + 전후 값) | `activity_logs` action 8종 + 탭 ④ 타임라인 + user JOIN |
 | **G5** | 연락처(대표전화·이메일·ARS·Fax·웹) 어드민 편집 | `business_hours_default` 컬럼 5개 + 폼 입력 |
-| **G6** | 호텔리어 실시간 영업상태 노출 (1분 단위) | 헤더 sm 배지 + 사이드바 ContactPanel + 푸터 ContactPanel |
+| **G6** | 호텔리어 실시간 운영상태 노출 (1분 단위) | 헤더 sm 배지 + 사이드바 ContactPanel + 푸터 ContactPanel |
 | **G7** | 동일 정책 소스 — 어드민 미리보기와 호텔리어 표시 결과가 정확히 일치 | 같은 `calculateBusinessStatus` 순수 함수 양쪽 호출 |
 
 ---
@@ -41,7 +41,7 @@
 ## 3. Non-Goals (이번 Phase에서 안 함)
 
 - 호텔별·지역별 다른 운영시간 — 오아테크 단일 본사 운영, 멀티테넌시 제외
-- 요일별 다른 영업시간 (월~금 각각) — 현재 평일 단일, 단축영업은 override로 처리
+- 요일별 다른 운영시간 (월~금 각각) — 현재 평일 단일, 단축운영은 override로 처리
 - active override 임의 시간 단축 (전체 시간 재정의) — 종료일 단축만 P3, 시간 변경은 cancel + 재예약
 - 운영시간 변경 사용자 알림 (호텔리어에게 SMS/이메일) — 패널 표시로 충분
 - 다국어 (영문 ARS 메뉴 등) — 한국어 단일 운영
@@ -101,7 +101,7 @@
   weekday_close     time NOT NULL,        // '18:40'
   lunch_start       time,                 // '12:00'
   lunch_end         time,                 // '13:00'
-  intake_deadline   time,                 // '18:00' (영업 종료보다 빠를 수 있음)
+  intake_deadline   time,                 // '18:00' (운영 종료보다 빠를 수 있음)
   saturday_closed   bool DEFAULT true,
   sunday_closed     bool DEFAULT true,
   holidays_closed   bool DEFAULT true,
@@ -167,7 +167,7 @@
 ```
 /admin/master/business-hours
   ┌─ PageHeader + Breadcrumb (← 마스터 데이터)
-  ├─ StatusPreview (현재 영업상태, 호텔리어와 동일 결과)
+  ├─ StatusPreview (현재 운영상태, 호텔리어와 동일 결과)
   ├─ Tab Bar [현재 운영시간] [예약 변경 N] [공휴일 N] [변경 이력]
   ├─ ?tab=hours      → 운영시간 편집 폼 (시간 + 휴무 + 긴급전화 + 연락처 5필드)
   ├─ ?tab=overrides  → 진행중/예약/만료/취소 그룹 + 신규 예약 폼
@@ -178,7 +178,7 @@
 ### 6.2 호텔리어 4곳 노출
 
 ```
-헤더 우상단      BusinessStatusBadge size=sm  ("● 영업 중")
+헤더 우상단      BusinessStatusBadge size=sm  ("● 운영 중")
 도움말 사이드바  ContactPanel variant=sidebar (/help, /faq, /troubleshoot)
 티켓 사이드바    ContactPanel variant=sidebar (/tickets/new)
 사이트 푸터      ContactPanel variant=footer (전역, 어드민 외)

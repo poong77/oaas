@@ -259,9 +259,9 @@ function summarizePayload(log: BusinessHoursActivityLogRow): string | null {
 function labelFor(key: string): string {
   switch (key) {
     case 'weekdayOpen':
-      return '영업 시작';
+      return '운영 시작';
     case 'weekdayClose':
-      return '영업 종료';
+      return '운영 종료';
     case 'lunchStart':
       return '점심 시작';
     case 'lunchEnd':

@@ -69,7 +69,7 @@ export default async function MasterBusinessHoursPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title="운영시간"
-        description="호텔리어 컨택 패널의 실시간 영업상태에 즉시 반영됩니다."
+        description="호텔리어 컨택 패널의 실시간 운영상태에 즉시 반영됩니다."
         breadcrumb={
           <Link
             href="/admin/master"

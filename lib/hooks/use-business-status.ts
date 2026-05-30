@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * 호텔리어 컨택 패널·헤더 배지를 위한 영업상태 훅.
+ * 호텔리어 컨택 패널·헤더 배지를 위한 운영상태 훅.
  *
  * - `/api/business-hours/context`에서 정책(hours + holidays) 페치
  * - 1분 간격으로 calculateBusinessStatus 재호출 (시간 흐름 반영)

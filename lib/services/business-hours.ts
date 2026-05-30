@@ -708,7 +708,7 @@ export async function applyScheduledOverrides(today: string): Promise<{
  * 채널: 'new' (운영팀 채널 재사용 — 별도 ops 채널이 신설되면 그쪽으로 이동).
  */
 const KIND_LABEL_KR: Record<BusinessHoursOverrideKind, string> = {
-  short_hours: '단축영업',
+  short_hours: '단축운영',
   closed: '임시휴무',
   custom: '자유 설정',
 };
@@ -781,7 +781,7 @@ function buildOverrideReminderBlocks(
   if (o.kind !== 'closed') {
     const times: string[] = [];
     if (o.weekdayOpen && o.weekdayClose) {
-      times.push(`영업 ${toHHMM(o.weekdayOpen)}~${toHHMM(o.weekdayClose)}`);
+      times.push(`운영 ${toHHMM(o.weekdayOpen)}~${toHHMM(o.weekdayClose)}`);
     }
     if (o.lunchStart && o.lunchEnd) {
       times.push(`점심 ${toHHMM(o.lunchStart)}~${toHHMM(o.lunchEnd)}`);
@@ -985,7 +985,7 @@ export async function loadBusinessHoursContext(
 }
 
 /**
- * 호텔리어 컨택 패널이 호출. 현재 시각 기준 영업 상태 + 부가 정보 반환.
+ * 호텔리어 컨택 패널이 호출. 현재 시각 기준 운영 상태 + 부가 정보 반환.
  *
  * 캐싱 전략: 컨택 패널은 1분마다 클라이언트가 재계산하므로 서버 fetch는
  * 짧은 캐시(예: 60초)면 충분. 향후 unstable_cache + revalidateTag 적용.

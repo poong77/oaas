@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * BusinessStatusBadge — 실시간 영업상태 뱃지.
+ * BusinessStatusBadge — 실시간 운영상태 뱃지.
  *
  * 사이즈:
- *   - sm: 헤더용 점 + 라벨 ("● 영업 중")
- *   - md: 사이드바·푸터용 라벨 + 보조 정보 ("● 영업 중 · 마감까지 2h")
+ *   - sm: 헤더용 점 + 라벨 ("● 운영 중")
+ *   - md: 사이드바·푸터용 라벨 + 보조 정보 ("● 운영 중 · 마감까지 2h")
  *
  * 클릭하면 도움말 페이지(또는 컨택 패널)로 이동. linkTo로 커스텀 가능.
  */
@@ -51,7 +51,7 @@ export function BusinessStatusBadge({
           'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition hover:opacity-90 ' +
           TONE_CLASS[tone]
         }
-        aria-label={`영업 상태: ${status.label}`}
+        aria-label={`운영 상태: ${status.label}`}
       >
         <Dot tone={tone} />
         <span>{status.label}</span>

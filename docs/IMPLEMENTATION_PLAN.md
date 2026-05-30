@@ -441,11 +441,11 @@ updated_by (FK users), updated_at
 #### `business_hours_default` (현재 운영시간 — 단일 행)
 ```ts
 id,                                  // 단일 행 강제 (unique index on (true))
-weekday_open    time NOT NULL,       // 평일 영업 시작 (예: 10:00)
-weekday_close   time NOT NULL,       // 평일 영업 종료 (예: 18:40)
+weekday_open    time NOT NULL,       // 평일 운영 시작 (예: 10:00)
+weekday_close   time NOT NULL,       // 평일 운영 종료 (예: 18:40)
 lunch_start     time,                // 점심 시작 (예: 12:00, nullable)
 lunch_end       time,                // 점심 종료 (예: 13:00, nullable)
-intake_deadline time,                // 접수 마감 (예: 18:00, nullable — 영업종료보다 빠를 수 있음)
+intake_deadline time,                // 접수 마감 (예: 18:00, nullable — 운영종료보다 빠를 수 있음)
 saturday_closed bool DEFAULT true,
 sunday_closed   bool DEFAULT true,
 holidays_closed bool DEFAULT true,   // 공휴일 자동 휴무
@@ -456,7 +456,7 @@ updated_by      uuid (FK users),
 created_at, updated_at, is_active
 ```
 - **수정 즉시 반영** — `activity_logs(action='business_hours.default.update', payload={before, after})`
-- 호텔리어 컨택 패널의 `useBusinessStatus()` 훅이 이 행을 기준으로 영업 중/외 판정.
+- 호텔리어 컨택 패널의 `useBusinessStatus()` 훅이 이 행을 기준으로 운영 중/외 판정.
 
 #### `business_hours_overrides` (예약 변경 — 일시적 오버라이드)
 ```ts
@@ -464,13 +464,13 @@ id,
 effective_from   date NOT NULL,      // 적용 시작일
 effective_until  date NOT NULL,      // 적용 종료일 (포함)
 kind enum('short_hours' | 'closed' | 'custom'),
-                                     // short_hours: 단축영업, closed: 임시휴무, custom: 자유 설정
+                                     // short_hours: 단축운영, closed: 임시휴무, custom: 자유 설정
 weekday_open    time,                // null이면 default 사용 (kind='closed'면 무시)
 weekday_close   time,
 lunch_start     time,
 lunch_end       time,
 intake_deadline time,
-reason          text NOT NULL,       // "5/15 단축영업", "임직원 워크숍" 등
+reason          text NOT NULL,       // "5/15 단축운영", "임직원 워크숍" 등
 status enum('scheduled' | 'active' | 'expired' | 'canceled') DEFAULT 'scheduled',
 applied_at      timestamp,           // cron이 status='active' 전환한 시각
 created_by      uuid (FK users),
