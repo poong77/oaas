@@ -8,8 +8,6 @@
 import Link from 'next/link';
 
 export function SiteFooter() {
-  const year = new Date().getFullYear();
-
   return (
     <footer className="mt-auto border-t border-slate-200 bg-white py-6 dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -37,7 +35,7 @@ export function SiteFooter() {
             </Link>
           </div>
           <span className="opacity-70">
-            © {year} OA Solutions. All rights reserved.
+            Copyright 2022(C) OA Tech. All Right Reserved.
           </span>
         </div>
       </div>
