@@ -218,14 +218,17 @@ function FooterPanel({
   const emergencyPhone = status?.emergencyPhone ?? hours.emergencyPhone;
 
   return (
-    <footer className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+    <footer
+      id="contact"
+      className="scroll-mt-20 border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950"
+    >
       <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         {/* 운영상태 */}
         <div className="flex flex-col gap-2">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             운영 상태
           </h3>
-          <BusinessStatusBadge size="md" linkTo="/help#hours" />
+          <BusinessStatusBadge size="md" linkTo="#contact" />
         </div>
 
         {/* 대표전화 + ARS */}

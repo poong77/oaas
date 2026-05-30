@@ -88,7 +88,7 @@ export function Header() {
 
         <div className="flex items-center gap-1.5 sm:gap-2">
           <div className="hidden sm:block">
-            <BusinessStatusBadge size="sm" linkTo="/help" />
+            <BusinessStatusBadge size="sm" linkTo="#contact" />
           </div>
           <ThemeToggle />
           {status === 'authenticated' && user ? (

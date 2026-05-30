@@ -9,6 +9,16 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
+ * 페이지 내 앵커 이동(예: 헤더 운영상태 배지 → #contact 푸터) 부드럽게.
+ * 접근성 — prefers-reduced-motion 환경에서는 즉시 이동.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/*
  * 디자인 토큰 — 메인 컬러는 brand-* 로 노출.
  *
  * 역할별 동적 분기 (role-mode-ui):
