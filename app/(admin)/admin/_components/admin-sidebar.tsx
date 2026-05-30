@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { ExternalLink, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS, GROUP_ORDER, GROUP_LABEL } from '../_data/nav-items';
+import { AdminHelpButton } from './admin-help-button';
 import { AdminNavItem } from './admin-nav-item';
 import { AdminSidebarToggle } from './admin-sidebar-toggle';
 import { AdminUserMenu } from './admin-user-menu';
@@ -110,9 +111,19 @@ export function AdminSidebar({ collapsed, userRole, className }: AdminSidebarPro
         })}
       </nav>
 
-      {/* 4. footer: 사용자 메뉴 */}
+      {/* 4. footer: 도움말 + 사용자 메뉴 */}
       <div className="shrink-0 border-t border-slate-100 dark:border-slate-800">
         {/* TODO[sidebar-daily-kpi]: 오늘 처리한 티켓 카운터 (footer 영역) */}
+        <div
+          className={cn(
+            'border-b border-slate-100 dark:border-slate-800',
+            collapsed ? 'py-1' : 'px-1 py-1',
+          )}
+        >
+          <AdminHelpButton
+            placement={collapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}
+          />
+        </div>
         <AdminUserMenu placement={collapsed ? 'sidebar-collapsed' : 'sidebar-expanded'} />
       </div>
     </aside>

@@ -19,6 +19,7 @@ import { ExternalLink, Menu, Shield } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS, GROUP_ORDER, GROUP_LABEL } from '../_data/nav-items';
+import { AdminHelpButton } from './admin-help-button';
 import { AdminNavItem } from './admin-nav-item';
 import { AdminUserMenu } from './admin-user-menu';
 
@@ -113,7 +114,10 @@ export function AdminMobileHeader({ userRole, className }: AdminMobileHeaderProp
         </span>
       </div>
 
-      <AdminUserMenu placement="mobile-compact" />
+      <div className="flex items-center gap-1">
+        <AdminHelpButton placement="mobile-compact" />
+        <AdminUserMenu placement="mobile-compact" />
+      </div>
     </header>
   );
 }
