@@ -22,6 +22,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { listChecklists } from '@/lib/services/checklists';
 import { getProductCategories } from '@/lib/services/categories';
 import { buildProductMap } from '@/components/faqs/category-maps';
+import { ContactPanel } from '@/components/contact/contact-panel';
 import { TroubleshootFilters } from './_components/troubleshoot-filters';
 
 export const dynamic = 'force-dynamic';
@@ -56,7 +57,9 @@ export default async function TroubleshootHubPage({
   const hasFilter = Boolean(sp.q || sp.productCode);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
+        <div className="flex flex-col gap-6">
       <PageHeader
         title="트러블슈팅 체크리스트"
         description={`단계별로 진단하며 ${total}개 시나리오에서 해결 방법을 찾습니다.`}
@@ -170,6 +173,9 @@ export default async function TroubleshootHubPage({
           </div>
         </CardContent>
       </Card>
+        </div>
+        <ContactPanel variant="sidebar" />
+      </div>
     </div>
   );
 }

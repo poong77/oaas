@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { getChecklistWithSteps } from '@/lib/services/checklists';
 import { getProductCategories } from '@/lib/services/categories';
 import { buildProductMap } from '@/components/faqs/category-maps';
+import { ContactPanel } from '@/components/contact/contact-panel';
 import { ChecklistRunner } from './_components/checklist-runner';
 
 export const dynamic = 'force-dynamic';
@@ -48,7 +49,9 @@ export default async function TroubleshootRunPage({
   const productLabel = productMap[checklist.productCode]?.label ?? checklist.productCode;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
+        <div className="flex flex-col gap-5">
       <PageHeader
         title={checklist.title}
         description={checklist.description ?? '단계별로 답하여 문제를 진단합니다.'}
@@ -73,6 +76,9 @@ export default async function TroubleshootRunPage({
         steps={checklist.steps}
         productLabel={productLabel}
       />
+        </div>
+        <ContactPanel variant="sidebar" />
+      </div>
     </div>
   );
 }

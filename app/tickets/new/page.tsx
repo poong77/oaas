@@ -8,6 +8,7 @@
 
 import { Suspense } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
+import { ContactPanel } from '@/components/contact/contact-panel';
 import { requireAuth } from '@/lib/permissions';
 import { getCategoriesByType } from '@/lib/services/categories';
 import { getHotelById, getUserById } from '@/lib/services/users';
@@ -58,7 +59,9 @@ export default async function NewTicketPage({
           : '오류 · 기능문의 · 기능개발 · 데이터수정 등 모든 유형의 문의를 접수합니다.';
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
+        <div className="flex flex-col gap-5">
       <PageHeader
         title={params.type === 'error' ? '오류 접수' : '문의 접수'}
         description={description}
@@ -102,6 +105,9 @@ export default async function NewTicketPage({
           }}
         />
       </Suspense>
+        </div>
+        <ContactPanel variant="sidebar" />
+      </div>
     </div>
   );
 }

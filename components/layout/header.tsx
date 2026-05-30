@@ -9,6 +9,7 @@ import { signOut } from 'next-auth/react';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { useCurrentUser } from '@/lib/hooks/use-current-user';
 import { cn } from '@/lib/utils';
+import { BusinessStatusBadge } from '@/components/contact/business-status-badge';
 
 /**
  * GNB — LP-02.
@@ -86,6 +87,9 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="hidden sm:block">
+            <BusinessStatusBadge size="sm" linkTo="/help" />
+          </div>
           <ThemeToggle />
           {status === 'authenticated' && user ? (
             <>

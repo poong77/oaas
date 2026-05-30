@@ -5,11 +5,14 @@
  *
  * defaults가 null이면 첫 등록 모드 — 시드 기본값 placeholder로 표시.
  * 저장 성공 시 router.refresh()로 페이지 데이터 + StatusPreview 즉시 갱신.
+ *
+ * P3 정리(2026-05-30): 연락처 5필드(대표전화·이메일·ARS·Fax·웹) 입력 추가.
+ * 호텔리어 ContactPanel과 동일한 단일 소스.
  */
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save } from 'lucide-react';
+import { Plus, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +24,8 @@ import {
   type BusinessHoursDefaultState,
 } from '@/app/actions/master-business-hours-actions';
 import type { BusinessHoursDefault } from '@/db/schema';
+import type { ArsItem } from '@/lib/business-hours/calculate';
+import { toHHMM } from '@/lib/business-hours/format';
 
 type Props = {
   defaults: BusinessHoursDefault | null;
@@ -28,17 +33,14 @@ type Props = {
 
 const INITIAL: BusinessHoursDefaultState = { ok: false };
 
-// PostgreSQL time 타입은 'HH:MM:SS' 형식으로 오므로 input[type=time]에 맞게 'HH:MM'으로 자른다.
-function trim(t: string | null | undefined): string {
-  if (!t) return '';
-  return t.slice(0, 5);
-}
-
 export function BusinessHoursForm({ defaults }: Props) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(
     updateBusinessHoursDefaultAction,
     INITIAL,
+  );
+  const [arsItems, setArsItems] = useState<ArsItem[]>(
+    Array.isArray(defaults?.arsItems) ? (defaults!.arsItems as ArsItem[]) : [],
   );
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export function BusinessHoursForm({ defaults }: Props) {
           id="weekdayOpen"
           label="평일 영업 시작"
           required
-          defaultValue={trim(defaults?.weekdayOpen) || '10:00'}
+          defaultValue={toHHMM(defaults?.weekdayOpen) || '10:00'}
           type="time"
           error={state.fieldErrors?.weekdayOpen}
           help="평일 영업을 시작하는 시각"
@@ -67,7 +69,7 @@ export function BusinessHoursForm({ defaults }: Props) {
           id="weekdayClose"
           label="평일 영업 종료"
           required
-          defaultValue={trim(defaults?.weekdayClose) || '18:40'}
+          defaultValue={toHHMM(defaults?.weekdayClose) || '18:40'}
           type="time"
           error={state.fieldErrors?.weekdayClose}
           help="평일 영업이 끝나는 시각"
@@ -79,7 +81,7 @@ export function BusinessHoursForm({ defaults }: Props) {
         <Field
           id="lunchStart"
           label="점심 시작"
-          defaultValue={trim(defaults?.lunchStart)}
+          defaultValue={toHHMM(defaults?.lunchStart)}
           type="time"
           error={state.fieldErrors?.lunchStart}
           help="점심시간 없으면 비워두세요"
@@ -87,7 +89,7 @@ export function BusinessHoursForm({ defaults }: Props) {
         <Field
           id="lunchEnd"
           label="점심 종료"
-          defaultValue={trim(defaults?.lunchEnd)}
+          defaultValue={toHHMM(defaults?.lunchEnd)}
           type="time"
           error={state.fieldErrors?.lunchEnd}
           help="점심시간 끝나는 시각"
@@ -98,7 +100,7 @@ export function BusinessHoursForm({ defaults }: Props) {
       <Field
         id="intakeDeadline"
         label="접수 마감 시각"
-        defaultValue={trim(defaults?.intakeDeadline)}
+        defaultValue={toHHMM(defaults?.intakeDeadline)}
         type="time"
         error={state.fieldErrors?.intakeDeadline}
         help="영업 종료보다 빠를 수 있습니다 (예: 18:00 마감, 18:40 종료)"
@@ -155,6 +157,115 @@ export function BusinessHoursForm({ defaults }: Props) {
             />
             <p className="text-xs text-slate-500">200자 이내</p>
           </div>
+        </div>
+      </fieldset>
+
+      {/* 연락처 (대표전화·이메일·ARS·Fax·웹) — P3 정리 */}
+      <fieldset className="rounded-md border border-slate-200 p-4 dark:border-slate-700">
+        <legend className="px-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
+          연락처 정보 (호텔리어 ContactPanel·푸터에 노출)
+        </legend>
+        <div className="grid gap-3 pt-2 sm:grid-cols-2">
+          <Field
+            id="mainPhone"
+            label="대표전화"
+            defaultValue={defaults?.mainPhone ?? ''}
+            placeholder="1833-4702"
+            error={state.fieldErrors?.mainPhone}
+            help="비워두면 패널에서 숨겨집니다"
+          />
+          <Field
+            id="mainEmail"
+            label="대표 이메일"
+            defaultValue={defaults?.mainEmail ?? ''}
+            placeholder="as@oapms.com"
+            error={state.fieldErrors?.mainEmail}
+          />
+          <Field
+            id="faxNumber"
+            label="Fax"
+            defaultValue={defaults?.faxNumber ?? ''}
+            placeholder="0505-300-4702"
+            error={state.fieldErrors?.faxNumber}
+            help="footer에만 표시"
+          />
+          <Field
+            id="websiteUrl"
+            label="회사 웹사이트"
+            defaultValue={defaults?.websiteUrl ?? ''}
+            placeholder="www.oapms.com"
+            error={state.fieldErrors?.websiteUrl}
+            help="footer에만 표시"
+          />
+        </div>
+
+        <div className="mt-4 flex flex-col gap-2">
+          <Label>ARS 메뉴 (대표전화 안내)</Label>
+          <input
+            type="hidden"
+            name="arsItems"
+            value={JSON.stringify(arsItems)}
+          />
+          {arsItems.length === 0 && (
+            <p className="text-xs text-slate-500">
+              "+ 항목 추가"로 1번·2번·3번 등을 등록하세요. ContactPanel에 자동 노출됩니다.
+            </p>
+          )}
+          {arsItems.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={item.num}
+                onChange={(e) => {
+                  const next = [...arsItems];
+                  next[idx] = { ...item, num: e.target.value };
+                  setArsItems(next);
+                }}
+                className="w-16 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                placeholder="1"
+                maxLength={4}
+              />
+              <input
+                type="text"
+                value={item.label}
+                onChange={(e) => {
+                  const next = [...arsItems];
+                  next[idx] = { ...item, label: e.target.value };
+                  setArsItems(next);
+                }}
+                className="flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                placeholder="시스템 사용 문의"
+                maxLength={60}
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  setArsItems(arsItems.filter((_, i) => i !== idx))
+                }
+                aria-label={`${item.num}번 삭제`}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              setArsItems([
+                ...arsItems,
+                { num: String(arsItems.length + 1), label: '' },
+              ])
+            }
+            disabled={arsItems.length >= 10}
+            className="self-start"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            항목 추가
+          </Button>
         </div>
       </fieldset>
 

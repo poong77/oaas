@@ -9,6 +9,11 @@ import { CircleDot, Coffee, Moon, OctagonAlert, Phone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { BusinessStatusResult } from '@/lib/business-hours/calculate';
+import {
+  formatDateTimeKst,
+  formatRemaining,
+  formatTimeKst,
+} from '@/lib/business-hours/format';
 
 type Props = {
   status: BusinessStatusResult | null;
@@ -97,46 +102,14 @@ function describe(s: BusinessStatusResult): string {
   }
   if (s.status === 'lunch') {
     const next = s.nextOpenAt;
-    return next
-      ? `${formatTime(next)} 응대 재개 예정`
-      : '점심시간 중입니다';
+    return next ? `${formatTimeKst(next)} 응대 재개 예정` : '점심시간 중입니다';
   }
   if (s.status === 'intake_closed') {
     return `당일 접수는 마감되었습니다. 영업 종료까지 ${formatRemaining(s.msUntilClose ?? 0)}`;
   }
   // closed
   if (s.nextOpenAt) {
-    return `다음 영업: ${formatDateTime(s.nextOpenAt)}`;
+    return `다음 영업: ${formatDateTimeKst(s.nextOpenAt)}`;
   }
   return '다음 영업일을 결정할 수 없습니다 — 정책 확인이 필요합니다';
-}
-
-function formatRemaining(ms: number): string {
-  const totalMin = Math.max(0, Math.floor(ms / 60_000));
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  if (h === 0) return `${m}분`;
-  if (m === 0) return `${h}시간`;
-  return `${h}시간 ${m}분`;
-}
-
-function formatTime(d: Date): string {
-  return d.toLocaleTimeString('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-}
-
-function formatDateTime(d: Date): string {
-  return d.toLocaleString('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
 }

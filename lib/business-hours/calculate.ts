@@ -13,6 +13,9 @@
  * `effective hours`를 override로 치환하는 헬퍼를 별도 추가한다 (시그니처는 그대로).
  */
 
+/** ARS 메뉴 항목 (예: { num: '1', label: '시스템 사용 문의' }) */
+export type ArsItem = { num: string; label: string };
+
 export type BusinessHoursInput = {
   /** 'HH:MM' or 'HH:MM:SS' — PostgreSQL time 컬럼 raw 문자열 그대로 받음 */
   weekdayOpen: string;
@@ -25,6 +28,16 @@ export type BusinessHoursInput = {
   holidaysClosed: boolean;
   emergencyPhone: string | null;
   emergencyNote: string | null;
+  /** 대표전화 (예: 1833-4702) — ContactPanel 표시 */
+  mainPhone: string | null;
+  /** 대표 이메일 (예: as@oapms.com) — ContactPanel 표시 */
+  mainEmail: string | null;
+  /** ARS 메뉴 (1·2·3번 안내) */
+  arsItems: ArsItem[];
+  /** Fax 번호 (예: 0505-300-4702) — footer 표시 */
+  faxNumber: string | null;
+  /** 회사 웹사이트 (예: www.oapms.com) — footer 표시 */
+  websiteUrl: string | null;
   /** IANA timezone, 기본 'Asia/Seoul' */
   timezone: string;
   /**
@@ -74,6 +87,14 @@ export type BusinessStatusResult = {
   todayHolidayName: string | null;
   emergencyPhone: string | null;
   emergencyNote: string | null;
+  /** 컨택 정보 — ContactPanel·footer가 사용 */
+  contact: {
+    mainPhone: string | null;
+    mainEmail: string | null;
+    arsItems: ArsItem[];
+    faxNumber: string | null;
+    websiteUrl: string | null;
+  };
   /** 디버그용 — 정책 기준으로 계산된 effective 시각 */
   debug: {
     localDate: string; // 'YYYY-MM-DD' KST
@@ -203,6 +224,7 @@ export function calculateBusinessStatus(args: {
       todayHolidayName,
       emergencyPhone: hours.emergencyPhone,
       emergencyNote: hours.emergencyNote,
+      contact: extractContact(hours),
       debug: { localDate, localTime, weekday },
     };
   }
@@ -219,6 +241,7 @@ export function calculateBusinessStatus(args: {
       todayHolidayName,
       emergencyPhone: hours.emergencyPhone,
       emergencyNote: hours.emergencyNote,
+      contact: extractContact(hours),
       debug: { localDate, localTime, weekday },
     };
   }
@@ -235,6 +258,7 @@ export function calculateBusinessStatus(args: {
     todayHolidayName,
     emergencyPhone: hours.emergencyPhone,
     emergencyNote: hours.emergencyNote,
+    contact: extractContact(hours),
     debug: { localDate, localTime, weekday },
   };
 }
@@ -261,7 +285,18 @@ function makeClosedResult(args: {
     todayHolidayName: args.todayHolidayName,
     emergencyPhone: args.hours.emergencyPhone,
     emergencyNote: args.hours.emergencyNote,
+    contact: extractContact(args.hours),
     debug: args.debug,
+  };
+}
+
+function extractContact(hours: BusinessHoursInput): BusinessStatusResult['contact'] {
+  return {
+    mainPhone: hours.mainPhone,
+    mainEmail: hours.mainEmail,
+    arsItems: hours.arsItems,
+    faxNumber: hours.faxNumber,
+    websiteUrl: hours.websiteUrl,
   };
 }
 
@@ -349,19 +384,14 @@ function findNextOpenDate(
   hours: BusinessHoursInput,
   holidays: HolidayInfo[],
 ): Date | null {
-  const { localDate, localTime, weekday } = extractLocalParts(
-    now,
-    hours.timezone,
-  );
-
-  // 오늘 점심 후 또는 오픈 전이면 오늘 weekdayOpen / lunchEnd 반환 (점심 케이스는 이미 위에서 분기됨)
+  // 오늘 점심 후 또는 오픈 전이면 오늘 weekdayOpen/lunchEnd 반환 (위에서 이미 분기).
   // 여기는 "다음 영업일" 계산이므로 오늘 영업 끝났거나 휴무인 케이스만 진입.
+  const { localDate } = extractLocalParts(now, hours.timezone);
 
   const [y, m, d] = localDate.split('-').map(Number);
-  // 내일부터 30일까지 순회
   for (let offset = 1; offset <= 30; offset++) {
     const candidate = new Date(Date.UTC(y!, m! - 1, d! + offset));
-    const candDate = candidate.toISOString().slice(0, 10); // YYYY-MM-DD UTC 기준
+    const candDate = candidate.toISOString().slice(0, 10);
     const candWeekday = candidate.getUTCDay();
 
     if (hours.saturdayClosed && candWeekday === 6) continue;
@@ -372,9 +402,5 @@ function findNextOpenDate(
 
     return combineLocalDateTime(candDate, hours.weekdayOpen, hours.timezone);
   }
-
-  // 사용 안 되는 변수 silencer
-  void localTime;
-  void weekday;
   return null;
 }

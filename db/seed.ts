@@ -1430,20 +1430,10 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
       },
       description: 'Slack Webhook 전송 채널 매핑',
     },
-    {
-      key: 'business_hours',
-      value: {
-        start: '09:00',
-        end: '19:00',
-        timezone: 'Asia/Seoul',
-      },
-      description: '운영팀 영업 시간 (UI 안내용)',
-    },
-    {
-      key: 'contact_phone',
-      value: '02-1234-5678',
-      description: '대표 문의 전화번호',
-    },
+    // (제거) business_hours, contact_phone 키 — `business_hours_default` 테이블로 일원화.
+    //   - 운영시간: business_hours_default 컬럼
+    //   - 대표전화/이메일/ARS/Fax/웹: business_hours_default 컬럼 (P3 정리, 2026-05-30)
+    //   - 어드민 편집: /admin/master/business-hours
   ];
   let ssCreated = 0;
   for (const s of seedSettings) {
@@ -2382,6 +2372,18 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
     .where(eq(businessHoursDefault.isActive, true))
     .limit(1);
 
+  const CONTACT_DEFAULTS = {
+    mainPhone: '1833-4702',
+    mainEmail: 'as@oapms.com',
+    arsItems: [
+      { num: '1', label: '시스템 사용 문의' },
+      { num: '2', label: '도입 상담' },
+      { num: '3', label: '경영·회계 기타' },
+    ],
+    faxNumber: '0505-300-4702',
+    websiteUrl: 'www.oapms.com',
+  };
+
   if (existingBhd.length === 0) {
     await db.insert(businessHoursDefault).values({
       weekdayOpen: '10:00',
@@ -2395,10 +2397,30 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
       emergencyPhone: '070-8028-0919',
       emergencyNote: '영업시간 외 긴급전화 (단순 금액 정정 불가)',
       timezone: 'Asia/Seoul',
+      ...CONTACT_DEFAULTS,
     });
-    console.log('[seed] business_hours_default: 1건 신규');
+    console.log('[seed] business_hours_default: 1건 신규 (연락처 포함)');
   } else {
-    console.log('[seed] business_hours_default: 이미 존재, 스킵');
+    // 연락처 컬럼이 NULL이면 보강 (P3 정리에서 컬럼 추가됨, 2026-05-30)
+    const row = existingBhd[0]!;
+    const [current] = await db
+      .select({
+        mainPhone: businessHoursDefault.mainPhone,
+        mainEmail: businessHoursDefault.mainEmail,
+        arsItems: businessHoursDefault.arsItems,
+      })
+      .from(businessHoursDefault)
+      .where(eq(businessHoursDefault.id, row.id))
+      .limit(1);
+    if (current && !current.mainPhone) {
+      await db
+        .update(businessHoursDefault)
+        .set(CONTACT_DEFAULTS)
+        .where(eq(businessHoursDefault.id, row.id));
+      console.log('[seed] business_hours_default: 연락처 컬럼 보강');
+    } else {
+      console.log('[seed] business_hours_default: 이미 존재 (연락처 포함), 스킵');
+    }
   }
 
   // ─── N+1. 공휴일 마스터 (2026년 19종 = 양력 8 + 음력 7 + 대체 4) ──

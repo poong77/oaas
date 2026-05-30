@@ -29,6 +29,8 @@ const REFETCH_MS = 5 * 60_000; // 5분
 
 export type UseBusinessStatus = {
   status: BusinessStatusResult | null;
+  /** 현재 적용 중인 정책 (override 머지된 결과). ContactPanel의 운영시간 안내문이 사용 */
+  hours: BusinessHoursInput | null;
   /** 정책 데이터 로딩 실패 (운영시간 미설정 등) */
   unavailable: boolean;
 };
@@ -76,7 +78,7 @@ export function useBusinessStatus(): UseBusinessStatus {
   }, []);
 
   if (!ctx) {
-    return { status: null, unavailable };
+    return { status: null, hours: null, unavailable };
   }
 
   const status = calculateBusinessStatus({
@@ -85,5 +87,5 @@ export function useBusinessStatus(): UseBusinessStatus {
     holidays: ctx.holidays,
   });
 
-  return { status, unavailable };
+  return { status, hours: ctx.hours, unavailable };
 }

@@ -15,6 +15,11 @@ import { CircleDot, Coffee, Moon, OctagonAlert } from 'lucide-react';
 
 import { useBusinessStatus } from '@/lib/hooks/use-business-status';
 import type { BusinessStatusResult } from '@/lib/business-hours/calculate';
+import {
+  formatDateTimeKst,
+  formatRemaining,
+  formatTimeKst,
+} from '@/lib/business-hours/format';
 
 type Size = 'sm' | 'md';
 
@@ -114,48 +119,20 @@ function Dot({ tone }: { tone: Tone }) {
 function subline(s: BusinessStatusResult): string {
   if (s.status === 'open') {
     if (s.msUntilIntakeClose !== null && s.msUntilIntakeClose > 0) {
-      return `접수 마감 ${remaining(s.msUntilIntakeClose)}`;
+      return `접수 마감 ${formatRemaining(s.msUntilIntakeClose, 'short')}`;
     }
-    return s.msUntilClose ? `마감 ${remaining(s.msUntilClose)}` : '';
+    return s.msUntilClose
+      ? `마감 ${formatRemaining(s.msUntilClose, 'short')}`
+      : '';
   }
   if (s.status === 'lunch') {
-    return s.nextOpenAt ? `${time(s.nextOpenAt)} 재개` : '점심시간';
+    return s.nextOpenAt ? `${formatTimeKst(s.nextOpenAt)} 재개` : '점심시간';
   }
   if (s.status === 'intake_closed') {
     return '당일 접수 마감';
   }
   // closed
-  return s.nextOpenAt ? `다음 ${dateTime(s.nextOpenAt)}` : '';
-}
-
-function remaining(ms: number): string {
-  const totalMin = Math.max(0, Math.floor(ms / 60_000));
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  if (h === 0) return `${m}분`;
-  if (m === 0) return `${h}시간`;
-  return `${h}h ${m}m`;
-}
-
-function time(d: Date): string {
-  return d.toLocaleTimeString('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-}
-
-function dateTime(d: Date): string {
-  return d.toLocaleString('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    month: 'numeric',
-    day: 'numeric',
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+  return s.nextOpenAt ? `다음 ${formatDateTimeKst(s.nextOpenAt)}` : '';
 }
 
 function BadgeSkeleton({ size }: { size: Size }) {

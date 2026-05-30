@@ -36,6 +36,7 @@ import {
   type OverrideActionState,
 } from '@/app/actions/master-business-hours-actions';
 import type { BusinessHoursOverride } from '@/db/schema';
+import { todayKst, toHHMM } from '@/lib/business-hours/format';
 
 type Props = {
   overrides: BusinessHoursOverride[];
@@ -354,19 +355,15 @@ function summarizeTimes(o: BusinessHoursOverride): React.ReactNode | null {
   if (o.kind === 'closed') return null;
   const parts: string[] = [];
   if (o.weekdayOpen && o.weekdayClose) {
-    parts.push(`${trim(o.weekdayOpen)}~${trim(o.weekdayClose)}`);
+    parts.push(`${toHHMM(o.weekdayOpen)}~${toHHMM(o.weekdayClose)}`);
   }
-  if (o.intakeDeadline) parts.push(`접수${trim(o.intakeDeadline)}`);
+  if (o.intakeDeadline) parts.push(`접수${toHHMM(o.intakeDeadline)}`);
   if (parts.length === 0) return null;
   return (
     <span className="font-mono text-[11px] text-slate-500">{parts.join(' · ')}</span>
   );
 }
 
-function trim(t: string | null): string {
-  if (!t) return '';
-  return t.slice(0, 5);
-}
 
 // ─────────────────────────────────────────────────────────────────
 // 신규 예약 폼

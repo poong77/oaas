@@ -35,10 +35,12 @@ import {
 import { logActivity } from '@/lib/audit';
 import {
   calculateBusinessStatus,
+  type ArsItem,
   type BusinessHoursInput,
   type BusinessStatusResult,
   type HolidayInfo,
 } from '@/lib/business-hours/calculate';
+import { todayKst, toHHMM } from '@/lib/business-hours/format';
 import { sendSlack, type SlackBlock } from '@/lib/notifications/slack';
 
 // ─────────────────────────────────────────────────────────────────
@@ -56,6 +58,12 @@ export type BusinessHoursDefaultWriteInput = {
   holidaysClosed: boolean;
   emergencyPhone?: string | null;
   emergencyNote?: string | null;
+  // P3 정리(2026-05-30): 연락처도 같이 한 화면에서 편집
+  mainPhone?: string | null;
+  mainEmail?: string | null;
+  arsItems?: ArsItem[];
+  faxNumber?: string | null;
+  websiteUrl?: string | null;
   timezone?: string;
 };
 
@@ -101,6 +109,11 @@ export async function upsertBusinessHoursDefault(
       holidaysClosed: input.holidaysClosed,
       emergencyPhone: input.emergencyPhone ?? null,
       emergencyNote: input.emergencyNote ?? null,
+      mainPhone: input.mainPhone ?? null,
+      mainEmail: input.mainEmail ?? null,
+      arsItems: input.arsItems ?? [],
+      faxNumber: input.faxNumber ?? null,
+      websiteUrl: input.websiteUrl ?? null,
       timezone: input.timezone ?? 'Asia/Seoul',
       updatedBy: userId,
     };
@@ -146,6 +159,11 @@ function snapshotDefault(row: BusinessHoursDefault) {
     holidaysClosed: row.holidaysClosed,
     emergencyPhone: row.emergencyPhone,
     emergencyNote: row.emergencyNote,
+    mainPhone: row.mainPhone,
+    mainEmail: row.mainEmail,
+    arsItems: row.arsItems,
+    faxNumber: row.faxNumber,
+    websiteUrl: row.websiteUrl,
     timezone: row.timezone,
   };
 }
@@ -550,9 +568,7 @@ export async function shortenActiveOverride(
       return { ok: false, message: 'NOT_SHORTER' };
     }
 
-    const today = new Date()
-      .toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' })
-      .slice(0, 10);
+    const today = todayKst();
     const nowExpired = newEffectiveUntil < today;
 
     await db
@@ -765,13 +781,13 @@ function buildOverrideReminderBlocks(
   if (o.kind !== 'closed') {
     const times: string[] = [];
     if (o.weekdayOpen && o.weekdayClose) {
-      times.push(`영업 ${trimTime(o.weekdayOpen)}~${trimTime(o.weekdayClose)}`);
+      times.push(`영업 ${toHHMM(o.weekdayOpen)}~${toHHMM(o.weekdayClose)}`);
     }
     if (o.lunchStart && o.lunchEnd) {
-      times.push(`점심 ${trimTime(o.lunchStart)}~${trimTime(o.lunchEnd)}`);
+      times.push(`점심 ${toHHMM(o.lunchStart)}~${toHHMM(o.lunchEnd)}`);
     }
     if (o.intakeDeadline) {
-      times.push(`접수마감 ${trimTime(o.intakeDeadline)}`);
+      times.push(`접수마감 ${toHHMM(o.intakeDeadline)}`);
     }
     if (times.length > 0) {
       lines.push(`*적용 시간:* ${times.join(' · ')}`);
@@ -802,9 +818,6 @@ function buildOverrideReminderBlocks(
   ];
 }
 
-function trimTime(t: string): string {
-  return t.slice(0, 5);
-}
 
 /**
  * effective_until < today 인 active 행을 expired로 전환.
@@ -903,20 +916,17 @@ export async function listBusinessHoursActivityLogs(options: {
 // ─────────────────────────────────────────────────────────────────
 
 /**
- * 호텔리어 컨택 패널이 호출. 현재 시각 기준 영업 상태 + 부가 정보 반환.
+ * 호텔리어 클라이언트가 사용할 정책 컨텍스트 로드.
+ * default + 공휴일 + active override 머지를 한 번에 처리.
  *
- * 캐싱 전략: 컨택 패널은 1분마다 클라이언트가 재계산하므로 서버 fetch는
- * 짧은 캐시(예: 60초)면 충분. 향후 unstable_cache + revalidateTag 적용.
- *
- * default 데이터가 없으면 null 반환 — 호출 측에서 fallback UI 처리.
+ * `/api/business-hours/context` route와 `getCurrentBusinessStatus`가 공통으로 사용 (W1 정리).
  */
-export async function getCurrentBusinessStatus(
+export async function loadBusinessHoursContext(
   now: Date = new Date(),
-): Promise<BusinessStatusResult | null> {
+): Promise<{ hours: BusinessHoursInput; holidays: HolidayInfo[] } | null> {
   const defaults = await getBusinessHoursDefault();
   if (!defaults) return null;
 
-  // KST 기준 오늘 날짜
   const today = now
     .toLocaleString('sv-SE', { timeZone: defaults.timezone })
     .slice(0, 10);
@@ -925,7 +935,6 @@ export async function getCurrentBusinessStatus(
     .toISOString()
     .slice(0, 10);
 
-  // 공휴일 + active override 병렬 조회
   const [holidayRows, activeOverride] = await Promise.all([
     db!
       .select({
@@ -937,7 +946,6 @@ export async function getCurrentBusinessStatus(
       .where(
         and(
           eq(businessHolidays.isActive, true),
-          // recurring=true는 연도 무관, recurring=false는 lookahead 범위
           sql`(${businessHolidays.isRecurring} = true OR (${businessHolidays.date} >= ${today} AND ${businessHolidays.date} <= ${thirtyDaysLater}))`,
         ),
       ),
@@ -950,7 +958,6 @@ export async function getCurrentBusinessStatus(
     isRecurring: r.isRecurring,
   }));
 
-  // default 베이스
   let hours: BusinessHoursInput = {
     weekdayOpen: defaults.weekdayOpen,
     weekdayClose: defaults.weekdayClose,
@@ -962,15 +969,35 @@ export async function getCurrentBusinessStatus(
     holidaysClosed: defaults.holidaysClosed,
     emergencyPhone: defaults.emergencyPhone,
     emergencyNote: defaults.emergencyNote,
+    mainPhone: defaults.mainPhone,
+    mainEmail: defaults.mainEmail,
+    arsItems: defaults.arsItems,
+    faxNumber: defaults.faxNumber,
+    websiteUrl: defaults.websiteUrl,
     timezone: defaults.timezone,
   };
 
-  // P2: active override 머지
   if (activeOverride) {
     hours = mergeOverrideIntoHours(hours, activeOverride);
   }
 
-  return calculateBusinessStatus({ now, hours, holidays });
+  return { hours, holidays };
+}
+
+/**
+ * 호텔리어 컨택 패널이 호출. 현재 시각 기준 영업 상태 + 부가 정보 반환.
+ *
+ * 캐싱 전략: 컨택 패널은 1분마다 클라이언트가 재계산하므로 서버 fetch는
+ * 짧은 캐시(예: 60초)면 충분. 향후 unstable_cache + revalidateTag 적용.
+ *
+ * default 데이터가 없으면 null 반환 — 호출 측에서 fallback UI 처리.
+ */
+export async function getCurrentBusinessStatus(
+  now: Date = new Date(),
+): Promise<BusinessStatusResult | null> {
+  const ctx = await loadBusinessHoursContext(now);
+  if (!ctx) return null;
+  return calculateBusinessStatus({ now, hours: ctx.hours, holidays: ctx.holidays });
 }
 
 /**

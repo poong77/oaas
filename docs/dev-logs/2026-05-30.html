@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2026-05-30 — 운영시간 마스터 P1+P2 + 호텔리어 컨택 패널</title>
+<style>
+  :root {
+    --brand-50: #f5f3ff;
+    --brand-100: #ede9fe;
+    --brand-500: #8b5cf6;
+    --brand-600: #7c3aed;
+    --brand-700: #6d28d9;
+    --brand-900: #4c1d95;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif;
+    background: var(--slate-50);
+    color: var(--slate-900);
+    line-height: 1.6;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+  header { padding: 24px 0; border-bottom: 3px solid var(--brand-500); margin-bottom: 24px; }
+  h1 { margin: 0 0 4px; font-size: 22px; color: var(--brand-700); }
+  h2 { font-size: 17px; color: var(--brand-700); margin: 24px 0 8px; }
+  h3 { font-size: 14px; color: var(--slate-700); margin: 12px 0 6px; }
+  .meta { color: var(--slate-500); font-size: 13px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .card.brand { border-left: 3px solid var(--brand-500); }
+  .card.success { border-left: 3px solid #10b981; }
+  .card.warn { border-left: 3px solid #f59e0b; }
+  .card.danger { border-left: 3px solid #ef4444; }
+  .stat-num { font-size: 24px; font-weight: 700; color: var(--brand-700); }
+  .stat-label { font-size: 12px; color: var(--slate-500); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--slate-200); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+  td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  ul.check { list-style: none; padding-left: 0; }
+  ul.check li::before { content: "✅ "; }
+  ul.todo li::before { content: "⏳ "; }
+  ul.risk li::before { content: "⚠ "; }
+  code { background: var(--slate-100); padding: 2px 5px; border-radius: 3px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, monospace; }
+  kbd { background: var(--slate-100); border: 1px solid var(--slate-300); padding: 1px 4px; border-radius: 3px; font-size: 11px; font-family: monospace; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge.ok { background: #d1fae5; color: #065f46; }
+  .badge.info { background: var(--brand-100); color: var(--brand-700); }
+  .badge.warn { background: #fef3c7; color: #92400e; }
+  pre { background: var(--slate-900); color: #e2e8f0; padding: 10px 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; line-height: 1.5; }
+  pre code { background: transparent; color: inherit; padding: 0; }
+  .flow {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 12px;
+    color: var(--slate-700);
+    white-space: pre;
+    overflow-x: auto;
+  }
+  @media (max-width: 640px) {
+    h1 { font-size: 19px; }
+    .grid { grid-template-columns: 1fr; }
+    th, td { font-size: 12px; padding: 4px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>운영시간 마스터 P1+P2 + 호텔리어 컨택 패널</h1>
+  <p class="meta">📅 2026-05-30 · 단일 세션 · 타입체크 ✅ 통과 · DB 마이그레이션 2건 적용 완료</p>
+</header>
+
+<section>
+  <h2>📊 한눈에 보기</h2>
+  <div class="grid">
+    <div class="card brand">
+      <div class="stat-num">3</div>
+      <div class="stat-label">신규 DB 테이블 (default·overrides·holidays)</div>
+    </div>
+    <div class="card brand">
+      <div class="stat-num">19</div>
+      <div class="stat-label">시드 공휴일 (양력 8 + 음력 7 + 대체 4)</div>
+    </div>
+    <div class="card success">
+      <div class="stat-num">22</div>
+      <div class="stat-label">신규·수정 파일</div>
+    </div>
+    <div class="card success">
+      <div class="stat-num">4</div>
+      <div class="stat-label">컨택 패널 배치 위치 (헤더·도움말·티켓·푸터)</div>
+    </div>
+    <div class="card warn">
+      <div class="stat-num">1</div>
+      <div class="stat-label">Vercel Cron (KST 00:01)</div>
+    </div>
+    <div class="card brand">
+      <div class="stat-num">8</div>
+      <div class="stat-label">activity_logs action 종류</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>🎯 오늘의 결과물</h2>
+  <p>호텔리어가 보는 "지금 영업 중인지" 정보를 어드민이 한 화면에서 통째로 관리할 수 있게 만들었다. 영업시간·점심·접수마감·휴무 정책뿐만 아니라 <strong>설/추석 단축영업 같은 일시적 변경을 미리 예약</strong>해두면 cron이 자동으로 적용·만료시킨다. 변경 이력은 <code>activity_logs</code>에 8종 액션으로 기록된다.</p>
+  <p>호텔리어 쪽은 <strong>헤더 우상단 실시간 배지</strong>가 1분마다 라벨을 갱신한다 (영업 중 / 점심시간 / 접수 마감 / 영업 외). <code>/help</code>·<code>/tickets/new</code>에는 우측 sticky <code>ContactPanel</code>이, 사이트 전역 푸터에도 동일한 데이터 소스를 구독하는 가로형 패널이 깔린다. 어드민이 운영시간을 수정하면 호텔리어 쪽이 다음 5분 이내 자동 반영된다 (<code>revalidateTag('business-hours')</code>).</p>
+</section>
+
+<section>
+  <h2>🗂 단계별 산출물</h2>
+
+  <h3>① P1 — 단일 운영시간 + 공휴일 (DB · 도메인 · 어드민 메뉴)</h3>
+  <table>
+    <thead><tr><th>레이어</th><th>파일 / 내용</th><th>특징</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>스키마</td>
+        <td><code>business_hours_default</code> · <code>business_holidays</code></td>
+        <td>단일 행 강제 (service layer), 부분 unique index (활성 행만)</td>
+      </tr>
+      <tr>
+        <td>도메인</td>
+        <td><code>lib/business-hours/calculate.ts</code></td>
+        <td>순수 함수, sv-SE 로케일로 KST 정밀 변환, 30일 lookahead</td>
+      </tr>
+      <tr>
+        <td>서비스</td>
+        <td><code>lib/services/business-hours.ts</code></td>
+        <td>upsert/CRUD + fire-and-forget audit log</td>
+      </tr>
+      <tr>
+        <td>액션</td>
+        <td><code>app/actions/master-business-hours-actions.ts</code></td>
+        <td>zod cross-field 검증 (영업종료&gt;시작, 점심 짝, 접수마감≤종료)</td>
+      </tr>
+      <tr>
+        <td>UI</td>
+        <td>tab-bar · status-preview · business-hours-form · holidays-section</td>
+        <td>StatusPreview는 호텔리어 패널과 동일 결과 보장</td>
+      </tr>
+      <tr>
+        <td>시드</td>
+        <td>2026년 공휴일 19종 (양력 매년 반복 + 음력 + 대체)</td>
+        <td><span class="badge info">idempotent</span> 같은 날짜 활성 행 있으면 skip</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>② P2 — 예약 변경 + 변경 이력 + Vercel Cron</h3>
+  <table>
+    <thead><tr><th>레이어</th><th>파일 / 내용</th><th>특징</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>스키마</td>
+        <td><code>business_hours_overrides</code></td>
+        <td>kind enum (short_hours/closed/custom) + status enum (scheduled/active/expired/canceled)</td>
+      </tr>
+      <tr>
+        <td>충돌 방지</td>
+        <td>service <code>hasOverrideCollision()</code></td>
+        <td>UI 사전 검증 + DB 단일 트랜잭션 INSERT 시 재검증</td>
+      </tr>
+      <tr>
+        <td>도메인 머지</td>
+        <td>calculate.ts에 <code>forcedClosure</code> 옵션 추가</td>
+        <td>P1 시그니처 유지하며 임시 휴무 지원</td>
+      </tr>
+      <tr>
+        <td>Cron</td>
+        <td><code>app/api/cron/business-hours-overrides/route.ts</code> + vercel.json</td>
+        <td>매일 KST 00:01 (UTC 15:01), Bearer 인증, scheduled→active + active→expired</td>
+      </tr>
+      <tr>
+        <td>UI</td>
+        <td>overrides-section · history-section</td>
+        <td>상태별 그룹(진행중/예약/만료/취소) + activity_logs 타임라인 + payload diff</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>③ 호텔리어 컨택 통합 (API · 훅 · 컴포넌트 · 4곳 배치)</h3>
+  <table>
+    <thead><tr><th>파일</th><th>역할</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>/api/business-hours/context</code></td>
+        <td>정책(hours) + 공휴일 + active override 머지 결과 반환, 60초 캐시 + 태그 무효화</td>
+      </tr>
+      <tr>
+        <td><code>lib/hooks/use-business-status.ts</code></td>
+        <td>5분 정책 재페치 + 1분 calculate 재호출 (now만 갱신)</td>
+      </tr>
+      <tr>
+        <td><code>components/contact/business-status-badge.tsx</code></td>
+        <td>size=sm(헤더용 점 배지) / md(라벨+보조정보)</td>
+      </tr>
+      <tr>
+        <td><code>components/contact/contact-panel.tsx</code></td>
+        <td>variant=sidebar (수직) / footer (가로) — ARS 1·2·3번 + 이메일 + 긴급전화</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>🔁 데이터 흐름</h2>
+  <div class="flow">┌─ 어드민이 운영시간 수정 / 예약 등록 ─────────────┐
+│  upsertBusinessHoursDefault() / createOverride() │
+│   ↓ activity_logs (8종 action)                   │
+│   ↓ revalidateTag('business-hours')              │
+└──────────────────────────────────────────────────┘
+                  ↓
+┌─ /api/business-hours/context (캐시 60s) ─────────┐
+│  hours + holidays + active override 머지         │
+└──────────────────────────────────────────────────┘
+                  ↓
+┌─ useBusinessStatus() 훅 ─────────────────────────┐
+│  · 5분마다 정책 재페치                           │
+│  · 1분마다 calculateBusinessStatus 재호출        │
+└──────────────────────────────────────────────────┘
+                  ↓
+┌─ 호텔리어 UI 4곳 ────────────────────────────────┐
+│  · 헤더 우상단      BusinessStatusBadge size=sm  │
+│  · 도움말 사이드바  ContactPanel variant=sidebar │
+│  · 티켓 사이드바    ContactPanel variant=sidebar │
+│  · 사이트 푸터      ContactPanel variant=footer  │
+└──────────────────────────────────────────────────┘
+                  ↑
+┌─ Cron 매일 KST 00:01 ────────────────────────────┐
+│  applyScheduledOverrides()  scheduled → active   │
+│  expireFinishedOverrides()  active    → expired  │
+│  revalidateTag('business-hours')                 │
+└──────────────────────────────────────────────────┘</div>
+</section>
+
+<section>
+  <h2>🧠 핵심 설계 결정</h2>
+  <table>
+    <thead><tr><th>결정</th><th>선택</th><th>이유</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>단일 행 강제</td>
+        <td>service layer 보장</td>
+        <td>UPSERT 패턴이 단순 · UI에서 신규 생성 차단으로 충분</td>
+      </tr>
+      <tr>
+        <td>이력 저장</td>
+        <td><code>activity_logs</code> 재사용 + action 패턴 8종</td>
+        <td>별도 history 테이블 중복 회피 · 기존 인프라 활용</td>
+      </tr>
+      <tr>
+        <td>override 휴무 표현</td>
+        <td><code>BusinessHoursInput.forcedClosure</code> 옵션</td>
+        <td>calculate 시그니처 유지 · P1 호환</td>
+      </tr>
+      <tr>
+        <td>충돌 검증</td>
+        <td>service 사전 검증 (DB EXCLUDE X)</td>
+        <td>Drizzle EXCLUDE 미지원 · 단일 어드민 가정에서 충분</td>
+      </tr>
+      <tr>
+        <td>탭 라우팅</td>
+        <td>URL searchParam <code>?tab=</code></td>
+        <td>SSR 친화 · 새로고침 시 탭 유지 · 라우트 세그먼트 폭증 회피</td>
+      </tr>
+      <tr>
+        <td>Cron 시각</td>
+        <td>KST 00:01 (UTC 15:01)</td>
+        <td>자정 직후 활성화 → 호텔리어 첫 접속 시 정확한 상태</td>
+      </tr>
+      <tr>
+        <td>호텔리어 패널 갱신</td>
+        <td>1분 시간 갱신 + 5분 정책 페치</td>
+        <td>1분이면 UX상 충분 · 정책은 변경 빈도 낮아 5분 캐시 OK</td>
+      </tr>
+      <tr>
+        <td>타임존 처리</td>
+        <td>sv-SE 로케일 + UTC+9 직접 매핑</td>
+        <td>외부 라이브러리 없이 정확 · Asia/Seoul 단일 운영 정책</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>📋 audit log action 8종</h2>
+  <table>
+    <thead><tr><th>action</th><th>트리거</th><th>payload 핵심</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">business_hours.default.update</td><td>운영시간 수정</td><td>before/after diff</td></tr>
+      <tr><td class="mono">business_hours.default.create</td><td>운영시간 첫 등록</td><td>after</td></tr>
+      <tr><td class="mono">business_hours.holiday.create</td><td>공휴일 추가</td><td>date, name, isRecurring</td></tr>
+      <tr><td class="mono">business_hours.holiday.delete</td><td>공휴일 소프트 삭제</td><td>date, name</td></tr>
+      <tr><td class="mono">business_hours.override.create</td><td>예약 변경 등록</td><td>kind, period, reason</td></tr>
+      <tr><td class="mono">business_hours.override.cancel</td><td>예약 변경 취소 (scheduled만)</td><td>kind, period, reason</td></tr>
+      <tr><td class="mono">business_hours.override.applied</td><td>cron 자동 활성화</td><td>trigger=cron, today</td></tr>
+      <tr><td class="mono">business_hours.override.expired</td><td>cron 자동 만료</td><td>trigger=cron, today</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>📁 신규 · 수정 파일 (22개)</h2>
+
+  <h3>DB (5)</h3>
+  <ul class="check">
+    <li><code>db/schema/business-hours-default.ts</code> — 단일 행 마스터</li>
+    <li><code>db/schema/business-hours-overrides.ts</code> — 예약 변경 (2 enum 포함)</li>
+    <li><code>db/schema/business-holidays.ts</code> — 공휴일 (부분 unique index)</li>
+    <li><code>db/migrations/0012_*.sql</code>, <code>0013_*.sql</code></li>
+    <li><code>db/seed.ts</code> — 운영시간 default 1행 + 공휴일 19종</li>
+  </ul>
+
+  <h3>도메인·서비스 (3)</h3>
+  <ul class="check">
+    <li><code>lib/business-hours/calculate.ts</code> — 순수 함수</li>
+    <li><code>lib/services/business-hours.ts</code> — 11개 함수</li>
+    <li><code>lib/hooks/use-business-status.ts</code> — 클라이언트 훅</li>
+  </ul>
+
+  <h3>API & Cron (2)</h3>
+  <ul class="check">
+    <li><code>app/api/business-hours/context/route.ts</code></li>
+    <li><code>app/api/cron/business-hours-overrides/route.ts</code></li>
+  </ul>
+
+  <h3>Server Actions (1)</h3>
+  <ul class="check">
+    <li><code>app/actions/master-business-hours-actions.ts</code></li>
+  </ul>
+
+  <h3>어드민 페이지 (7)</h3>
+  <ul class="check">
+    <li><code>app/(admin)/admin/master/business-hours/page.tsx</code> (4탭 라우팅)</li>
+    <li><code>_components/tab-bar.tsx</code></li>
+    <li><code>_components/status-preview.tsx</code></li>
+    <li><code>_components/business-hours-form.tsx</code></li>
+    <li><code>_components/holidays-section.tsx</code></li>
+    <li><code>_components/overrides-section.tsx</code></li>
+    <li><code>_components/history-section.tsx</code></li>
+  </ul>
+
+  <h3>호텔리어 컴포넌트 (2)</h3>
+  <ul class="check">
+    <li><code>components/contact/business-status-badge.tsx</code></li>
+    <li><code>components/contact/contact-panel.tsx</code></li>
+  </ul>
+
+  <h3>통합 수정 (5)</h3>
+  <ul class="check">
+    <li><code>components/layout/header.tsx</code> — 우상단 sm 배지</li>
+    <li><code>components/layout/role-scope.tsx</code> — 전역 푸터 배치</li>
+    <li><code>app/help/page.tsx</code> — grid + sidebar</li>
+    <li><code>app/tickets/new/page.tsx</code> — grid + sidebar</li>
+    <li><code>app/(admin)/admin/master/page.tsx</code> — 운영시간 카드 + system-settings description 수정</li>
+    <li><code>vercel.json</code> — cron 등록 추가</li>
+    <li><code>docs/IMPLEMENTATION_PLAN.md</code> — 마스터 표 + Phase 1/9 ✅ 완료 마킹 + 19종 표기 수정</li>
+  </ul>
+</section>
+
+<section>
+  <h2>🧪 확인 방법</h2>
+  <pre><code>npm run dev
+
+# 어드민 흐름
+#   /admin/master → "운영시간" 카드 → 4탭
+#   탭 ① 현재 운영시간 수정 → StatusPreview 즉시 갱신
+#   탭 ② 신규 예약 등록 → 기간 충돌 검증
+#   탭 ③ 공휴일 추가 (인라인) / 삭제 (ConfirmDialog)
+#   탭 ④ 변경 이력 (activity_logs 타임라인)
+
+# 호텔리어 흐름
+#   / 진입 → 헤더 우상단 "● 영업 중 / 영업 외" 배지
+#   /help → 우측 sticky ContactPanel (모바일은 stack)
+#   /tickets/new → 우측 sticky ContactPanel
+#   모든 페이지 하단 → 가로형 푸터 ContactPanel
+
+# Cron 수동 호출 (로컬)
+#   curl -H "Authorization: Bearer dev" \
+#     http://localhost:3000/api/cron/business-hours-overrides</code></pre>
+</section>
+
+<section>
+  <h2>✅ 규칙 준수 체크</h2>
+  <ul class="check">
+    <li>어드민 권한 가드 <code>requireRole(['admin'])</code></li>
+    <li>물리 DELETE 금지 — <code>is_active=false</code> 소프트 삭제</li>
+    <li><code>window.confirm</code> 금지 — 글로벌 <code>useConfirmDialog</code></li>
+    <li>audit log fire-and-forget (lib/audit.ts)</li>
+    <li>캐시 무효화 <code>revalidateTag('business-hours', 'default')</code></li>
+    <li>zod cross-field 검증 (Server Actions 입구)</li>
+    <li>모든 페이지 동일 디자인 수준 (Card + PageHeader + EmptyState)</li>
+    <li>모바일 반응형 (sidebar는 lg부터 우측, 모바일 stack)</li>
+    <li>호텔리어/푸터에서 <code>tel:</code>·<code>mailto:</code> 링크</li>
+    <li>타입체크 통과 (운영시간/컨택 관련 파일 0 에러)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>⚠ 알려진 이슈 · 후속 작업</h2>
+  <ul class="risk">
+    <li><strong>articles.ts 타입 에러</strong> — 누군가 추가한 <code>article-redirects</code> 변경과 <code>ArticleListItem</code> 타입이 불일치. 본 작업 외 영역이라 별도 처리 필요.</li>
+    <li><strong>도움말 [product]/[slug] 페이지</strong> — sidebar 미배치. index만 적용. 추후 확장.</li>
+  </ul>
+  <ul class="todo">
+    <li>P3 보강 — 양력 공휴일 자동 복제 (매년 1월 트리거) / active override 종료일 단축 편집 / 예약 적용 24시간 전 슬랙 알림</li>
+    <li>activity_logs에 user.name JOIN으로 이력 화면 가독성 ↑</li>
+    <li>DB EXCLUDE 제약으로 override 충돌 방지 강화 (현재는 service layer만)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>📝 메모</h2>
+  <p>오늘 작업의 가장 큰 가치는 <strong>"어드민이 정책을 한 곳에서 통째로 수정"</strong>하면 <strong>"호텔리어 패널이 자동으로 따라온다"</strong>는 단일 진실(SSOT) 구조를 완성한 것이다. 같은 <code>calculateBusinessStatus</code> 순수 함수가 어드민 StatusPreview와 호텔리어 Badge 양쪽에서 호출되므로 preview-truth 1:1 보장. 어떤 화면을 봐도 같은 시점·같은 정책으로 같은 결과가 나온다.</p>
+  <p>P3에서 양력 공휴일 자동 복제와 슬랙 알림이 들어오면 운영시간 마스터는 완전체가 된다. 그 전까지 어드민이 신경 쓸 일은 (a) 매년 1월에 신년 공휴일 일괄 추가, (b) 명절·점검 일정이 잡히면 미리 예약 등록 — 이 두 가지뿐이다.</p>
+</section>
+
+<footer style="margin-top:32px; padding-top:16px; border-top:1px solid var(--slate-200); color:var(--slate-500); font-size:12px;">
+  📅 2026-05-30 · 통합 AS 플랫폼 (support.oapms.com) · Co-Authored-By: Claude
+</footer>
+
+</div>
+</body>
+</html>

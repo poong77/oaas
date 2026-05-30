@@ -29,6 +29,11 @@ const DATE_REGEX = /^\d{4}-(0\d|1[0-2])-(0\d|[12]\d|3[01])$/;
 // business_hours_default
 // ─────────────────────────────────────────────────────────────────
 
+const ArsItemSchema = z.object({
+  num: z.string().min(1).max(4),
+  label: z.string().min(1).max(60),
+});
+
 const DefaultSchema = z
   .object({
     weekdayOpen: z.string().regex(TIME_REGEX, 'HH:MM 형식'),
@@ -53,6 +58,12 @@ const DefaultSchema = z
     holidaysClosed: z.boolean(),
     emergencyPhone: z.string().max(40).nullable(),
     emergencyNote: z.string().max(200).nullable(),
+    // 연락처 5필드 (P3 정리)
+    mainPhone: z.string().max(40).nullable(),
+    mainEmail: z.string().max(100).nullable(),
+    arsItems: z.array(ArsItemSchema).max(10),
+    faxNumber: z.string().max(40).nullable(),
+    websiteUrl: z.string().max(200).nullable(),
   })
   .refine((d) => d.weekdayClose > d.weekdayOpen, {
     message: '영업 종료 시각은 시작보다 늦어야 합니다',
@@ -106,6 +117,23 @@ export async function updateBusinessHoursDefaultAction(
 ): Promise<BusinessHoursDefaultState> {
   const user = await requireRole(['admin']);
 
+  // ARS items: form은 'arsItems' 단일 JSON 문자열로 전달
+  let arsItems: { num: string; label: string }[] = [];
+  const arsRaw = ((formData.get('arsItems') ?? '') as string).trim();
+  if (arsRaw) {
+    try {
+      const parsed = JSON.parse(arsRaw);
+      if (Array.isArray(parsed)) {
+        arsItems = parsed.filter(
+          (it): it is { num: string; label: string } =>
+            it && typeof it.num === 'string' && typeof it.label === 'string',
+        );
+      }
+    } catch {
+      // 잘못된 JSON은 빈 배열로 fallback (zod에서 추가 검증)
+    }
+  }
+
   const raw = {
     weekdayOpen: ((formData.get('weekdayOpen') ?? '') as string).trim(),
     weekdayClose: ((formData.get('weekdayClose') ?? '') as string).trim(),
@@ -119,6 +147,11 @@ export async function updateBusinessHoursDefaultAction(
       (((formData.get('emergencyPhone') ?? '') as string).trim() || null),
     emergencyNote:
       (((formData.get('emergencyNote') ?? '') as string).trim() || null),
+    mainPhone: (((formData.get('mainPhone') ?? '') as string).trim() || null),
+    mainEmail: (((formData.get('mainEmail') ?? '') as string).trim() || null),
+    arsItems,
+    faxNumber: (((formData.get('faxNumber') ?? '') as string).trim() || null),
+    websiteUrl: (((formData.get('websiteUrl') ?? '') as string).trim() || null),
   };
 
   const parsed = DefaultSchema.safeParse(raw);
@@ -142,6 +175,11 @@ export async function updateBusinessHoursDefaultAction(
       holidaysClosed: parsed.data.holidaysClosed,
       emergencyPhone: parsed.data.emergencyPhone,
       emergencyNote: parsed.data.emergencyNote,
+      mainPhone: parsed.data.mainPhone,
+      mainEmail: parsed.data.mainEmail,
+      arsItems: parsed.data.arsItems,
+      faxNumber: parsed.data.faxNumber,
+      websiteUrl: parsed.data.websiteUrl,
     },
     user.id,
   );

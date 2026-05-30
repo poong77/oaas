@@ -18,6 +18,7 @@ import {
   listPopularArticles,
 } from '@/lib/services/articles';
 import { resolveIcon } from '@/app/_components/home/_icon-map';
+import { ContactPanel } from '@/components/contact/contact-panel';
 import { HelpHeroSearch } from './_components/help-hero-search';
 import { PopularArticleList } from './_components/popular-article-list';
 
@@ -32,7 +33,9 @@ export default async function HelpIndexPage() {
   ]);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
+        <div className="flex flex-col gap-8">
       <PageHeader
         title="제품별 가이드"
         description="PMS · CMS · Keyless · 키오스크 · 웹서비스 핸드북을 한 곳에서 찾아보세요."
@@ -104,6 +107,9 @@ export default async function HelpIndexPage() {
           </a>
         </CardContent>
       </Card>
+        </div>
+        <ContactPanel variant="sidebar" />
+      </div>
     </div>
   );
 }

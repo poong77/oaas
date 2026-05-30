@@ -30,6 +30,7 @@ import {
   buildIssueTypeMap,
   buildProductMap,
 } from '@/components/faqs/category-maps';
+import { ContactPanel } from '@/components/contact/contact-panel';
 import { FaqFilters } from './_components/faq-filters';
 
 export const dynamic = 'force-dynamic';
@@ -75,7 +76,9 @@ export default async function FaqPage({
   const hasFilter = Boolean(sp.q || sp.productCode || sp.issueType);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
+        <div className="flex flex-col gap-6">
       <PageHeader
         title="빠른 해결"
         description={`자주 묻는 질문 ${total}건. 답이 없으면 트러블슈팅 체크리스트나 문의 접수로 이동하세요.`}
@@ -159,6 +162,9 @@ export default async function FaqPage({
           </div>
         </CardContent>
       </Card>
+        </div>
+        <ContactPanel variant="sidebar" />
+      </div>
     </div>
   );
 }

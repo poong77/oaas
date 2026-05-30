@@ -260,6 +260,7 @@ editor_drafts (
 | 솔루션 링크 마스터 | `solution_link_presets` | 호텔 프로필 기본값 (Keyless·홈페이지 등) | P2 |
 | 시스템 설정 | `system_settings` | 첨부 사이즈 · Rate Limit · SSO · 외부키 마스킹 · 슬랙 채널 | P1 |
 | 호텔 마스터 | `hotels` | 호텔명·OA PMS 매핑 ID (어드민만 편집) | P1 |
+| **운영시간 마스터** ✅ | `business_hours_default` · `business_hours_overrides` · `business_holidays` | ① 현재 운영시간 (점심·접수마감·긴급전화 안내문구) · ② 예약 변경 (기간/시간 일시적 오버라이드, cron 자동 활성화/만료) · ③ 공휴일 관리 · ④ 변경 이력 (`activity_logs` 필터) | **P1+P2 완료 2026-05-29** |
 
 ---
 
@@ -434,7 +435,75 @@ created_at, updated_at, is_active
 id, key (unique), value jsonb, description,
 updated_by (FK users), updated_at
 // 예: max_upload_mb, rate_limit_login_per_min, slack_channels, ...
+// 주의: business_hours 키는 사용하지 않음 — `business_hours_default` 전용 테이블로 분리.
 ```
+
+#### `business_hours_default` (현재 운영시간 — 단일 행)
+```ts
+id,                                  // 단일 행 강제 (unique index on (true))
+weekday_open    time NOT NULL,       // 평일 영업 시작 (예: 10:00)
+weekday_close   time NOT NULL,       // 평일 영업 종료 (예: 18:40)
+lunch_start     time,                // 점심 시작 (예: 12:00, nullable)
+lunch_end       time,                // 점심 종료 (예: 13:00, nullable)
+intake_deadline time,                // 접수 마감 (예: 18:00, nullable — 영업종료보다 빠를 수 있음)
+saturday_closed bool DEFAULT true,
+sunday_closed   bool DEFAULT true,
+holidays_closed bool DEFAULT true,   // 공휴일 자동 휴무
+emergency_phone text,                // 070-8028-0919
+emergency_note  text,                // "단순 금액 정정 불가" 등 안내문구
+timezone        text DEFAULT 'Asia/Seoul',
+updated_by      uuid (FK users),
+created_at, updated_at, is_active
+```
+- **수정 즉시 반영** — `activity_logs(action='business_hours.default.update', payload={before, after})`
+- 호텔리어 컨택 패널의 `useBusinessStatus()` 훅이 이 행을 기준으로 영업 중/외 판정.
+
+#### `business_hours_overrides` (예약 변경 — 일시적 오버라이드)
+```ts
+id,
+effective_from   date NOT NULL,      // 적용 시작일
+effective_until  date NOT NULL,      // 적용 종료일 (포함)
+kind enum('short_hours' | 'closed' | 'custom'),
+                                     // short_hours: 단축영업, closed: 임시휴무, custom: 자유 설정
+weekday_open    time,                // null이면 default 사용 (kind='closed'면 무시)
+weekday_close   time,
+lunch_start     time,
+lunch_end       time,
+intake_deadline time,
+reason          text NOT NULL,       // "5/15 단축영업", "임직원 워크숍" 등
+status enum('scheduled' | 'active' | 'expired' | 'canceled') DEFAULT 'scheduled',
+applied_at      timestamp,           // cron이 status='active' 전환한 시각
+created_by      uuid (FK users),
+created_at, updated_at, is_active
+```
+- **충돌 방지**: 같은 날짜에 활성 override 2건 금지 (UI 사전 검증 + DB 부분 unique 제약 `WHERE status IN ('scheduled','active')`)
+- **자동 전환**: cron (Vercel Cron 또는 on-demand) 매일 00:01에 `effective_from <= today` → active, `effective_until < today` → expired
+- **취소**: status='canceled', is_active=false. `scheduled` 상태에서만 가능 (active는 종료일 단축으로 처리)
+- **실시간 적용**: `useBusinessStatus()`는 `status='active'` override가 있으면 그것을 우선 적용
+
+#### `business_holidays` (공휴일 마스터)
+```ts
+id,
+date            date NOT NULL UNIQUE,  // 2026-01-01
+name            text NOT NULL,         // "신정", "설날 연휴" 등
+is_recurring    bool DEFAULT false,    // 매년 반복 (양력 기준 신정·광복절 등)
+created_by      uuid (FK users),
+created_at, updated_at, is_active
+```
+- `business_hours_default.holidays_closed=true`이면 이 날짜는 자동 휴무 처리.
+- 음력 공휴일(설·추석)은 `is_recurring=false`로 매년 수동 등록 또는 천문연 API 연동 (P2).
+- 시드: 2026년 공휴일 19종 (양력 8 + 음력 7 + 대체공휴일 4).
+
+#### 운영시간 변경 이력 (`activity_logs` 활용)
+별도 테이블 없이 `activity_logs`로 통합. UI에서 다음 action 필터링:
+- `business_hours.default.update` — 현재 운영시간 수정
+- `business_hours.override.create` — 예약 변경 등록
+- `business_hours.override.cancel` — 예약 취소
+- `business_hours.override.applied` — cron 자동 활성화 (system 액션)
+- `business_hours.override.expired` — cron 자동 만료 (system 액션)
+- `business_hours.holiday.create` / `holiday.delete` — 공휴일 관리
+
+payload: `{ before, after, reason?, override_id?, holiday_id? }`
 
 #### `activity_logs` (감사)
 ```ts
@@ -471,29 +540,30 @@ created_at, is_active
 
 > 각 Phase 완료 시 사용자 승인 받고 다음 진행. Phase 0은 필수 선행.
 
-### Phase 0 — 프로젝트 셋업 (1~2일)
-- [ ] Next.js 15 + TypeScript 프로젝트 생성
-- [ ] Tailwind 4 + shadcn/ui 초기화 (메인 컬러는 우선 indigo, 추후 확정)
-- [ ] Drizzle ORM + Neon 연결 (DATABASE_URL)
-- [ ] Vercel 프로젝트 연동
-- [ ] 폴더 구조 골격 (`/app`, `/db`, `/lib`, `/components`, `/docs`)
-- [ ] `.env.example`, `.gitignore`, ESLint, Prettier
-- [ ] 다크모드 토글, ConfirmDialog 전역, Toaster 셋업
-- [ ] 헤더/GNB 레이아웃 골격 (LP-02 기준)
-- [ ] `.env`로 환경변수 정리, GitHub 저장소 연결
+### Phase 0 — 프로젝트 셋업 (1~2일) — **완료 2026-05-28**
+- [x] Next.js 15 + TypeScript 프로젝트 생성
+- [x] Tailwind 4 + shadcn/ui 초기화 (메인 컬러는 우선 indigo, 추후 확정)
+- [x] Drizzle ORM + Neon 연결 (DATABASE_URL)
+- [x] Vercel 프로젝트 연동
+- [x] 폴더 구조 골격 (`/app`, `/db`, `/lib`, `/components`, `/docs`)
+- [x] `.env.example`, `.gitignore`, ESLint, Prettier
+- [x] 다크모드 토글, ConfirmDialog 전역, Toaster 셋업
+- [x] 헤더/GNB 레이아웃 골격 (LP-02 기준)
+- [x] `.env`로 환경변수 정리, GitHub 저장소 연결
 
 **완료 기준**: `npm run dev` → 빈 홈 + 다크모드 토글 + 헬스체크 API
 
-### Phase 1 — 인증·권한·프로필 (3~4일)
-- [ ] NextAuth + OA SSO Provider 구현 (PM-04)
-- [ ] 역할 미들웨어 + `requireRole()` helper
-- [ ] `users`, `hotels`, `categories` 스키마 + 시드
-- [ ] 호텔리어 프로필 페이지 (AC-01, AC-02, AC-03)
-- [ ] 직원 계정 관리 (AC-04, AC-05)
-- [ ] 어드민 사용자 관리 (AC-06~10): 리스트·생성·편집·비번초기화·활성토글
-- [ ] 호텔 마스터 어드민 (Phase 7 마스터 일부 선행)
-- [ ] 솔라피·SES 연동 (초대·비번초기화 SMS/이메일)
-- [ ] `activity_logs` 기본 셋업
+### Phase 1 — 인증·권한·프로필 (3~4일) — **완료 2026-05-28**
+- [x] NextAuth + OA SSO Provider 구현 (PM-04)
+- [x] 역할 미들웨어 + `requireRole()` helper
+- [x] `users`, `hotels`, `categories` 스키마 + 시드
+- [x] 호텔리어 프로필 페이지 (AC-01, AC-02, AC-03)
+- [x] 직원 계정 관리 (AC-04, AC-05)
+- [x] 어드민 사용자 관리 (AC-06~10): 리스트·생성·편집·비번초기화·활성토글
+- [x] 호텔 마스터 어드민 (Phase 7 마스터 일부 선행)
+- [x] **운영시간 마스터 P1 선행** (`business_hours_default` + `business_holidays` 스키마·시드, `/admin/master/business-hours` ① 현재 운영시간 탭 + ③ 공휴일 탭, `useBusinessStatus()` 훅) — 호텔리어 컨택 패널이 의존 — **완료 2026-05-29**
+- [x] 솔라피·SES 연동 (초대·비번초기화 SMS/이메일)
+- [x] `activity_logs` 기본 셋업
 
 **리스크**: OA PMS 호텔 계정 매핑 정책 — 시작 전 사용자와 확정 필요
 
@@ -512,11 +582,11 @@ created_at, is_active
 - [ ] SS-01 통합 검색 (탭별 결과·필터)
 - [ ] **help.oapms.com (채널.io) 마이그레이션 방안 결정** — API 색인 vs DB 이관
 
-### Phase 4 — 셀프 픽스 (2일)
-- [ ] `faqs`, `checklists`, `checklist_steps` 스키마
-- [ ] SF-01 FAQ 목록 (아코디언)
-- [ ] SF-02 트러블슈팅 체크리스트 (단계별 분기)
-- [ ] SF-04 어드민 편집
+### Phase 4 — 셀프 픽스 (2일) — **완료 2026-05-30**
+- [x] `faqs`, `checklists`, `checklist_steps` 스키마 (`checklist_step_action_kind` enum)
+- [x] SF-01 FAQ 목록 (`/faq` 아코디언 + 제품·유형 필터 + 검색 + 도움됨 위젯, ContactPanel sidebar)
+- [x] SF-02 트러블슈팅 체크리스트 (`/troubleshoot` 허브 + `[id]` ChecklistRunner 단계별 분기 next/resolved/escalate, ContactPanel sidebar)
+- [x] SF-04 어드민 편집 (`/admin/faqs`, `/admin/checklists` CRUD + 통계)
 
 ### Phase 5 — 이슈 클레임 (4~5일) — **완료 2026-05-28**
 - [x] `tickets`, `ticket_messages`, `ticket_attachments`, `ticket_form_fields`, `notification_logs` 스키마
@@ -535,33 +605,45 @@ created_at, is_active
 - [x] 매니저/어드민 헤더 + admin-nav에 "티켓 큐" 메뉴
 - [x] 시드: 샘플 티켓 3건 + 메시지 9~10건 (idempotent)
 
-### Phase 6 — 이슈 현황 (2~3일)
-- [ ] IS-01 내 문의 목록
-- [ ] IS-02 티켓 상세 (처리이력·공개메모·추가 답변)
-- [ ] IS-03 상태 3단계 알림 (SMS/이메일 자동)
-- [ ] IS-04 어드민 티켓 큐 (칸반/리스트, 상태 변경, 담당자 배정, 마감일)
-- [ ] ⑦ 피드백 (`ticket_feedback`)
+### Phase 6 — 이슈 현황 (2~3일) — **완료 2026-05-30**
+- [x] IS-01 내 문의 목록 (Phase 5 선행)
+- [x] IS-02 티켓 상세 (처리이력·공개메모·추가 답변, Phase 5 선행)
+- [x] IS-03 상태 3단계 알림 (SMS/이메일 자동) — `changeStatus` → `dispatchStatusChangeNotifications` (in_progress / completed) + notification_logs 기록
+- [x] IS-04 어드민 티켓 큐 (칸반/리스트, 상태 변경, 담당자 배정, 마감일)
+- [x] ⑦ 피드백 (`ticket_feedback` + `FeedbackWidget` 클라이언트 컴포넌트, 호텔리어 상세에서 노출)
 
-### Phase 7 — 공지·릴리즈 (1~2일)
-- [ ] `notices` 스키마
-- [ ] NT-01 공지 목록·상세 (제품 태그, 상단 고정)
-- [ ] NT-03 긴급 배너 자동 노출/해제
+### Phase 7 — 공지·릴리즈 (1~2일) — **완료 2026-05-30**
+- [x] `notices` 스키마 (notice_kind enum: notice/release/incident, banner_until 자동 만료)
+- [x] NT-01 공지 목록 (`/notices` 필터·페이지네이션) + 상세 (`/notices/[id]`) + 어드민 CRUD (`/admin/notices`)
+- [x] NT-03 긴급 배너 자동 노출/해제 — `EmergencyBanner` RSC가 `service_status='incident'` + `notices.banner=true` 둘 다 처리, banner_until 시각 이후 lazy 자동 비표시
 
-### Phase 8 — 챗봇 임베드 (1일)
-- [ ] CB-01 oachat.ai iframe 임베드 (전 페이지 우하단 플로팅)
-- [ ] 장애 시 fallback (직접 접수 CTA)
+### Phase 8 — 챗봇 임베드 (1일) — **완료 2026-05-30**
+- [x] CB-01 oachat.ai iframe 임베드 (`ChatbotFab` 우하단 fixed, 모바일 풀스크린) — 노출 제외 `/login`, `/admin/*`, `/profile/staff`
+- [x] 장애 시 fallback (`OACHAT_EMBED_URL` 비어있으면 "문의 접수" 안내 카드)
 
-### Phase 9 — 어드민 마스터 데이터 (3~4일)
-- [ ] `/admin/master` 라우트 그룹
-- [ ] 카테고리 관리 (제품/유형/긴급도/영향범위 탭)
-- [ ] 이슈 접수 폼 필드 (제품별 동적 필드)
-- [ ] 알림 템플릿 (SMS/이메일, 이벤트별)
-- [ ] 시스템 설정 (key-value)
-- [ ] 호텔 마스터 (이미 Phase 1에서 일부)
+### Phase 9 — 어드민 마스터 데이터 (3~4일) — **완료 2026-05-30**
+- [x] `/admin/master` 라우트 그룹 (인덱스 카드 그리드)
+- [x] 카테고리 관리 (제품/유형/긴급도/영향범위 탭)
+- [x] 이슈 접수 폼 필드 (`form-fields`, 제품별 동적 필드)
+- [x] 알림 템플릿 (SMS/이메일, 이벤트별)
+- [x] 빠른 응대 (`quick-replies`)
+- [x] 자주 찾는 작업 (`quick-actions`)
+- [x] 역할별 시작 (`role-starters`)
+- [x] 솔루션 링크 프리셋 (`solution-links`)
+- [x] 시스템 설정 (key-value)
+- [x] 동의어 사전 (`synonyms`)
+- [x] 메뉴 구조 (`menu-taxonomies`)
+- [x] 유입 채널 (`ticket-channels`)
+- [x] 호텔 마스터 (Phase 1 선행 완료)
+- [x] **운영시간 마스터 P2 보강** — `business_hours_overrides` 스키마, `/admin/master/business-hours` ② 예약 변경 탭 (CRUD + 충돌 검증) + ④ 변경 이력 탭 (`activity_logs` 필터 뷰), Vercel Cron daily 활성화/만료 핸들러 (`/api/cron/business-hours-overrides`, KST 00:01) — **완료 2026-05-29**
+- [x] **운영시간 마스터 P3 보강** — (a) 양력 공휴일 일괄 복제 (`replicateRecurringHolidaysForYear`), (b) active override 종료일 단축 편집 (`shortenActiveOverride` + UI 인라인 폼), (c) 예약 적용 24시간 전 슬랙 알림 (cron 통합 `notifyUpcomingOverrides`, 'new' 채널), (d) 변경 이력 화면 user.name LEFT JOIN — **완료 2026-05-30**
+- [x] **연락처 정보 일원화** (P3 정리, 2026-05-30) — `business_hours_default`에 컬럼 5개 추가(`main_phone`, `main_email`, `ars_items`, `fax_number`, `website_url`). ContactPanel 하드코딩 제거. `system_settings.business_hours` · `contact_phone` 키 시드/DB 모두 cleanup. 운영시간·점심·접수마감·긴급전화·대표전화·이메일·ARS·Fax·웹사이트가 **한 화면(/admin/master/business-hours 탭 ①)에서 통째로 관리** + 호텔리어 ContactPanel·헤더 배지·footer가 동일 단일 소스 구독.
 
-### Phase 10 — 배포·검증 (1~2일)
-- [ ] Vercel 프로덕션 환경변수 설정
-- [ ] 커스텀 도메인 연결 (`support.oapms.com`)
+### Phase 10 — 배포·검증 (1~2일) — **체크리스트 완성 2026-05-30**
+- [x] 보안 헤더·CSP·Rate Limit·HSTS 코드 적용 (`next.config.ts`, `lib/rate-limit.ts`)
+- [x] **배포 체크리스트 문서화** — `docs/DEPLOY_CHECKLIST.md` (환경변수·시드·보안·롤백·운영 매뉴얼 8장)
+- [ ] Vercel 프로덕션 환경변수 설정 — 운영팀 작업
+- [ ] 커스텀 도메인 연결 (`support.oapms.com`) — 운영팀 작업
 - [ ] 보안 헤더·Rate Limit 적용 확인
 - [ ] E2E 테스트 (Playwright) — 사용자 요청 시
 - [ ] 운영 매뉴얼 작성 (`docs/dev-logs/`)

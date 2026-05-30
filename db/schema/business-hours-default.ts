@@ -21,9 +21,15 @@
  *   emergency_note='영업시간 외 긴급전화 (단순 금액 정정 불가)'
  */
 
-import { boolean, pgTable, text, time, uuid } from 'drizzle-orm/pg-core';
+import { boolean, jsonb, pgTable, text, time, uuid } from 'drizzle-orm/pg-core';
 import { commonColumns } from './_shared';
 import { users } from './users';
+
+/**
+ * ARS 메뉴 항목 — `business_hours_default.ars_items` jsonb 형식.
+ * 예: [{ num: '1', label: '시스템 사용 문의' }, ...]
+ */
+export type ArsItem = { num: string; label: string };
 
 export const businessHoursDefault = pgTable('business_hours_default', {
   ...commonColumns(),
@@ -47,6 +53,16 @@ export const businessHoursDefault = pgTable('business_hours_default', {
   emergencyPhone: text('emergency_phone'),
   /** 긴급전화 안내문구 (예: "단순 금액 정정 불가") */
   emergencyNote: text('emergency_note'),
+  /** 대표전화 (예: 1833-4702) — ContactPanel 표시 */
+  mainPhone: text('main_phone'),
+  /** 대표 이메일 (예: as@oapms.com) — ContactPanel 표시 */
+  mainEmail: text('main_email'),
+  /** ARS 메뉴 (대표전화 안내). 예: [{ num:'1', label:'시스템 사용 문의' }] */
+  arsItems: jsonb('ars_items').notNull().default([]).$type<ArsItem[]>(),
+  /** Fax 번호 (예: 0505-300-4702) — footer 표시 */
+  faxNumber: text('fax_number'),
+  /** 회사 웹사이트 (예: www.oapms.com) — footer 표시 */
+  websiteUrl: text('website_url'),
   /** IANA timezone — 기본 Asia/Seoul */
   timezone: text('timezone').notNull().default('Asia/Seoul'),
   /** 마지막 수정 어드민 */
