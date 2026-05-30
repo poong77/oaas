@@ -19,6 +19,7 @@ import { auth } from '@/lib/auth';
 import { resolveRoleMode } from '@/lib/types/role-mode';
 import { EmergencyBanner } from './emergency-banner';
 import { Header } from './header';
+import { SiteFooter } from './site-footer';
 import { ChatbotFab } from '@/components/chatbot/chatbot-fab';
 import { ContactPanel } from '@/components/contact/contact-panel';
 import { getChatbotEmbedUrl } from '@/lib/services/chatbot-meta';
@@ -47,6 +48,7 @@ export async function RoleScope({ children }: { children: React.ReactNode }) {
       <main className="flex-1">{children}</main>
 
       {showHeader && <ContactPanel variant="footer" />}
+      {showHeader && <SiteFooter />}
       {showHotelierExtras && <ChatbotFab embedUrl={chatbotEmbedUrl} />}
     </div>
   );

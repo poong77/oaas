@@ -7,10 +7,11 @@
  *   ③ 자주찾는작업 (DB)
  *   ④ 역할별 시작하기 (DB)
  *   ⑤ CTA 3개
- *   ⑥ 푸터
+ *   (푸터는 RoleScope의 글로벌 SiteFooter로 통합 — 별도 렌더 없음)
  *
  * 변경 이력:
  *   - 2026-05-29: 서비스 상태/최근 업데이트를 Hero 우측 박스로 통합. 하단 중복 섹션 제거.
+ *   - 2026-05-30: HomeFooter 제거 → 글로벌 SiteFooter(RoleScope)로 이전.
  *
  * DB 호출이 있으므로 force-dynamic.
  */
@@ -25,7 +26,6 @@ import { CategoryGrid } from './_components/home/category-grid';
 import { QuickActions } from './_components/home/quick-actions';
 import { RoleStarters } from './_components/home/role-starters';
 import { HomeCTA } from './_components/home/home-cta';
-import { HomeFooter } from './_components/home/home-footer';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,7 +56,6 @@ export default async function HomePage() {
       <QuickActions items={quickActionRows} />
       <RoleStarters items={roleStarterRows} />
       <HomeCTA />
-      <HomeFooter />
     </>
   );
 }
