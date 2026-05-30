@@ -9,7 +9,9 @@ import {
   ArrowRight,
   Bell,
   BookA,
+  Clock,
   Database,
+  FolderTree,
   HelpCircle,
   Layers,
   Link as LinkIcon,
@@ -95,10 +97,19 @@ const ITEMS: MasterItem[] = [
     adminOnly: true,
   },
   {
+    href: '/admin/master/business-hours',
+    label: '운영시간',
+    description:
+      '평일 영업·점심·접수마감·긴급전화·공휴일을 관리합니다. 호텔리어 컨택 패널 실시간 영업상태에 반영.',
+    icon: Clock,
+    adminOnly: true,
+    badge: '실시간 반영',
+  },
+  {
     href: '/admin/master/system-settings',
     label: '시스템 설정',
     description:
-      '업로드 한도·로그인 Rate Limit·Slack 채널·영업 시간 등 key-value.',
+      '업로드 한도·로그인 Rate Limit·Slack 채널 등 key-value. (운영시간은 별도 메뉴로 분리)',
     icon: Settings,
     adminOnly: true,
   },
@@ -108,6 +119,14 @@ const ITEMS: MasterItem[] = [
     description:
       '검색 동의어 그룹·이형어 관리. 통합 검색 시 자동 확장 (예: "결제" ↔ "페이먼트").',
     icon: BookA,
+    adminOnly: true,
+  },
+  {
+    href: '/admin/master/menu-taxonomies',
+    label: '메뉴 구조',
+    description:
+      '도움말 아티클의 menu_path 정본. 제품별 대/중/소 메뉴 트리 (최대 3단). 아티클 작성 시 cascading select 옵션 소스.',
+    icon: FolderTree,
     adminOnly: true,
   },
 ];

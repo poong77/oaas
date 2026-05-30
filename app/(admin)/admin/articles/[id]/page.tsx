@@ -46,7 +46,7 @@ export default async function EditArticlePage({
         title={
           <span className="inline-flex items-center gap-2">
             아티클 편집
-            {article.publishedAt ? (
+            {article.status === 'published' ? (
               <Badge tone="success">발행됨</Badge>
             ) : (
               <Badge tone="warn">Draft</Badge>
@@ -65,10 +65,10 @@ export default async function EditArticlePage({
           </Link>
         }
         actions={
-          article.publishedAt ? (
+          article.status === 'published' ? (
             <Button asChild variant="outline" size="sm">
               <Link
-                href={`/help/${article.productCode}/${article.slug}`}
+                href={`/help/${article.productCode}/${article.contentType}/${article.slug}`}
                 target="_blank"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -84,13 +84,17 @@ export default async function EditArticlePage({
         initial={{
           id: article.id,
           productCode: article.productCode,
+          contentType: article.contentType,
           categoryPath: article.categoryPath ?? null,
           slug: article.slug,
           title: article.title,
+          summary: article.summary ?? '',
           summary30s: article.summary30s ?? '',
+          keywords: article.keywords ?? [],
           bodyMarkdown: article.bodyMarkdown,
+          relatedSlugs: article.relatedSlugs ?? [],
           relatedArticleIds: article.relatedArticleIds ?? null,
-          isPublished: Boolean(article.publishedAt),
+          isPublished: article.status === 'published',
         }}
       />
     </div>

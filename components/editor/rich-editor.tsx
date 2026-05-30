@@ -140,11 +140,17 @@ export function RichEditor({
       },
     },
     onUpdate: ({ editor }) => {
-      // HTML로 저장 — 폰트·색상·정렬·폰트사이즈 등 인라인 스타일 보존.
-      // tiptap-markdown serializer는 표준 마크다운만 지원하여 스타일 손실됨.
-      const html = editor.getHTML();
-      valueRef.current = html;
-      onChange(html);
+      // v1.1 (Option A, Design D-2): markdown + 인라인 HTML 하이브리드 저장.
+      //   - tiptap-markdown의 html:true 옵션이 markdown 표현 불가능한 노드(폰트사이즈/색상/정렬/
+      //     밑줄/형광펜/YouTube 등 7종)를 인라인 HTML 태그로 직렬화하여 보존.
+      //   - getHTML()이 아닌 storage.markdown.getMarkdown()을 사용하면 markdown(+ 인라인 HTML)로 저장됨.
+      //   - body-validator(`## H2`)는 markdown 표기 그대로이므로 정상 작동.
+      //   - 회귀 검증: /admin/sandbox/editor-check 페이지에서 14종 매트릭스 시각 확인.
+      const md =
+        (editor.storage.markdown?.getMarkdown() as string | undefined) ??
+        editor.getHTML();
+      valueRef.current = md;
+      onChange(md);
     },
   });
 

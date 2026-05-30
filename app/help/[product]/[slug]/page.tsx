@@ -1,238 +1,51 @@
 /**
- * /help/[product]/[slug] — 아티클 상세 (SS-03).
+ * /help/[product]/[slug] — 레거시 URL → /help/[product]/[content_type]/[slug] 308 리다이렉트.
  *
- * 구성:
- *   - 헤더 (제목 + 메타: 발행일/작성자/조회수/도움됨%)
- *   - 30초 요약 카드 (있을 때만)
- *   - 본문 마크다운 + TOC (sticky 우측 사이드바, 모바일은 상단 collapsible)
- *   - 도움됨 위젯
- *   - 관련 문서 카드 3~5건
- *   - 공유/인쇄/링크 버튼
- *   - view_count 1회 증가 (client effect)
+ * v1.1 URL 패턴 변경 (Plan Q-5, Design §5):
+ *   - 옛: /help/[product]/[slug]
+ *   - 새: /help/[product]/[content_type]/[slug]
  *
- * 권한:
- *   - 비로그인/호텔리어: 발행된 활성 아티클만
- *   - 매니저/어드민: draft도 미리보기 가능 (상단 노란 배지)
+ * 동작:
+ *   1) slug로 articles 조회 → content_type 알면 정식 URL로 308
+ *   2) 없으면 article_redirects 폴백 조회 → toSlug로 articles 재조회
+ *   3) 둘 다 실패 시 404
  */
 
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import {
-  ArrowLeft,
-  CalendarDays,
-  Eye,
-  Pencil,
-  ThumbsUp,
-  User as UserIcon,
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { MarkdownView } from '@/components/articles/markdown-view';
-import { ArticleToc } from '@/components/articles/article-toc';
-import { ArticleFeedbackWidget } from '@/components/articles/article-feedback-widget';
-import { ArticleShareBar } from '@/components/articles/article-share-bar';
-import { ArticleViewTracker } from '@/components/articles/article-view-tracker';
-import {
-  getArticleBySlug,
-  getRelatedArticles,
-} from '@/lib/services/articles';
-import { getCurrentUser } from '@/lib/permissions';
-import { getProductCategories } from '@/lib/services/categories';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { getArticleBySlug } from '@/lib/services/articles';
+import { getRedirectByFromPath } from '@/lib/services/article-redirects';
 
 export const dynamic = 'force-dynamic';
 
 type RouteParams = Promise<{ product: string; slug: string }>;
 
-export async function generateMetadata({ params }: { params: RouteParams }) {
-  const { slug } = await params;
-  const article = await getArticleBySlug(slug);
-  if (!article) return { title: '도움말 — OA 통합 AS' };
-  return {
-    title: `${article.title} — OA 통합 AS`,
-    description: article.summary30s ?? undefined,
-  };
-}
-
-export default async function HelpArticlePage({
+export default async function LegacyHelpArticleRedirect({
   params,
 }: {
   params: RouteParams;
 }) {
   const { product, slug } = await params;
-  const user = await getCurrentUser();
-  const canPreview = user?.role === 'manager' || user?.role === 'admin';
 
-  const article = await getArticleBySlug(slug, {
-    includeUnpublished: canPreview,
-  });
-  if (!article) notFound();
-  if (article.productCode !== product) {
-    // URL의 product와 아티클의 productCode 불일치 → 정식 경로로 보내야 하지만 단순 404
-    notFound();
+  // 1) 직접 slug 조회
+  const article = await getArticleBySlug(slug, { includeUnpublished: false });
+  if (article) {
+    permanentRedirect(
+      `/help/${article.productCode}/${article.contentType}/${article.slug}`,
+    );
   }
-  // 비-매니저가 draft 접근 시 차단 (getArticleBySlug 단계 처리 외 안전망)
-  if (!canPreview && !article.publishedAt) notFound();
 
-  const [related, productCats] = await Promise.all([
-    getRelatedArticles(article.relatedArticleIds, article.productCode, 4),
-    getProductCategories(),
-  ]);
-  const productLabel =
-    productCats.find((c) => c.code === product)?.label ?? product;
+  // 2) article_redirects 폴백
+  const redirect = await getRedirectByFromPath(`/help/${product}/${slug}`);
+  if (redirect) {
+    const target = await getArticleBySlug(redirect.toSlug, {
+      includeUnpublished: false,
+    });
+    if (target) {
+      permanentRedirect(
+        `/help/${target.productCode}/${target.contentType}/${target.slug}`,
+      );
+    }
+  }
 
-  const helpfulTotal = article.helpfulYes + article.helpfulNo;
-  const helpfulPct =
-    helpfulTotal > 0
-      ? Math.round((article.helpfulYes / helpfulTotal) * 100)
-      : null;
-
-  return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <ArticleViewTracker articleId={article.id} />
-
-      <div className="flex flex-col gap-3">
-        <Link
-          href={`/help/${product}`}
-          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:underline"
-        >
-          <ArrowLeft className="h-3 w-3" />
-          {productLabel} 가이드
-        </Link>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="brand" className="uppercase">
-            {productLabel}
-          </Badge>
-          {article.categoryPath?.map((seg, i) => (
-            <Badge key={`${seg}-${i}`} tone="slate">
-              {seg}
-            </Badge>
-          ))}
-          {!article.publishedAt && (
-            <Badge tone="warn">DRAFT (미리보기)</Badge>
-          )}
-          {!article.isActive && <Badge tone="danger">비활성</Badge>}
-        </div>
-
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          {article.title}
-        </h1>
-
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-          {article.publishedAt && (
-            <span className="inline-flex items-center gap-1">
-              <CalendarDays className="h-3 w-3" />
-              {formatDate(article.publishedAt)} 발행
-            </span>
-          )}
-          {article.authorName && (
-            <span className="inline-flex items-center gap-1">
-              <UserIcon className="h-3 w-3" />
-              {article.authorName}
-            </span>
-          )}
-          <span className="inline-flex items-center gap-1">
-            <Eye className="h-3 w-3" />
-            조회 {article.viewCount.toLocaleString()}
-          </span>
-          {helpfulPct !== null && (
-            <span className="inline-flex items-center gap-1">
-              <ThumbsUp className="h-3 w-3" />
-              도움됨 {helpfulPct}% ({helpfulTotal}명)
-            </span>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <ArticleShareBar title={article.title} />
-          {canPreview && (
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/admin/articles/${article.id}`}>
-                <Pencil className="h-3.5 w-3.5" />
-                관리자 편집
-              </Link>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* 모바일 TOC */}
-      <ArticleToc toc={article.toc ?? []} variant="mobile" />
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_240px]">
-        <article className="flex flex-col gap-5">
-          {article.summary30s && (
-            <Card className="border-brand-200 bg-brand-50/60 dark:border-brand-900 dark:bg-brand-950/40">
-              <CardContent className="flex flex-col gap-1 p-4 sm:p-5">
-                <span className="text-xs font-bold uppercase tracking-wide text-brand-700 dark:text-brand-300">
-                  30초 요약
-                </span>
-                <p className="text-sm font-medium text-slate-800 dark:text-slate-100 sm:text-base">
-                  {article.summary30s}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardContent className="p-5 sm:p-7">
-              <MarkdownView source={article.bodyMarkdown} />
-            </CardContent>
-          </Card>
-
-          <ArticleFeedbackWidget
-            articleId={article.id}
-            initialYes={article.helpfulYes}
-            initialNo={article.helpfulNo}
-            isLoggedIn={Boolean(user)}
-          />
-
-          {related.length > 0 && (
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-bold tracking-tight">
-                관련 문서
-              </h2>
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {related
-                  .filter((r) => r.id !== article.id)
-                  .slice(0, 4)
-                  .map((r) => (
-                    <li key={r.id}>
-                      <Link
-                        href={`/help/${r.productCode}/${r.slug}`}
-                        className="flex h-full flex-col gap-1 rounded-lg border border-slate-200 bg-white p-4 hover:border-brand-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-700"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Badge tone="brand" className="uppercase">
-                            {r.productCode}
-                          </Badge>
-                        </div>
-                        <span className="line-clamp-2 text-sm font-semibold">
-                          {r.title}
-                        </span>
-                        {r.summary30s && (
-                          <span className="line-clamp-1 text-xs text-slate-500">
-                            {r.summary30s}
-                          </span>
-                        )}
-                      </Link>
-                    </li>
-                  ))}
-              </ul>
-            </section>
-          )}
-        </article>
-
-        <ArticleToc toc={article.toc ?? []} variant="sidebar" />
-      </div>
-    </div>
-  );
-}
-
-function formatDate(d: Date | string | null): string {
-  if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '-';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  notFound();
 }

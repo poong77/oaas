@@ -9,7 +9,7 @@ export function SearchFilters({
   initial,
   categories,
 }: {
-  initial: { product?: string; sort?: string };
+  initial: { product?: string; sort?: string; contentType?: string };
   categories: ProductCategoryView[];
 }) {
   const router = useRouter();
@@ -38,6 +38,17 @@ export function SearchFilters({
             {c.label}
           </option>
         ))}
+      </Select>
+
+      <Select
+        value={initial.contentType ?? ''}
+        onChange={(e) => update({ contentType: e.target.value || undefined })}
+        aria-label="의도 필터"
+      >
+        <option value="">모든 의도</option>
+        <option value="howto">사용방법 (howto)</option>
+        <option value="feature">기능설명 (feature)</option>
+        <option value="troubleshoot">문제해결 (troubleshoot)</option>
       </Select>
 
       <Select

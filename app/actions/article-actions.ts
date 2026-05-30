@@ -18,14 +18,24 @@ import { logActivity } from '@/lib/audit';
 import {
   archiveArticleById,
   createArticle,
+  getArticleById,
   incrementViewCount,
+  publishArticleById,
   recordFeedback,
   restoreArticleById,
   slugExists,
   togglePublishArticleById,
+  unpublishArticleById,
   updateArticleById,
   type ArticleWriteInput,
 } from '@/lib/services/articles';
+import { upsertRedirect } from '@/lib/services/article-redirects';
+import {
+  validateBody,
+  validateTitle,
+  validateSummary,
+} from '@/lib/articles/body-validator';
+import { articleSaveSchema } from '@/lib/articles/zod-schemas';
 
 // ─────────────────────────────────────────────────────────────────────
 // public — 도움됨 / 조회수
@@ -70,20 +80,46 @@ export async function bumpArticleViewCount(articleId: string): Promise<void> {
 // 어드민 CRUD
 // ─────────────────────────────────────────────────────────────────────
 
-const ArticleWriteSchema = z.object({
-  productCode: z.string().min(1, '제품을 선택하세요'),
-  categoryPath: z.array(z.string()).optional().nullable(),
-  slug: z
-    .string()
-    .min(1)
-    .max(120)
-    .regex(/^[a-z0-9-]+$/, 'slug는 영문 소문자/숫자/하이픈만 가능합니다'),
-  title: z.string().min(1, '제목을 입력하세요').max(200),
-  summary30s: z.string().max(500).optional().nullable(),
-  bodyMarkdown: z.string().min(1, '본문을 입력하세요'),
-  relatedArticleIds: z.array(z.string().uuid()).optional().nullable(),
-  publish: z.boolean().optional(),
-});
+/**
+ * 어드민 폼 검증 스키마 — `articleSaveSchema`(lib/articles/zod-schemas.ts) 기반.
+ *
+ * 통합 (P1-1, 2026-05-30):
+ *   - SLUG_PATTERN·길이 제약은 `articleSaveSchema`에 일원화
+ *   - 폼 전용 어댑터 필드 추가: `categoryPath`(메뉴 경로 어댑터), `publish`(발행 토글),
+ *     `relatedArticleIds`(레거시 uuid 호환), `summary30s`(레거시 컬럼 호환)
+ *   - title/summary/menu_path 검증은 `articleSaveSchema`에서 그대로 상속
+ *
+ * v1.1 (Design D-4): summary 2000자 hard limit, 200자 권장 워닝은 body-validator로.
+ */
+const ArticleWriteSchema = articleSaveSchema
+  // 폼에서는 일부 필드를 다른 이름/제약으로 받으므로 어댑터 처리
+  .omit({ menuPath: true, keywords: true, contentType: true })
+  .extend({
+    /** 폼 default 'howto' (카드 선택 UI). */
+    contentType: z
+      .enum(['howto', 'feature', 'troubleshoot'])
+      .default('howto'),
+    /** 어댑터: 폼에서는 categoryPath라는 이름 사용. 1~3단계 (Plan §2.3). */
+    categoryPath: z
+      .array(z.string().trim().min(1).max(60))
+      .max(3, '메뉴 경로는 최대 3단계까지')
+      .optional()
+      .nullable(),
+    /** 폼은 draft 저장 허용 — keywords 빈 배열 가능. 발행 시 body-validator에서 워닝. */
+    keywords: z
+      .array(z.string().trim().min(1).max(60))
+      .max(30, '키워드는 최대 30개')
+      .optional()
+      .nullable(),
+    /** v1.1 status — draft/published 명시. 미지정 시 publish 플래그로 결정. */
+    status: z.enum(['draft', 'published']).optional(),
+    /** 레거시 summary_30s 컬럼 호환 (마이그레이션 기간 동안만, Q-13). */
+    summary30s: z.string().max(2000).optional().nullable(),
+    /** 레거시 relatedArticleIds (uuid[]) 호환 (P1-2 마이그레이션 후 제거 예정, Q-14). */
+    relatedArticleIds: z.array(z.string().uuid()).optional().nullable(),
+    /** 폼 발행 토글 — true 시 createArticle/updateArticle이 status='published'로 처리. */
+    publish: z.boolean().optional(),
+  });
 
 export type ArticleFormState = {
   ok: boolean;
@@ -141,14 +177,47 @@ function parseFormDataInput(formData: FormData): {
         .map((s) => s.trim())
         .filter(Boolean)
     : null;
+  const relatedSlugsRaw = get('relatedSlugs').trim();
+  const relatedSlugs = relatedSlugsRaw
+    ? relatedSlugsRaw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : null;
+  const keywordsRaw = get('keywords').trim();
+  const keywords = keywordsRaw
+    ? keywordsRaw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : null;
+  const appliesToRaw = get('appliesTo').trim();
+  let appliesTo: { feature?: string; models?: string[] } | null = null;
+  if (appliesToRaw) {
+    try {
+      appliesTo = JSON.parse(appliesToRaw);
+    } catch {
+      appliesTo = null;
+    }
+  }
+  const summary = get('summary').trim() || null;
 
   const raw: Record<string, unknown> = {
     productCode: get('productCode'),
+    contentType: (get('contentType') || 'howto') as
+      | 'howto'
+      | 'feature'
+      | 'troubleshoot',
     categoryPath,
     slug: get('slug').toLowerCase().trim(),
     title: get('title').trim(),
-    summary30s: get('summary30s').trim() || null,
+    summary,
+    // 호환: summary 비어 있고 summary30s 들어오면 summary로 통합 (Q-13)
+    summary30s: get('summary30s').trim() || summary,
+    keywords,
+    appliesTo,
     bodyMarkdown: get('bodyMarkdown'),
+    relatedSlugs,
     relatedArticleIds,
     publish: publishMode === 'publish',
   };
@@ -188,6 +257,17 @@ export async function createArticleAction(
       message: '같은 slug 아티클이 이미 존재합니다',
       fieldErrors: { slug: '중복된 slug입니다. 다른 값을 사용하세요.' },
     };
+  }
+  // 발행 차단 가드 — Plan Q-9, Design §6.3
+  if (input.publish && input.contentType) {
+    const { errors } = validateBody(input.bodyMarkdown, input.contentType);
+    if (errors.length > 0) {
+      return {
+        ok: false,
+        message: `발행 차단: ${errors[0]} (총 ${errors.length}건)`,
+        fieldErrors: { bodyMarkdown: errors.join(' / ') },
+      };
+    }
   }
   const result = await createArticle(input, user.id);
   if (!result.ok || !result.id) {
@@ -238,7 +318,41 @@ export async function updateArticleAction(
       fieldErrors: { slug: '중복된 slug입니다.' },
     };
   }
-  const result = await updateArticleById(id, input);
+  // 발행 상태로 전환되는 경우 검증 (Q-9)
+  const willPublish = input.publish === true || input.status === 'published';
+  if (willPublish && input.contentType) {
+    const { errors } = validateBody(input.bodyMarkdown, input.contentType);
+    if (errors.length > 0) {
+      return {
+        ok: false,
+        message: `발행 차단: ${errors[0]} (총 ${errors.length}건)`,
+        fieldErrors: { bodyMarkdown: errors.join(' / ') },
+      };
+    }
+  }
+  // content_type 또는 slug 변경 시 옛 URL → 새 slug 리다이렉트 (Design §5.3)
+  const existing = await getArticleById(id);
+  if (existing) {
+    const slugChanged = existing.slug !== input.slug;
+    const ctChanged = existing.contentType !== input.contentType;
+    if (slugChanged || ctChanged) {
+      // 옛 URL 1개: /help/[productCode]/[contentType]/[slug]
+      await upsertRedirect({
+        fromPath: `/help/${existing.productCode}/${existing.contentType}/${existing.slug}`,
+        toSlug: input.slug,
+        reason: slugChanged ? 'slug_rename' : 'content_type_change',
+      });
+      // 레거시 URL: /help/[productCode]/[slug]
+      if (slugChanged) {
+        await upsertRedirect({
+          fromPath: `/help/${existing.productCode}/${existing.slug}`,
+          toSlug: input.slug,
+          reason: 'slug_rename',
+        });
+      }
+    }
+  }
+  const result = await updateArticleById(id, input, user.id);
   if (!result.ok) {
     return {
       ok: false,
@@ -281,6 +395,85 @@ export async function togglePublishArticleAction(
     revalidatePath('/help');
   }
   return result;
+}
+
+/**
+ * v1.1 — 명시적 발행 액션.
+ * body-validator 차단 (Q-9). content_type별 필수 H2 누락 시 errors 반환.
+ */
+export async function publishArticleAction(
+  id: string,
+): Promise<{
+  ok: boolean;
+  message?: string;
+  errors?: string[];
+  warnings?: string[];
+}> {
+  const user = await requireRole(['manager', 'admin']);
+  const article = await getArticleById(id);
+  if (!article) return { ok: false, message: '아티클을 찾을 수 없습니다' };
+
+  const { errors, warnings } = validateBody(
+    article.bodyMarkdown,
+    article.contentType,
+  );
+  const titleW = validateTitle(article.title).warnings;
+  const summaryW = validateSummary(article.summary).warnings;
+  const allWarnings = [...warnings, ...titleW, ...summaryW];
+
+  if (errors.length > 0) {
+    return {
+      ok: false,
+      message: `발행 차단 (${errors.length}건)`,
+      errors,
+      warnings: allWarnings,
+    };
+  }
+
+  const result = await publishArticleById(id, user.id);
+  if (!result.ok) {
+    return { ok: false, message: result.message ?? '발행 실패' };
+  }
+  logActivity({
+    userId: user.id,
+    action: 'article.publish',
+    targetType: 'article',
+    targetId: id,
+    payload: { slug: article.slug, contentType: article.contentType },
+  });
+  revalidatePath('/admin/articles');
+  revalidatePath(`/admin/articles/${id}`);
+  revalidatePath('/help');
+  revalidatePath(`/help/${article.productCode}`);
+  revalidatePath(
+    `/help/${article.productCode}/${article.contentType}/${article.slug}`,
+  );
+  return { ok: true, warnings: allWarnings };
+}
+
+/** v1.1 — 명시적 비공개 액션. */
+export async function unpublishArticleAction(
+  id: string,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const article = await getArticleById(id);
+  if (!article) return { ok: false, message: '아티클을 찾을 수 없습니다' };
+  const result = await unpublishArticleById(id, user.id);
+  if (!result.ok) return result;
+  logActivity({
+    userId: user.id,
+    action: 'article.unpublish',
+    targetType: 'article',
+    targetId: id,
+    payload: { slug: article.slug },
+  });
+  revalidatePath('/admin/articles');
+  revalidatePath(`/admin/articles/${id}`);
+  revalidatePath('/help');
+  revalidatePath(
+    `/help/${article.productCode}/${article.contentType}/${article.slug}`,
+  );
+  return { ok: true };
 }
 
 export async function archiveArticleAction(

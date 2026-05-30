@@ -16,10 +16,12 @@ import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import {
   articles,
+  businessHolidays,
+  businessHoursDefault,
   categories,
   checklistSteps,
   checklists,
@@ -33,6 +35,7 @@ import {
   serviceStatus,
   solutionLinkPresets,
   systemSettings,
+  menuTaxonomies,
   termGroups,
   termSynonyms,
   ticketChannels,
@@ -420,13 +423,17 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
     const toc = extractTocLocal(a.bodyMarkdown);
     const row: NewArticle = {
       productCode: a.productCode,
+      contentType: 'howto', // 시드는 일단 howto. Do-11에서 content_type별 샘플 3개 추가 예정
+      status: 'published',
       categoryPath: a.categoryPath,
       slug: a.slug,
       title: a.title,
+      summary: a.summary30s,
       summary30s: a.summary30s,
       bodyMarkdown: a.bodyMarkdown,
       toc,
       authorId,
+      lastEditorId: authorId,
       publishedAt: new Date(),
     };
     await db.insert(articles).values(row);
@@ -2192,6 +2199,260 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
   }
   console.log(
     `[seed] term_groups: ${tgCreated}건 신규 / ${tgSkipped}건 스킵, term_synonyms: ${tsCreated}건 INSERT 시도`,
+  );
+
+  // ───────────────────────────────────────────────────────────────
+  // 메뉴 구조 마스터 시드 (아티클 menu_path 정본)
+  // 6개 제품 × 평균 2~3 루트 × 평균 3~4 자식 ≈ 50~60개 노드
+  // 멱등성: (product_code, parent_id, label) 유니크 인덱스에 onConflictDoNothing
+  // ───────────────────────────────────────────────────────────────
+
+  type MenuSeedNode = {
+    label: string;
+    description?: string;
+    children?: MenuSeedNode[];
+  };
+  type MenuSeedProduct = {
+    productCode: string;
+    roots: MenuSeedNode[];
+  };
+
+  const seedMenu: MenuSeedProduct[] = [
+    {
+      productCode: 'pms',
+      roots: [
+        {
+          label: '예약 관리',
+          description: '예약 등록/수정/취소/단체 예약 등 예약 운영',
+          children: [
+            { label: '예약 등록' },
+            { label: '예약 현황' },
+            { label: '상태값 사전' },
+            { label: '채널 연동' },
+          ],
+        },
+        {
+          label: '객실 관리',
+          children: [
+            { label: '객실 등록' },
+            { label: '객실 요금' },
+            { label: '청소 상태' },
+          ],
+        },
+        {
+          label: '매출 / 정산',
+          children: [{ label: '일별 매출' }, { label: '정산 내역' }],
+        },
+      ],
+    },
+    {
+      productCode: 'cms',
+      roots: [
+        {
+          label: '채널 관리',
+          children: [{ label: '채널 연결' }, { label: '채널 매핑' }],
+        },
+        {
+          label: '객실 동기화',
+          children: [{ label: '동기화 설정' }, { label: '오류 로그' }],
+        },
+      ],
+    },
+    {
+      productCode: 'keyless',
+      roots: [
+        {
+          label: '키 발급',
+          children: [{ label: '모바일 키 발급' }, { label: '카드 키 발급' }],
+        },
+        {
+          label: '도어락 관리',
+          children: [{ label: '도어락 등록' }, { label: '원격 제어' }],
+        },
+      ],
+    },
+    {
+      productCode: 'kiosk',
+      roots: [
+        {
+          label: '설치 / 설정',
+          children: [{ label: '기기 설치' }, { label: '네트워크 설정' }],
+        },
+        {
+          label: '결제',
+          children: [{ label: '결제 설정' }, { label: '영수증 출력' }],
+        },
+      ],
+    },
+    {
+      productCode: 'web',
+      roots: [
+        {
+          label: '사이트 관리',
+          children: [{ label: '홈 편집' }, { label: '메뉴 편집' }],
+        },
+        {
+          label: '부킹 엔진',
+          children: [{ label: '상품 등록' }, { label: '가격 설정' }],
+        },
+      ],
+    },
+    {
+      productCode: 'config',
+      roots: [
+        {
+          label: '계정',
+          children: [{ label: '비밀번호 변경' }, { label: '권한 설정' }],
+        },
+        {
+          label: '시스템',
+          children: [{ label: '백업' }, { label: '활동 로그' }],
+        },
+      ],
+    },
+  ];
+
+  let menuCreated = 0;
+  let menuSkipped = 0;
+  for (const product of seedMenu) {
+    let rootOrder = 100;
+    for (const root of product.roots) {
+      const existingRoot = await db
+        .select({ id: menuTaxonomies.id })
+        .from(menuTaxonomies)
+        .where(
+          sql`${menuTaxonomies.productCode} = ${product.productCode} AND ${menuTaxonomies.parentId} IS NULL AND ${menuTaxonomies.label} = ${root.label}`,
+        )
+        .limit(1);
+
+      let rootId: string;
+      if (existingRoot.length > 0) {
+        menuSkipped++;
+        rootId = existingRoot[0]!.id;
+      } else {
+        const [inserted] = await db
+          .insert(menuTaxonomies)
+          .values({
+            productCode: product.productCode,
+            parentId: null,
+            label: root.label,
+            description: root.description ?? null,
+            sortOrder: rootOrder,
+          })
+          .returning({ id: menuTaxonomies.id });
+        rootId = inserted!.id;
+        menuCreated++;
+      }
+      rootOrder += 100;
+
+      let childOrder = 100;
+      for (const child of root.children ?? []) {
+        const existingChild = await db
+          .select({ id: menuTaxonomies.id })
+          .from(menuTaxonomies)
+          .where(
+            sql`${menuTaxonomies.productCode} = ${product.productCode} AND ${menuTaxonomies.parentId} = ${rootId} AND ${menuTaxonomies.label} = ${child.label}`,
+          )
+          .limit(1);
+        if (existingChild.length > 0) {
+          menuSkipped++;
+        } else {
+          await db.insert(menuTaxonomies).values({
+            productCode: product.productCode,
+            parentId: rootId,
+            label: child.label,
+            description: child.description ?? null,
+            sortOrder: childOrder,
+          });
+          menuCreated++;
+        }
+        childOrder += 100;
+      }
+    }
+  }
+  console.log(
+    `[seed] menu_taxonomies: ${menuCreated}건 신규 / ${menuSkipped}건 스킵`,
+  );
+
+  // ─── N. 운영시간 마스터 (P1 선행 — 호텔리어 컨택 패널 의존) ──────
+  console.log('[seed] business_hours_default 확인...');
+  const existingBhd = await db
+    .select({ id: businessHoursDefault.id })
+    .from(businessHoursDefault)
+    .where(eq(businessHoursDefault.isActive, true))
+    .limit(1);
+
+  if (existingBhd.length === 0) {
+    await db.insert(businessHoursDefault).values({
+      weekdayOpen: '10:00',
+      weekdayClose: '18:40',
+      lunchStart: '12:00',
+      lunchEnd: '13:00',
+      intakeDeadline: '18:00',
+      saturdayClosed: true,
+      sundayClosed: true,
+      holidaysClosed: true,
+      emergencyPhone: '070-8028-0919',
+      emergencyNote: '영업시간 외 긴급전화 (단순 금액 정정 불가)',
+      timezone: 'Asia/Seoul',
+    });
+    console.log('[seed] business_hours_default: 1건 신규');
+  } else {
+    console.log('[seed] business_hours_default: 이미 존재, 스킵');
+  }
+
+  // ─── N+1. 공휴일 마스터 (2026년 19종 = 양력 8 + 음력 7 + 대체 4) ──
+  const HOLIDAYS_2026: {
+    date: string;
+    name: string;
+    isRecurring: boolean;
+  }[] = [
+    // 양력 — is_recurring=true (UI에서 "내년 복제" 대상 표시)
+    { date: '2026-01-01', name: '신정', isRecurring: true },
+    { date: '2026-03-01', name: '삼일절', isRecurring: true },
+    { date: '2026-05-05', name: '어린이날', isRecurring: true },
+    { date: '2026-06-06', name: '현충일', isRecurring: true },
+    { date: '2026-08-15', name: '광복절', isRecurring: true },
+    { date: '2026-10-03', name: '개천절', isRecurring: true },
+    { date: '2026-10-09', name: '한글날', isRecurring: true },
+    { date: '2026-12-25', name: '성탄절', isRecurring: true },
+    // 음력 — 2026년 천문연 기준 (매년 수동 등록 필요)
+    { date: '2026-02-16', name: '설날 연휴', isRecurring: false },
+    { date: '2026-02-17', name: '설날', isRecurring: false },
+    { date: '2026-02-18', name: '설날 연휴', isRecurring: false },
+    { date: '2026-05-24', name: '부처님오신날', isRecurring: false },
+    { date: '2026-09-24', name: '추석 연휴', isRecurring: false },
+    { date: '2026-09-25', name: '추석', isRecurring: false },
+    { date: '2026-09-26', name: '추석 연휴', isRecurring: false },
+    // 대체공휴일 — 2026 한정 (현충일·금요일 한글날·성탄절은 대체 대상 아님)
+    { date: '2026-03-02', name: '삼일절 대체공휴일', isRecurring: false },
+    { date: '2026-05-25', name: '부처님오신날 대체공휴일', isRecurring: false },
+    { date: '2026-08-17', name: '광복절 대체공휴일', isRecurring: false },
+    { date: '2026-10-05', name: '개천절 대체공휴일', isRecurring: false },
+  ];
+
+  console.log(
+    `[seed] business_holidays 확인 ${HOLIDAYS_2026.length}건...`,
+  );
+  let bhCreated = 0;
+  let bhSkipped = 0;
+  for (const h of HOLIDAYS_2026) {
+    const existing = await db
+      .select({ id: businessHolidays.id })
+      .from(businessHolidays)
+      .where(
+        sql`${businessHolidays.date} = ${h.date} AND ${businessHolidays.isActive} = true`,
+      )
+      .limit(1);
+    if (existing.length === 0) {
+      await db.insert(businessHolidays).values(h);
+      bhCreated++;
+    } else {
+      bhSkipped++;
+    }
+  }
+  console.log(
+    `[seed] business_holidays: ${bhCreated}건 신규 / ${bhSkipped}건 스킵`,
   );
 
   console.log('\n[seed] ✅ 완료. 로그인 계정:');

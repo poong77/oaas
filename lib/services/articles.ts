@@ -30,9 +30,13 @@ import {
   articles,
   users,
   type Article,
+  type ArticleContentType,
+  type ArticleStatus,
+  type ArticleAppliesTo,
   type NewArticle,
   type TocEntry,
 } from '@/db/schema';
+import { extractToc as extractTocV2 } from '@/lib/articles/toc-extractor';
 
 // ─────────────────────────────────────────────────────────────────────
 // 타입
@@ -43,9 +47,13 @@ export type ArticleListItem = Pick<
   | 'id'
   | 'slug'
   | 'title'
+  | 'summary'
   | 'summary30s'
   | 'productCode'
+  | 'contentType'
+  | 'status'
   | 'categoryPath'
+  | 'keywords'
   | 'publishedAt'
   | 'viewCount'
   | 'helpfulYes'
@@ -54,6 +62,7 @@ export type ArticleListItem = Pick<
   | 'updatedAt'
   | 'createdAt'
   | 'authorId'
+  | 'lastEditorId'
 >;
 
 export type ListArticlesParams = {
@@ -62,6 +71,10 @@ export type ListArticlesParams = {
   isActive?: boolean | 'all';
   /** true: 발행만, false: draft만, undefined: 모두 */
   publishedOnly?: boolean;
+  /** v1.1 — content_type 필터 */
+  contentType?: ArticleContentType;
+  /** v1.1 — status 필터 (publishedOnly와 중복 시 status 우선) */
+  status?: ArticleStatus;
   sortBy?: 'published_at' | 'view_count' | 'helpful' | 'updated_at';
   sortOrder?: 'asc' | 'desc';
   page?: number;
@@ -74,6 +87,33 @@ export type ListArticlesResult = {
   page: number;
   pageSize: number;
 };
+
+// ─────────────────────────────────────────────────────────────────────
+// 헬퍼
+// ─────────────────────────────────────────────────────────────────────
+
+/** ArticleListItem과 매칭되는 select 객체 (5개 list 함수에서 재사용). */
+const ARTICLE_LIST_SELECT = {
+  id: articles.id,
+  slug: articles.slug,
+  title: articles.title,
+  summary: articles.summary,
+  summary30s: articles.summary30s,
+  productCode: articles.productCode,
+  contentType: articles.contentType,
+  status: articles.status,
+  categoryPath: articles.categoryPath,
+  keywords: articles.keywords,
+  publishedAt: articles.publishedAt,
+  viewCount: articles.viewCount,
+  helpfulYes: articles.helpfulYes,
+  helpfulNo: articles.helpfulNo,
+  isActive: articles.isActive,
+  updatedAt: articles.updatedAt,
+  createdAt: articles.createdAt,
+  authorId: articles.authorId,
+  lastEditorId: articles.lastEditorId,
+} as const;
 
 // ─────────────────────────────────────────────────────────────────────
 // 조회
@@ -97,15 +137,21 @@ export async function listArticles(
   if (params.productCode) {
     conditions.push(eq(articles.productCode, params.productCode));
   }
-  if (params.publishedOnly === true) {
-    conditions.push(isNotNull(articles.publishedAt));
+  if (params.status) {
+    conditions.push(eq(articles.status, params.status));
+  } else if (params.publishedOnly === true) {
+    conditions.push(eq(articles.status, 'published'));
   } else if (params.publishedOnly === false) {
-    conditions.push(sql`${articles.publishedAt} IS NULL`);
+    conditions.push(eq(articles.status, 'draft'));
+  }
+  if (params.contentType) {
+    conditions.push(eq(articles.contentType, params.contentType));
   }
   if (params.q && params.q.trim()) {
     const pattern = `%${params.q.trim()}%`;
     const search = or(
       ilike(articles.title, pattern),
+      ilike(articles.summary, pattern),
       ilike(articles.summary30s, pattern),
       ilike(articles.bodyMarkdown, pattern),
     );
@@ -138,9 +184,13 @@ export async function listArticles(
         id: articles.id,
         slug: articles.slug,
         title: articles.title,
+        summary: articles.summary,
         summary30s: articles.summary30s,
         productCode: articles.productCode,
+        contentType: articles.contentType,
+        status: articles.status,
         categoryPath: articles.categoryPath,
+        keywords: articles.keywords,
         publishedAt: articles.publishedAt,
         viewCount: articles.viewCount,
         helpfulYes: articles.helpfulYes,
@@ -149,6 +199,7 @@ export async function listArticles(
         updatedAt: articles.updatedAt,
         createdAt: articles.createdAt,
         authorId: articles.authorId,
+        lastEditorId: articles.lastEditorId,
       })
       .from(articles)
       .where(whereExpr)
@@ -205,9 +256,13 @@ export async function listPopularArticles(
         id: articles.id,
         slug: articles.slug,
         title: articles.title,
+        summary: articles.summary,
         summary30s: articles.summary30s,
         productCode: articles.productCode,
+        contentType: articles.contentType,
+        status: articles.status,
         categoryPath: articles.categoryPath,
+        keywords: articles.keywords,
         publishedAt: articles.publishedAt,
         viewCount: articles.viewCount,
         helpfulYes: articles.helpfulYes,
@@ -216,6 +271,7 @@ export async function listPopularArticles(
         updatedAt: articles.updatedAt,
         createdAt: articles.createdAt,
         authorId: articles.authorId,
+        lastEditorId: articles.lastEditorId,
       })
       .from(articles)
       .where(
@@ -240,9 +296,13 @@ export async function listRecentPublishedArticles(
         id: articles.id,
         slug: articles.slug,
         title: articles.title,
+        summary: articles.summary,
         summary30s: articles.summary30s,
         productCode: articles.productCode,
+        contentType: articles.contentType,
+        status: articles.status,
         categoryPath: articles.categoryPath,
+        keywords: articles.keywords,
         publishedAt: articles.publishedAt,
         viewCount: articles.viewCount,
         helpfulYes: articles.helpfulYes,
@@ -251,6 +311,7 @@ export async function listRecentPublishedArticles(
         updatedAt: articles.updatedAt,
         createdAt: articles.createdAt,
         authorId: articles.authorId,
+        lastEditorId: articles.lastEditorId,
       })
       .from(articles)
       .where(
@@ -353,9 +414,13 @@ export async function getRelatedArticles(
           id: articles.id,
           slug: articles.slug,
           title: articles.title,
+          summary: articles.summary,
           summary30s: articles.summary30s,
           productCode: articles.productCode,
+          contentType: articles.contentType,
+          status: articles.status,
           categoryPath: articles.categoryPath,
+          keywords: articles.keywords,
           publishedAt: articles.publishedAt,
           viewCount: articles.viewCount,
           helpfulYes: articles.helpfulYes,
@@ -364,6 +429,7 @@ export async function getRelatedArticles(
           updatedAt: articles.updatedAt,
           createdAt: articles.createdAt,
           authorId: articles.authorId,
+          lastEditorId: articles.lastEditorId,
         })
         .from(articles)
         .where(
@@ -382,9 +448,13 @@ export async function getRelatedArticles(
         id: articles.id,
         slug: articles.slug,
         title: articles.title,
+        summary: articles.summary,
         summary30s: articles.summary30s,
         productCode: articles.productCode,
+        contentType: articles.contentType,
+        status: articles.status,
         categoryPath: articles.categoryPath,
+        keywords: articles.keywords,
         publishedAt: articles.publishedAt,
         viewCount: articles.viewCount,
         helpfulYes: articles.helpfulYes,
@@ -393,6 +463,7 @@ export async function getRelatedArticles(
         updatedAt: articles.updatedAt,
         createdAt: articles.createdAt,
         authorId: articles.authorId,
+        lastEditorId: articles.lastEditorId,
       })
       .from(articles)
       .where(
@@ -421,7 +492,11 @@ export type SearchArticleHit = ArticleListItem & {
 
 export async function searchArticles(
   q: string,
-  options: { productCode?: string; limit?: number } = {},
+  options: {
+    productCode?: string;
+    contentType?: ArticleContentType;
+    limit?: number;
+  } = {},
 ): Promise<SearchArticleHit[]> {
   if (!db) return [];
   const query = q.trim();
@@ -429,18 +504,42 @@ export async function searchArticles(
   const pattern = `%${query}%`;
   const limit = Math.min(100, Math.max(1, options.limit ?? 50));
   try {
+    // v1.1: synonyms-master로 쿼리 확장 (Plan §6, Design §11.1)
+    const { expandKeywords } = await import(
+      '@/lib/services/synonym-expander'
+    );
+    const expanded = await expandKeywords(query, { maxTokens: 32 });
+
     const conditions: SQL[] = [
       eq(articles.isActive, true),
-      isNotNull(articles.publishedAt),
+      eq(articles.status, 'published'),
     ];
     if (options.productCode) {
       conditions.push(eq(articles.productCode, options.productCode));
     }
-    const searchCond = or(
+    if (options.contentType) {
+      conditions.push(eq(articles.contentType, options.contentType));
+    }
+
+    // 검색 조건: keywords 배열 OR + title/summary/body ILIKE OR
+    const orParts: SQL[] = [];
+    // (1) keywords 배열 매칭 (GIN: articles_keywords_gin)
+    if (expanded.length > 0) {
+      const expandedLit = sql.raw(
+        `ARRAY[${expanded.map((t) => `'${t.replace(/'/g, "''")}'`).join(',')}]::text[]`,
+      );
+      orParts.push(sql`${articles.keywords} && ${expandedLit}`);
+    }
+    // (2) ILIKE 폴백 — title/summary/body
+    const ilikeCond = or(
       ilike(articles.title, pattern),
+      ilike(articles.summary, pattern),
       ilike(articles.summary30s, pattern),
       ilike(articles.bodyMarkdown, pattern),
     );
+    if (ilikeCond) orParts.push(ilikeCond);
+
+    const searchCond = orParts.length === 1 ? orParts[0] : or(...orParts);
     if (searchCond) conditions.push(searchCond);
 
     const rows = await db
@@ -448,9 +547,13 @@ export async function searchArticles(
         id: articles.id,
         slug: articles.slug,
         title: articles.title,
+        summary: articles.summary,
         summary30s: articles.summary30s,
         productCode: articles.productCode,
+        contentType: articles.contentType,
+        status: articles.status,
         categoryPath: articles.categoryPath,
+        keywords: articles.keywords,
         publishedAt: articles.publishedAt,
         viewCount: articles.viewCount,
         helpfulYes: articles.helpfulYes,
@@ -459,6 +562,7 @@ export async function searchArticles(
         updatedAt: articles.updatedAt,
         createdAt: articles.createdAt,
         authorId: articles.authorId,
+        lastEditorId: articles.lastEditorId,
       })
       .from(articles)
       .where(and(...conditions))
@@ -644,11 +748,25 @@ async function incrementHelpfulCounter(
 
 export type ArticleWriteInput = {
   productCode: string;
+  /** v1.1 — 사용자 의도. 신규 작성/수정 모두 필수 권장. */
+  contentType?: ArticleContentType;
+  /** v1.1 — 상태. 미지정 시 draft 유지/신규 draft 생성. */
+  status?: ArticleStatus;
   categoryPath?: string[] | null;
   slug: string;
   title: string;
+  /** v1.1 — summary (summary30s 대체, Q-13). 둘 다 지정 시 summary 우선. */
+  summary?: string | null;
+  /** deprecated — Q-13에 의해 summary로 통합. 호환 유지. */
   summary30s?: string | null;
+  /** v1.1 — synonyms-master 결합 검색용. */
+  keywords?: string[] | null;
+  /** v1.1 — 적용 범위 (Plan Q-12). null = 전체. */
+  appliesTo?: ArticleAppliesTo | null;
   bodyMarkdown: string;
+  /** v1.1 — slug 기반 안정 참조 (Q-14). */
+  relatedSlugs?: string[] | null;
+  /** deprecated — Q-14에 의해 relatedSlugs로 전환. 호환 유지. */
   relatedArticleIds?: string[] | null;
   publish?: boolean;
 };
@@ -678,19 +796,30 @@ export async function createArticle(
   authorId: string,
 ): Promise<{ ok: boolean; id?: string; message?: string }> {
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  if (!input.contentType) {
+    return { ok: false, message: 'CONTENT_TYPE_REQUIRED' };
+  }
   try {
-    const toc = extractToc(input.bodyMarkdown);
+    const toc = extractTocV2(input.bodyMarkdown);
+    const willPublish = input.publish === true || input.status === 'published';
     const values: NewArticle = {
       productCode: input.productCode,
+      contentType: input.contentType,
+      status: willPublish ? 'published' : 'draft',
       categoryPath: input.categoryPath ?? null,
       slug: input.slug,
       title: input.title,
+      summary: input.summary ?? null,
       summary30s: input.summary30s ?? null,
+      keywords: input.keywords ?? [],
+      appliesTo: input.appliesTo ?? null,
       bodyMarkdown: input.bodyMarkdown,
       toc,
+      relatedSlugs: input.relatedSlugs ?? [],
       relatedArticleIds: input.relatedArticleIds ?? null,
       authorId,
-      publishedAt: input.publish ? new Date() : null,
+      lastEditorId: authorId,
+      publishedAt: willPublish ? new Date() : null,
     };
     const [row] = await db.insert(articles).values(values).returning({
       id: articles.id,
@@ -709,23 +838,29 @@ export async function createArticle(
 export async function updateArticleById(
   id: string,
   input: ArticleWriteInput,
+  editorId?: string,
 ): Promise<{ ok: boolean; message?: string }> {
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
   try {
-    const toc = extractToc(input.bodyMarkdown);
-    await db
-      .update(articles)
-      .set({
-        productCode: input.productCode,
-        categoryPath: input.categoryPath ?? null,
-        slug: input.slug,
-        title: input.title,
-        summary30s: input.summary30s ?? null,
-        bodyMarkdown: input.bodyMarkdown,
-        toc,
-        relatedArticleIds: input.relatedArticleIds ?? null,
-      })
-      .where(eq(articles.id, id));
+    const toc = extractTocV2(input.bodyMarkdown);
+    const patch: Partial<NewArticle> = {
+      productCode: input.productCode,
+      categoryPath: input.categoryPath ?? null,
+      slug: input.slug,
+      title: input.title,
+      summary: input.summary ?? null,
+      summary30s: input.summary30s ?? null,
+      bodyMarkdown: input.bodyMarkdown,
+      toc,
+      relatedArticleIds: input.relatedArticleIds ?? null,
+    };
+    if (input.contentType) patch.contentType = input.contentType;
+    if (input.status) patch.status = input.status;
+    if (input.keywords) patch.keywords = input.keywords;
+    if (input.appliesTo !== undefined) patch.appliesTo = input.appliesTo;
+    if (input.relatedSlugs) patch.relatedSlugs = input.relatedSlugs;
+    if (editorId) patch.lastEditorId = editorId;
+    await db.update(articles).set(patch).where(eq(articles.id, id));
     return { ok: true };
   } catch (err) {
     console.error('[articles.updateArticleById] 실패:', err);
@@ -737,6 +872,57 @@ export async function updateArticleById(
   }
 }
 
+/** v1.1 — 명시적 발행 (status='published', publishedAt=now, toc 재추출, lastEditorId). */
+export async function publishArticleById(
+  id: string,
+  editorId: string,
+): Promise<{ ok: boolean; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    const rows = await db
+      .select({ bodyMarkdown: articles.bodyMarkdown })
+      .from(articles)
+      .where(eq(articles.id, id))
+      .limit(1);
+    if (rows.length === 0) {
+      return { ok: false, message: 'ARTICLE_NOT_FOUND' };
+    }
+    const toc = extractTocV2(rows[0]!.bodyMarkdown);
+    await db
+      .update(articles)
+      .set({
+        status: 'published',
+        publishedAt: new Date(),
+        lastEditorId: editorId,
+        toc,
+      })
+      .where(eq(articles.id, id));
+    return { ok: true };
+  } catch (err) {
+    console.error('[articles.publishArticleById] 실패:', err);
+    return { ok: false, message: 'INTERNAL_ERROR' };
+  }
+}
+
+/** v1.1 — 명시적 비공개 (status='draft', publishedAt 보존, lastEditorId). */
+export async function unpublishArticleById(
+  id: string,
+  editorId: string,
+): Promise<{ ok: boolean; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    await db
+      .update(articles)
+      .set({ status: 'draft', lastEditorId: editorId })
+      .where(eq(articles.id, id));
+    return { ok: true };
+  } catch (err) {
+    console.error('[articles.unpublishArticleById] 실패:', err);
+    return { ok: false, message: 'INTERNAL_ERROR' };
+  }
+}
+
+/** @deprecated v1.1 — publishArticleById / unpublishArticleById 사용. */
 export async function togglePublishArticleById(
   id: string,
   publish: boolean,
@@ -745,12 +931,66 @@ export async function togglePublishArticleById(
   try {
     await db
       .update(articles)
-      .set({ publishedAt: publish ? new Date() : null })
+      .set({
+        status: publish ? 'published' : 'draft',
+        publishedAt: publish ? new Date() : null,
+      })
       .where(eq(articles.id, id));
     return { ok: true };
   } catch (err) {
     console.error('[articles.togglePublishArticleById] 실패:', err);
     return { ok: false, message: 'INTERNAL_ERROR' };
+  }
+}
+
+/**
+ * v1.1 — 새 URL `/help/[product]/[content_type]/[slug]` 조회용.
+ *
+ * - slug가 전역 unique이므로 product+content_type는 검증 용도
+ * - 검증 실패 시 null 반환 (호출자가 404 또는 redirect 결정)
+ */
+export async function getArticleBySlugAndType(
+  productCode: string,
+  contentType: ArticleContentType,
+  slug: string,
+  options: { includeUnpublished?: boolean } = {},
+): Promise<ArticleDetail | null> {
+  if (!db) return null;
+  try {
+    const conditions: SQL[] = [
+      eq(articles.slug, slug),
+      eq(articles.isActive, true),
+    ];
+    if (!options.includeUnpublished) {
+      conditions.push(eq(articles.status, 'published'));
+    }
+    const rows = await db
+      .select({
+        article: articles,
+        authorName: users.name,
+        authorEmail: users.email,
+      })
+      .from(articles)
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(and(...conditions))
+      .limit(1);
+    const r = rows[0];
+    if (!r) return null;
+    // product/contentType 불일치 시 null (호출자가 redirect 결정)
+    if (
+      r.article.productCode !== productCode ||
+      r.article.contentType !== contentType
+    ) {
+      return null;
+    }
+    return {
+      ...r.article,
+      authorName: r.authorName,
+      authorEmail: r.authorEmail,
+    };
+  } catch (err) {
+    console.error('[articles.getArticleBySlugAndType] 실패:', err);
+    return null;
   }
 }
 

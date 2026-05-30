@@ -44,6 +44,7 @@ type SearchParams = Promise<{
   q?: string;
   tab?: 'help' | 'faq' | 'notice' | 'incident';
   product?: string;
+  contentType?: 'howto' | 'feature' | 'troubleshoot';
   sort?: 'relevance' | 'recent' | 'views';
 }>;
 
@@ -64,6 +65,7 @@ export default async function SearchPage({
   const tab = sp.tab ?? 'help';
   const sort = sp.sort ?? 'relevance';
   const product = sp.product || undefined;
+  const contentType = sp.contentType || undefined;
 
   const categories = await getProductCategories();
 
@@ -75,7 +77,11 @@ export default async function SearchPage({
 
   if (query) {
     [helpHits, faqHits, noticeHits, incidentRows] = await Promise.all([
-      searchArticles(query, { productCode: product, limit: 100 }),
+      searchArticles(query, {
+        productCode: product,
+        contentType,
+        limit: 100,
+      }),
       searchFaqs(query, { productCode: product, limit: 100 }),
       searchNotices(query, { productCode: product, limit: 100 }),
       fetchRecentIncidents(query),
@@ -127,7 +133,7 @@ export default async function SearchPage({
           {tab === 'help' && (
             <>
               <SearchFilters
-                initial={{ product, sort }}
+                initial={{ product, sort, contentType }}
                 categories={categories}
               />
               {sortedHelp.length === 0 ? (
@@ -176,7 +182,7 @@ export default async function SearchPage({
           {tab === 'faq' && (
             <>
               <SearchFilters
-                initial={{ product, sort }}
+                initial={{ product, sort, contentType }}
                 categories={categories}
               />
               {sortedFaq.length === 0 ? (
@@ -223,7 +229,7 @@ export default async function SearchPage({
           {tab === 'notice' && (
             <>
               <SearchFilters
-                initial={{ product, sort }}
+                initial={{ product, sort, contentType }}
                 categories={categories}
               />
               {sortedNotice.length === 0 ? (
