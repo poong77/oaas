@@ -44,15 +44,19 @@
   100% { transform: translateY(0); }
 }
 
-#contact:target [data-contact-highlight] {
+/*
+ * 트리거는 JS(ContactPanel)에서 .contact-highlight-active 클래스 토글.
+ * :target 가상클래스는 smooth scroll과 타이밍이 어긋나 실제로 보이지 않는 케이스가 잦아 JS로 일원화.
+ */
+.contact-highlight-active {
   border-radius: 0.5rem;
   animation:
-    spotlight-ring 1.5s ease-out 0.1s forwards,
-    micro-bounce 0.6s ease-out 0.15s;
+    spotlight-ring 1.8s ease-out forwards,
+    micro-bounce 0.7s ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #contact:target [data-contact-highlight] {
+  .contact-highlight-active {
     animation: none;
   }
 }

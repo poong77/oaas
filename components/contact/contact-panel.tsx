@@ -15,6 +15,7 @@
  * (P3 정리, 2026-05-30 — 이전엔 일부 하드코딩되어 있었음)
  */
 
+import { useEffect, useRef } from 'react';
 import { Calendar, Coffee, Mail, MessageCircle, Phone } from 'lucide-react';
 import { useBusinessStatus } from '@/lib/hooks/use-business-status';
 import type {
@@ -216,6 +217,52 @@ function FooterPanel({
 }) {
   const contact = status?.contact ?? extractContactFallback(hours);
   const emergencyPhone = status?.emergencyPhone ?? hours.emergencyPhone;
+  const highlightRef = useRef<HTMLDivElement>(null);
+
+  /*
+   * 운영상태 칼럼 강조 효과 트리거.
+   *   - hash가 #contact가 될 때 / 동일 hash로의 재클릭 시 모두 발동.
+   *   - smooth scroll이 도착할 즈음(~550ms)에 효과 시작 → 사용자가 도착 직후 시선 잡힘.
+   *   - .contact-highlight-active 클래스를 add/remove + reflow trick으로 매번 애니메이션 재실행.
+   */
+  useEffect(() => {
+    function fire() {
+      const el = highlightRef.current;
+      if (!el) return;
+      el.classList.remove('contact-highlight-active');
+      // 강제 reflow — 같은 클래스 재추가 시에도 animation을 다시 실행하도록.
+      void el.offsetWidth;
+      el.classList.add('contact-highlight-active');
+    }
+
+    function scheduleIfContactHash(delay = 550) {
+      if (typeof window === 'undefined') return;
+      if (window.location.hash !== '#contact') return;
+      window.setTimeout(fire, delay);
+    }
+
+    // 초기 진입 시 hash가 이미 #contact인 경우 (외부 링크 등)
+    scheduleIfContactHash(700);
+
+    function onHashChange() {
+      scheduleIfContactHash();
+    }
+    window.addEventListener('hashchange', onHashChange);
+
+    // 동일 hash 재클릭 (hashchange 이벤트 미발생) 보완 — 문서 전역 클릭 인터셉트
+    function onDocClick(e: MouseEvent) {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest('a[href="#contact"]');
+      if (anchor) scheduleIfContactHash();
+    }
+    document.addEventListener('click', onDocClick);
+
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+      document.removeEventListener('click', onDocClick);
+    };
+  }, []);
 
   return (
     <footer
@@ -223,8 +270,8 @@ function FooterPanel({
       className="scroll-mt-20 border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950"
     >
       <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
-        {/* 운영상태 — 헤더 배지 클릭 시 :target 강조 효과 적용 (globals.css) */}
-        <div className="flex flex-col gap-2" data-contact-highlight>
+        {/* 운영상태 — 헤더 배지 클릭 시 강조 효과 (.contact-highlight-active 클래스, globals.css) */}
+        <div ref={highlightRef} className="flex flex-col gap-2">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             운영 상태
           </h3>
