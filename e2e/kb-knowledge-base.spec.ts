@@ -119,8 +119,10 @@ test.describe('KB-07 /help/[product] menu_taxonomies 트리 (public)', () => {
   test('KB-07 사이드바 트리 노출 + 노드 클릭 시 URL ?path 동기화', async ({ page }) => {
     await page.goto('/help/cms');
 
-    // PageHeader 노출 확인
-    await expect(page.getByRole('heading', { name: /가이드/ })).toBeVisible();
+    // PageHeader 노출 확인 (h1만 — 아티클 카드 h3와 구분)
+    await expect(
+      page.getByRole('heading', { name: /가이드/, level: 1 }),
+    ).toBeVisible();
 
     // MenuTreeSidebar — 카테고리 헤더 + "전체" 링크
     await expect(page.getByText('카테고리').first()).toBeVisible();
