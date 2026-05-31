@@ -124,7 +124,37 @@ export default async function HelpProductPage({
 
       <ProductFilters initial={sp} productCode={current.code} />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_220px]">
+      <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+        <aside className="hidden flex-col gap-4 lg:flex">
+          {/* B1 — menu_taxonomies 트리 사이드바 (좌측) */}
+          <MenuTreeSidebar
+            productCode={current.code}
+            tree={menuTree}
+            selectedPath={selectedPath}
+            articleCountsByPath={articleCountsByPath}
+            totalCount={allInProduct.total}
+          />
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                다른 제품
+              </h3>
+              <ul className="flex flex-col gap-1.5 text-sm">
+                {others.map((o) => (
+                  <li key={o.id}>
+                    <Link
+                      href={`/help/${o.code}`}
+                      className="block rounded px-2 py-1 text-slate-600 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-300 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
+                    >
+                      {o.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </aside>
+
         <Card>
           <CardContent className="p-0">
             {items.length === 0 ? (
@@ -161,36 +191,6 @@ export default async function HelpProductPage({
             )}
           </CardContent>
         </Card>
-
-        <aside className="hidden flex-col gap-4 lg:flex">
-          {/* B1 — menu_taxonomies 트리 사이드바 */}
-          <MenuTreeSidebar
-            productCode={current.code}
-            tree={menuTree}
-            selectedPath={selectedPath}
-            articleCountsByPath={articleCountsByPath}
-            totalCount={allInProduct.total}
-          />
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
-                다른 제품
-              </h3>
-              <ul className="flex flex-col gap-1.5 text-sm">
-                {others.map((o) => (
-                  <li key={o.id}>
-                    <Link
-                      href={`/help/${o.code}`}
-                      className="block rounded px-2 py-1 text-slate-600 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-300 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
-                    >
-                      {o.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </aside>
       </div>
 
       <Card>
