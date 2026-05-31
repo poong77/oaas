@@ -159,16 +159,17 @@ export function RichEditor({
 
   const autoSaveResult = useAutoSave(autoSave, value);
 
-  // 외부에서 value가 바뀌면 에디터에 반영 (편집 도중 외부 갱신은 흔치 않음, 안전장치)
+  // 외부에서 value가 바뀌면 에디터에 반영.
+  // 주의: value는 markdown이라 editor.getHTML()로 비교하면 매번 불일치 → 매번 setContent → 커서 최하단 이동(버그).
+  //       반드시 editor.storage.markdown.getMarkdown() 으로 비교해 동일하면 skip.
   useEffect(() => {
     if (!editor) return;
     if (!mounted) return;
-    const current = editor.getHTML();
-    if (current !== value) {
-      // emitUpdate: false → 외부 동기화 시 onChange 재발화 방지
-      // Tiptap setContent는 HTML/마크다운 자동 인식 (기존 마크다운 본문 호환)
-      editor.commands.setContent(value, { emitUpdate: false });
-    }
+    const currentMd =
+      (editor.storage.markdown?.getMarkdown() as string | undefined) ??
+      editor.getHTML();
+    if (currentMd === value) return;
+    editor.commands.setContent(value, { emitUpdate: false });
   }, [editor, value, mounted]);
 
   useEffect(() => {

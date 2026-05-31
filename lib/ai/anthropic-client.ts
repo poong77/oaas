@@ -20,7 +20,12 @@ import {
 } from './prompts/article-assistant';
 import { trackCost } from './cost-tracker';
 
-const MODEL = 'claude-sonnet-4-6';
+/**
+ * 모델 ID — 환경변수 override 가능 (Vercel ANTHROPIC_MODEL).
+ * Anthropic Console에서 정확한 모델 ID 확인 후 override 권장.
+ * 폴백: claude-sonnet-4-5 (안전한 alias).
+ */
+const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-5';
 
 function getClient(): Anthropic {
   // Vercel 환경별 분리:
@@ -43,22 +48,30 @@ function getClient(): Anthropic {
  * 아티클 보조 메타데이터 추출 호출.
  *
  * @returns JSON.parse된 결과 (스키마 검증은 호출처에서 zod safeParse).
- * @throws Anthropic SDK 에러 (network, auth, rate limit 등)
+ * @throws Anthropic SDK 에러 — 에러 메시지에 모델 ID 포함하여 디버깅 용이.
  */
 export async function callClaudeAssistant(input: AiAssistInput): Promise<unknown> {
   const client = getClient();
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 1500,
-    system: [
-      {
-        type: 'text',
-        text: SYSTEM_PROMPT,
-        cache_control: { type: 'ephemeral' },
-      },
-    ],
-    messages: [{ role: 'user', content: buildUserMessage(input) }],
-  });
+  let message;
+  try {
+    message = await client.messages.create({
+      model: MODEL,
+      max_tokens: 1500,
+      system: [
+        {
+          type: 'text',
+          text: SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
+      messages: [{ role: 'user', content: buildUserMessage(input) }],
+    });
+  } catch (err) {
+    // 에러 메시지에 모델 ID와 원본 메시지 포함 (Vercel 로그에서 즉시 진단)
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[anthropic-client] 호출 실패 model="${MODEL}":`, err);
+    throw new Error(`Anthropic API 호출 실패 (model=${MODEL}): ${msg}`);
+  }
 
   trackCost({
     inputTokens: message.usage.input_tokens,
@@ -71,5 +84,15 @@ export async function callClaudeAssistant(input: AiAssistInput): Promise<unknown
   if (!block || block.type !== 'text') {
     throw new Error('AI 응답에 text block이 없습니다.');
   }
-  return JSON.parse(block.text);
+
+  // JSON.parse 실패 시 원문 일부 로깅 (디버깅용)
+  try {
+    return JSON.parse(block.text);
+  } catch (err) {
+    console.error(
+      `[anthropic-client] JSON.parse 실패 model="${MODEL}". 응답 앞 200자:`,
+      block.text.slice(0, 200),
+    );
+    throw new Error(`AI 응답 JSON 파싱 실패: ${(err as Error).message}`);
+  }
 }

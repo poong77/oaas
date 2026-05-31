@@ -229,12 +229,17 @@ export async function aiAssistArticleAction(input: {
       originalLength: truncated.original,
     };
   } catch (err) {
-    console.error('[aiAssistArticleAction] Claude 호출 실패:', err);
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error('[aiAssistArticleAction] Claude 호출 실패:', errMsg);
+    // 개발 환경 / Vercel preview에서는 실제 에러를 토스트로 노출하여 디버깅
+    const showDetail =
+      process.env.VERCEL_ENV !== 'production' || process.env.NODE_ENV !== 'production';
     return {
       ok: false,
       reason: 'api-error',
-      message:
-        'AI 보조가 일시적으로 동작하지 않아요. 수동으로 계속 작성하거나 잠시 후 다시 시도해주세요.',
+      message: showDetail
+        ? `AI 보조 실패: ${errMsg.slice(0, 200)}`
+        : 'AI 보조가 일시적으로 동작하지 않아요. 수동으로 계속 작성하거나 잠시 후 다시 시도해주세요.',
     };
   }
 }
