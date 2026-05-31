@@ -44,8 +44,8 @@ export function ImageAnnotator({ file, onComplete, onCancel }: ImageAnnotatorPro
   // 도구 상태
   const [tool, setTool] = useState<Tool>('arrow');
   const [color, setColor] = useState<AnnotationColor>('red');
-  const [frame, setFrame] = useState<FrameStyle>('none');
-  const [bgColor, setBgColor] = useState<BgColor>('sky');
+  const [frame, setFrame] = useState<FrameStyle>('browser');
+  const [bgColor, setBgColor] = useState<BgColor>('sunset');
   const [shapes, setShapes] = useState<AnnotationShape[]>([]);
   const [history, setHistory] = useState<AnnotationShape[][]>([[]]);
   const [historyIdx, setHistoryIdx] = useState(0);
