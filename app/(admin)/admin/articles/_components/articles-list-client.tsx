@@ -125,6 +125,7 @@ export function ArticlesListClient({
           <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
             <tr>
               <th className="px-3 py-2 text-left">제목 / 제품</th>
+              <th className="px-3 py-2 text-left">의도</th>
               <th className="px-3 py-2 text-left">상태</th>
               <th className="px-3 py-2 text-right">조회</th>
               <th className="px-3 py-2 text-right">도움됨</th>
@@ -140,17 +141,23 @@ export function ArticlesListClient({
                     <Badge tone="brand" className="uppercase">
                       {productLabel(a.productCode)}
                     </Badge>
-                    {a.contentType && CONTENT_TYPE_META[a.contentType] && (
-                      <Badge tone={CONTENT_TYPE_META[a.contentType].tone}>
-                        {CONTENT_TYPE_META[a.contentType].label}
+                    {a.categoryPath?.map((label, i) => (
+                      <Badge key={`${label}-${i}`} tone="slate">
+                        {label}
                       </Badge>
-                    )}
-                    {a.categoryPath?.[0] && (
-                      <Badge tone="slate">{a.categoryPath[0]}</Badge>
-                    )}
+                    ))}
                   </div>
                   <div className="mt-1 font-medium">{a.title}</div>
                   <div className="text-xs text-slate-500">/{a.slug}</div>
+                </td>
+                <td className="px-3 py-2">
+                  {a.contentType && CONTENT_TYPE_META[a.contentType] ? (
+                    <Badge tone={CONTENT_TYPE_META[a.contentType].tone}>
+                      {CONTENT_TYPE_META[a.contentType].label}
+                    </Badge>
+                  ) : (
+                    <span className="text-xs text-slate-400">-</span>
+                  )}
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex flex-wrap items-center gap-1">
@@ -254,6 +261,11 @@ export function ArticlesListClient({
               <Badge tone="brand" className="uppercase">
                 {productLabel(a.productCode)}
               </Badge>
+              {a.categoryPath?.map((label, i) => (
+                <Badge key={`${label}-${i}`} tone="slate">
+                  {label}
+                </Badge>
+              ))}
               {a.contentType && CONTENT_TYPE_META[a.contentType] && (
                 <Badge tone={CONTENT_TYPE_META[a.contentType].tone}>
                   {CONTENT_TYPE_META[a.contentType].label}
