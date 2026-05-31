@@ -17,6 +17,8 @@
 | **content_type 카드** | 호버 시 골격 미리보기 (popover) |
 | **덮어쓰기** | 기존 본문 존재 시 `ConfirmDialog`로 의도 확인 |
 | **월 예산** | $50 (Sonnet 4.6 기준 약 5,000회) |
+| **Stream B (v1.1 추가)** | B1 `/help/[product]` menu_taxonomies 트리 사이드바 · B2 `/role/[key]` role_starters DB 연동 + 어드민 매핑 UI |
+| **신규/변경 파일 합계** | **29개** (신규 21, 변경 8) — Drizzle 변경 0 |
 
 ### 4-Perspective Value
 
@@ -154,6 +156,24 @@ tests/e2e/
     kb-04-ai-assist-apply.spec.ts      [NEW]   AI 보조 적용 → 메타 일괄 채움
     kb-05-manual-fallback.spec.ts      [NEW]   AI 거부 → 수동 입력
     kb-06-api-degradation.spec.ts      [NEW]   Anthropic 모의 장애 시 fallback
+    kb-07-help-menu-tree.spec.ts       [NEW]   B1: /help/[product] 사이드바 트리 → 아티클 도달
+    kb-08-role-starter.spec.ts         [NEW]   B2: /role/[key] 매핑된 아티클 노출 + 어드민 매핑 UI 편집
+
+# Stream B 추가
+lib/services/
+  role-starters.ts                     [NEW]   getRoleStarterWithArticles(roleKey), updateRoleStarterArticleIds
+
+app/
+  actions/
+    role-starter-actions.ts            [EDIT]  getRoleStarterWithArticlesAction, updateRoleStarterArticleIdsAction
+  help/[product]/
+    _components/
+      menu-tree-sidebar.tsx            [NEW]   menu_taxonomies 트리 사이드바 (펼침/접힘 + URL 동기)
+    page.tsx                           [EDIT]  사이드바 영역을 MenuTreeSidebar로 교체
+  role/[key]/page.tsx                  [REWRITE] 정적 ROLE_STARTERS → DB 기반
+  (admin)/admin/master/role-starters/
+    _components/
+      role-starter-mapping-form.tsx    [EDIT]   articleIds 검색 자동완성 + 드래그 정렬
 ```
 
 [CTO] 전체 변경 파일 약 22개. 신규 17개 + 변경 5개. Drizzle migration 0건.
@@ -852,6 +872,232 @@ export function trackCost(usage: { inputTokens: number; outputTokens: number; ca
 
 ---
 
+## 15. Stream B 세부 설계 (v1.1)
+
+### 15-1. B1 — `/help/[product]` 메뉴 트리 사이드바
+
+#### 15-1-1. 데이터 흐름
+
+```
+[Server (page.tsx)]
+  ├─ getMenuTaxonomyTree(productCode)   ← Phase 1에서 추가됨, 재사용
+  └─ listArticles({ productCode, categoryPath?, q?, publishedOnly: true, ...sp })
+
+[Client (menu-tree-sidebar.tsx)]
+  - 트리 노드 클릭 → router.push(`/help/${product}?path=${encodedPath}`)
+  - URL ?path= 변경 → server 가 listArticles의 categoryPath 필터로 사용
+  - 펼침 상태는 sessionStorage에 저장 (`help-tree-expand-${product}`)
+```
+
+#### 15-1-2. 컴포넌트 props
+
+```ts
+// app/help/[product]/_components/menu-tree-sidebar.tsx
+export interface MenuTreeSidebarProps {
+  productCode: string;
+  tree: MenuTreeNode[];                       // server에서 fetch
+  selectedPath?: string[];                    // URL ?path=
+  articleCountsByPath: Record<string, number>;// path string → count
+}
+
+type MenuTreeNode = {
+  id: string;
+  label: string;
+  parentId: string | null;
+  children: MenuTreeNode[];
+};
+```
+
+#### 15-1-3. UI 디자인
+
+```
+┌─ MenuTreeSidebar ──────────────┐
+│ 카테고리 (전체 47건)           │
+│ ▾ 예약 관리 (12)               │
+│    예약 등록 (5) ◀ selected    │  ← bg-brand-50, font-semibold
+│    예약 수정 (4)               │
+│    예약 취소 (3)               │
+│ ▸ 객실 관리 (8)                │
+│ ▾ 결제 (15)                    │
+│    카드결제 (10)               │
+│    포인트 결제 (5)             │
+│ ▸ 정산 (7)                     │
+│ ▸ 보고서 (5)                   │
+└────────────────────────────────┘
+```
+
+[UI] selected는 background + left-border 2px brand-500. hover는 bg-slate-50.
+
+#### 15-1-4. 카테고리 카운트 계산
+
+```ts
+// app/help/[product]/page.tsx 내부
+const allArticles = await listArticles({ productCode, publishedOnly: true, pageSize: 1000 });
+const articleCountsByPath: Record<string, number> = {};
+for (const a of allArticles.items) {
+  if (!a.categoryPath) continue;
+  // 누적 카운트: ['예약 관리', '예약 등록'] → '예약 관리' +1, '예약 관리/예약 등록' +1
+  for (let i = 1; i <= a.categoryPath.length; i++) {
+    const key = a.categoryPath.slice(0, i).join('/');
+    articleCountsByPath[key] = (articleCountsByPath[key] ?? 0) + 1;
+  }
+}
+```
+
+[CTO] 1000건 미만은 메모리 카운트 빠름. 1000건 초과 시 SQL `GROUP BY` 쿼리로 전환.
+
+### 15-2. B2 — `/role/[key]` 마스터 DB 연동
+
+#### 15-2-1. 데이터 흐름
+
+```
+[Server (role/[key]/page.tsx — REWRITE)]
+  ├─ getRoleStarterWithArticles(key)
+  │    └─ SELECT role_starters.*, ARRAY(... articles WHERE id = ANY(articleIds))
+  │       발행된 아티클만, articleIds 순서 유지
+  └─ Hero (label + description + icon) + Article Card Grid
+
+[Admin (admin/master/role-starters)]
+  ├─ 기존 마스터 페이지에 articleIds 매핑 폼 추가
+  ├─ RelatedArticleAutocomplete 재사용 (Phase 2 결과)
+  └─ DnD 정렬 (dnd-kit 또는 기존 자체 솔루션)
+```
+
+#### 15-2-2. server action 시그니처
+
+```ts
+// app/actions/role-starter-actions.ts (편집)
+export async function getRoleStarterWithArticlesAction(roleKey: string): Promise<{
+  starter: { id: string; roleKey: string; label: string; description: string; icon: string };
+  articles: Array<{ id: string; slug: string; title: string; summary: string; productCode: string }>;
+} | null> {
+  // public 접근 — 인증 불필요 (호텔리어 누구나 열람)
+  return getRoleStarterWithArticles(roleKey);
+}
+
+export async function updateRoleStarterArticleIdsAction(roleKey: string, articleIds: string[]): Promise<{ ok: true } | { ok: false; message: string }> {
+  await requireRole(['admin']);
+  // articleIds: 발행된 아티클만 허용 검증
+  return updateRoleStarterArticleIds(roleKey, articleIds);
+}
+```
+
+#### 15-2-3. UI 디자인 — `/role/[key]` 페이지
+
+```
+┌─ Hero ────────────────────────────────────────────┐
+│ 🛎️  프론트 시작하기                                │
+│    체크인·체크아웃·키 발급 등 프론트 데스크 업무   │
+└───────────────────────────────────────────────────┘
+
+┌─ Article Cards (순서대로) ────────────────────────┐
+│ ① ┌────────────────────────────────────────────┐ │
+│   │ PMS · howto                                 │ │
+│   │ 호텔 PMS 첫 로그인부터 대시보드 익히기      │ │
+│   │ 호텔 PMS에 처음 로그인 후 메뉴 구조와...    │ │
+│   │ ⏱ 약 8분 · 📂 PMS > 시작하기              │ │
+│   └────────────────────────────────────────────┘ │
+│ ② ┌────────────────────────────────────────────┐ │
+│   │ PMS · howto                                 │ │
+│   │ 체크인 등록 — 일반 예약 케이스               │ │
+│   │ ...                                          │ │
+│   └────────────────────────────────────────────┘ │
+│ ③ ...                                            │
+└──────────────────────────────────────────────────┘
+
+┌─ 다른 역할도 살펴보기 ───────────────────────────┐
+│ [예약·판매] [하우스키핑] [관리자] [신규 오픈]    │
+└──────────────────────────────────────────────────┘
+```
+
+[UI] 카드 순서는 articleIds 배열 그대로. 번호 ①②③는 ::before 가상요소로.
+
+#### 15-2-4. 어드민 매핑 UI
+
+```
+┌─ master/role-starters / [role-key 편집] ──────────┐
+│ 역할 정보                                          │
+│  ┌─ label: "프론트"                              │
+│  │  description: "체크인·체크아웃·키 발급..."     │
+│  │  icon: BellRing  [Lucide picker]              │
+│  └───────────────────────────────────────────────┘
+│                                                    │
+│ 추천 가이드 (드래그 정렬, articleIds)              │
+│  ① PMS · 호텔 PMS 첫 로그인 (slug: pms-first-...) │
+│      [↑] [↓] [✕]                                  │
+│  ② PMS · 체크인 등록 — 일반 예약 (slug: pms-ci...)│
+│      [↑] [↓] [✕]                                  │
+│  ③ Keyless · 키 발급 (slug: keyless-issue-key)    │
+│      [↑] [↓] [✕]                                  │
+│                                                    │
+│ 가이드 추가                                        │
+│  [🔍 아티클 검색...] ← RelatedArticleAutocomplete  │
+│                                                    │
+│ [저장]                                             │
+└────────────────────────────────────────────────────┘
+```
+
+[CS] role_starters 매핑은 운영팀이 분기마다 재검토. 트래픽/만족도 기반 교체. 본 사이클은 편집 UI만 제공하고 분석 대시보드는 v2.
+
+### 15-3. e2e 시나리오 추가
+
+#### KB-07 — /help 메뉴 트리
+
+```ts
+test('/help/cms 사이드바 트리에서 모든 카테고리 도달', async ({ page }) => {
+  await page.goto('/help/cms');
+  // 트리에 4개 1단계 노드 노출 (master 시드 기준)
+  await expect(page.getByTestId('menu-tree-node-l1')).toHaveCount(4);
+
+  // 1단계 노드 펼치기
+  await page.getByText('콘텐츠 관리').click();
+  await expect(page.getByTestId('menu-tree-node-l2')).toBeVisible();
+
+  // 2단계 노드 클릭 → 필터 적용
+  await page.getByText('블로그 작성').click();
+  await expect(page).toHaveURL(/path=콘텐츠\+관리\/블로그\+작성/);
+  await expect(page.getByTestId('article-card')).toHaveCount.toBeGreaterThan(0);
+
+  // sessionStorage 펼침 상태 유지 확인
+  await page.reload();
+  await expect(page.getByTestId('menu-tree-node-l2')).toBeVisible();
+});
+```
+
+#### KB-08 — /role/front 마스터 연동
+
+```ts
+test('/role/front 매핑된 아티클이 순서대로 노출', async ({ page }) => {
+  // 사전 조건: master/role-starters/front 에 3개 articleId 매핑된 상태 (seed)
+  await page.goto('/role/front');
+  const cards = page.getByTestId('role-article-card');
+  await expect(cards).toHaveCount(3);
+  // 첫 카드 = articleIds[0] 의 title 노출
+  await expect(cards.nth(0).getByRole('heading')).toContainText('호텔 PMS 첫 로그인');
+
+  // 어드민에서 articleIds 순서 변경
+  await loginAs(page, 'admin');
+  await page.goto('/admin/master/role-starters/front');
+  await page.getByTestId('role-article-row').nth(0).getByRole('button', { name: '↓' }).click();
+  await page.getByRole('button', { name: '저장' }).click();
+
+  // 다시 /role/front 방문 → 순서 변경 반영
+  await page.goto('/role/front');
+  await expect(page.getByTestId('role-article-card').nth(0).getByRole('heading')).not.toContainText('호텔 PMS 첫 로그인');
+});
+```
+
+### 15-4. 마이그레이션 (B2)
+
+- 기존 `_constants.ts`의 정적 `ROLE_STARTERS` 5개는 seed script로 DB에 삽입 후 코드에서 제거
+- `articleIds` 초기값은 비어있음 (`[]`) — 운영팀이 매핑 UI로 채워야 노출
+- `/role/[key]` 페이지는 매핑이 빈 상태에서도 동작 (EmptyState로 "아직 매핑된 가이드가 없어요" + "전체 가이드 보기" 버튼)
+
+[AS] seed script는 `scripts/seed-role-starters.ts` 로 작성. 한 번만 실행 (idempotent).
+
+---
+
 ## 변경 이력
 
-- 2026-05-31: 초안 작성 (Open Q 추천안 반영)
+- 2026-05-31 v1.0: 초안 작성 (Open Q 추천안 반영, Stream A만)
+- 2026-05-31 v1.1: **Stream B 세부 설계 추가** (§15). B1 `/help/[product]` 트리 사이드바, B2 `/role/[key]` 마스터 DB + 어드민 매핑 UI. e2e KB-07, KB-08. 신규/변경 파일 22 → 29.

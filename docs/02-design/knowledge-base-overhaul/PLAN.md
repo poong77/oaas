@@ -12,8 +12,8 @@
 |---|---|
 | **Feature** | knowledge-base-overhaul (Stream A MVP) |
 | **Goal** | 아티클 작성 자동화 (A1~A5) + 콘텐츠 품질 3대 목표 (1의도/빠른인식/챗봇KB) 달성 |
-| **MVP Scope** | A1 본문 템플릿 · A2 메뉴 캐스케이드 · A3 키워드 자동완성 · A4 관련문서 자동추천 · A5 Claude 보조 |
-| **Out-of-Scope (v2)** | Stream B (/help, /role 마스터 반영) · Stream C (챗봇 KB 인덱싱·자기완결 errors 승격) |
+| **MVP Scope** | A1 본문 템플릿 · A2 메뉴 캐스케이드 · A3 키워드 자동완성 · A4 관련문서 자동추천 · A5 Claude 보조 · **B1 /help 메뉴 트리** · **B2 /role 마스터 DB 연동** |
+| **Out-of-Scope (v2)** | Stream C (챗봇 KB 인덱싱·자기완결 errors 승격) — A5에서 chatbot_meta 추출은 하되 영속화는 v2에서 |
 | **예상 기간** | 3주 (Phase 1 ~ 3) · 5인 팀 병렬 진행 시 단축 가능 |
 | **핵심 의존성** | Anthropic Claude API · 기존 마스터 (menu_taxonomies/term_synonyms/articles) · Tiptap RichEditor |
 | **성공 지표** | 아티클 1건 평균 작성 시간 ↓ 60% / 발행 차단(errors) 비율 ↓ 80% / 챗봇 KB 메타 100% 자동 생성 |
@@ -144,9 +144,12 @@
 
 ## 3. Scope
 
-### 3-1. In-Scope (MVP)
+### 3-1. In-Scope (MVP, v1.1 — Stream B 포함)
 
-- **에디터 측**: `app/(admin)/admin/articles/_components/article-editor.tsx` 전면 리팩토링 (519줄 단일 → 모듈 분리)
+- **공개 페이지 측 (Stream B)**:
+  - **B1** `/help/[product]` 사이드바를 `menu_taxonomies` 트리로 교체 + 드릴다운 navigation
+  - **B2** `/role/[key]` 페이지를 `role_starters` DB + 매핑된 articleIds 기반으로 전환, 어드민 마스터에서 매핑 UI 제공
+- **에디터 측 (Stream A)**: `app/(admin)/admin/articles/_components/article-editor.tsx` 전면 리팩토링 (519줄 단일 → 모듈 분리)
 - **신규 라이브러리**:
   - `lib/articles/templates.ts` (content_type별 본문 골격)
   - `lib/articles/recommend.ts` (키워드/관련문서 추천)
@@ -169,8 +172,8 @@
 
 ### 3-2. Out-of-Scope (v2 별도 사이클)
 
-- **Stream B** /help, /role 마스터 반영 (B1 menu_taxonomies 사이드바 트리 / B2 role_starters DB 연동)
-- **Stream C** 챗봇 KB 메타데이터 (C1 intent/entities/steps JSON 발행 시 생성 / C2 자기완결 violations errors 승격)
+- **Stream C** 챗봇 KB 메타데이터 영속화 (C1 chatbot_meta JSONB 컬럼 추가 + 발행 시 저장 / C2 자기완결 violations errors 승격)
+  - A5에서 AI가 chatbot_meta를 출력은 하지만, v1은 화면 표시 + draft에만 보관. 발행 시 DB 영속화는 v2.
 - **자기참조 ("위에서 말한") 워닝 → errors 승격** (UX 영향 큰 변경이므로 별도 사이클)
 - **AI 자동 발행** (사람 확인 없이 자동 발행은 본 사이클에서 금지)
 - **다국어 번역** (한국어 우선)
@@ -241,7 +244,7 @@
 
 **Phase 1 Acceptance**: `npm run typecheck` + `npm run lint` 통과 · 기존 e2e 회귀 없음 · 신규 컴포넌트 단독 동작.
 
-### Phase 2 (Week 2) — 키워드/관련문서 자동완성 (A3, A4)
+### Phase 2 (Week 2) — 키워드/관련문서 자동완성 (A3, A4) + /help 메뉴 트리 (B1)
 
 | 작업 | 담당 관점 | 완료 기준 |
 |---|---|---|
@@ -251,10 +254,11 @@
 | `searchArticlesForAutocomplete(q)` server action (경량 검색) | [CTO] | 200ms 내 응답, 발행된 아티클만 |
 | `RelatedArticleAutocomplete` 컴포넌트 (검색 + 자동완성 + 추천 칩) | [UI][UX] | slug + uuid 양쪽 호환 |
 | body-validator: 키워드 수동 ≥ 3개 워닝 유지 + 추천 적용 시 자동 해소 | [AS] | 추천 클릭 시 워닝 즉시 사라짐 |
+| **B1 — `/help/[product]` 메뉴 트리 사이드바** (Phase 1의 `getMenuTaxonomyTree` 재사용) | [UI][UX][CTO] | 트리 노드 클릭 → `?path=` 쿼리로 아티클 리스트 필터, 펼침 상태 URL 동기 |
 
-**Phase 2 Acceptance**: 추천 정확도 매니저 3인 정성 평가 통과 · API 응답 시간 SLA 충족.
+**Phase 2 Acceptance**: 추천 정확도 매니저 3인 정성 평가 통과 · API 응답 시간 SLA 충족 · /help/cms 메뉴 트리에서 모든 카테고리 도달 가능.
 
-### Phase 3 (Week 3) — Claude AI 보조 + 통합 (A5)
+### Phase 3 (Week 3) — Claude AI 보조 + /role 마스터 DB (B2) + 통합 (A5)
 
 | 작업 | 담당 관점 | 완료 기준 |
 |---|---|---|
@@ -263,9 +267,11 @@
 | `aiAssistArticle(input)` server action | [CTO] | 입력 검증, JSON 스키마 결과 반환, rate limit |
 | `AiAssistantPanel` 컴포넌트 (제안 카드 + 적용/거부) | [UI][UX] | 응답 3~5초, 적용 시 해당 필드 즉시 반영 |
 | graceful degradation: API 장애 시 패널 비활성화 + 토스트 | [CTO] | 호출 실패 시 수동 입력 흐름 유지 |
-| 통합 e2e: 본문 골격 → 메뉴 캐스케이드 → 키워드 추천 → 관련 추천 → AI 보조 → 발행 | [전팀] | 8분 이내 발행 시나리오 통과 |
+| **B2 — `/role/[key]` 페이지를 `role_starters` DB 기반으로** (정적 `ROLE_STARTERS` 상수 제거) | [CTO][UX] | DB에서 articleIds 매핑 fetch → 실제 아티클 카드 노출, label/description은 DB가 SoT |
+| **B2 — 어드민 `master/role-starters` 매핑 UI** (articleIds 추가/제거/순서 변경) | [UI][UX][CS] | 검색 자동완성으로 아티클 선택, 드래그 정렬, soft-delete |
+| 통합 e2e: 본문 골격 → 메뉴 캐스케이드 → 키워드 추천 → 관련 추천 → AI 보조 → 발행 + /help 메뉴 트리 + /role 페이지 | [전팀] | 8분 이내 발행 시나리오 통과 + KB-07·KB-08 통과 |
 
-**Phase 3 Acceptance**: AI 채택률 매니저 5명 테스트에서 ≥ 60% · 평균 작성 시간 ≤ 8분 측정 · 모든 NFR 충족.
+**Phase 3 Acceptance**: AI 채택률 매니저 5명 테스트에서 ≥ 60% · 평균 작성 시간 ≤ 8분 측정 · /role/front 호텔리어 3명 인터뷰에서 "처음 출근일에 본격 활용 가능" 통과 · 모든 NFR 충족.
 
 ---
 
@@ -427,6 +433,72 @@ const SYSTEM = `당신은 호텔 OA 솔루션 도움말 작성 보조입니다.
 
 ---
 
+## 11. Stream B 보강 (v1.1) — /help 메뉴 트리 + /role 마스터 DB
+
+### 11-1. 변경 이유
+
+사용자 초기 요구사항: "(1) /help/cms — 마스터페이지 메뉴구조 반영 안 됨 / (2) /role/front — 마스터·아티클 어떻게 연결되고 자동화될 수 있을지". 초안 PLAN에서 Stream B를 v2로 미뤘으나, 챗봇 KB 최적화·1아티클=1의도 원칙은 **공개 페이지 노출 전략과 분리 불가**. v1.1에서 MVP에 승격.
+
+### 11-2. B1 — /help/[product] 사이드바 메뉴 트리
+
+- **현재 상태**: `categoryPath[0]` 문자열 카운트만 사이드바에 노출. menu_taxonomies 트리 미사용. ([help/[product]/page.tsx:71-75](app/help/[product]/page.tsx#L71-L75))
+- **[UX]** 호텔리어 멘탈 모델: 가이드를 메뉴 구조로 검색하는 패턴이 가장 직관적. "예약 관리 → 예약 등록" 트리 노드 클릭 → 해당 카테고리 아티클만 필터.
+- **[UI]** 사이드바 트리는 펼침/접힘 + 현재 선택 highlight + 카운트 배지. URL `?path=예약+관리/예약+등록` 쿼리로 펼침 상태 동기 (북마크/공유 가능).
+- **[AS]** 메뉴 트리가 정본이면 작성자(매니저)·소비자(호텔리어)·관리자(어드민)가 같은 IA를 공유. 분류 일관성 보장.
+- **[CTO]** Phase 1의 `getMenuTaxonomyTree(productCode)` 재사용 → 추가 비용 거의 없음. 트리 ↔ 아티클 매칭은 `categoryPath` 배열의 prefix match.
+
+### 11-3. B2 — /role/[key] 마스터 DB + 매핑 UI
+
+- **현재 상태**: 정적 상수 `ROLE_STARTERS` 사용 (label/description/icon만). `role_starters` DB 테이블에 `articleIds: uuid[]` 컬럼 있으나 미연동. ([role/[key]/page.tsx:14-35](app/role/[key]/page.tsx#L14-L35))
+- **[UX]** 호텔리어 첫 출근일 시나리오: "프론트 시작하기" 클릭 → 7개 핵심 가이드가 순서대로 카드로 노출 → 첫 가이드부터 따라 학습. 정적 상수는 운영 변경 불가능 → "신규 직원 온보딩 KPI" 측정 불가.
+- **[UI]** `/role/[key]` 페이지는 hero + role description + **아티클 카드 그리드** (순서대로). 카드는 제목 + summary + 예상 시간 (chatbot_meta 활용 가능 시).
+- **[CS]** "신규 직원이 처음 출근한 날 무엇부터 봐야 하는가"는 CS팀이 가장 자주 받는 질문. 매핑 UI에서 직접 운영 가능해야 함.
+- **[AS]** 매핑은 어드민 `master/role-starters` 페이지에 추가 — 기존 마스터 편집 패턴 그대로 (검색 자동완성으로 아티클 선택, 드래그 정렬).
+- **[CTO]** DB 스키마 변경 0. 기존 `articleIds: uuid[]` 컬럼 그대로 활용. 신규 server action `getRoleStarterWithArticles(roleKey)` 추가.
+
+### 11-4. 일정 영향 — 3주 유지
+
+- **Phase 2 후반 1일**: B1 사이드바 트리 컴포넌트 + 기존 정적 카운트 사이드바 교체
+- **Phase 3 후반 1.5일**: B2 `/role/[key]` 페이지 전환 + 어드민 매핑 UI + e2e KB-07, KB-08
+
+기존 일정은 그대로 유지. menu_taxonomies tree 함수 공유로 시너지 확보.
+
+### 11-5. 성공 지표 추가
+
+| 지표 | 현재 | 목표 |
+|---|---|---|
+| /help 메뉴 트리 사용률 | 0% | ≥ 40% 사용자가 사이드바 트리에서 1회 이상 클릭 |
+| /role/[key] 페이지 가이드 클릭 ≥ 1건 비율 | N/A (placeholder) | ≥ 70% |
+| 신규 매니저 온보딩 시간 (정성) | "막막함" | "한 페이지로 시작 명확" |
+
+### 11-6. 신규/변경 파일 추가 (v1.1)
+
+```
+lib/services/
+  role-starters.ts                     [NEW]   getRoleStarterWithArticles(roleKey)
+
+app/
+  help/[product]/
+    _components/
+      menu-tree-sidebar.tsx            [NEW]   B1: menu_taxonomies 트리 사이드바
+    page.tsx                           [EDIT]  사이드바 교체
+  role/[key]/page.tsx                  [REWRITE] B2: DB 기반 페이지로 전환
+  (admin)/admin/master/role-starters/
+    _components/
+      role-starter-mapping-form.tsx    [EDIT]   articleIds 검색 자동완성 + 드래그 정렬
+  actions/
+    role-starter-actions.ts            [EDIT]   getRoleStarterWithArticles, updateRoleStarterArticles
+
+tests/e2e/knowledge-base/
+  kb-07-help-menu-tree.spec.ts         [NEW]   /help/cms 트리 → 아티클 도달
+  kb-08-role-starter.spec.ts           [NEW]   /role/front 매핑된 아티클 노출
+```
+
+[CTO] 추가 파일 7개 (신규 4, 변경 3). 총 변경 파일 22 → 29.
+
+---
+
 ## 변경 이력
 
-- 2026-05-31: 초안 작성 (5인 팀 PM Lite + Plan 일괄)
+- 2026-05-31 v1.0: 초안 작성 (5인 팀 PM Lite + Plan 일괄, Stream A만)
+- 2026-05-31 v1.1: **Stream B MVP 승격** (B1 /help 메뉴 트리, B2 /role 마스터 DB). 일정 3주 유지.
