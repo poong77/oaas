@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2026-05-31 — Layout 사이클 마감 (PDCA Done · Match 95%)</title>
+<style>
+  :root {
+    --brand-50: #f5f3ff;
+    --brand-100: #ede9fe;
+    --brand-500: #8b5cf6;
+    --brand-600: #7c3aed;
+    --brand-700: #6d28d9;
+    --brand-900: #4c1d95;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+    --emerald-50: #ecfdf5;
+    --emerald-600: #059669;
+    --amber-50: #fffbeb;
+    --amber-600: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif;
+    background: var(--slate-50);
+    color: var(--slate-900);
+    line-height: 1.6;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+  header { padding: 24px 0; border-bottom: 3px solid var(--brand-500); margin-bottom: 24px; }
+  h1 { margin: 0 0 4px; font-size: 22px; color: var(--brand-700); }
+  h2 { font-size: 17px; color: var(--brand-700); margin: 24px 0 8px; }
+  h3 { font-size: 14px; color: var(--slate-700); margin: 12px 0 6px; }
+  .meta { color: var(--slate-500); font-size: 13px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .card.brand { border-left: 3px solid var(--brand-500); }
+  .card.success { border-left: 3px solid var(--emerald-600); background: var(--emerald-50); }
+  .card.warn { border-left: 3px solid var(--amber-600); background: var(--amber-50); }
+  .stat-num { font-size: 24px; font-weight: 700; color: var(--brand-700); }
+  .stat-label { font-size: 12px; color: var(--slate-500); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--slate-200); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+  td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  ul.check { list-style: none; padding-left: 0; }
+  ul.check li::before { content: "✅ "; }
+  ul.todo li::before { content: "⏳ "; }
+  ul.next li::before { content: "→ "; color: var(--brand-600); font-weight: 700; }
+  code { background: var(--slate-100); padding: 2px 5px; border-radius: 3px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, monospace; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge.ok { background: #d1fae5; color: #065f46; }
+  .badge.info { background: var(--brand-100); color: var(--brand-700); }
+  .badge.warn { background: #fef3c7; color: #92400e; }
+  blockquote {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--brand-500);
+    background: var(--brand-50);
+    border-radius: 4px;
+    color: var(--slate-700);
+    font-size: 13px;
+  }
+  @media (max-width: 640px) {
+    h1 { font-size: 19px; }
+    .grid { grid-template-columns: 1fr; }
+    th, td { font-size: 12px; padding: 4px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Layout 사이클 마감 — PDCA Done</h1>
+  <p class="meta">📅 2026-05-31 · 운영시간 마스터 + 호텔리어 컨택 패널 + 글로벌 헤더/푸터 통합 ·
+    <span class="badge ok">Match 95%</span> <span class="badge info">11 commits</span> <span class="badge info">42 hours</span>
+  </p>
+</header>
+
+<section>
+  <h2>📊 한눈에 보기</h2>
+  <div class="grid">
+    <div class="card brand">
+      <div class="stat-num">11</div>
+      <div class="stat-label">머지된 커밋 (5/29 ~ 5/31)</div>
+    </div>
+    <div class="card brand">
+      <div class="stat-num">3</div>
+      <div class="stat-label">신규 마스터 테이블 (business_hours/overrides/holidays)</div>
+    </div>
+    <div class="card brand">
+      <div class="stat-num">6</div>
+      <div class="stat-label">신규 e2e 시나리오 (H-01 ~ H-06)</div>
+    </div>
+    <div class="card success">
+      <div class="stat-num">95%</div>
+      <div class="stat-label">Gap Match Rate (Design ↔ 구현)</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>🎯 4-Perspective 가치 요약</h2>
+  <table>
+    <thead><tr><th>관점</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Problem</b></td>
+        <td>레이아웃 컴포넌트와 운영 상태/연락처 정보가 페이지마다 분산. 마스터 변경 시 다발 수정 필요. URL 충돌·CSS :target 부작용.</td>
+      </tr>
+      <tr>
+        <td><b>Solution</b></td>
+        <td>SiteHeader·SiteFooter 글로벌 컴포넌트화. business_hours / business_hours_overrides / business_holidays 마스터 도입. 어드민 <code>master/business-hours</code>에서 단일 편집.</td>
+      </tr>
+      <tr>
+        <td><b>Function·UX</b></td>
+        <td>(1) 모든 페이지 일관된 헤더/푸터 (2) 호텔리어 푸터에서 실시간 운영상태 칼럼 + Spotlight Ring + Micro Bounce (3) 약관·개인정보 페이지 분리 (4) 헤더 운영상태 배지 → 푸터 컨택 자동 스크롤·강조</td>
+      </tr>
+      <tr>
+        <td><b>Core Value</b></td>
+        <td>운영팀 효율↑ (마스터 중앙화), 호텔리어 신뢰↑ (실시간 상태 가시화), 버그 위험↓ (중복 코드 제거 + 라우팅 충돌 해소 + e2e 회귀 방지).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>🧱 완료된 작업 (커밋 단위)</h2>
+  <table>
+    <thead><tr><th>커밋</th><th>유형</th><th>요약</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">68fa758</td><td><span class="badge info">feat</span></td><td>운영시간·공휴일·예약변경·연락처 통합 마스터 + 호텔리어 컨택 패널</td></tr>
+      <tr><td class="mono">54a5b65</td><td><span class="badge info">feat</span></td><td>운영 상태 아이콘 어드민 편집 가능 (마스터 통합)</td></tr>
+      <tr><td class="mono">2709350</td><td><span class="badge info">refactor</span></td><td>HomeFooter → 글로벌 SiteFooter + 약관/개인정보 페이지</td></tr>
+      <tr><td class="mono">14dbb99</td><td><span class="badge info">feat</span></td><td>#contact 푸터 도착 시 운영상태 Spotlight Ring + Micro Bounce</td></tr>
+      <tr><td class="mono">800dd44</td><td><span class="badge info">feat</span></td><td>헤더 운영상태 배지 클릭 → 푸터 컨택 패널 스크롤</td></tr>
+      <tr><td class="mono">ccaaa94</td><td><span class="badge warn">fix</span></td><td>운영상태 강조 :target → JS 트리거 전환</td></tr>
+      <tr><td class="mono">e783f69</td><td><span class="badge warn">fix</span></td><td>운영상태 배지 반복 클릭 시 URL <code>#contact</code> 누적 버그</td></tr>
+      <tr><td class="mono">8f5563c</td><td><span class="badge warn">fix</span></td><td>help/[product]/[slug] ↔ [content_type] 동명 세그먼트 충돌 해소</td></tr>
+      <tr><td class="mono">d183e02</td><td><span class="badge info">test</span></td><td>운영자 도움말 패널 e2e 시나리오 (H-01~H-06)</td></tr>
+      <tr><td class="mono">0a98ead</td><td><span class="badge info">refactor</span></td><td>도메인 용어 "영업" → "운영" 통일</td></tr>
+      <tr><td class="mono">4b647e9</td><td><span class="badge info">chore</span></td><td>BusinessStatusBadge sm 아이콘 14px 통일</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>💡 인사이트 (다음 사이클로 이월)</h2>
+  <blockquote>
+    <b>마스터-페이지 분리 패턴이 잘 작동했음.</b> business_hours 마스터를 어드민에서 편집 → 호텔리어 ContactPanel이 자동 소비.
+    동일 패턴을 <code>knowledge-base-overhaul</code> 사이클에서 <code>menu_taxonomies ↔ /help</code>, <code>role_starters ↔ /role</code>에 그대로 적용 예정.
+  </blockquote>
+  <ul class="check">
+    <li>도메인 용어 통일은 작업 막판에 일괄 처리하는 게 효율적 (작업 도중 혼용 허용 → 마지막에 정리)</li>
+    <li>CSS <code>:target</code>은 SPA 환경에서 URL 누적·history pollution 위험. React 상태로 전환이 정답.</li>
+    <li>Next.js 동명 세그먼트 우선순위는 e2e로 회귀 방지 필수 (정적 세그먼트 vs 동적 세그먼트)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>📄 잔여 사항</h2>
+  <ul class="check">
+    <li><b>0건</b> — 모든 작업 클린업 완료. PDCA <code>phase: report</code>로 종료.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>🚀 다음 사이클</h2>
+  <ul class="next">
+    <li><b>knowledge-base-overhaul</b> — Stream A (에디터 자동화 A1~A5) MVP 스코프 확정</li>
+    <li>CTO-Led Agent Teams 활성화 + Vercel ANTHROPIC_API_KEY 등록</li>
+    <li>PDCA Plan 진입 (5인 팀: CTO·UX·UI·AS·CS)</li>
+  </ul>
+</section>
+
+<footer style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--slate-200); color: var(--slate-500); font-size: 12px;">
+  PDCA Report: <code>docs/04-report/layout/REPORT.md</code> ·
+  bkit State: <code>.bkit/state/pdca-status.json</code>
+</footer>
+
+</div>
+</body>
+</html>

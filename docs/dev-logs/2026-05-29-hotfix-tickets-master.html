@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2026-05-29 핫픽스 — ticket_no race + master 페이지 500</title>
+<style>
+  :root {
+    --brand: #4f46e5;
+    --brand-50: #eef2ff;
+    --brand-100: #e0e7ff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+    --green-50: #ecfdf5;
+    --green-600: #059669;
+    --amber-50: #fffbeb;
+    --amber-600: #d97706;
+    --red-50: #fef2f2;
+    --red-600: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+          "Pretendard Variable", "Pretendard", sans-serif;
+    background: var(--slate-50);
+    color: var(--slate-900);
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 60px; }
+  header { margin-bottom: 24px; }
+  h1 { font-size: 24px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .subtitle { color: var(--slate-500); font-size: 13px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); margin: 16px 0; }
+  @media (min-width: 640px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .card .label { font-size: 11px; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.05em; }
+  .card .value { font-size: 22px; font-weight: 700; margin-top: 6px; color: var(--brand); }
+  .card .hint { font-size: 12px; color: var(--slate-500); margin-top: 4px; }
+  section { background: white; border: 1px solid var(--slate-200); border-radius: 10px; padding: 18px 20px; margin: 16px 0; }
+  section h2 { font-size: 17px; margin: 0 0 12px; }
+  section h3 { font-size: 14px; margin: 18px 0 8px; color: var(--slate-700); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--slate-100); text-align: left; vertical-align: top; }
+  th { background: var(--slate-50); font-weight: 600; color: var(--slate-700); }
+  code { font-family: "JetBrains Mono", "SF Mono", Menlo, monospace; font-size: 12px; background: var(--slate-100); padding: 1px 5px; border-radius: 4px; word-break: break-all; }
+  pre { background: var(--slate-900); color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px; line-height: 1.5; }
+  pre code { background: transparent; color: inherit; padding: 0; }
+  .ok { color: var(--green-600); font-weight: 600; }
+  .warn { color: var(--amber-600); font-weight: 600; }
+  .err { color: var(--red-600); font-weight: 600; }
+  ul.checklist { list-style: none; padding-left: 0; margin: 0; }
+  ul.checklist li { padding: 4px 0; }
+  ul.checklist li::before { content: "✅ "; }
+  ul.checklist li.pending::before { content: "⏳ "; }
+  ul.checklist li.note::before { content: "ℹ️ "; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .pill.ok { background: var(--green-50); color: var(--green-600); }
+  .pill.warn { background: var(--amber-50); color: var(--amber-600); }
+  .pill.err { background: var(--red-50); color: var(--red-600); }
+  .pill.brand { background: var(--brand-50); color: var(--brand); }
+  .callout {
+    background: var(--amber-50);
+    border-left: 3px solid var(--amber-600);
+    padding: 12px 14px;
+    border-radius: 6px;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  .callout.brand { background: var(--brand-50); border-left-color: var(--brand); }
+  .callout.ok { background: var(--green-50); border-left-color: var(--green-600); }
+  .timeline { border-left: 2px solid var(--brand-100); margin: 8px 0 8px 6px; padding-left: 16px; }
+  .timeline .ev { margin: 8px 0; font-size: 13px; }
+  .timeline .ev time { display: inline-block; min-width: 110px; color: var(--slate-500); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>핫픽스 — ticket_no 충돌 + 마스터 페이지 500</h1>
+  <div class="subtitle">2026-05-29 · support.oapms.com · 운영 장애 2건 동시 대응</div>
+</header>
+
+<div class="grid">
+  <div class="card">
+    <div class="label">장애 건수</div>
+    <div class="value">2</div>
+    <div class="hint">티켓 채번 / 마스터 페이지</div>
+  </div>
+  <div class="card">
+    <div class="label">커밋</div>
+    <div class="value">2</div>
+    <div class="hint">fa35d27 · 1da31af</div>
+  </div>
+  <div class="card">
+    <div class="label">DB 마이그레이션</div>
+    <div class="value">0010</div>
+    <div class="hint">ticket_no_counter</div>
+  </div>
+  <div class="card">
+    <div class="label">영향 범위</div>
+    <div class="value">전 어드민</div>
+    <div class="hint">티켓 + 마스터 데이터</div>
+  </div>
+</div>
+
+<section>
+  <h2>1. 장애 ① — ticket_no UNIQUE 충돌</h2>
+
+  <h3>증상 (Vercel 함수 로그)</h3>
+<pre><code>[warning] [tickets.createTicket] ticket_no 충돌 재시도 1/5: AS-2026-000010
+[warning] ... 재시도 2/5 ~ 5/5
+[error] 재시도 한계 초과, 마지막 에러: NeonDbError 23505
+  duplicate key value violates unique constraint "tickets_ticket_no_uq"
+  Key (ticket_no)=(AS-2026-000014) already exists.</code></pre>
+
+  <h3>근본 원인</h3>
+  <table>
+    <tr><th style="width:120px">레이어</th><th>문제</th></tr>
+    <tr>
+      <td>채번 알고리즘</td>
+      <td><code>MAX(ticket_no) + 1</code> 기반. 충돌 시 <code>bump</code> 증분 후 재시도.</td>
+    </tr>
+    <tr>
+      <td>Neon 특성</td>
+      <td>read replica lag 1~2초. 동시 INSERT 요청들이 모두 stale <code>currentMax</code>를 읽고 같은 슬롯 시도.</td>
+    </tr>
+    <tr>
+      <td>당시 운영 코드</td>
+      <td><code>bump×1, retry=5</code> — 5건 동시 접수만으로 100% 충돌. 로그의 000010~000014가 정확히 5건 충돌 증거.</td>
+    </tr>
+  </table>
+
+  <h3>수정 (commit <code>fa35d27</code>)</h3>
+  <p><strong>MAX 기반 → atomic UPSERT 카운터 테이블</strong>. Postgres 단일 statement로 race-free 보장. replica lag 무관.</p>
+<pre><code>-- db/migrations/0010_red_piledriver.sql
+CREATE TABLE "ticket_no_counter" (
+  "year" integer PRIMARY KEY NOT NULL,
+  "last_no" integer DEFAULT 0 NOT NULL
+);
+
+-- 기존 운영 ticket_no MAX로 초기화 (시드 ≥900000 제외)
+INSERT INTO "ticket_no_counter" ("year", "last_no")
+SELECT
+  CAST(SUBSTRING("ticket_no" FROM 4 FOR 4) AS INTEGER) AS year,
+  MAX(CAST(SUBSTRING("ticket_no" FROM 9) AS INTEGER)) AS last_no
+FROM "tickets"
+WHERE "ticket_no" ~ '^AS-[0-9]{4}-[0-9]{6}$'
+  AND CAST(SUBSTRING("ticket_no" FROM 9) AS INTEGER) < 900000
+GROUP BY CAST(SUBSTRING("ticket_no" FROM 4 FOR 4) AS INTEGER)
+ON CONFLICT ("year") DO UPDATE
+  SET "last_no" = GREATEST("ticket_no_counter"."last_no", EXCLUDED."last_no");</code></pre>
+
+<pre><code>// lib/services/tickets.ts — generateTicketNo()
+INSERT INTO ticket_no_counter (year, last_no)
+VALUES (${year}, 1)
+ON CONFLICT (year) DO UPDATE
+  SET last_no = ticket_no_counter.last_no + 1
+RETURNING last_no</code></pre>
+
+  <h3>운영 검증</h3>
+  <ul class="checklist">
+    <li>마이그레이션 직후 <code>ticket_no_counter(2026, 20)</code> — 실제 운영 MAX와 일치</li>
+    <li>재배포 후 신규 티켓 <code>AS-2026-000021</code> 정상 채번</li>
+    <li class="note">연도 PK 구조라 2027-01-01 첫 티켓은 자동 <code>AS-2027-000001</code></li>
+  </ul>
+</section>
+
+<section>
+  <h2>2. 장애 ② — 마스터 페이지 전수 500</h2>
+
+  <h3>증상</h3>
+  <ul class="checklist">
+    <li class="note">사용자 신고: <code>/admin/master/categories</code>, <code>/admin/master/quick-actions/[id]</code> 등 전 마스터 페이지 <span class="pill err">500</span></li>
+    <li class="note">로컬 dev + prod build 양쪽 모두 정상 200 — 운영에서만 재현</li>
+  </ul>
+
+  <h3>실제 에러 stack (Vercel 함수 로그)</h3>
+<pre><code>ReferenceError: CategoryType is not defined
+  at .next/server/chunks/ssr/app_actions_master-actions_ts_0yyo~_g.js:1:11659
+  at Context.asyncModule (...turbopack runtime...)
+  at module evaluation (...master-actions...)
+  at &lt;unknown&gt; (...quick-actions/[id]/page...)
+{ digest: '2128134143' }</code></pre>
+
+  <h3>근본 원인</h3>
+  <div class="callout">
+    Next 16 Turbopack이 <code>'use server'</code> 파일의 <code>export type { CategoryType };</code>(타입 re-export)을
+    런타임 value export로 잘못 emit. TS 컴파일 단계에선 strip되지만 Server Actions 번들러 경로에서 누락.
+    동일 파일을 import하는 모든 어드민 마스터 페이지가 module init 시점에 ReferenceError로 죽음.
+  </div>
+
+  <h3>왜 로컬은 멀쩡했나</h3>
+  <p>로컬 <code>next dev</code>(Turbopack), <code>next start</code>(prod build) 모두 정상 작동. Vercel 함수 cold start 경로의 ESM 직렬화 순서에서만 노출되는 경계 케이스. 빌드·타입체크로는 검출 불가.</p>
+
+  <h3>수정 (commit <code>1da31af</code>)</h3>
+<pre><code>// app/actions/master-actions.ts
+- import type { CategoryType } from '@/db/schema';  // 미사용
+  ...
+- // 타입 export
+- export type { CategoryType };                      // 원흉</code></pre>
+  <p>외부 사용처는 모두 이미 <code>@/db/schema</code>에서 직접 import 중이라 영향 0.</p>
+</section>
+
+<section>
+  <h2>3. 같은 패턴 일괄 점검 — 전체 14개 <code>'use server'</code> 파일</h2>
+
+  <div class="callout ok">
+    <strong>결론: 동일 버그 패턴은 master-actions.ts 하나뿐.</strong>
+    나머지 13개 파일의 <code>export type</code>은 모두 <strong>로컬 정의</strong>(<code>export type FormState = {...}</code>) 형태로 안전.
+  </div>
+
+  <table>
+    <thead>
+      <tr><th style="width:300px">파일</th><th>패턴</th><th style="width:90px">상태</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>admin-user-actions.ts</code></td><td>—</td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>article-actions.ts</code></td><td>로컬 <code>ArticleFormState</code></td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>checklist-actions.ts</code></td><td>로컬 <code>ChecklistFormState</code>, <code>StepActionResult</code></td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>faq-actions.ts</code></td><td>로컬 <code>FaqFormState</code></td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><strong><code>master-actions.ts</code></strong></td><td><strong>re-export <code>CategoryType</code> (외부 타입)</strong></td><td><span class="pill err">수정함</span></td></tr>
+      <tr><td><code>master-business-hours-actions.ts</code></td><td>로컬 state 3종</td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>master-menu-taxonomies-actions.ts</code></td><td>로컬 <code>MenuTaxonomyActionState</code></td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>master-synonyms-actions.ts</code></td><td>로컬 <code>GroupActionState</code></td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>master-ticket-channels-actions.ts</code></td><td>로컬 <code>ChannelActionState</code></td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>notice-actions.ts</code></td><td>로컬 <code>NoticeFormState</code></td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>profile-actions.ts</code></td><td>—</td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>service-status-actions.ts</code></td><td>로컬 <code>ChangeStatusInput</code> (zod 추론)</td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>staff-actions.ts</code></td><td>—</td><td><span class="pill ok">안전</span></td></tr>
+      <tr><td><code>ticket-actions.ts</code></td><td>로컬 <code>TicketCreateState</code></td><td><span class="pill ok">안전</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>판별 기준</h3>
+  <ul class="checklist">
+    <li><strong>안전</strong>: <code>export type FooState = {...}</code> — 같은 파일 내 정의 + export. 번들러가 strip 가능.</li>
+    <li class="note"><strong>위험</strong>: <code>export type { Foo };</code> 형태로 <em>다른 모듈에서 import한 타입</em>을 re-export — Turbopack이 runtime value로 오인.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>4. 타임라인 (KST)</h2>
+  <div class="timeline">
+    <div class="ev"><time>15:56</time>운영에서 동시 티켓 5건 접수 → ticket_no 충돌 5/5 한계 초과 → 접수 실패</div>
+    <div class="ev"><time>16:00</time>commit <code>5cec26c</code> — bump 폭 1→10, retry 5→10 (임시 완화)</div>
+    <div class="ev"><time>16:30 ~ 17:10</time>사용자가 마스터 페이지 500 신고. 로컬 재현 실패. Vercel 함수 로그 요청.</div>
+    <div class="ev"><time>17:16</time>commit <code>fa35d27</code> — ticket_no_counter atomic UPSERT 도입 + 운영 DB 마이그레이션 0010 적용</div>
+    <div class="ev"><time>17:25</time>운영 신규 티켓 <code>AS-2026-000021</code> 정상. 사용자가 마스터 페이지 실제 stack trace 공유 → 원인 즉시 특정.</div>
+    <div class="ev"><time>17:25</time>commit <code>1da31af</code> — <code>export type { CategoryType }</code> 제거. 재배포.</div>
+    <div class="ev"><time>이후</time>14개 <code>'use server'</code> 파일 일괄 점검 → 동일 패턴 0건 확인.</div>
+  </div>
+</section>
+
+<section>
+  <h2>5. 변경 파일 요약</h2>
+  <table>
+    <thead>
+      <tr><th>커밋</th><th>파일</th><th>변경</th></tr>
+    </thead>
+    <tbody>
+      <tr><td rowspan="5"><code>fa35d27</code></td>
+          <td><code>db/schema/ticket-no-counter.ts</code></td><td>신규 (16 줄)</td></tr>
+      <tr><td><code>db/schema/index.ts</code></td><td>export 추가 (2 줄)</td></tr>
+      <tr><td><code>db/migrations/0010_red_piledriver.sql</code></td><td>신규 (테이블 + 초기화 SQL)</td></tr>
+      <tr><td><code>db/migrations/meta/0010_snapshot.json</code></td><td>drizzle-kit 자동 (gitignore)</td></tr>
+      <tr><td><code>lib/services/tickets.ts</code></td><td>generateTicketNo 재작성, createTicket 재시도 10→2</td></tr>
+      <tr><td><code>1da31af</code></td>
+          <td><code>app/actions/master-actions.ts</code></td><td>type import + re-export 제거 (3 줄)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>6. 향후 권장 사항</h2>
+  <ul class="checklist">
+    <li class="note"><strong>Server Actions lint 룰</strong>: <code>eslint-plugin-next</code> 또는 자체 룰로 <code>'use server'</code> 파일에서 <code>export type { ... };</code>(re-export) 금지 자동 검출. 동일 함정 재발 방지.</li>
+    <li class="note"><strong>운영 부하 테스트</strong>: 동시 티켓 접수 50~100건 부하 테스트로 atomic counter 동작 확인 권장 (별도 작업).</li>
+    <li class="note"><strong>티켓 번호 연도 정책</strong>: 연도별 카운터 reset이 의도된 동작인지 운영팀 확인. 글로벌 누적 번호가 더 좋다면 schema PK를 (year, last_no) → 단일 last_no로 변경 가능.</li>
+    <li class="note"><strong>dev-rules.md 보강</strong>: <code>'use server'</code> 파일 export 제약 항목 추가 — async 함수 외에는 <em>로컬 정의</em> 타입만 export.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>7. 학습 포인트</h2>
+  <div class="callout brand">
+    <strong>로컬에서 재현 안 되는 운영 장애는 stack trace 없으면 절대 못 잡는다.</strong>
+    Vercel 에러 ID(<code>398581919</code>, <code>2128134143</code>)는 사용자 화면용 식별자일 뿐 원인이 아니다.
+    함수 로그의 <em>첫 줄 에러 메시지 + 파일:라인</em>이 있어야 1샷에 잡힌다.
+    사용자에게 stack trace를 명확히 요청하는 것이 추측·소거법보다 10배 빠르다.
+  </div>
+  <div class="callout brand" style="margin-top:8px">
+    <strong>Race condition을 retry 횟수로 막지 마라.</strong>
+    MAX 기반 채번은 본질적으로 race-prone. retry는 확률을 낮출 뿐 0으로 만들지 못한다.
+    Postgres의 <code>INSERT ... ON CONFLICT DO UPDATE RETURNING</code>은 단일 statement atomic이라 race-free.
+    근본 해결이 임시 완화보다 코드량도 적다 (76 줄 → 30 줄).
+  </div>
+</section>
+
+<footer style="margin-top:24px; padding-top:16px; border-top:1px solid var(--slate-200); color:var(--slate-500); font-size:12px;">
+  통합 AS 플랫폼 · 2026-05-29 핫픽스 · <code>fa35d27</code> + <code>1da31af</code> · main 배포 완료
+</footer>
+
+</div>
+</body>
+</html>
