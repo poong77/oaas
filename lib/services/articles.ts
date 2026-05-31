@@ -128,6 +128,40 @@ const ARTICLE_LIST_SELECT = {
 // 조회
 // ─────────────────────────────────────────────────────────────────────
 
+/**
+ * 검색 조건 빌더 (listArticles / searchArticles 공유).
+ *
+ * 동의어 확장 결과(expanded)를 받아:
+ *   (1) keywords 배열 매칭 (GIN: articles_keywords_gin)
+ *   (2) 확장된 각 term을 title/summary/summary30s/bodyMarkdown ILIKE
+ * 를 OR로 묶는다.
+ *
+ * keywords는 작성자가 수동 입력하므로 동의어가 누락될 수 있어,
+ * 확장 term을 본문에도 ILIKE 매칭해 "실시간객실 ↔ 실시간 객실"처럼
+ * 띄어쓰기/이형어 차이를 흡수한다.
+ */
+function buildArticleSearchCondition(expanded: string[]): SQL | undefined {
+  if (expanded.length === 0) return undefined;
+  const orParts: SQL[] = [];
+  // (1) keywords 배열 매칭
+  const expandedLit = sql.raw(
+    `ARRAY[${expanded.map((t) => `'${t.replace(/'/g, "''")}'`).join(',')}]::text[]`,
+  );
+  orParts.push(sql`${articles.keywords} && ${expandedLit}`);
+  // (2) 확장 term 각각 ILIKE — title/summary/summary30s/body
+  for (const term of expanded) {
+    const pattern = `%${term}%`;
+    const cond = or(
+      ilike(articles.title, pattern),
+      ilike(articles.summary, pattern),
+      ilike(articles.summary30s, pattern),
+      ilike(articles.bodyMarkdown, pattern),
+    );
+    if (cond) orParts.push(cond);
+  }
+  return orParts.length === 1 ? orParts[0] : or(...orParts);
+}
+
 export async function listArticles(
   params: ListArticlesParams = {},
 ): Promise<ListArticlesResult> {
@@ -163,13 +197,13 @@ export async function listArticles(
     );
   }
   if (params.q && params.q.trim()) {
-    const pattern = `%${params.q.trim()}%`;
-    const search = or(
-      ilike(articles.title, pattern),
-      ilike(articles.summary, pattern),
-      ilike(articles.summary30s, pattern),
-      ilike(articles.bodyMarkdown, pattern),
+    // v1.2: 제품 가이드/목록 검색도 동의어(synonyms-master) 확장 적용.
+    // 예) "실시간객실" → "실시간 객실". searchArticles와 동일 로직 공유.
+    const { expandKeywords } = await import(
+      '@/lib/services/synonym-expander'
     );
+    const expanded = await expandKeywords(params.q.trim(), { maxTokens: 16 });
+    const search = buildArticleSearchCondition(expanded);
     if (search) conditions.push(search);
   }
 
@@ -521,7 +555,6 @@ export async function searchArticles(
   if (!db) return [];
   const query = q.trim();
   if (!query) return [];
-  const pattern = `%${query}%`;
   const limit = Math.min(100, Math.max(1, options.limit ?? 50));
   try {
     // v1.1: synonyms-master로 쿼리 확장 (Plan §6, Design §11.1)
@@ -541,25 +574,8 @@ export async function searchArticles(
       conditions.push(eq(articles.contentType, options.contentType));
     }
 
-    // 검색 조건: keywords 배열 OR + title/summary/body ILIKE OR
-    const orParts: SQL[] = [];
-    // (1) keywords 배열 매칭 (GIN: articles_keywords_gin)
-    if (expanded.length > 0) {
-      const expandedLit = sql.raw(
-        `ARRAY[${expanded.map((t) => `'${t.replace(/'/g, "''")}'`).join(',')}]::text[]`,
-      );
-      orParts.push(sql`${articles.keywords} && ${expandedLit}`);
-    }
-    // (2) ILIKE 폴백 — title/summary/body
-    const ilikeCond = or(
-      ilike(articles.title, pattern),
-      ilike(articles.summary, pattern),
-      ilike(articles.summary30s, pattern),
-      ilike(articles.bodyMarkdown, pattern),
-    );
-    if (ilikeCond) orParts.push(ilikeCond);
-
-    const searchCond = orParts.length === 1 ? orParts[0] : or(...orParts);
+    // 검색 조건: keywords 배열 OR + 확장 term 각각 ILIKE (listArticles와 공유)
+    const searchCond = buildArticleSearchCondition(expanded);
     if (searchCond) conditions.push(searchCond);
 
     const rows = await db

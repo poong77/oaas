@@ -45,6 +45,8 @@
 | SS-06 | 아티클 게시물 관리 | 생성·수정·삭제·카테고리 이동·공개여부. 마크다운 에디터 | 매니저·어드민 | P1 |
 | SS-07 | (AI) 게시물 포맷 최적화 | AI가 초안 가독성·구조 개선안 제안, 담당자 검토 후 반영 | 매니저(검토) | P3 |
 
+> **검색 동의어 확장 (v1.2, 2026-05-31)** — SS-01 통합 검색뿐 아니라 SS-02 제품별 가이드 목록 검색(`listArticles`)도 `synonyms-master`(`term_groups`/`term_synonyms`) 기반 동의어 확장을 적용한다. `expandKeywords()`로 확장한 대표어·이형어를 ① `keywords` 배열 매칭(GIN) + ② title/summary/body ILIKE 로 OR 결합. 작성자가 `keywords`를 누락해도 본문 ILIKE로 매칭되도록 보강(예: "실시간객실" → "실시간 객실"). 두 검색 함수는 `buildArticleSearchCondition()` 헬퍼를 공유.
+
 ### 2. 셀프 픽스 (SF) — 스스로 문제 해결
 
 | ID | 기능 | 핵심 동작 | 권한 | 우선순위 |
