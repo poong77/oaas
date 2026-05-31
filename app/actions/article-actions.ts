@@ -45,6 +45,12 @@ import {
   type ResolvedTemplate,
 } from '@/lib/services/master-article-templates';
 import { generateOpsIdSlug, isOpsIdSlug } from '@/lib/articles/ops-id-slug';
+import {
+  recommendKeywords,
+  recommendRelatedArticles,
+  type KeywordRecommendation,
+  type RelatedArticleRecommendation,
+} from '@/lib/articles/recommend';
 import type { ArticleContentType } from '@/db/schema';
 
 // ─────────────────────────────────────────────────────────────────────
@@ -95,6 +101,45 @@ export async function resolveArticleTemplateAction(
 ): Promise<ResolvedTemplate> {
   await requireRole(['manager', 'admin']);
   return resolveArticleTemplate(contentType);
+}
+
+/**
+ * A3 — 키워드 추천 (동의어 그룹 + 본문 빈도 토큰).
+ */
+export async function recommendKeywordsAction(input: {
+  title: string;
+  body: string;
+  productCode: string;
+  existing: string[];
+}): Promise<KeywordRecommendation[]> {
+  await requireRole(['manager', 'admin']);
+  return recommendKeywords({
+    title: input.title ?? '',
+    body: input.body ?? '',
+    productCode: input.productCode ?? '',
+    existing: input.existing ?? [],
+  });
+}
+
+/**
+ * A4 — 관련 문서 추천 (같은 카테고리 + 키워드 교집합 + 본문 링크).
+ */
+export async function recommendRelatedArticlesAction(input: {
+  productCode: string;
+  categoryPath: string[];
+  keywords: string[];
+  body: string;
+  excludeId?: string;
+}): Promise<RelatedArticleRecommendation[]> {
+  await requireRole(['manager', 'admin']);
+  if (!input.productCode?.trim()) return [];
+  return recommendRelatedArticles({
+    productCode: input.productCode.trim(),
+    categoryPath: input.categoryPath ?? [],
+    keywords: input.keywords ?? [],
+    body: input.body ?? '',
+    excludeId: input.excludeId,
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────

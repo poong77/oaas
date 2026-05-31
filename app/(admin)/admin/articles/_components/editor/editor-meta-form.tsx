@@ -25,6 +25,7 @@ import {
   generateOpsIdSlugAction,
 } from '@/app/actions/article-actions';
 import { MenuPathCascader } from './menu-path-cascader';
+import { KeywordRecommender } from './keyword-recommender';
 
 export interface EditorMetaFormProps {
   mode: 'create' | 'edit';
@@ -39,6 +40,8 @@ export interface EditorMetaFormProps {
   summary: string;
   keywords: string[];
   related: string;
+  /** A3 추천에서 사용할 본문 컨텍스트 (shell에서 전달). */
+  bodyForRecommend?: string;
 
   onProductCode: (v: string) => void;
   onCategoryPath: (v: string[]) => void;
@@ -63,6 +66,7 @@ export function EditorMetaForm({
   summary,
   keywords,
   related,
+  bodyForRecommend = '',
   onProductCode,
   onCategoryPath,
   onTitle,
@@ -248,8 +252,21 @@ export function EditorMetaForm({
             </Button>
           </div>
           <span className="text-xs text-slate-500">
-            {keywords.length} / 30 · Phase 2에서 동의어 자동 추천 추가 예정.
+            {keywords.length} / 30 · 동의어·본문 토큰 자동 추천 (debounce 500ms)
           </span>
+          <KeywordRecommender
+            inputContext={{
+              title,
+              body: bodyForRecommend,
+              productCode,
+            }}
+            current={keywords}
+            onAdd={(k) => {
+              if (!keywords.includes(k) && keywords.length < 30) {
+                onKeywords([...keywords, k]);
+              }
+            }}
+          />
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">

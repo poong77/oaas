@@ -305,6 +305,7 @@ export function ArticleEditor({
           summary={summary}
           keywords={keywords}
           related={related}
+          bodyForRecommend={body}
           onProductCode={setProductCode}
           onCategoryPath={setCategoryPath}
           onTitle={setTitle}
