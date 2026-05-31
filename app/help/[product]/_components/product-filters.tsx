@@ -5,6 +5,7 @@ import { useState, useTransition, type FormEvent } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { toQueryString } from '@/lib/url-query';
 
 export function ProductFilters({
   initial,
@@ -30,7 +31,7 @@ export function ProductFilters({
     }
     next.delete('page');
     startTransition(() =>
-      router.push(`/help/${productCode}?${next.toString()}`),
+      router.push(`/help/${productCode}?${toQueryString(next)}`),
     );
   }
 

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Eye, ThumbsUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { ArticleListItem } from '@/lib/services/articles';
+import { toQueryString } from '@/lib/url-query';
 
 export function ProductArticleList({
   items,
@@ -27,7 +28,7 @@ export function ProductArticleList({
   function go(p: number) {
     const next = new URLSearchParams(sp.toString());
     next.set('page', String(p));
-    router.push(`/help/${productCode}?${next.toString()}`);
+    router.push(`/help/${productCode}?${toQueryString(next)}`);
   }
 
   return (

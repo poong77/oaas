@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { getProductCategories } from '@/lib/services/categories';
 import { listArticles } from '@/lib/services/articles';
 import { getMenuTaxonomyTreeByProduct } from '@/lib/services/master-menu-taxonomies';
+import { parsePathParam, pathToKey } from '@/lib/url-query';
 import { resolveIcon } from '@/app/_components/home/_icon-map';
 import { ProductFilters } from './_components/product-filters';
 import { ProductArticleList } from './_components/product-article-list';
@@ -31,8 +32,8 @@ type SearchParams = Promise<{
   sortBy?: 'published_at' | 'view_count' | 'helpful';
   sortOrder?: 'asc' | 'desc';
   page?: string;
-  /** B1 — menu_taxonomies 트리 노드 선택. 'parent/child/grandchild' 형태. */
-  path?: string;
+  /** B1 — menu_taxonomies 트리 노드 선택. 배열 파라미터 ?path=parent&path=child 형태. */
+  path?: string | string[];
 }>;
 
 export async function generateMetadata({ params }: { params: RouteParams }) {
@@ -60,9 +61,9 @@ export default async function HelpProductPage({
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1);
   const sortBy = sp.sortBy ?? 'published_at';
   const sortOrder = sp.sortOrder ?? 'desc';
-  const selectedPath = sp.path
-    ? sp.path.split('/').map((s) => s.trim()).filter(Boolean)
-    : [];
+  // B1 — path는 배열 파라미터(?path=A&path=B). 라벨에 '/'가 있어도 깨지지 않는다.
+  // @see lib/url-query.ts
+  const selectedPath = parsePathParam(sp.path);
 
   // B1 — 메인 리스트는 selectedPath 필터 + 페이지네이션
   const { items, total, pageSize } = await listArticles({
@@ -86,12 +87,13 @@ export default async function HelpProductPage({
     }),
   ]);
 
-  // 누적 카운트: ['예약 관리', '예약 등록'] → '예약 관리': +1, '예약 관리/예약 등록': +1
+  // 누적 카운트: ['예약 관리', '예약 등록'] → '예약 관리': +1, '예약 관리/예약 등록': +1.
+  // 키는 pathToKey(라벨에 없는 제어문자 구분자)로 직렬화해 '/' 포함 라벨도 충돌 없음.
   const articleCountsByPath: Record<string, number> = {};
   for (const a of allInProduct.items) {
     if (!a.categoryPath) continue;
     for (let i = 1; i <= a.categoryPath.length; i++) {
-      const key = a.categoryPath.slice(0, i).join('/');
+      const key = pathToKey(a.categoryPath.slice(0, i));
       articleCountsByPath[key] = (articleCountsByPath[key] ?? 0) + 1;
     }
   }

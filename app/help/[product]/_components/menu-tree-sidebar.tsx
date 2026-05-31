@@ -4,7 +4,7 @@
  * MenuTreeSidebar — /help/[product] 메뉴 트리 사이드바 (B1).
  *
  * - menu_taxonomies 트리 렌더링 (펼침/접힘)
- * - 노드 클릭 → ?path=encoded%2Flabel URL 갱신
+ * - 노드 클릭 → ?path=A&path=B 배열 파라미터로 URL 갱신 (라벨에 '/' 포함 가능)
  * - 펼침 상태 sessionStorage 보관
  * - 각 노드별 카운트 (articleCountsByPath)
  *
@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { MenuTaxonomyTreeNode } from '@/lib/services/master-menu-taxonomies';
+import { toQueryString, pathToKey } from '@/lib/url-query';
 
 export interface MenuTreeSidebarProps {
   productCode: string;
@@ -24,9 +25,7 @@ export interface MenuTreeSidebarProps {
   totalCount: number;
 }
 
-function pathKey(parts: string[]): string {
-  return parts.join('/');
-}
+const pathKey = pathToKey;
 
 export function MenuTreeSidebar({
   productCode,
@@ -84,10 +83,10 @@ export function MenuTreeSidebar({
 
   function navigateTo(nextPath: string[]) {
     const params = new URLSearchParams(searchParams.toString());
-    if (nextPath.length === 0) params.delete('path');
-    else params.set('path', nextPath.join('/'));
+    params.delete('path');
+    for (const part of nextPath) params.append('path', part);
     params.delete('page');
-    router.push(`/help/${productCode}?${params.toString()}`);
+    router.push(`/help/${productCode}?${toQueryString(params)}`);
   }
 
   const selectedKey = pathKey(selectedPath);
