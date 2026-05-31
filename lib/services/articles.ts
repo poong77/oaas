@@ -93,6 +93,10 @@ export type ListArticlesParams = {
 export type ListArticlesResult = {
   items: ArticleListItem[];
   total: number;
+  /** 필터 조건 전체 기준 발행 아티클 수 (현재 페이지 아님). */
+  totalPublished: number;
+  /** 필터 조건 전체 기준 Draft 아티클 수 (현재 페이지 아님). */
+  totalDraft: number;
   page: number;
   pageSize: number;
 };
@@ -172,7 +176,14 @@ export async function listArticles(
   const offset = (page - 1) * pageSize;
 
   if (!db) {
-    return { items: [], total: 0, page, pageSize };
+    return {
+      items: [],
+      total: 0,
+      totalPublished: 0,
+      totalDraft: 0,
+      page,
+      pageSize,
+    };
   }
 
   const conditions: SQL[] = [];
@@ -262,15 +273,28 @@ export async function listArticles(
       .offset(offset);
 
     const totalRows = await db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({
+        count: sql<number>`count(*)::int`,
+        published: sql<number>`count(*) filter (where ${articles.publishedAt} is not null)::int`,
+        draft: sql<number>`count(*) filter (where ${articles.publishedAt} is null)::int`,
+      })
       .from(articles)
       .where(whereExpr);
     const total = Number(totalRows[0]?.count ?? 0);
+    const totalPublished = Number(totalRows[0]?.published ?? 0);
+    const totalDraft = Number(totalRows[0]?.draft ?? 0);
 
-    return { items, total, page, pageSize };
+    return { items, total, totalPublished, totalDraft, page, pageSize };
   } catch (err) {
     console.error('[articles.listArticles] 실패:', err);
-    return { items: [], total: 0, page, pageSize };
+    return {
+      items: [],
+      total: 0,
+      totalPublished: 0,
+      totalDraft: 0,
+      page,
+      pageSize,
+    };
   }
 }
 

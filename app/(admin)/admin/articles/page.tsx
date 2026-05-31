@@ -60,7 +60,11 @@ export default async function AdminArticlesPage({
       ? sp.menuPath.split('|').filter(Boolean)
       : undefined;
 
-  const [{ items, total, pageSize }, categories, menuNodes] =
+  const [
+    { items, total, totalPublished, totalDraft, pageSize },
+    categories,
+    menuNodes,
+  ] =
     await Promise.all([
       listArticles({
         q: sp.q,
@@ -87,8 +91,6 @@ export default async function AdminArticlesPage({
     depth: n.depth,
   }));
 
-  const publishedCount = items.filter((a) => a.publishedAt).length;
-  const draftCount = items.filter((a) => !a.publishedAt).length;
 
   return (
     <div className="flex flex-col gap-5">
@@ -112,13 +114,9 @@ export default async function AdminArticlesPage({
       />
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="전체 (이 페이지)" value={items.length} />
-        <StatCard
-          label="발행"
-          value={publishedCount}
-          tone="success"
-        />
-        <StatCard label="Draft" value={draftCount} tone="warn" />
+        <StatCard label="전체" value={total} />
+        <StatCard label="발행" value={totalPublished} tone="success" />
+        <StatCard label="Draft" value={totalDraft} tone="warn" />
       </div>
 
       <Card>
