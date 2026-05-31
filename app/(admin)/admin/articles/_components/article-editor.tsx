@@ -58,8 +58,9 @@ import {
 } from './editor/article-checklist-sidebar';
 import {
   AiAssistantPanel,
-  type AiAssistPatch,
+  KbAiChatbotMetaCard,
 } from './editor/ai-assistant-panel';
+import type { AiAssistOutput } from '@/lib/ai/prompts/article-assistant';
 
 type EditorMode = 'create' | 'edit';
 
@@ -174,6 +175,23 @@ export function ArticleEditor({
     },
     [autosave],
   );
+
+  // AI 제안 결과 (각 필드 옆 mini 카드로 분산 표시)
+  const [aiSuggestion, setAiSuggestion] = useState<AiAssistOutput | null>(null);
+  function dismissField(field: 'slug' | 'summary' | 'keywords' | 'relatedHints' | 'chatbotMeta') {
+    setAiSuggestion((prev) => {
+      if (!prev) return null;
+      const next = { ...prev };
+      if (field === 'slug') (next as { slug?: string }).slug = '';
+      else if (field === 'summary') (next as { summary?: string }).summary = '';
+      else if (field === 'keywords') (next as { keywords?: string[] }).keywords = [];
+      else if (field === 'relatedHints')
+        (next as { related_search_hints?: string[] }).related_search_hints = [];
+      else if (field === 'chatbotMeta')
+        (next as { chatbot_meta?: AiAssistOutput['chatbot_meta'] | null }).chatbot_meta = null as never;
+      return next;
+    });
+  }
 
   // 골격 마스터 (DB 우선, 폴백 코드 상수) — 마운트 시 3종 fetch
   const [templates, setTemplates] = useState<
@@ -310,6 +328,42 @@ export function ArticleEditor({
           keywords={keywords}
           related={related}
           bodyForRecommend={body}
+          aiSuggestion={aiSuggestion}
+          onAiApplySlug={() => {
+            if (aiSuggestion?.slug) {
+              setSlug(aiSuggestion.slug);
+              dismissField('slug');
+            }
+          }}
+          onAiRejectSlug={() => dismissField('slug')}
+          onAiApplySummary={() => {
+            if (aiSuggestion?.summary) {
+              setSummary(aiSuggestion.summary);
+              dismissField('summary');
+            }
+          }}
+          onAiRejectSummary={() => dismissField('summary')}
+          onAiApplyKeywords={() => {
+            if (aiSuggestion?.keywords) {
+              const merged = Array.from(
+                new Set([...keywords, ...aiSuggestion.keywords]),
+              ).slice(0, 30);
+              setKeywords(merged);
+              dismissField('keywords');
+            }
+          }}
+          onAiRejectKeywords={() => dismissField('keywords')}
+          onAiApplyRelatedHints={() => {
+            // related_search_hints는 키워드 후보 — 검색용 힌트라 keywords로 일부 병합
+            if (aiSuggestion?.related_search_hints) {
+              const merged = Array.from(
+                new Set([...keywords, ...aiSuggestion.related_search_hints]),
+              ).slice(0, 30);
+              setKeywords(merged);
+              dismissField('relatedHints');
+            }
+          }}
+          onAiRejectRelatedHints={() => dismissField('relatedHints')}
           onProductCode={setProductCode}
           onCategoryPath={setCategoryPath}
           onTitle={setTitle}
@@ -330,23 +384,21 @@ export function ArticleEditor({
             existingKeywords: keywords,
           }}
           disabled={title.trim().length === 0 && body.length < 500}
-          onApply={(patch: AiAssistPatch) => {
-            if (patch.slug) setSlug(patch.slug);
-            if (patch.summary) setSummary(patch.summary);
-            if (patch.keywords) {
-              const merged = Array.from(
-                new Set([...keywords, ...patch.keywords]),
-              ).slice(0, 30);
-              setKeywords(merged);
-            }
-            if (patch.relatedHints && patch.relatedHints.length > 0) {
-              // related 자동 추천은 단순 키워드 힌트 — 사용자가 검색에 쓰도록 별도 표시.
-              // 직접 related 필드 채우기보다 keyword 추천에 합치는 게 안전.
-              // v1.5: chatbotMeta 영속화
-            }
-            // chatbotMeta는 draft에 보관 — v2 (Stream C)에서 articles 컬럼 추가
-          }}
+          onResult={(output) => setAiSuggestion(output)}
         />
+
+        {/* 챗봇 KB 메타는 별도 카드 (사이드 표시) */}
+        {aiSuggestion?.chatbot_meta && (
+          <KbAiChatbotMetaCard
+            meta={aiSuggestion.chatbot_meta}
+            onApply={() => {
+              // v2 (Stream C)에서 articles.chatbot_meta JSONB 컬럼으로 영속화 예정.
+              // v1은 draft에 보관 + 토스트만.
+              dismissField('chatbotMeta');
+            }}
+            onReject={() => dismissField('chatbotMeta')}
+          />
+        )}
 
         <EditorBody
           value={body}

@@ -27,6 +27,8 @@ import {
 import { MenuPathCascader } from './menu-path-cascader';
 import { KeywordRecommender } from './keyword-recommender';
 import { RelatedArticleAutocomplete } from './related-article-autocomplete';
+import { KbAiSuggestionCard } from './ai-assistant-panel';
+import type { AiAssistOutput } from '@/lib/ai/prompts/article-assistant';
 
 export interface EditorMetaFormProps {
   mode: 'create' | 'edit';
@@ -43,6 +45,16 @@ export interface EditorMetaFormProps {
   related: string;
   /** A3 추천에서 사용할 본문 컨텍스트 (shell에서 전달). */
   bodyForRecommend?: string;
+  /** A5 AI 제안 (각 필드 옆 mini 카드 inline 표시). */
+  aiSuggestion?: AiAssistOutput | null;
+  onAiApplySlug?: () => void;
+  onAiRejectSlug?: () => void;
+  onAiApplySummary?: () => void;
+  onAiRejectSummary?: () => void;
+  onAiApplyKeywords?: () => void;
+  onAiRejectKeywords?: () => void;
+  onAiApplyRelatedHints?: () => void;
+  onAiRejectRelatedHints?: () => void;
 
   onProductCode: (v: string) => void;
   onCategoryPath: (v: string[]) => void;
@@ -68,6 +80,15 @@ export function EditorMetaForm({
   keywords,
   related,
   bodyForRecommend = '',
+  aiSuggestion,
+  onAiApplySlug,
+  onAiRejectSlug,
+  onAiApplySummary,
+  onAiRejectSummary,
+  onAiApplyKeywords,
+  onAiRejectKeywords,
+  onAiApplyRelatedHints,
+  onAiRejectRelatedHints,
   onProductCode,
   onCategoryPath,
   onTitle,
@@ -192,6 +213,13 @@ export function EditorMetaForm({
             </Button>
           </div>
           {fieldErrors.slug && <FieldError msg={fieldErrors.slug} />}
+          <KbAiSuggestionCard
+            value={aiSuggestion?.slug}
+            onApply={() => onAiApplySlug?.()}
+            onReject={() => onAiRejectSlug?.()}
+            label="slug 제안"
+            mono
+          />
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -207,6 +235,12 @@ export function EditorMetaForm({
           <span className="text-xs text-slate-500">
             {summary.length} / 2000 {summary.length > 200 && '· 200자 권장'}
           </span>
+          <KbAiSuggestionCard
+            value={aiSuggestion?.summary}
+            onApply={() => onAiApplySummary?.()}
+            onReject={() => onAiRejectSummary?.()}
+            label="summary 제안"
+          />
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -268,6 +302,16 @@ export function EditorMetaForm({
               }
             }}
           />
+          <KbAiSuggestionCard
+            value={
+              aiSuggestion?.keywords && aiSuggestion.keywords.length > 0
+                ? aiSuggestion.keywords.join(', ')
+                : undefined
+            }
+            onApply={() => onAiApplyKeywords?.()}
+            onReject={() => onAiRejectKeywords?.()}
+            label={`keywords 제안 (${aiSuggestion?.keywords?.length ?? 0}개 일괄)`}
+          />
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -286,6 +330,17 @@ export function EditorMetaForm({
           <span className="text-xs text-slate-500">
             slug 쉼표(,) 구분. 검색 또는 추천 칩에서 클릭으로 추가하세요.
           </span>
+          <KbAiSuggestionCard
+            value={
+              aiSuggestion?.related_search_hints &&
+              aiSuggestion.related_search_hints.length > 0
+                ? aiSuggestion.related_search_hints.join(', ')
+                : undefined
+            }
+            onApply={() => onAiApplyRelatedHints?.()}
+            onReject={() => onAiRejectRelatedHints?.()}
+            label="관련 검색어 제안 → keywords로 병합"
+          />
         </div>
       </CardContent>
     </Card>

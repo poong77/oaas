@@ -1,17 +1,19 @@
 'use client';
 
 /**
- * AiAssistantPanel — Claude 보조 패널 (A5).
+ * AiAssistantTrigger — Claude 보조 호출 트리거 (A5, UX v1.4).
+ *
+ * v1.4 변경: 5종 카드 일괄 표시 X → 각 필드 옆 mini 적용 카드로 분산.
+ *           이 컴포넌트는 트리거 + 로딩 + 결과 콜백만 담당.
  *
  * 흐름:
- *   - "✨ AI 보조" 버튼 → aiAssistArticleAction
- *   - 5종 카드 (slug/summary/keywords/related/chatbot_meta) → 각 [적용]/[거부]
- *   - 적용 시 부모로 patch 전달
+ *   - "✨ 작성 보조" 버튼 → aiAssistArticleAction
+ *   - 결과 → onResult 콜백 → 부모(shell)가 aiSuggestion state 보관
+ *   - 각 필드 옆 KbAiSuggestionCard가 부분 적용 UI 담당
  *
  * graceful degradation:
  *   - rate-limit: 60초 비활성화 + 토스트
- *   - api-error: 활성 유지, 재시도 가능
- *   - parse-error: 재시도
+ *   - api-error: 활성 유지, 재시도 가능 (실제 에러 메시지 노출 — production 외)
  *
  * @see docs/02-design/knowledge-base-overhaul/DESIGN.md §1-1 (A5)
  */
@@ -25,14 +27,6 @@ import { aiAssistArticleAction } from '@/app/actions/article-actions';
 import type { ArticleContentType } from '@/db/schema';
 import type { AiAssistOutput } from '@/lib/ai/prompts/article-assistant';
 
-export interface AiAssistPatch {
-  slug?: string;
-  summary?: string;
-  keywords?: string[];
-  relatedHints?: string[];
-  chatbotMeta?: AiAssistOutput['chatbot_meta'];
-}
-
 export interface AiAssistantPanelProps {
   inputContext: {
     title: string;
@@ -42,18 +36,17 @@ export interface AiAssistantPanelProps {
     categoryPath: string[];
     existingKeywords: string[];
   };
-  onApply: (patch: AiAssistPatch) => void;
+  onResult: (output: AiAssistOutput) => void;
   /** 비활성 조건: 본문 500자 미만, 제목 없음 등. */
   disabled?: boolean;
 }
 
 export function AiAssistantPanel({
   inputContext,
-  onApply,
+  onResult,
   disabled = false,
 }: AiAssistantPanelProps) {
   const [loading, setLoading] = useState(false);
-  const [output, setOutput] = useState<AiAssistOutput | null>(null);
   const [cooldownUntil, setCooldownUntil] = useState<number>(0);
 
   const onCooldown = Date.now() < cooldownUntil;
@@ -61,7 +54,7 @@ export function AiAssistantPanel({
     !disabled &&
     !loading &&
     !onCooldown &&
-    inputContext.productCode &&
+    !!inputContext.productCode &&
     (inputContext.title.trim().length > 0 || inputContext.body.length > 200);
 
   async function handleCall() {
@@ -81,7 +74,8 @@ export function AiAssistantPanel({
           `본문이 길어 5000자만 분석했어요 (원본 ${result.originalLength?.toLocaleString()}자).`,
         );
       }
-      setOutput(result.data);
+      onResult(result.data);
+      toast.success('AI 제안이 각 필드 옆에 표시됐어요. 적용/거부를 선택하세요.');
     } finally {
       setLoading(false);
     }
@@ -89,159 +83,161 @@ export function AiAssistantPanel({
 
   return (
     <Card>
-      <CardContent className="flex flex-col gap-3 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-brand-600 dark:text-brand-300" />
-            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              AI 보조 — 5종 메타 추출
-            </span>
-          </div>
+      <CardContent className="flex flex-wrap items-center justify-between gap-2 p-3">
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="h-4 w-4 text-brand-600 dark:text-brand-300" />
+          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            AI 작성 보조
+          </span>
+          <span className="text-xs text-slate-500">
+            슬러그·요약·키워드·관련문서·챗봇메타 한 번에 추출 (각 필드 옆 적용)
+          </span>
+        </div>
+        <div className="flex flex-col items-end gap-1">
           <Button
             type="button"
             size="sm"
             onClick={handleCall}
             disabled={!canCall}
           >
-            {loading ? '추출 중...' : '✨ 한 번 클릭으로 작성 보조'}
+            {loading ? '추출 중...' : '✨ 작성 보조'}
           </Button>
+          {disabled && (
+            <span className="text-[10px] text-slate-400">
+              본문 500자 또는 제목 입력 후 활성
+            </span>
+          )}
+          {onCooldown && (
+            <span className="text-[10px] text-amber-600 dark:text-amber-400">
+              분당 한도 — 1분 후 가능
+            </span>
+          )}
         </div>
-
-        {disabled && !output && (
-          <p className="text-xs text-slate-500">
-            본문 500자 또는 제목 작성 후 활성화돼요.
-          </p>
-        )}
-        {onCooldown && (
-          <p className="text-xs text-amber-600 dark:text-amber-400">
-            분당 한도 초과로 잠시 후 다시 시도할 수 있어요.
-          </p>
-        )}
-
-        {output && (
-          <div className="grid gap-2">
-            <ApplyCard
-              label="slug"
-              value={output.slug}
-              onApply={() => onApply({ slug: output.slug })}
-            />
-            <ApplyCard
-              label="요약 (summary)"
-              value={output.summary}
-              onApply={() => onApply({ summary: output.summary })}
-            />
-            <ApplyCard
-              label={`키워드 ${output.keywords.length}개`}
-              value={output.keywords.join(', ')}
-              onApply={() => onApply({ keywords: output.keywords })}
-            />
-            <ApplyCard
-              label="관련 문서 키워드"
-              value={output.related_search_hints.join(', ') || '(없음)'}
-              onApply={() =>
-                onApply({ relatedHints: output.related_search_hints })
-              }
-            />
-            <ChatbotMetaCard meta={output.chatbot_meta} onApply={onApply} />
-            <button
-              type="button"
-              onClick={() => setOutput(null)}
-              className="self-end text-xs text-slate-400 hover:text-rose-500"
-            >
-              모두 닫기
-            </button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
 }
 
-function ApplyCard({
-  label,
+// ─────────────────────────────────────────────────────────────────────────────
+// 각 필드 옆 mini 적용 카드
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface KbAiSuggestionCardProps {
+  /** 제안 값. null/undefined이면 카드 표시 안 함. */
+  value?: string | null;
+  /** 적용 클릭 시 호출. */
+  onApply: () => void;
+  /** 거부 클릭 시 호출 (해당 제안 dismiss). */
+  onReject: () => void;
+  /** 표시 라벨 (예: 'slug 제안'). */
+  label?: string;
+  /** 값을 <code> 스타일로 표시할지. */
+  mono?: boolean;
+}
+
+/**
+ * 각 입력 필드 아래에 inline으로 표시되는 작은 적용 카드.
+ *
+ * @example
+ * <Input value={slug} onChange={...} />
+ * <KbAiSuggestionCard
+ *   value={aiSuggestion?.slug}
+ *   onApply={() => { setSlug(aiSuggestion!.slug); clearSlugSuggestion(); }}
+ *   onReject={clearSlugSuggestion}
+ *   label="slug 제안"
+ *   mono
+ * />
+ */
+export function KbAiSuggestionCard({
   value,
   onApply,
-}: {
-  label: string;
-  value: string;
-  onApply: () => void;
-}) {
-  const [applied, setApplied] = useState(false);
+  onReject,
+  label = 'AI 제안',
+  mono = false,
+}: KbAiSuggestionCardProps) {
+  if (!value) return null;
   return (
-    <div className="rounded-md border border-slate-200 p-2 dark:border-slate-700">
+    <div className="mt-1 flex flex-wrap items-center gap-2 rounded-md border border-brand-200 bg-brand-50/60 px-2 py-1.5 text-xs dark:border-brand-800 dark:bg-brand-950/30">
+      <Sparkles className="h-3 w-3 shrink-0 text-brand-600 dark:text-brand-300" />
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-brand-700 dark:text-brand-300">
+        {label}
+      </span>
+      <span
+        className={`min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200 ${
+          mono ? 'font-mono text-[11px]' : ''
+        }`}
+        title={value}
+      >
+        {value}
+      </span>
+      <button
+        type="button"
+        onClick={() => {
+          onApply();
+          toast.success(`${label} 적용됨`);
+        }}
+        className="inline-flex h-6 items-center gap-1 rounded bg-brand-500 px-2 text-[10px] font-medium text-white hover:bg-brand-600"
+      >
+        <Check className="h-3 w-3" />
+        적용
+      </button>
+      <button
+        type="button"
+        onClick={onReject}
+        aria-label="제안 거부"
+        className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-rose-500 dark:border-slate-700"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 챗봇 KB 메타 카드 (별도 영역, 사이드바 또는 사이드 표시)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface KbAiChatbotMetaCardProps {
+  meta: AiAssistOutput['chatbot_meta'] | null;
+  onApply: () => void;
+  onReject: () => void;
+}
+
+export function KbAiChatbotMetaCard({
+  meta,
+  onApply,
+  onReject,
+}: KbAiChatbotMetaCardProps) {
+  if (!meta) return null;
+  return (
+    <div className="flex flex-col gap-1.5 rounded-md border border-emerald-200 bg-emerald-50/40 p-2 dark:border-emerald-800 dark:bg-emerald-950/20">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-          {label}
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+          챗봇 KB 메타 (v2 영속화)
         </span>
         <div className="flex gap-1">
           <button
             type="button"
             onClick={() => {
               onApply();
-              setApplied(true);
-              toast.success(`${label} 적용됨`);
+              toast.success('챗봇 메타 적용됨 (draft에 보관)');
             }}
-            disabled={applied}
-            className={`inline-flex h-6 items-center gap-1 rounded px-2 text-xs font-medium ${
-              applied
-                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                : 'bg-brand-500 text-white hover:bg-brand-600'
-            }`}
+            className="inline-flex h-6 items-center gap-1 rounded bg-emerald-600 px-2 text-[10px] font-medium text-white hover:bg-emerald-700"
           >
-            {applied ? (
-              <Check className="h-3 w-3" />
-            ) : (
-              <Sparkles className="h-3 w-3" />
-            )}
-            {applied ? '적용됨' : '적용'}
+            <Check className="h-3 w-3" />
+            적용
           </button>
           <button
             type="button"
-            onClick={() => setApplied(true)}
-            className="inline-flex h-6 items-center rounded border border-slate-200 px-2 text-xs text-slate-500 hover:bg-slate-50 dark:border-slate-700"
+            onClick={onReject}
+            aria-label="제안 거부"
+            className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-rose-500 dark:border-slate-700"
           >
             <X className="h-3 w-3" />
           </button>
         </div>
       </div>
-      <p className="mt-1 text-xs text-slate-700 dark:text-slate-200">{value}</p>
-    </div>
-  );
-}
-
-function ChatbotMetaCard({
-  meta,
-  onApply,
-}: {
-  meta: AiAssistOutput['chatbot_meta'];
-  onApply: (patch: AiAssistPatch) => void;
-}) {
-  const [applied, setApplied] = useState(false);
-  return (
-    <div className="rounded-md border border-emerald-200 bg-emerald-50/30 p-2 dark:border-emerald-800 dark:bg-emerald-950/20">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-          챗봇 KB 메타 (v2 영속화)
-        </span>
-        <button
-          type="button"
-          onClick={() => {
-            onApply({ chatbotMeta: meta });
-            setApplied(true);
-            toast.success('챗봇 메타 적용됨 (draft에 보관)');
-          }}
-          disabled={applied}
-          className={`inline-flex h-6 items-center gap-1 rounded px-2 text-xs font-medium ${
-            applied
-              ? 'bg-emerald-100 text-emerald-700'
-              : 'bg-emerald-600 text-white hover:bg-emerald-700'
-          }`}
-        >
-          {applied ? <Check className="h-3 w-3" /> : null}
-          {applied ? '적용됨' : '적용'}
-        </button>
-      </div>
-      <dl className="mt-1.5 grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
+      <dl className="grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
         <div>
           <dt className="text-slate-500">의도</dt>
           <dd className="text-slate-700 dark:text-slate-200">{meta.intent}</dd>
