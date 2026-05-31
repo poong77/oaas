@@ -1027,6 +1027,51 @@ export async function restoreArticleById(
 }
 
 /**
+ * 자동완성용 경량 검색 (knowledge-base-overhaul A4).
+ *
+ * 발행된 아티클 중 title ILIKE '%q%' (또는 slug 정확 매칭) top N개.
+ */
+export async function searchArticlesForAutocomplete(
+  q: string,
+  productCode?: string,
+  limit = 10,
+): Promise<
+  Array<{ id: string; slug: string; title: string; productCode: string }>
+> {
+  if (!db) return [];
+  const term = q.trim();
+  if (term.length < 2) return [];
+  try {
+    const conds = [
+      eq(articles.status, 'published'),
+      eq(articles.isActive, true),
+      or(
+        ilike(articles.title, `%${term}%`),
+        eq(articles.slug, term.toLowerCase()),
+      )!,
+    ];
+    if (productCode?.trim()) {
+      conds.push(eq(articles.productCode, productCode.trim()));
+    }
+    const rows = await db
+      .select({
+        id: articles.id,
+        slug: articles.slug,
+        title: articles.title,
+        productCode: articles.productCode,
+      })
+      .from(articles)
+      .where(and(...conds))
+      .orderBy(desc(articles.viewCount))
+      .limit(limit);
+    return rows;
+  } catch (err) {
+    console.error('[articles.searchArticlesForAutocomplete] 실패:', err);
+    return [];
+  }
+}
+
+/**
  * 본문 마크다운에서 TOC 자동 추출 (#, ##, ### 까지).
  * anchor는 lowercase + 공백 → hyphen + non-word 제거 (rehype-slug 기본 규칙 모방).
  */

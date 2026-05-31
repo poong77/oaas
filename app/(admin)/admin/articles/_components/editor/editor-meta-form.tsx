@@ -26,6 +26,7 @@ import {
 } from '@/app/actions/article-actions';
 import { MenuPathCascader } from './menu-path-cascader';
 import { KeywordRecommender } from './keyword-recommender';
+import { RelatedArticleAutocomplete } from './related-article-autocomplete';
 
 export interface EditorMetaFormProps {
   mode: 'create' | 'edit';
@@ -270,15 +271,20 @@ export function EditorMetaForm({
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <Label htmlFor="related">관련 문서 slug (선택)</Label>
-          <Input
-            id="related"
-            value={related}
-            onChange={(e) => onRelated(e.target.value)}
-            placeholder="예: pms-howto-001, pms-feature-013"
+          <Label>관련 문서 (선택)</Label>
+          <RelatedArticleAutocomplete
+            inputContext={{
+              productCode,
+              categoryPath,
+              keywords,
+              body: bodyForRecommend,
+              excludeId: mode === 'edit' ? initialId : undefined,
+            }}
+            rawValue={related}
+            onChange={onRelated}
           />
           <span className="text-xs text-slate-500">
-            slug 쉼표(,) 구분. Phase 2에서 자동 추천 + 검색 자동완성 추가 예정.
+            slug 쉼표(,) 구분. 검색 또는 추천 칩에서 클릭으로 추가하세요.
           </span>
         </div>
       </CardContent>

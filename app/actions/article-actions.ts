@@ -23,6 +23,7 @@ import {
   publishArticleById,
   recordFeedback,
   restoreArticleById,
+  searchArticlesForAutocomplete,
   slugExists,
   togglePublishArticleById,
   unpublishArticleById,
@@ -140,6 +141,17 @@ export async function recommendRelatedArticlesAction(input: {
     body: input.body ?? '',
     excludeId: input.excludeId,
   });
+}
+
+/**
+ * A4 — 관련 문서 자동완성 검색 (title ILIKE %q% 또는 slug 정확 매칭).
+ */
+export async function searchArticlesForAutocompleteAction(
+  q: string,
+  productCode?: string,
+): Promise<Array<{ id: string; slug: string; title: string; productCode: string }>> {
+  await requireRole(['manager', 'admin']);
+  return searchArticlesForAutocomplete(q, productCode);
 }
 
 // ─────────────────────────────────────────────────────────────────────
