@@ -59,3 +59,6 @@ export * from './ticket-no-counter';
 export * from './business-hours-default';
 export * from './business-holidays';
 export * from './business-hours-overrides';
+// knowledge-base-overhaul (Phase 1 v1.3) — slug 채번 + 골격 마스터
+export * from './article-seq-counters';
+export * from './article-templates';
