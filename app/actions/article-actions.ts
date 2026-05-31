@@ -385,12 +385,14 @@ function parseFormDataInput(formData: FormData): {
         .filter(Boolean)
     : null;
   const relatedSlugsRaw = get('relatedSlugs').trim();
+  // articleSaveSchema.relatedSlugs는 .default([])만 있고 nullable 아님.
+  // 빈 폼은 null이 아니라 []로 보내야 zod 통과.
   const relatedSlugs = relatedSlugsRaw
     ? relatedSlugsRaw
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean)
-    : null;
+    : [];
   const keywordsRaw = get('keywords').trim();
   const keywords = keywordsRaw
     ? keywordsRaw
@@ -407,7 +409,9 @@ function parseFormDataInput(formData: FormData): {
       appliesTo = null;
     }
   }
-  const summary = get('summary').trim() || null;
+  // articleSaveSchema.summary는 optional(undefined OK)이지만 null은 거부.
+  // 빈 폼은 undefined로 보내야 zod 통과.
+  const summary = get('summary').trim() || undefined;
 
   const raw: Record<string, unknown> = {
     productCode: get('productCode'),
