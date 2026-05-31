@@ -140,6 +140,10 @@ const ARTICLE_LIST_SELECT = {
  * keywords는 작성자가 수동 입력하므로 동의어가 누락될 수 있어,
  * 확장 term을 본문에도 ILIKE 매칭해 "실시간객실 ↔ 실시간 객실"처럼
  * 띄어쓰기/이형어 차이를 흡수한다.
+ *
+ * 주의: leg (1) arrayOverlaps는 정확 일치(대소문자/공백 민감)라
+ * keywords가 확장 term과 형태가 다르면 미스 → leg (2) ILIKE가 보완한다.
+ * 즉 (1)은 정확-매칭 GIN 가속 경로, (2)가 의미 매칭의 실질 보장.
  */
 function buildArticleSearchCondition(expanded: string[]): SQL | undefined {
   if (expanded.length === 0) return undefined;
@@ -200,6 +204,8 @@ export async function listArticles(
     const { expandKeywords } = await import(
       '@/lib/services/synonym-expander'
     );
+    // maxTokens 16: 목록(SS-02)은 단일 제품 범위라 통합검색(SS-01, 32)보다
+    // 좁게 확장 — ILIKE 조건 수 과증가 방지.
     const expanded = await expandKeywords(params.q.trim(), { maxTokens: 16 });
     const search = buildArticleSearchCondition(expanded);
     if (search) conditions.push(search);
