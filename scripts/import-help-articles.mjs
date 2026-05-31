@@ -26,7 +26,14 @@ loadEnv({ path: '.env' });
 if (existsSync('.env.local')) loadEnv({ path: '.env.local', override: true });
 
 import { compositeBrowserFrame } from './lib/composite-frame.mjs';
-import { sources, specs } from './data/help-pms-specs.mjs';
+import { sources as sourcesPmsRoom, specs as specsPmsRoom } from './data/help-pms-specs.mjs';
+import { sources as sourcesPmsRoomExtra, specs as specsPmsRoomExtra } from './data/help-pms-room-extra-specs.mjs';
+import { sources as sourcesPmsCDR, specs as specsPmsCDR } from './data/help-pms-customer-daily-report-specs.mjs';
+import { sources as sourcesCms, specs as specsCms } from './data/help-cms-specs.mjs';
+
+// 모든 spec 파일을 합쳐서 한 번에 처리. 신규 카테고리 추가 시 여기에 import + concat.
+const sources = [...sourcesPmsRoom, ...sourcesPmsRoomExtra, ...sourcesPmsCDR, ...sourcesCms];
+const specs = [...specsPmsRoom, ...specsPmsRoomExtra, ...specsPmsCDR, ...specsCms];
 
 const dbUrl = process.env.DATABASE_URL;
 const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
