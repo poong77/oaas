@@ -20,17 +20,9 @@ import {
   getTemplateHoverPreview,
   type ArticleTemplate,
 } from '@/lib/articles/templates';
+import { CONTENT_TYPE_OPTIONS } from '@/lib/articles/content-type-meta';
 
-const OPTIONS: Array<{
-  value: ArticleContentType;
-  label: string;
-  hint: string;
-  tone: 'brand' | 'success' | 'warn';
-}> = [
-  { value: 'howto', label: '사용방법', hint: '따라하기', tone: 'brand' },
-  { value: 'feature', label: '기능설명', hint: '이해하기', tone: 'success' },
-  { value: 'troubleshoot', label: '문제해결', hint: '고치기', tone: 'warn' },
-];
+const OPTIONS = CONTENT_TYPE_OPTIONS;
 
 export interface IntentSelectorProps {
   value: ArticleContentType;

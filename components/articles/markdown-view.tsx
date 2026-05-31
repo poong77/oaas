@@ -150,7 +150,7 @@ export function MarkdownView({
           h2: ({ children, ...props }) => (
             <h2
               {...props}
-              className="mb-3 mt-7 scroll-mt-24 border-b border-slate-200 pb-1 text-xl font-bold tracking-tight dark:border-slate-700"
+              className="mb-3 mt-7 scroll-mt-24 border-b border-slate-200 pb-1 text-xl font-bold tracking-tight text-brand-700 dark:border-slate-700 dark:text-brand-300"
             >
               {children}
             </h2>
@@ -158,7 +158,7 @@ export function MarkdownView({
           h3: ({ children, ...props }) => (
             <h3
               {...props}
-              className="mb-2 mt-5 scroll-mt-24 text-base font-bold tracking-tight"
+              className="mb-2 mt-5 scroll-mt-24 text-base font-bold tracking-tight text-brand-700 dark:text-brand-300"
             >
               {children}
             </h3>

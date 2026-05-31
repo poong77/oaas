@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import type { ArticleListItem } from '@/lib/services/articles';
 import type { ProductCategoryView } from '@/lib/services/categories';
+import { CONTENT_TYPE_META } from '@/lib/articles/content-type-meta';
 import {
   archiveArticleAction,
   restoreArticleAction,
@@ -135,10 +136,15 @@ export function ArticlesListClient({
             {items.map((a) => (
               <tr key={a.id} className={a.isActive ? '' : 'opacity-60'}>
                 <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <Badge tone="brand" className="uppercase">
                       {productLabel(a.productCode)}
                     </Badge>
+                    {a.contentType && CONTENT_TYPE_META[a.contentType] && (
+                      <Badge tone={CONTENT_TYPE_META[a.contentType].tone}>
+                        {CONTENT_TYPE_META[a.contentType].label}
+                      </Badge>
+                    )}
                     {a.categoryPath?.[0] && (
                       <Badge tone="slate">{a.categoryPath[0]}</Badge>
                     )}
@@ -248,6 +254,11 @@ export function ArticlesListClient({
               <Badge tone="brand" className="uppercase">
                 {productLabel(a.productCode)}
               </Badge>
+              {a.contentType && CONTENT_TYPE_META[a.contentType] && (
+                <Badge tone={CONTENT_TYPE_META[a.contentType].tone}>
+                  {CONTENT_TYPE_META[a.contentType].label}
+                </Badge>
+              )}
               {a.publishedAt ? (
                 <Badge tone="success">발행</Badge>
               ) : (
