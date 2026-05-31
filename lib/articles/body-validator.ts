@@ -132,13 +132,15 @@ function escapeRegex(s: string): string {
  * H2 다음 본문 영역에 실질적 텍스트가 있는지 (20자+, blockquote/공백 제거).
  *
  * 골격(>로 시작하는 placeholder)만 있으면 false.
+ *
+ * 정규식 주의: JavaScript는 `\z`(EOF) 미지원 → lookahead `(?=\n##\s|$)`로 대체.
+ *              `(?:^|\n)`으로 H2 라인 시작 매칭 (멀티라인 플래그 없이).
  */
 function hasMeaningfulContent(body: string, headingCore: string): boolean {
-  // H2 라인 패턴: ^##\s+(headingCore...)
-  // 다음 H2 또는 EOF 직전까지를 슬라이스
+  // 다음 ## 또는 문자열 끝(EOF) 직전까지를 슬라이스
   const re = new RegExp(
-    `^##\\s+[^\\n]*${escapeRegex(headingCore)}[^\\n]*\\n([\\s\\S]*?)(?=^##\\s|\\z)`,
-    'mu',
+    `(?:^|\\n)##\\s+[^\\n]*${escapeRegex(headingCore)}[^\\n]*\\n([\\s\\S]*?)(?=\\n##\\s|$)`,
+    'u',
   );
   const m = body.match(re);
   if (!m) return false;
@@ -170,9 +172,10 @@ export function extractBodyOutline(
   const items: BodyOutlineItem[] = required.map((text) => {
     // 괄호 부분 제거 매칭 — "위치(메뉴 경로)" → "위치"
     const core = text.split('(')[0]!.trim();
-    const present = new RegExp(`^##\\s+[^\\n]*${escapeRegex(core)}`, 'mu').test(
-      body,
-    );
+    const present = new RegExp(
+      `(?:^|\\n)##\\s+[^\\n]*${escapeRegex(core)}`,
+      'u',
+    ).test(body);
     const hasContent = present && hasMeaningfulContent(body, core);
     return { text, present, hasContent };
   });
