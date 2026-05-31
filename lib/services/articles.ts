@@ -897,7 +897,7 @@ export async function updateArticleById(
     if (input.relatedSlugs) patch.relatedSlugs = input.relatedSlugs;
     if (editorId) patch.lastEditorId = editorId;
 
-    // v1.5 — 발행 상태일 때 워닝 카운트 갱신
+    // v1.5 — 발행 상태일 때 워닝 카운트 갱신 + status/publishedAt 전환
     const willPublish =
       input.publish === true || input.status === 'published';
     if (willPublish && input.contentType) {
@@ -911,6 +911,18 @@ export async function updateArticleById(
       if ((input.keywords ?? []).length < 3) warningCount += 1;
       if (!input.categoryPath || input.categoryPath.length === 0) warningCount += 1;
       patch.warningCount = warningCount;
+
+      // status='published'로 강제 전환 (편집 페이지 발행 버튼).
+      // publishedAt은 첫 발행 시에만 새로 찍음 — 재발행 시 기존 시각 유지.
+      patch.status = 'published';
+      const [existing] = await db
+        .select({ publishedAt: articles.publishedAt })
+        .from(articles)
+        .where(eq(articles.id, id))
+        .limit(1);
+      if (!existing?.publishedAt) {
+        patch.publishedAt = new Date();
+      }
     }
 
     await db.update(articles).set(patch).where(eq(articles.id, id));
