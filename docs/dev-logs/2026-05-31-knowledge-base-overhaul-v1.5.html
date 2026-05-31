@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2026-05-31 — knowledge-base-overhaul v1.5 중간 마감</title>
+<style>
+  :root {
+    --brand-50: #f5f3ff;
+    --brand-100: #ede9fe;
+    --brand-500: #8b5cf6;
+    --brand-600: #7c3aed;
+    --brand-700: #6d28d9;
+    --brand-900: #4c1d95;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+    --emerald-50: #ecfdf5;
+    --emerald-600: #059669;
+    --amber-50: #fffbeb;
+    --amber-600: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif;
+    background: var(--slate-50); color: var(--slate-900); line-height: 1.6;
+  }
+  .container { max-width: 1080px; margin: 0 auto; }
+  header { padding: 24px 0; border-bottom: 3px solid var(--brand-500); margin-bottom: 24px; }
+  h1 { margin: 0 0 4px; font-size: 24px; color: var(--brand-700); }
+  h2 { font-size: 18px; color: var(--brand-700); margin: 28px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--slate-200); }
+  h3 { font-size: 14px; color: var(--slate-700); margin: 14px 0 6px; }
+  .meta { color: var(--slate-500); font-size: 13px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .card { background: white; border: 1px solid var(--slate-200); border-radius: 8px; padding: 14px 16px; }
+  .card.brand { border-left: 3px solid var(--brand-500); }
+  .card.success { border-left: 3px solid var(--emerald-600); background: var(--emerald-50); }
+  .card.warn { border-left: 3px solid var(--amber-600); background: var(--amber-50); }
+  .stat-num { font-size: 28px; font-weight: 700; color: var(--brand-700); }
+  .stat-label { font-size: 12px; color: var(--slate-500); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--slate-200); padding: 7px 9px; text-align: left; vertical-align: top; }
+  th { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+  td.mono, code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  code { background: var(--slate-100); padding: 2px 5px; border-radius: 3px; }
+  ul.check { list-style: none; padding-left: 0; }
+  ul.check li::before { content: "✅ "; }
+  ul.todo li::before { content: "⏳ "; }
+  ul.next li::before { content: "→ "; color: var(--brand-600); font-weight: 700; }
+  ul.insight li { margin: 6px 0; padding-left: 4px; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge.ok { background: #d1fae5; color: #065f46; }
+  .badge.info { background: var(--brand-100); color: var(--brand-700); }
+  .badge.warn { background: #fef3c7; color: #92400e; }
+  blockquote { margin: 12px 0; padding: 10px 14px; border-left: 3px solid var(--brand-500); background: var(--brand-50); border-radius: 4px; color: var(--slate-700); font-size: 13px; }
+  @media (max-width: 640px) {
+    h1 { font-size: 20px; }
+    .grid { grid-template-columns: 1fr; }
+    th, td { font-size: 12px; padding: 5px 7px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>knowledge-base-overhaul — v1.5 중간 마감</h1>
+  <p class="meta">📅 2026-05-31 · Phase 1·2·3 + v1.5 정책 완료 · 프로덕션 e2e 3/3 통과 · Phase 4·5 별도 사이클 권장 ·
+    <span class="badge ok">26 commits</span> <span class="badge info">+5,000줄</span> <span class="badge info">$43/월 추정</span>
+  </p>
+</header>
+
+<section>
+  <h2>📊 한눈에 보기</h2>
+  <div class="grid">
+    <div class="card brand"><div class="stat-num">26</div><div class="stat-label">누적 commits</div></div>
+    <div class="card brand"><div class="stat-num">~5,000</div><div class="stat-label">코드 변경 (줄)</div></div>
+    <div class="card brand"><div class="stat-num">3</div><div class="stat-label">신규 DB 테이블/컬럼</div></div>
+    <div class="card brand"><div class="stat-num">9 + 10</div><div class="stat-label">신규 lib / 컴포넌트</div></div>
+    <div class="card success"><div class="stat-num">3/3</div><div class="stat-label">프로덕션 e2e</div></div>
+    <div class="card success"><div class="stat-num">$43</div><div class="stat-label">월 AI 비용 추정</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>🎯 4-Perspective 가치</h2>
+  <table>
+    <thead><tr><th>관점</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td><b>Problem</b></td><td>아티클 작성 30분+ · 메타 수동 · 발행 직전 차단 · AI 0% · 키워드 한/영 혼재 · /help 트리 부재 · /role DB 미연동</td></tr>
+      <tr><td><b>Solution</b></td><td>골격 마스터 DB · 메뉴 캐스케이더 · 자동 추천 · Claude 5종 메타 · 운영 ID slug · 자동저장 · /help 트리 · /role DB · 한글 정책 · 발행 완화 · ⚠️ 보완 N건</td></tr>
+      <tr><td><b>Function · UX</b></td><td>좌 본문 + 우 체크리스트 · 의도 카드 호버 · 캐스케이더 3단 · 추천 칩 · 자동완성 · AI ✨ 트리거 각 필드 옆 · 분산 적용 카드 · 챗봇 메타 별도 · 보완 N건 amber 배지</td></tr>
+      <tr><td><b>Core Value</b></td><td>매니저 효율 60%↑ · 호텔리어 검색 도달성↑ · 챗봇 KB 자동 메타 기반 · 운영팀 마스터 일관성 · 예산 내 ($43/월)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>📋 Phase별 진척</h2>
+  <table>
+    <thead><tr><th>Phase</th><th>항목</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td>Phase 1 (Week 1)</td><td>A1 골격 · A2 캐스케이더 · A7 Slug ID · A8 자동저장 · editor 519→280줄 분리</td><td>✅</td></tr>
+      <tr><td>Phase 2 (Week 2)</td><td>A3 키워드 추천 · A4 관련문서 자동완성 · B1 /help 메뉴 트리</td><td>✅</td></tr>
+      <tr><td>Phase 3 (Week 3)</td><td>A5 Claude Sonnet 4.6 · B2 /role DB 폴백 · AI UX 분산 · 트리거 위치</td><td>✅</td></tr>
+      <tr><td>v1.5 정책</td><td>발행 완화(Hard/Soft) · 키워드 한글 · ⚠️ 보완 N건 · 환경별 키 분기 · 백스페이스/regex 핫픽스 · 사이드바 좌측</td><td>✅</td></tr>
+      <tr><td>e2e</td><td>프로덕션 KB-07·KB-08·KB-08b 3/3 통과</td><td>✅</td></tr>
+      <tr><td>Phase 4</td><td>A6 재편집 4모드 + diff 미리보기</td><td>⏳ 별도 사이클</td></tr>
+      <tr><td>Phase 5</td><td>Stream D 이미지 4종 (sharp · tui-image-editor · CSS 프레임)</td><td>⏳ 별도 사이클</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>🧱 주요 산출물</h2>
+  <h3>신규 라이브러리 (12개)</h3>
+  <ul class="check">
+    <li><code>lib/articles/templates.ts</code> — content_type 본문 골격 3종</li>
+    <li><code>lib/articles/recommend.ts</code> — A3·A4 추천 알고리즘</li>
+    <li><code>lib/articles/ops-id-slug.ts</code> — A7 atomic UPSERT slug</li>
+    <li><code>lib/articles/keyword-filter.ts</code> — v1.5 한글 정책</li>
+    <li><code>lib/articles/body-validator.ts</code> 확장 — extractBodyOutline + isPlaceholderOnly + hardCheck</li>
+    <li><code>lib/services/master-article-templates.ts</code> — 골격 마스터 (DB 우선, 코드 폴백)</li>
+    <li><code>lib/services/master-role-starters.ts</code> 확장 — getRoleStarterWithArticles</li>
+    <li><code>lib/editor/use-autosave-status.ts</code> — A8 상태 훅 + 토글</li>
+    <li><code>lib/ai/anthropic-client.ts</code> — Claude wrapper + env 분기</li>
+    <li><code>lib/ai/prompts/article-assistant.ts</code> — system + zod + truncate</li>
+    <li><code>lib/ai/rate-limiter.ts</code> — sliding window 메모리</li>
+    <li><code>lib/ai/cost-tracker.ts</code> — 토큰 사용량 console</li>
+  </ul>
+  <h3>신규 컴포넌트 (10개)</h3>
+  <ul class="check">
+    <li>IntentSelector · MenuPathCascader · EditorMetaForm · EditorBody · ArticleChecklistSidebar</li>
+    <li>AiAssistantPanel + KbAiSuggestionCard + KbAiChatbotMetaCard</li>
+    <li>KeywordRecommender · RelatedArticleAutocomplete · MenuTreeSidebar</li>
+  </ul>
+  <h3>DB 변경 2건</h3>
+  <ul class="check">
+    <li><code>0016</code> — article_seq_counters + article_templates</li>
+    <li><code>0017</code> — articles.warning_count int default 0</li>
+  </ul>
+</section>
+
+<section>
+  <h2>💡 인사이트 (8건, 다음 사이클로 이월)</h2>
+  <ul class="insight">
+    <li><b>사용자 피드백 즉시 반영 패턴</b> — 큰 Phase 사이사이에 작은 정책 변경을 즉시 commit으로 처리. PLAN/DESIGN v1.0~v1.5로 이력 기록.</li>
+    <li><b>모델 ID 미스매치 위험</b> — 새 모델이 SDK 미등록일 수 있음. 폴백 + ANTHROPIC_MODEL env override가 안전망. 에러에 모델 ID 노출이 진단에 결정적.</li>
+    <li><b>마이그레이션 메타 충돌</b> — drizzle 0015/0016 prevId 같으면 차단. snapshot id 수동 패치로 해결. 한번 직접 SQL 만들면 메타 동기 부담.</li>
+    <li><b>표현식 인덱스 부채</b> — articles_search_tsv처럼 raw SQL로 만든 인덱스는 schema 미정의 → 다음 generate에서 또 DROP. articles.ts에 표현식 인덱스 정의 추가 권장.</li>
+    <li><b>status enum 보수성</b> — derived 상태("개선필요")는 메타 컬럼(warning_count) + UI 배지. status 이진성(draft/published) 유지.</li>
+    <li><b>e2e strict mode</b> — 광범위 role 매치는 strict 위반. <code>level: 1</code> 또는 <code>.first()</code>로 좁히기.</li>
+    <li><b>AI 1회 호출 + 분산 표시</b> — 5종 메타를 부분 호출하면 비용 5배. 1회 호출 후 각 필드 옆 분산 표시가 비용·UX 둘 다 최적.</li>
+    <li><b>한글/영어 분리 정책</b> — articles.keywords(한글, 호텔리어 검색어) vs term_synonyms(영어 약어·동의어, 시스템 사전). expandKeywords로 자동 조합.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>📂 미해결 부채 (v1.5+ 권장)</h2>
+  <table>
+    <thead><tr><th>ID</th><th>부채</th><th>영향</th><th>권장</th></tr></thead>
+    <tbody>
+      <tr><td>D1</td><td>articles_search_tsv 인덱스 schema 미정의</td><td>다음 generate 시 또 DROP</td><td>articles.ts에 표현식 인덱스 정의 추가</td></tr>
+      <tr><td>D2</td><td>KB-01 로컬 e2e 미실행</td><td>manager 시나리오 회귀 부족</td><td>npm run dev + test:e2e 별도</td></tr>
+      <tr><td>D3</td><td>master/role-starters articleIds 매핑 UI</td><td>/role 매핑 운영 UX 부족</td><td>별도 사이클 ~1일</td></tr>
+      <tr><td>D4</td><td>system 프롬프트 4000자+ 확장 + cache 활성</td><td>호출당 비용 ~70% 절감 가능</td><td>호텔리어 어휘 사전 + 예시 추가</td></tr>
+      <tr><td>D5</td><td>A6 재편집 4모드</td><td>본문 재구조화·톤 자동화</td><td>Phase 4 별도 사이클</td></tr>
+      <tr><td>D6</td><td>Stream D 이미지 4종</td><td>스크린샷 처리</td><td>Phase 5 별도 사이클</td></tr>
+      <tr><td>D7</td><td>KB-04 mock Anthropic</td><td>AI 보조 회귀 부족</td><td>Phase 4 동반</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>🚀 다음 사이클 진입 후보</h2>
+  <ul class="next">
+    <li><b>articles_search_tsv 부채 정리</b> — articles.ts 표현식 인덱스 추가 (작은 작업)</li>
+    <li><b>Phase 4 사이클</b> — A6 재편집 4모드(reorder/fill-gaps/tone/custom) + diff 미리보기. A6-3 tone만 Haiku.</li>
+    <li><b>Phase 5 사이클</b> — Stream D 이미지 4종. 독립적 작업, 병렬 가능.</li>
+    <li><b>master/role-starters 매핑 UI</b> — 드래그 정렬 + RelatedAutocomplete 재사용 (작은 작업)</li>
+  </ul>
+</section>
+
+<footer style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--slate-200); color: var(--slate-500); font-size: 12px;">
+  PDCA Report: <code>docs/04-report/knowledge-base-overhaul/REPORT-v1.5.md</code> ·
+  PLAN/DESIGN: <code>docs/02-design/knowledge-base-overhaul/</code> ·
+  마지막 commit: <code>d429711</code>
+</footer>
+
+</div>
+</body>
+</html>
