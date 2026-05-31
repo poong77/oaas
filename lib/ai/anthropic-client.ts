@@ -23,9 +23,18 @@ import { trackCost } from './cost-tracker';
 const MODEL = 'claude-sonnet-4-6';
 
 function getClient(): Anthropic {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  // Vercel 환경별 분리:
+  //   - Development(`vercel dev` 또는 Vercel 환경=Development): ANTHROPIC_API_KEY_DEV 우선
+  //   - Production / Preview / 로컬 npm run dev (.env.local): ANTHROPIC_API_KEY
+  //   - 폴백 순서: _DEV → 일반
+  //
+  // 의도: dev 환경에서 별도 키로 quota/요금 격리 (Anthropic Console에서 분리).
+  const apiKey =
+    process.env.ANTHROPIC_API_KEY_DEV ?? process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY missing — .env.local 또는 Vercel 환경변수 확인');
+    throw new Error(
+      'ANTHROPIC_API_KEY missing — .env.local 또는 Vercel 환경변수(ANTHROPIC_API_KEY / ANTHROPIC_API_KEY_DEV) 확인',
+    );
   }
   return new Anthropic({ apiKey });
 }
