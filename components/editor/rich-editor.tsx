@@ -32,6 +32,7 @@ import { LinkInputDialog } from './dialogs/link-input-dialog';
 import { ShortcutHelpModal } from './dialogs/shortcut-help-modal';
 import { DraftRestoreDialog } from './dialogs/draft-restore-dialog';
 import { createEditorShortcutHandler } from '@/lib/editor/editor-keymap';
+import { normalizeMarkdown } from '@/lib/editor/normalize-markdown';
 
 export interface RichEditorProps {
   /** 마크다운 문자열 (controlled) */
@@ -149,9 +150,12 @@ export function RichEditor({
       //   - getHTML()이 아닌 storage.markdown.getMarkdown()을 사용하면 markdown(+ 인라인 HTML)로 저장됨.
       //   - body-validator(`## H2`)는 markdown 표기 그대로이므로 정상 작동.
       //   - 회귀 검증: /admin/sandbox/editor-check 페이지에서 14종 매트릭스 시각 확인.
-      const md =
+      // tiptap-markdown 0.9.0 라운드 트립 손상 정규화:
+      //   CRLF→LF, `&gt;`→`>`, block image 다음 빈 줄 보장.
+      const rawMd =
         (editor.storage.markdown?.getMarkdown() as string | undefined) ??
         editor.getHTML();
+      const md = normalizeMarkdown(rawMd);
       valueRef.current = md;
       onChange(md);
     },
@@ -165,9 +169,10 @@ export function RichEditor({
   useEffect(() => {
     if (!editor) return;
     if (!mounted) return;
-    const currentMd =
+    const rawCurrent =
       (editor.storage.markdown?.getMarkdown() as string | undefined) ??
       editor.getHTML();
+    const currentMd = normalizeMarkdown(rawCurrent);
     if (currentMd === value) return;
     editor.commands.setContent(value, { emitUpdate: false });
   }, [editor, value, mounted]);
@@ -195,7 +200,9 @@ export function RichEditor({
       if (!candidate || !candidate.content.trim()) return;
 
       // 현재 본문(에디터)과 같으면 복구 불필요
-      const currentMd = (editor?.storage.markdown.getMarkdown() as string) ?? '';
+      const currentMd = normalizeMarkdown(
+        (editor?.storage.markdown.getMarkdown() as string) ?? '',
+      );
       if (currentMd.trim() === candidate.content.trim()) return;
 
       // 본문이 비어있거나 단순 prefill만 있는 경우에만 다이얼로그 (사용자 작업 보존 우선)
