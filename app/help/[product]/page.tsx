@@ -17,9 +17,11 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { getProductCategories } from '@/lib/services/categories';
 import { listArticles } from '@/lib/services/articles';
+import { getMenuTaxonomyTreeByProduct } from '@/lib/services/master-menu-taxonomies';
 import { resolveIcon } from '@/app/_components/home/_icon-map';
 import { ProductFilters } from './_components/product-filters';
 import { ProductArticleList } from './_components/product-article-list';
+import { MenuTreeSidebar } from './_components/menu-tree-sidebar';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +31,8 @@ type SearchParams = Promise<{
   sortBy?: 'published_at' | 'view_count' | 'helpful';
   sortOrder?: 'asc' | 'desc';
   page?: string;
+  /** B1 — menu_taxonomies 트리 노드 선택. 'parent/child/grandchild' 형태. */
+  path?: string;
 }>;
 
 export async function generateMetadata({ params }: { params: RouteParams }) {
@@ -56,22 +60,40 @@ export default async function HelpProductPage({
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1);
   const sortBy = sp.sortBy ?? 'published_at';
   const sortOrder = sp.sortOrder ?? 'desc';
+  const selectedPath = sp.path
+    ? sp.path.split('/').map((s) => s.trim()).filter(Boolean)
+    : [];
 
+  // B1 — 메인 리스트는 selectedPath 필터 + 페이지네이션
   const { items, total, pageSize } = await listArticles({
     productCode: current.code,
     q: sp.q,
     publishedOnly: true,
+    selectedPath,
     sortBy,
     sortOrder,
     page,
     pageSize: 10,
   });
 
-  // 사이드바 트리: categoryPath 첫 단계 카운트
-  const pathCounts: Record<string, number> = {};
-  for (const a of items) {
-    const root = a.categoryPath?.[0];
-    if (root) pathCounts[root] = (pathCounts[root] ?? 0) + 1;
+  // B1 — 사이드바 트리 + 카운트는 productCode 전체 (필터 없음, max 1000개)
+  const [menuTree, allInProduct] = await Promise.all([
+    getMenuTaxonomyTreeByProduct(current.code),
+    listArticles({
+      productCode: current.code,
+      publishedOnly: true,
+      pageSize: 1000,
+    }),
+  ]);
+
+  // 누적 카운트: ['예약 관리', '예약 등록'] → '예약 관리': +1, '예약 관리/예약 등록': +1
+  const articleCountsByPath: Record<string, number> = {};
+  for (const a of allInProduct.items) {
+    if (!a.categoryPath) continue;
+    for (let i = 1; i <= a.categoryPath.length; i++) {
+      const key = a.categoryPath.slice(0, i).join('/');
+      articleCountsByPath[key] = (articleCountsByPath[key] ?? 0) + 1;
+    }
   }
 
   const Icon = resolveIcon(current.icon);
@@ -141,30 +163,14 @@ export default async function HelpProductPage({
         </Card>
 
         <aside className="hidden flex-col gap-4 lg:flex">
-          {Object.keys(pathCounts).length > 0 && (
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
-                  카테고리
-                </h3>
-                <ul className="flex flex-col gap-1 text-sm">
-                  {Object.entries(pathCounts)
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([root, count]) => (
-                      <li
-                        key={root}
-                        className="flex items-center justify-between rounded px-2 py-1 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                      >
-                        <span>{root}</span>
-                        <span className="text-xs text-slate-400 tabular-nums">
-                          {count}
-                        </span>
-                      </li>
-                    ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
+          {/* B1 — menu_taxonomies 트리 사이드바 */}
+          <MenuTreeSidebar
+            productCode={current.code}
+            tree={menuTree}
+            selectedPath={selectedPath}
+            articleCountsByPath={articleCountsByPath}
+            totalCount={allInProduct.total}
+          />
           <Card>
             <CardContent className="p-4">
               <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">

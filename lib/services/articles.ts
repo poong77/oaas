@@ -79,6 +79,13 @@ export type ListArticlesParams = {
   sortOrder?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;
+  /**
+   * v1.3 (knowledge-base-overhaul B1) — categoryPath prefix 필터.
+   *
+   * `articles.categoryPath @> selectedPath` (배열 contains).
+   * 예: selectedPath=['예약 관리', '예약 등록'] 이면 그 prefix를 포함하는 아티클만.
+   */
+  selectedPath?: string[];
 };
 
 export type ListArticlesResult = {
@@ -146,6 +153,12 @@ export async function listArticles(
   }
   if (params.contentType) {
     conditions.push(eq(articles.contentType, params.contentType));
+  }
+  if (params.selectedPath && params.selectedPath.length > 0) {
+    // PostgreSQL 배열 contains: categoryPath가 selectedPath의 모든 라벨을 포함하면 매칭
+    conditions.push(
+      sql`${articles.categoryPath} @> ${params.selectedPath}::text[]`,
+    );
   }
   if (params.q && params.q.trim()) {
     const pattern = `%${params.q.trim()}%`;
