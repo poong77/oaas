@@ -1,0 +1,804 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>통합AS 개발일지 — as.oapms.com 공지 마이그레이션</title>
+<style>
+:root{--p:#2563eb;--p2:#1d4ed8;--bg:#f8fafc;--bd:#e2e8f0;--mut:#64748b;--ok:#16a34a}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;margin:0;background:var(--bg);color:#0f172a;line-height:1.65}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 18px 64px}
+.hero{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border-radius:16px;padding:28px 24px;margin-bottom:24px}
+.hero h1{margin:0 0 6px;font-size:23px}
+.hero p{margin:0;opacity:.92;font-size:14px}
+.hero .meta{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);padding:4px 11px;border-radius:999px;font-size:12px}
+h2{font-size:17px;margin:30px 0 12px;padding-left:10px;border-left:4px solid var(--p)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px}
+.card .n{font-size:27px;font-weight:800;color:var(--p)}
+.card .l{color:var(--mut);font-size:13px;margin-top:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+.box{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:18px}
+.box h3{margin:0 0 10px;font-size:15px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--bd);border-radius:12px;overflow:hidden;font-size:13px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--bd);vertical-align:top}
+th{background:#f1f5f9;font-weight:600;font-size:12px;color:#334155;position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+.title{max-width:330px}.num{text-align:right;color:var(--mut);font-variant-numeric:tabular-nums}
+.mono{font-family:ui-monospace,monospace;color:var(--mut)}.nowrap{white-space:nowrap}.muted{color:var(--mut)}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.k-notice{background:#dbeafe;color:#1d4ed8}.k-release{background:#dcfce7;color:#15803d}.k-incident{background:#fee2e2;color:#b91c1c}
+.prod{background:#f1f5f9;color:#475569}
+.tbl-scroll{max-height:560px;overflow:auto;border-radius:12px;border:1px solid var(--bd)}
+.tbl-scroll table{border:0;border-radius:0}
+ul.check{list-style:none;padding:0;margin:0}
+ul.check li{padding:7px 0 7px 28px;position:relative;font-size:14px;border-bottom:1px dashed var(--bd)}
+ul.check li:last-child{border-bottom:0}
+ul.check li:before{content:"✓";position:absolute;left:0;top:7px;color:var(--ok);font-weight:800}
+code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:13px;font-family:ui-monospace,monospace}
+pre{background:#0f172a;color:#e2e8f0;padding:14px 16px;border-radius:10px;overflow:auto;font-size:13px}
+.kv{font-size:14px}.kv b{display:inline-block;min-width:88px;color:var(--mut);font-weight:600}
+.note{margin-top:14px;padding:13px 15px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;font-size:13px;color:#92400e}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.flow .step{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;padding:6px 12px;border-radius:8px;font-weight:600}
+.flow .arr{color:var(--mut)}
+</style></head><body><div class="wrap">
+
+<div class="hero">
+  <h1>as.oapms.com 공지사항 마이그레이션 완료</h1>
+  <p>레거시 AS 사이트(Spring <code style="background:rgba(255,255,255,.2);color:#fff">.do</code>)의 공지 66건을 통합AS <code style="background:rgba(255,255,255,.2);color:#fff">notices</code> 테이블로 이관. 포스터 이미지는 Vercel Blob 재업로드 후 본문 인라인 임베드.</p>
+  <div class="meta">
+    <span class="chip">📅 2026-06-01</span>
+    <span class="chip">🗂 데이터 마이그레이션 (1회성)</span>
+    <span class="chip">✅ 66/66 적재 성공</span>
+    <span class="chip">🖼 이미지 58건 이관</span>
+  </div>
+</div>
+
+<h2>결과 요약</h2>
+<div class="cards">
+  <div class="card"><div class="n">66</div><div class="l">이관 공지 (신규)</div></div>
+  <div class="card"><div class="n">46</div><div class="l">notice 일반</div></div>
+  <div class="card"><div class="n">6</div><div class="l">release 업데이트</div></div>
+  <div class="card"><div class="n">14</div><div class="l">incident 장애</div></div>
+  <div class="card"><div class="n">59</div><div class="l">첨부 포함 공지</div></div>
+  <div class="card"><div class="n">58</div><div class="l">인라인 이미지</div></div>
+</div>
+
+<h2>이관 파이프라인</h2>
+<div class="box">
+  <div class="flow">
+    <span class="step">목록 4p 수집<br><small>list.do?page=N</small></span><span class="arr">→</span>
+    <span class="step">상세 66건 fetch<br><small>view.do?board_key</small></span><span class="arr">→</span>
+    <span class="step">HTML→Markdown</span><span class="arr">→</span>
+    <span class="step">제목 기반 분류<br><small>kind·제품</small></span><span class="arr">→</span>
+    <span class="step">이미지 Blob 업로드</span><span class="arr">→</span>
+    <span class="step">notices INSERT</span>
+  </div>
+  <div class="note"><b>안전장치</b> — 기본 dry-run(미리보기)으로 검증 후 <code>--commit</code> 실행. 제목+작성일 중복은 자동 skip → 재실행 안전. 물리적 변경 없이 반복 가능.</div>
+</div>
+
+<div class="grid2" style="margin-top:16px">
+  <div class="box">
+    <h3>소스 → 타깃 매핑</h3>
+    <div class="kv">
+      <p><b>제목</b> div.box → <code>title</code></p>
+      <p><b>본문</b> div.box.contents → <code>body_markdown</code> (HTML→MD)</p>
+      <p><b>작성일</b> 목록 td → <code>published_at</code> · <code>created_at</code> (KST→UTC)</p>
+      <p><b>첨부</b> #attaches → 이미지=본문 임베드 / 파일=다운로드 링크</p>
+      <p><b>작성자</b> "관리자" → <code>author_id</code> (admin@oa.local)</p>
+      <p><b>kind</b> 제목 키워드 자동 추정</p>
+      <p><b>product_code</b> 제목 키워드 자동 추정 (없으면 전체)</p>
+    </div>
+  </div>
+  <div class="box">
+    <h3>제품 분류 분포</h3>
+    <div class="cards" style="grid-template-columns:repeat(2,1fr)">
+      <div class="card" style="padding:12px"><div class="n" style="font-size:22px">53</div><div class="l">전체</div></div><div class="card" style="padding:12px"><div class="n" style="font-size:22px">7</div><div class="l">cms</div></div><div class="card" style="padding:12px"><div class="n" style="font-size:22px">3</div><div class="l">pms</div></div><div class="card" style="padding:12px"><div class="n" style="font-size:22px">3</div><div class="l">keyless</div></div>
+    </div>
+    <div class="note" style="margin-top:12px">분류는 제목 키워드 기반 <b>자동 추정값</b>입니다. 본문 공통 푸터("※시스템 접속불가…") 오염을 피하려 제목만 사용. 애매한 건은 어드민에서 개별 수정 가능.</div>
+  </div>
+</div>
+
+<h2>검증 결과</h2>
+<div class="box">
+  <ul class="check">
+    <li>공지 66건 전부 INSERT 성공 (DB 총 71건 = 신규 66 + 기존 seed 5)</li>
+    <li>이미지 58건 Vercel Blob 업로드 → 본문에 <code>![](blob URL)</code> 인라인 임베드</li>
+    <li>Blob 이미지 공개 접근 HTTP 200 확인 (원본과 동일 바이트수)</li>
+    <li>작성일을 published_at·created_at에 KST→UTC 보존, 전부 발행 상태</li>
+    <li>author_id = OA 어드민 계정 매핑 확인</li>
+    <li>HTML→Markdown 변환(줄바꿈·링크·이미지·엔티티 디코딩) 정상</li>
+    <li>incident 14건 = 실제 서비스 장애만 / release 6건 = 실제 업데이트만 (오분류 0)</li>
+  </ul>
+</div>
+
+<h2>재실행 방법</h2>
+<div class="box">
+<pre># 미리보기 (DB/Blob 미변경, JSON·HTML 리포트만 생성)
+npx tsx scripts/migrate-as-notices.ts
+
+# 실제 적재 (Blob 업로드 + notices INSERT, 중복 자동 skip)
+npx tsx scripts/migrate-as-notices.ts --commit</pre>
+  <p class="muted" style="font-size:13px;margin:10px 0 0">스크립트: <code>scripts/migrate-as-notices.ts</code> · 환경변수: <code>DATABASE_URL</code>, <code>BLOB_READ_WRITE_TOKEN</code> (.env.local)</p>
+</div>
+
+<h2>이관 공지 전체 목록 (66건)</h2>
+<div class="tbl-scroll">
+<table><thead><tr>
+<th>#</th><th>board_key</th><th>작성일</th><th>kind</th><th>제품</th><th>제목</th><th>본문(자)</th><th>첨부</th>
+</tr></thead><tbody>
+<tr>
+    <td class="num">1</td>
+    <td class="mono">19620</td>
+    <td class="nowrap">2026-05-28</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2026년 6월 3일 지방선거일 휴무 안내</td>
+    <td class="num">199</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">2</td>
+    <td class="mono">19525</td>
+    <td class="nowrap">2026-05-19</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2026년 5월 25일 대체휴일 휴무 안내</td>
+    <td class="num">202</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">3</td>
+    <td class="mono">19280</td>
+    <td class="nowrap">2026-04-28</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2026년 5월 1일, 5일 근로자의 날·어린이날 휴무 안내</td>
+    <td class="num">225</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">4</td>
+    <td class="mono">19279</td>
+    <td class="nowrap">2026-04-28</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2026년 4월 30일 (목) 단축영업 안내</td>
+    <td class="num">330</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">5</td>
+    <td class="mono">19062</td>
+    <td class="nowrap">2026-04-14</td>
+    <td><span class="badge k-release">release</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2026년 4월 15일 오전 6시 서비스 개선을 위한 DB 업데이트 안내</td>
+    <td class="num">411</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">6</td>
+    <td class="mono">18980</td>
+    <td class="nowrap">2026-04-08</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="badge prod">pms</span></td>
+    <td class="title">2026년 4월 7일 PMS · 키오스크 접속 오류 안내</td>
+    <td class="num">491</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">7</td>
+    <td class="mono">18713</td>
+    <td class="nowrap">2026-03-17</td>
+    <td><span class="badge k-release">release</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">OA파트너봇(Beta) 출시!</td>
+    <td class="num">144</td>
+    <td class="num"></td>
+  </tr>
+<tr>
+    <td class="num">8</td>
+    <td class="mono">18481</td>
+    <td class="nowrap">2026-02-26</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2026년 3월 2일 대체휴일 휴무 안내</td>
+    <td class="num">198</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">9</td>
+    <td class="mono">18298</td>
+    <td class="nowrap">2026-02-12</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2026 설 연휴 휴무안내</td>
+    <td class="num">273</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">10</td>
+    <td class="mono">18068</td>
+    <td class="nowrap">2026-01-26</td>
+    <td><span class="badge k-release">release</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">OA테크 헬프센터가 새로워졌어요.</td>
+    <td class="num">215</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">11</td>
+    <td class="mono">17845</td>
+    <td class="nowrap">2026-01-12</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2026.01.20 ~ 21 OA쇼룸 개최 및 신청 안내</td>
+    <td class="num">459</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">12</td>
+    <td class="mono">17215</td>
+    <td class="nowrap">2025-11-26</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2025년 11월 27일(목) 단축영업 안내</td>
+    <td class="num">290</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">13</td>
+    <td class="mono">17140</td>
+    <td class="nowrap">2025-11-20</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2025.11.25 ~ 26 OA쇼룸 개최 및 신청 안내</td>
+    <td class="num">608</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">14</td>
+    <td class="mono">17066</td>
+    <td class="nowrap">2025-11-14</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2026년도 객실 재고생성 안내</td>
+    <td class="num">285</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">15</td>
+    <td class="mono">16404</td>
+    <td class="nowrap">2025-09-30</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2025년 추석 연휴 휴무안내</td>
+    <td class="num">363</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">16</td>
+    <td class="mono">16264</td>
+    <td class="nowrap">2025-09-23</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2025년 9월 25일(목) 단축영업 안내</td>
+    <td class="num">289</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">17</td>
+    <td class="mono">15849</td>
+    <td class="nowrap">2025-08-27</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2025년 8월 28일(목) 단축영업 안내</td>
+    <td class="num">289</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">18</td>
+    <td class="mono">15779</td>
+    <td class="nowrap">2025-08-22</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">고객센터 운영시간 변경 안내(2025.09)</td>
+    <td class="num">298</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">19</td>
+    <td class="mono">15530</td>
+    <td class="nowrap">2025-08-06</td>
+    <td><span class="badge k-release">release</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">HG V2.0 업데이트</td>
+    <td class="num">0</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">20</td>
+    <td class="mono">15012</td>
+    <td class="nowrap">2025-07-07</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="badge prod">cms</span></td>
+    <td class="title">HG CMS &quot;Booking.com&quot; 예약 연동 누락 안내</td>
+    <td class="num">911</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">21</td>
+    <td class="mono">14617</td>
+    <td class="nowrap">2025-06-13</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="badge prod">cms</span></td>
+    <td class="title">HG CMS 예약건 미연동 오류 안내</td>
+    <td class="num">0</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">22</td>
+    <td class="mono">14259</td>
+    <td class="nowrap">2025-05-19</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">Booking.com 재고자동보충 기능 비활성화</td>
+    <td class="num">415</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">23</td>
+    <td class="mono">13913</td>
+    <td class="nowrap">2025-04-28</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2025년 05월 휴무안내</td>
+    <td class="num">170</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">24</td>
+    <td class="mono">12166</td>
+    <td class="nowrap">2025-01-21</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2025년 설 연휴 휴무안내</td>
+    <td class="num">221</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">25</td>
+    <td class="mono">11462</td>
+    <td class="nowrap">2024-12-04</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="badge prod">keyless</span></td>
+    <td class="title">“폰(모바일)키” 네이버 단축Url 기능 중단 안내</td>
+    <td class="num">505</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">26</td>
+    <td class="mono">11282</td>
+    <td class="nowrap">2024-11-25</td>
+    <td><span class="badge k-release">release</span></td>
+    <td><span class="badge prod">pms</span></td>
+    <td class="title">WEB PMS 업데이트 접수 안내</td>
+    <td class="num">284</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">27</td>
+    <td class="mono">10525</td>
+    <td class="nowrap">2024-10-08</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="badge prod">cms</span></td>
+    <td class="title">온다 CMS 서버 점검 안내</td>
+    <td class="num">389</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">28</td>
+    <td class="mono">10365</td>
+    <td class="nowrap">2024-09-30</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">2024년 10월 휴무안내</td>
+    <td class="num">171</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">29</td>
+    <td class="mono">10276</td>
+    <td class="nowrap">2024-09-25</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="badge prod">cms</span></td>
+    <td class="title">호텔플러스(온다 CMS) Airbnb 연동오류 안내</td>
+    <td class="num">362</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">30</td>
+    <td class="mono">10104</td>
+    <td class="nowrap">2024-09-12</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">오아테크 사업자등록증 변경 (본점 주소 이전)</td>
+    <td class="num">117</td>
+    <td class="num">🖼 1 📎1</td>
+  </tr>
+<tr>
+    <td class="num">31</td>
+    <td class="mono">10084</td>
+    <td class="nowrap">2024-09-11</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">추석연휴 휴무 안내</td>
+    <td class="num">266</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">32</td>
+    <td class="mono">10035</td>
+    <td class="nowrap">2024-09-06</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">본사 사무실 이전 안내</td>
+    <td class="num">645</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">33</td>
+    <td class="mono">9722</td>
+    <td class="nowrap">2024-08-19</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="badge prod">cms</span></td>
+    <td class="title">호텔플러스(온다 CMS) 에어비앤비 연동 불안정 안내</td>
+    <td class="num">471</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">34</td>
+    <td class="mono">9608</td>
+    <td class="nowrap">2024-08-12</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">광복절 (8/15 목) 휴무 안내</td>
+    <td class="num">162</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">35</td>
+    <td class="mono">9432</td>
+    <td class="nowrap">2024-08-01</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="badge prod">keyless</span></td>
+    <td class="title">“폰키 단축Url” 장애 복구 안내</td>
+    <td class="num">496</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">36</td>
+    <td class="mono">9389</td>
+    <td class="nowrap">2024-07-31</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="badge prod">keyless</span></td>
+    <td class="title">“폰키 단축Url” 장애 안내</td>
+    <td class="num">548</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">37</td>
+    <td class="mono">8926</td>
+    <td class="nowrap">2024-07-03</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">“EON 문자발송 서비스 장애&quot; 보고 안내</td>
+    <td class="num">623</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">38</td>
+    <td class="mono">8871</td>
+    <td class="nowrap">2024-07-01</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">“EON 문자발송 서비스” 장애 복구안내</td>
+    <td class="num">239</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">39</td>
+    <td class="mono">8864</td>
+    <td class="nowrap">2024-07-01</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">EON 문자발송 서비스 장애 안내</td>
+    <td class="num">474</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">40</td>
+    <td class="mono">8432</td>
+    <td class="nowrap">2024-06-03</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">현충일 (6/6 목) 휴무 안내</td>
+    <td class="num">160</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">41</td>
+    <td class="mono">8015</td>
+    <td class="nowrap">2024-05-09</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">아고다 연동 예약 오류 안내</td>
+    <td class="num">605</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">42</td>
+    <td class="mono">7884</td>
+    <td class="nowrap">2024-05-01</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">업무 일시중단 안내</td>
+    <td class="num">223</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">43</td>
+    <td class="mono">7837</td>
+    <td class="nowrap">2024-04-28</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">5월 휴무안내</td>
+    <td class="num">248</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">44</td>
+    <td class="mono">7773</td>
+    <td class="nowrap">2024-04-25</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">[긴급] 아고다 서버 장애 이슈</td>
+    <td class="num">359</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">45</td>
+    <td class="mono">7396</td>
+    <td class="nowrap">2024-04-05</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">선거일 (4/10 금) 휴무 안내</td>
+    <td class="num">162</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">46</td>
+    <td class="mono">6835</td>
+    <td class="nowrap">2024-02-26</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">삼일절 (3/1 금) 휴무 안내</td>
+    <td class="num">159</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">47</td>
+    <td class="mono">6600</td>
+    <td class="nowrap">2024-02-05</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">설연휴 공휴일 (2.9.금~2.12.월) 휴무 안내</td>
+    <td class="num">169</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">48</td>
+    <td class="mono">6290</td>
+    <td class="nowrap">2024-01-09</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">AS상담 일시휴무 공지</td>
+    <td class="num">203</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">49</td>
+    <td class="mono">6088</td>
+    <td class="nowrap">2023-12-27</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">신정 (1/1 월) 휴무 안내</td>
+    <td class="num">159</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">50</td>
+    <td class="mono">5957</td>
+    <td class="nowrap">2023-12-18</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">크리스마스 (12/25 월) 휴무 안내</td>
+    <td class="num">163</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">51</td>
+    <td class="mono">4900</td>
+    <td class="nowrap">2023-10-10</td>
+    <td><span class="badge k-incident">incident</span></td>
+    <td><span class="badge prod">cms</span></td>
+    <td class="title">[2023/10/10] CMS 아고다 누락 이슈</td>
+    <td class="num">562</td>
+    <td class="num"></td>
+  </tr>
+<tr>
+    <td class="num">52</td>
+    <td class="mono">4817</td>
+    <td class="nowrap">2023-10-06</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">한글날 (10/9 월) 휴무 안내</td>
+    <td class="num">162</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">53</td>
+    <td class="mono">4582</td>
+    <td class="nowrap">2023-09-21</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">추석 공휴일 (9.28.목~10.3.화) 휴무 안내</td>
+    <td class="num">171</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">54</td>
+    <td class="mono">2118</td>
+    <td class="nowrap">2023-05-25</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">석가탄신일 대체 공휴일 (05/29) 휴무 안내</td>
+    <td class="num">172</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">55</td>
+    <td class="mono">2018</td>
+    <td class="nowrap">2023-05-18</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">*비밀번호 초기화 관련 공지</td>
+    <td class="num">151</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">56</td>
+    <td class="mono">1681</td>
+    <td class="nowrap">2023-04-27</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">근로자의 날 (5.1.월) 휴무 공지</td>
+    <td class="num">168</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">57</td>
+    <td class="mono">1615</td>
+    <td class="nowrap">2023-04-25</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">월이용료 납부 안내</td>
+    <td class="num">477</td>
+    <td class="num"></td>
+  </tr>
+<tr>
+    <td class="num">58</td>
+    <td class="mono">1435</td>
+    <td class="nowrap">2023-04-15</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="badge prod">cms</span></td>
+    <td class="title">[종료 공지] 익스피디아 / 아고다 CMS  (~23.5.15)</td>
+    <td class="num">183</td>
+    <td class="num"></td>
+  </tr>
+<tr>
+    <td class="num">59</td>
+    <td class="mono">1245</td>
+    <td class="nowrap">2023-04-05</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">오아테크 계좌 사본</td>
+    <td class="num">114</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">60</td>
+    <td class="mono">1242</td>
+    <td class="nowrap">2023-04-05</td>
+    <td><span class="badge k-release">release</span></td>
+    <td><span class="badge prod">pms</span></td>
+    <td class="title">OA PMS 헬프센터 업데이트</td>
+    <td class="num">78</td>
+    <td class="num"></td>
+  </tr>
+<tr>
+    <td class="num">61</td>
+    <td class="mono">1133</td>
+    <td class="nowrap">2023-03-27</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">코로나 확진 및 격리로 인한 AS 지연 안내</td>
+    <td class="num">260</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">62</td>
+    <td class="mono">1074</td>
+    <td class="nowrap">2023-03-23</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">오아테크 긴급전화 연락처 변경 안내</td>
+    <td class="num">117</td>
+    <td class="num"></td>
+  </tr>
+<tr>
+    <td class="num">63</td>
+    <td class="mono">483</td>
+    <td class="nowrap">2023-02-03</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">★★ AS 접수규정/ 업무(처리)시간 안내 ★★</td>
+    <td class="num">2,015</td>
+    <td class="num"></td>
+  </tr>
+<tr>
+    <td class="num">64</td>
+    <td class="mono">332</td>
+    <td class="nowrap">2023-01-17</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">* 2023년 1월 설 휴무안내 *</td>
+    <td class="num">205</td>
+    <td class="num">🖼 1</td>
+  </tr>
+<tr>
+    <td class="num">65</td>
+    <td class="mono">331</td>
+    <td class="nowrap">2023-01-17</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">*자체 백업 방법안내*</td>
+    <td class="num">36</td>
+    <td class="num"> 📎1</td>
+  </tr>
+<tr>
+    <td class="num">66</td>
+    <td class="mono">104</td>
+    <td class="nowrap">2022-12-23</td>
+    <td><span class="badge k-notice">notice</span></td>
+    <td><span class="muted">전체</span></td>
+    <td class="title">* 시스템 점검 안내 *</td>
+    <td class="num">228</td>
+    <td class="num">🖼 1</td>
+  </tr>
+</tbody></table>
+</div>
+
+<h2>후속 권장</h2>
+<div class="box">
+  <ul class="check">
+    <li>어드민 공지 목록에서 자동 분류 결과 스팟 점검 (특히 [전체]로 둔 OTA 연동 이슈)</li>
+    <li>비이미지 첨부 2건의 다운로드 링크 동작 확인</li>
+    <li>레거시 as.oapms.com/notice → 통합AS 공지로 리다이렉트 정책 결정 (Phase 추후)</li>
+  </ul>
+</div>
+
+<p style="text-align:center;color:var(--mut);font-size:12px;margin-top:32px">통합AS 플랫폼 · support.oapms.com · 생성 2026-06-01</p>
+</div></body></html>
