@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { FileText, Plus } from 'lucide-react';
 import { listArticles } from '@/lib/services/articles';
 import { getProductCategories } from '@/lib/services/categories';
+import { listMenuTaxonomyFlat } from '@/lib/services/master-menu-taxonomies';
 import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,6 +23,8 @@ export const metadata = { title: '아티클 관리 — OA 통합 AS 어드민' }
 type SearchParams = Promise<{
   q?: string;
   productCode?: string;
+  /** 메뉴구분(중분류>소분류) 경로 — 라벨을 '|'로 join. 제품 선택 시에만 유효. */
+  menuPath?: string;
   status?: 'published' | 'draft' | 'all';
   active?: 'active' | 'inactive' | 'all';
   sortBy?: 'published_at' | 'view_count' | 'helpful' | 'updated_at';
@@ -51,19 +54,38 @@ export default async function AdminArticlesPage({
         ? false
         : true;
 
-  const [{ items, total, pageSize }, categories] = await Promise.all([
-    listArticles({
-      q: sp.q,
-      productCode: sp.productCode,
-      publishedOnly,
-      isActive,
-      sortBy: sp.sortBy ?? 'updated_at',
-      sortOrder: sp.sortOrder ?? 'desc',
-      page,
-      pageSize: 20,
-    }),
-    getProductCategories(),
-  ]);
+  // 메뉴구분(selectedPath)은 제품이 선택된 경우에만 유효 (메뉴 트리가 제품 종속).
+  const selectedPath =
+    sp.productCode && sp.menuPath
+      ? sp.menuPath.split('|').filter(Boolean)
+      : undefined;
+
+  const [{ items, total, pageSize }, categories, menuNodes] =
+    await Promise.all([
+      listArticles({
+        q: sp.q,
+        productCode: sp.productCode,
+        selectedPath,
+        publishedOnly,
+        isActive,
+        sortBy: sp.sortBy ?? 'updated_at',
+        sortOrder: sp.sortOrder ?? 'desc',
+        page,
+        pageSize: 20,
+      }),
+      getProductCategories(),
+      // 제품 선택 시 그 제품의 메뉴 트리(평탄화)만 로드 — 연동 드롭다운용.
+      sp.productCode
+        ? listMenuTaxonomyFlat({ productCode: sp.productCode })
+        : Promise.resolve([]),
+    ]);
+
+  // 메뉴구분 드롭다운 옵션: pathLabels를 '|'로 join한 value + ' › '로 표시.
+  const menuOptions = menuNodes.map((n) => ({
+    value: n.pathLabels.join('|'),
+    label: n.pathLabels.join(' › '),
+    depth: n.depth,
+  }));
 
   const publishedCount = items.filter((a) => a.publishedAt).length;
   const draftCount = items.filter((a) => !a.publishedAt).length;
@@ -83,7 +105,11 @@ export default async function AdminArticlesPage({
         }
       />
 
-      <ArticlesFilters initial={sp} categories={categories} />
+      <ArticlesFilters
+        initial={sp}
+        categories={categories}
+        menuOptions={menuOptions}
+      />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard label="전체 (이 페이지)" value={items.length} />
