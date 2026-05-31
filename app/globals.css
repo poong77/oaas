@@ -119,6 +119,16 @@
   --color-brand-950: #052e16;
 }
 
+/*
+ * 호텔리어 그린(brand-700)은 채도가 높아 본문 H2/H3에서 형광처럼 튄다.
+ * 라이트 모드 헤딩만 한 단계 차분한 톤(green-800)으로 내린다.
+ * 다크 모드는 어두운 배경 가독성을 위해 markdown-view의 brand-300(밝은 그린) 유지.
+ * (unlayered 규칙이라 Tailwind utility text-brand-700보다 우선 적용)
+ */
+html:not(.dark) [data-role='hotelier'] .markdown-view :is(h2, h3) {
+  color: #166534;
+}
+
 @layer base {
   html,
   body {
