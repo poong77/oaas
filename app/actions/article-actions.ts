@@ -36,6 +36,27 @@ import {
   validateSummary,
 } from '@/lib/articles/body-validator';
 import { articleSaveSchema } from '@/lib/articles/zod-schemas';
+import {
+  getMenuTaxonomyTreeByProduct,
+  type MenuTaxonomyTreeNode,
+} from '@/lib/services/master-menu-taxonomies';
+
+// ─────────────────────────────────────────────────────────────────────
+// knowledge-base-overhaul Phase 1 (A2/B1) — 메뉴 트리 조회
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * 매니저/어드민용 메뉴 트리 조회 (캐스케이딩 드롭다운 + /help 사이드바 공용).
+ *
+ * 200ms 내 응답 목표 (단일 productCode + 캐시 적용된 raw 활용).
+ */
+export async function getMenuTaxonomyTreeAction(
+  productCode: string,
+): Promise<MenuTaxonomyTreeNode[]> {
+  await requireRole(['manager', 'admin']);
+  if (!productCode?.trim()) return [];
+  return getMenuTaxonomyTreeByProduct(productCode.trim());
+}
 
 // ─────────────────────────────────────────────────────────────────────
 // public — 도움됨 / 조회수

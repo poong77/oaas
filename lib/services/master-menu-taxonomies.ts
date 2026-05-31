@@ -153,6 +153,19 @@ export async function listMenuTaxonomyTree(
   }
 }
 
+/**
+ * 단일 productCode의 트리 (knowledge-base-overhaul A2/B1 공용).
+ *
+ * - 비활성 노드 제외
+ * - sortOrder + label 정렬 (buildTree에서 이미 적용)
+ */
+export async function getMenuTaxonomyTreeByProduct(
+  productCode: string,
+): Promise<MenuTaxonomyTreeNode[]> {
+  const byProduct = await listMenuTaxonomyTree({ productCode });
+  return byProduct[productCode] ?? [];
+}
+
 /** 평탄화된 전체 노드 — 드롭다운(부모 선택)·검증용. */
 export async function listMenuTaxonomyFlat(
   params: ListMenuTaxonomyParams = {},
