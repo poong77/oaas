@@ -584,7 +584,13 @@ export async function updateArticleAction(
   revalidatePath(`/admin/articles/${id}`);
   revalidatePath('/help');
   revalidatePath(`/help/${input.productCode}`);
-  revalidatePath(`/help/${input.productCode}/${input.slug}`);
+  // 실제 라우트는 4단 구조: /help/[product]/[content_type]/[slug]
+  if (input.contentType) {
+    revalidatePath(`/help/${input.productCode}/${input.contentType}`);
+    revalidatePath(
+      `/help/${input.productCode}/${input.contentType}/${input.slug}`,
+    );
+  }
   return { ok: true, id };
 }
 
