@@ -12,9 +12,9 @@
 |---|---|
 | **Feature** | knowledge-base-overhaul (Stream A MVP) |
 | **Goal** | 아티클 작성 자동화 (A1~A5) + 콘텐츠 품질 3대 목표 (1의도/빠른인식/챗봇KB) 달성 |
-| **MVP Scope** | A1 본문 템플릿 · A2 메뉴 캐스케이드 · A3 키워드 자동완성 · A4 관련문서 자동추천 · A5 Claude 보조 · **B1 /help 메뉴 트리** · **B2 /role 마스터 DB 연동** |
+| **MVP Scope** | A1 본문 템플릿 · A2 메뉴 캐스케이드 · A3 키워드 자동완성 · A4 관련문서 자동추천 · A5 Claude 보조 · **A6 재편집 4모드** · **B1 /help 메뉴 트리** · **B2 /role 마스터 DB 연동** |
 | **Out-of-Scope (v2)** | Stream C (챗봇 KB 인덱싱·자기완결 errors 승격) — A5에서 chatbot_meta 추출은 하되 영속화는 v2에서 |
-| **예상 기간** | 3주 (Phase 1 ~ 3) · 5인 팀 병렬 진행 시 단축 가능 |
+| **예상 기간** | **4주** (Phase 1 ~ 4) · 5인 팀 병렬 진행 시 단축 가능 |
 | **핵심 의존성** | Anthropic Claude API · 기존 마스터 (menu_taxonomies/term_synonyms/articles) · Tiptap RichEditor |
 | **성공 지표** | 아티클 1건 평균 작성 시간 ↓ 60% / 발행 차단(errors) 비율 ↓ 80% / 챗봇 KB 메타 100% 자동 생성 |
 
@@ -273,6 +273,20 @@
 
 **Phase 3 Acceptance**: AI 채택률 매니저 5명 테스트에서 ≥ 60% · 평균 작성 시간 ≤ 8분 측정 · /role/front 호텔리어 3명 인터뷰에서 "처음 출근일에 본격 활용 가능" 통과 · 모든 NFR 충족.
 
+### Phase 4 (Week 4) — A6 재편집 4모드 + diff 미리보기
+
+| 작업 | 담당 관점 | 완료 기준 |
+|---|---|---|
+| `lib/ai/prompts/article-rewriter.ts` — 4모드별 system 프롬프트 + JSON 출력 스키마 | [AS][CS][CTO] | mode = 'reorder' \| 'fill-gaps' \| 'tone' \| 'custom' 각각 검증 통과 |
+| `aiRewriteArticleAction(input)` server action — rate limit 분당 5회/일 100회 (메타 추출보다 보수) | [CTO] | input/output 검증 + truncation + 에러 핸들링 |
+| `RewritePanel` 컴포넌트 — 모드 선택 + (custom일 때) 명령 입력란 | [UI][UX] | 4모드 라디오 + 호버 설명 + custom 명령 자동완성(템플릿 5개) |
+| `DiffPreviewModal` 컴포넌트 — 사이드-바이-사이드 markdown diff | [UI][UX] | 라인별 변경 색상(추가 emerald · 삭제 rose · 수정 amber) + H2 섹션별 [적용] 토글 + [절부 적용]/[거부] |
+| markdown diff 유틸 — H2 섹션 단위로 split + 라인 diff | [CTO] | `diff` 패키지 사용 또는 자체 markdown-aware diff |
+| body-validator: 재편집 적용 후 자동 재검증 + 사이드바 체크리스트 갱신 | [AS] | apply 직후 ✓⏳ 즉시 업데이트 |
+| 통합 e2e: KB-09 (4모드 각각 호출 + 적용/거부) | [전팀] | 4모드 모두 동작 + 거부 시 본문 보존 |
+
+**Phase 4 Acceptance**: 매니저 5명이 A6-1(reorder)·A6-2(fill-gaps)·A6-3(tone)·A6-4(custom) 각 1회 이상 사용 + 적용률 ≥ 40% + 재편집 후 body-validator errors ≤ 0건.
+
 ---
 
 ## 6. Risks & Mitigations
@@ -502,3 +516,17 @@ tests/e2e/knowledge-base/
 
 - 2026-05-31 v1.0: 초안 작성 (5인 팀 PM Lite + Plan 일괄, Stream A만)
 - 2026-05-31 v1.1: **Stream B MVP 승격** (B1 /help 메뉴 트리, B2 /role 마스터 DB). 일정 3주 유지.
+- 2026-05-31 v1.2: **A6 재편집 신설** (4모드 + diff 미리보기). Phase 4 (Week 4) 추가. 일정 3주 → **4주**.
+
+### A6 세부 (v1.2)
+
+| 모드 | 호출 트리거 | 입력 | 출력 |
+|---|---|---|---|
+| **A6-1 reorder** | contentType 변경 시 자동 제안 (수락 시 호출) | { 기존 body, fromType, toType } | { reorderedBody, summaryOfChanges[] } |
+| **A6-2 fill-gaps** | "✨ 빈 섹션 채우기" 버튼 | { body, contentType, title, summary, productCode } | { filledBody, addedSections[] } |
+| **A6-3 tone** | "✨ 톤 보정" 버튼 | { body, contentType } | { revisedBody, changedPhrases[] } (CS 톤·자기참조/다중의도 제거) |
+| **A6-4 custom** | "✨ 자유 명령" + 사용자 입력 | { body, contentType, command(string) } | { revisedBody, summaryOfChanges[] } |
+
+[UX] 모든 모드 결과는 **DiffPreviewModal**로 표시. H2 섹션 단위 토글 + [전부 적용]/[부분 선택 적용]/[거부]. 거부 시 본문 변경 0.
+[AS] 4모드 모두 본문 5000자 cap + 출력 5000자 cap. 초과 시 truncation + 토스트.
+[CS] custom 명령 자동완성 템플릿 5개: "더 짧게" · "단계 더 자세히" · "용어 통일" · "초보 호텔리어 눈높이" · "약어 풀어쓰기".

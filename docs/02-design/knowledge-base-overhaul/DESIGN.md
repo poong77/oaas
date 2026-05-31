@@ -18,7 +18,8 @@
 | **덮어쓰기** | 기존 본문 존재 시 `ConfirmDialog`로 의도 확인 |
 | **월 예산** | $50 (Sonnet 4.6 기준 약 5,000회) |
 | **Stream B (v1.1 추가)** | B1 `/help/[product]` menu_taxonomies 트리 사이드바 · B2 `/role/[key]` role_starters DB 연동 + 어드민 매핑 UI |
-| **신규/변경 파일 합계** | **29개** (신규 21, 변경 8) — Drizzle 변경 0 |
+| **신규/변경 파일 합계** | **35개** (신규 26, 변경 9) — Drizzle 변경 0 |
+| **A6 재편집 (v1.2)** | 4모드 (reorder · fill-gaps · tone · custom) + 사이드-바이-사이드 markdown diff + 섹션별 부분 적용. Phase 4 (Week 4)에서 구현. |
 
 ### 4-Perspective Value
 
@@ -1101,3 +1102,219 @@ test('/role/front 매핑된 아티클이 순서대로 노출', async ({ page }) 
 
 - 2026-05-31 v1.0: 초안 작성 (Open Q 추천안 반영, Stream A만)
 - 2026-05-31 v1.1: **Stream B 세부 설계 추가** (§15). B1 `/help/[product]` 트리 사이드바, B2 `/role/[key]` 마스터 DB + 어드민 매핑 UI. e2e KB-07, KB-08. 신규/변경 파일 22 → 29.
+- 2026-05-31 v1.2: **A6 재편집 세부 설계 추가** (§16). 4모드(reorder/fill-gaps/tone/custom) + DiffPreviewModal + 섹션별 부분 적용. e2e KB-09. Phase 4 (Week 4) 신설. 일정 3주 → 4주. 신규/변경 파일 29 → 35.
+
+---
+
+## 16. A6 재편집 세부 설계 (v1.2)
+
+### 16-1. 컴포넌트 & 파일 인벤토리
+
+```
+lib/
+  ai/
+    prompts/
+      article-rewriter.ts              [NEW]   4모드별 system 프롬프트 + 출력 스키마
+  articles/
+    markdown-diff.ts                   [NEW]   H2 섹션 단위 split + 라인 diff (diff 패키지 사용)
+
+app/
+  actions/
+    article-actions.ts                 [EDIT]  aiRewriteArticleAction 추가
+  (admin)/admin/articles/_components/
+    editor/
+      rewrite-panel.tsx                [NEW]   4모드 라디오 + custom 명령 입력
+      diff-preview-modal.tsx           [NEW]   사이드-바이-사이드 + 섹션 토글 + [부분 적용]
+      ai-assistant-panel.tsx           [EDIT]  "재편집" 새 카드 추가, RewritePanel 호출
+
+tests/e2e/knowledge-base/
+  kb-09-rewrite-modes.spec.ts          [NEW]   4모드 각각 호출 + diff 표시 + 적용/거부
+```
+
+### 16-2. 타입 정의
+
+```ts
+// lib/ai/prompts/article-rewriter.ts
+export type RewriteMode = 'reorder' | 'fill-gaps' | 'tone' | 'custom';
+
+export interface RewriteInput {
+  mode: RewriteMode;
+  body: string;                          // 현재 본문
+  contentType: ArticleContentType;       // 현재 의도 (reorder의 경우 fromType)
+  title?: string;
+  summary?: string;
+  productCode?: string;
+  toType?: ArticleContentType;           // reorder 전용
+  command?: string;                      // custom 전용 (사용자 입력)
+}
+
+export interface RewriteOutput {
+  revisedBody: string;
+  summaryOfChanges: string[];            // ≤5개, 사람이 읽는 한국어
+  changedSections?: Array<{               // H2 섹션 단위 변경 메타데이터
+    heading: string;
+    changeType: 'added' | 'reordered' | 'modified' | 'unchanged';
+  }>;
+}
+
+// lib/articles/markdown-diff.ts
+export interface MarkdownSectionDiff {
+  heading: string;                       // "## 증상" 등
+  before: string;
+  after: string;
+  changed: boolean;
+  lineDiff: Array<{ type: 'equal' | 'add' | 'remove'; text: string }>;
+}
+```
+
+### 16-3. 시스템 프롬프트 (`article-rewriter.ts`)
+
+```ts
+const REWRITE_SYSTEM_BY_MODE: Record<RewriteMode, string> = {
+  reorder: `당신은 호텔 OA 솔루션 도움말 재편집 보조입니다. 사용자는 \`fromType\`로 작성한 본문을 \`toType\` 골격으로 재정렬하길 원합니다. 골격 정의는 다음과 같습니다:
+- howto: 목표 → 사전 준비 → 단계 → 다음 단계
+- feature: 개요 → 위치(메뉴 경로) → 항목 설명 → 관련 문서
+- troubleshoot: 증상 → 원인 → 해결 단계 → 그래도 안 되면
+
+규칙: (1) 기존 본문의 정보를 최대한 보존하면서 새 골격에 맞게 재배치 (2) 새 골격에 빈 섹션이 생기면 placeholder ">" 안내 줄로 채우기 — AI가 추측 작성 금지 (3) 기존 본문에는 있지만 새 골격에 자리가 없는 정보는 가장 가까운 섹션으로 통합.
+
+출력 JSON: { "revisedBody": string, "summaryOfChanges": string[5개 이내], "changedSections": [{heading, changeType}, ...] }`,
+
+  'fill-gaps': `당신은 호텔 OA 솔루션 도움말 재편집 보조입니다. 사용자가 작성한 본문에서 비어있거나 placeholder만 있는 H2 섹션을 제목/요약/제품 컨텍스트 기반으로 보완해주세요.
+
+규칙: (1) 이미 내용이 있는 섹션은 절대 수정 금지 (2) 빈 섹션만 채움. 채울 때 본문 다른 섹션의 사실에서만 추론 (3) 추측이 필요하면 추측 대신 ">" 안내 placeholder 유지 + summaryOfChanges에 "X 섹션은 정보 부족으로 보완 불가" 명시.
+
+출력 JSON: 동일`,
+
+  tone: `당신은 호텔 OA 솔루션 도움말 CS 톤 보정 보조입니다. 본문을 다음 규칙대로 다듬으세요:
+1. 마케팅 톤(✨엄청난✨, 손쉽게 등 형용사 과잉) 제거 → 객관·간결
+2. 명령형 "~하세요" → 청유형 "~해주세요" (단, 안전 경고는 명령형 유지)
+3. 자기참조 ("위에서 말한", "앞서 설명한") 제거 → 명시 참조
+4. 다중의도 표현 ("및", "그리고") → 단일 의도로 분리 또는 항목화
+5. 호텔리어 약어(CI, OTA 등) 보존 + 첫 등장 시 풀어쓰기 병기
+
+규칙: (1) 문장 의미는 변경 금지, 표현만 다듬음 (2) H2 구조 변경 금지 (3) 변경된 표현은 changedPhrases에 before/after 형태로 기록.
+
+출력 JSON: { "revisedBody": string, "summaryOfChanges": string[], "changedSections": [{heading, changeType}, ...] }`,
+
+  custom: `당신은 호텔 OA 솔루션 도움말 재편집 보조입니다. 사용자 명령을 받아 본문을 다듬으세요.
+사용자 명령: \`{command}\`
+
+규칙: (1) 명령이 모호하면 보수적으로 (최소 변경) (2) H2 구조 유지가 기본, 명령이 "재구성" 등 명시할 때만 구조 변경 (3) 1아티클=1의도 원칙 위반은 시도하지 않음 (4) 명령이 부적절(잘못된 사실 추가 등)하면 summaryOfChanges에 "거부 사유" 기록 후 revisedBody는 입력 그대로 반환.
+
+출력 JSON: 동일`,
+};
+```
+
+### 16-4. server action
+
+```ts
+// app/actions/article-actions.ts (편집)
+export async function aiRewriteArticleAction(input: RewriteInput): Promise<{ ok: true; data: RewriteOutput } | { ok: false; reason: string; message: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  try {
+    await rateLimitOrThrow(user.id, { perMin: 5, perDay: 100 });  // 메타 추출(10/200)보다 보수
+    const truncated = truncateBody(input.body, 5000);
+    const raw = await callClaudeRewriter({ ...input, body: truncated.text });
+    const parsed = RewriteOutputSchema.safeParse(raw);
+    if (!parsed.success) return { ok: false, reason: 'parse-error', message: 'AI 재편집 출력이 예상과 달라요.' };
+    // 출력 본문도 5000자 cap (지나친 확장 방지)
+    if (parsed.data.revisedBody.length > 5000) {
+      return { ok: false, reason: 'output-too-long', message: 'AI 출력이 너무 길어요. 더 작은 범위로 시도해주세요.' };
+    }
+    return { ok: true, data: parsed.data };
+  } catch (e) {
+    if (e instanceof RateLimitExceededError) return { ok: false, reason: 'rate-limit', message: e.message };
+    return { ok: false, reason: 'api-error', message: 'AI 재편집이 일시 중단됐어요.' };
+  }
+}
+```
+
+### 16-5. DiffPreviewModal UI
+
+```
+┌─ DiffPreviewModal (재편집 미리보기) ───────────────────────────────────┐
+│                                                                       │
+│  🎯 변경 요약 (5건)                                                   │
+│  • troubleshoot 골격 기준으로 4개 H2 재정렬                          │
+│  • "결제 안 됨" → "카드 결제 시 승인 거절" 으로 구체화                │
+│  • CS 톤: "안 됩니다" → "안 되는 경우가 있어요"                       │
+│  • 자기참조 "위에서 말한 절차" → "결제 단계"                          │
+│  • 빈 섹션 "그래도 안 되면" 은 placeholder 유지 (정보 부족)            │
+│                                                                       │
+│  ┌─ 기존 본문 ──────────────┬─ AI 제안 ─────────────────────┐        │
+│  │ ## 증상         [unchanged]│ ## 증상         [unchanged]   │  ✅    │
+│  │ 결제 안 됨...             │ 카드 결제 시 승인 거절...     │        │
+│  │                           │                                │        │
+│  │ ## 단계         [reordered]│ ## 원인         [added]      │  ☐     │
+│  │ 다시 시도해주세요...      │ 카드 한도, 카드사 일시 점검... │        │
+│  │                           │                                │        │
+│  │ — (없음)                   │ ## 해결 단계     [modified]  │  ☐     │
+│  │                           │ 1. 카드 한도 확인 → ...        │        │
+│  │                           │                                │        │
+│  │ ## 그래도 안 되면 [empty] │ ## 그래도 안 되면 [unchanged] │  ☐     │
+│  │ > 안내 적어주세요         │ > 안내 적어주세요              │        │
+│  └───────────────────────────┴────────────────────────────────┘        │
+│                                                                       │
+│  [✓ 전부 적용]  [✓ 선택만 적용 (체크된 3개)]  [✕ 거부]                │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+[UI] 좌·우 컬럼 동기 스크롤. 체크박스로 섹션별 선택. 변경 색상: emerald(추가) / rose(삭제) / amber(수정). 모달 폭은 모바일에서 80vh, 데스크톱에서 90vw.
+[UX] [선택만 적용] 버튼은 체크된 섹션만 본문에 반영, 나머지는 기존 유지. 거부 시 본문 변경 0.
+
+### 16-6. UX 흐름 — 재편집 시나리오 (의도 변경)
+
+```
+1. 본문 howto로 작성 중 (체크리스트 3/4 ✓)
+2. IntentSelector에서 troubleshoot 클릭
+3. ConfirmDialog: "본문이 있어요. 골격을 troubleshoot으로 바꾸려면:"
+   [✕ 의도만 바꾸기]  [✨ AI가 재정렬 제안]  [덮어쓰기 — 본문 삭제]
+4. [AI가 재정렬 제안] 클릭 → aiRewriteArticleAction({mode: 'reorder', fromType: 'howto', toType: 'troubleshoot', body})
+5. 5초 후 DiffPreviewModal 노출
+6. 사용자: 4개 섹션 중 3개 체크 → [선택만 적용] 클릭
+7. 본문 업데이트 + 사이드바 체크리스트 재계산 + 토스트 "3개 섹션 적용됨, 1개 거부됨"
+```
+
+[CS] "의도만 바꾸기"는 사용자가 본문을 직접 재정렬하고 싶을 때. "AI 재정렬 제안"은 시간 절약. "덮어쓰기"는 본문 전체 새로 작성. 3개 선택지가 작성자의 자율성을 보장.
+
+### 16-7. e2e KB-09
+
+```ts
+test('A6 reorder 모드 — howto → troubleshoot 골격 재정렬', async ({ page }) => {
+  await login(page, 'manager');
+  await page.goto('/admin/articles/new');
+  await page.getByRole('button', { name: '사용방법' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '주입' }).click();
+  // … 본문 일부 작성 …
+
+  // mock Anthropic은 reorder 출력 고정
+  await page.getByRole('button', { name: '문제해결' }).click();
+  await page.getByRole('button', { name: 'AI가 재정렬 제안' }).click();
+
+  await expect(page.getByRole('dialog', { name: '재편집 미리보기' })).toBeVisible();
+  await expect(page.getByText(/troubleshoot 골격 기준으로/)).toBeVisible();
+
+  // 첫 2개 섹션만 체크 → 선택만 적용
+  await page.getByTestId('diff-section-check').nth(0).click();
+  await page.getByTestId('diff-section-check').nth(1).click();
+  await page.getByRole('button', { name: /선택만 적용/ }).click();
+
+  // 본문 업데이트 확인 + 사이드바 체크리스트 재계산
+  await expect(page.locator('[contenteditable]')).toContainText('## 증상');
+  await expect(page.getByTestId('checklist-h2').filter({ hasText: '증상' }).locator('.checkmark')).toBeVisible();
+});
+```
+
+[CTO] 4모드 (KB-09-1 ~ KB-09-4)는 같은 spec 파일 내 4개 test로 분리. mock anthropic은 mode별 출력 다르게 설정.
+
+### 16-8. 일정 영향 (Phase 4)
+
+- 4모드 system 프롬프트는 거의 같은 형태 → 1일에 모두 작성 가능
+- DiffPreviewModal이 가장 큰 작업 (UX 정교 + 토글 + 부분 적용) → 2~3일
+- e2e 4 시나리오 → 1일
+- 통합 + 디버그 → 1일
+
+총 약 5일 (Week 4). 일정 빠듯하지만 Phase 1~3에서 충분한 기반(AI 클라이언트, RewriteInput 타입, 사이드바)을 마련해두면 가능.
+
+[CTO] **권장 병렬화**: CTO-Led Agent Teams 활성화 시 Phase 4를 Phase 3 후반과 병렬 진행 가능.
