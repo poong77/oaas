@@ -262,6 +262,11 @@ export function ImageAnnotator({ file, onComplete, onCancel }: ImageAnnotatorPro
         <span>
           {img.width} × {img.height}px
           {shapes.length > 0 && ` · 마크업 ${shapes.length}개`}
+          {tool === 'cursor' && (
+            <span className="ml-2 rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
+              선택 모드 — 도형 클릭/드래그, Delete 로 삭제, ESC 로 해제
+            </span>
+          )}
         </span>
         <div className="flex items-center gap-2">
           <button

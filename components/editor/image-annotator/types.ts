@@ -56,7 +56,14 @@ export interface TextShape {
 
 export type AnnotationShape = ArrowShape | RectShape | TextShape;
 
-export type FrameStyle = 'none' | 'shadow';
+export type FrameStyle = 'none' | 'shadow' | 'browser';
+
+/** FrameStyle 별 표시 라벨. */
+export const FRAME_LABEL: Record<FrameStyle, string> = {
+  none: '없음',
+  shadow: '그림자',
+  browser: '브라우저',
+};
 
 export interface AnnotatorState {
   shapes: AnnotationShape[];

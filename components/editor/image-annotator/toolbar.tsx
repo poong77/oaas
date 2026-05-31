@@ -14,6 +14,7 @@ import {
   type AnnotationColor,
   COLOR_HEX,
   COLOR_LABEL,
+  FRAME_LABEL,
   type FrameStyle,
   type Tool,
 } from './types';
@@ -94,14 +95,21 @@ export function AnnotatorToolbar({
           onClick={() => onFrame('none')}
           title="프레임 없음"
         >
-          <span className="px-1">없음</span>
+          <span className="px-1">{FRAME_LABEL.none}</span>
         </ToolBtn>
         <ToolBtn
           active={frame === 'shadow'}
           onClick={() => onFrame('shadow')}
           title="그림자 프레임"
         >
-          <span className="px-1">그림자</span>
+          <span className="px-1">{FRAME_LABEL.shadow}</span>
+        </ToolBtn>
+        <ToolBtn
+          active={frame === 'browser'}
+          onClick={() => onFrame('browser')}
+          title="브라우저 프레임 (mac 스타일)"
+        >
+          <span className="px-1">{FRAME_LABEL.browser}</span>
         </ToolBtn>
       </div>
 
@@ -139,13 +147,17 @@ function ToolBtn({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(e) => {
+        // 일부 환경에서 부모 onClick 으로 이벤트가 새는 경우가 있어 명시 차단
+        e.stopPropagation();
+        if (onClick) onClick();
+      }}
       disabled={disabled}
       title={title}
       className={cn(
-        'inline-flex h-7 min-w-7 items-center justify-center rounded border text-xs transition',
+        'inline-flex h-7 min-w-7 items-center justify-center rounded border-2 text-xs transition',
         active
-          ? 'border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-400 dark:bg-brand-950/40 dark:text-brand-200'
+          ? 'border-brand-600 bg-brand-100 text-brand-800 shadow-sm dark:border-brand-300 dark:bg-brand-900/60 dark:text-brand-100'
           : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
         disabled && 'cursor-not-allowed opacity-40 hover:bg-white dark:hover:bg-slate-900',
       )}

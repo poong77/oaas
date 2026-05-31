@@ -308,13 +308,19 @@ test.describe('KB-10 image upload dialog — 마크업 편집', () => {
       dialog.locator('button[title^="텍스트"]'),
     ).toBeVisible();
 
-    // 프레임 토글 2개
+    // 프레임 토글 3개 (없음 / 그림자 / 브라우저 mac 신호등)
     await expect(
       dialog.locator('button[title="프레임 없음"]'),
     ).toBeVisible();
     await expect(
       dialog.locator('button[title="그림자 프레임"]'),
     ).toBeVisible();
+    await expect(
+      dialog.locator('button[title="브라우저 프레임 (mac 스타일)"]'),
+    ).toBeVisible();
+
+    // 브라우저 프레임 클릭 → 활성 상태로 전환되는지 (스타일 검증은 어려우니 클릭만 검증)
+    await dialog.locator('button[title="브라우저 프레임 (mac 스타일)"]').click();
 
     // 완료 버튼
     await expect(
