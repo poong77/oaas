@@ -50,11 +50,6 @@ export function ProductArticleList({
                   {a.categoryPath?.[0] && (
                     <Badge tone="slate">{a.categoryPath[0]}</Badge>
                   )}
-                  {a.publishedAt && (
-                    <span className="text-xs text-slate-400">
-                      {formatDate(a.publishedAt)}
-                    </span>
-                  )}
                 </div>
                 <h3 className="line-clamp-2 text-base font-semibold text-slate-900 dark:text-slate-100">
                   {a.title}
@@ -117,11 +112,4 @@ export function ProductArticleList({
       )}
     </>
   );
-}
-
-function formatDate(d: Date | string | null): string {
-  if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '-';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
