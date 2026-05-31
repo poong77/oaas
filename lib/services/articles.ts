@@ -58,6 +58,7 @@ export type ArticleListItem = Pick<
   | 'viewCount'
   | 'helpfulYes'
   | 'helpfulNo'
+  | 'warningCount'
   | 'isActive'
   | 'updatedAt'
   | 'createdAt'
@@ -115,6 +116,7 @@ const ARTICLE_LIST_SELECT = {
   viewCount: articles.viewCount,
   helpfulYes: articles.helpfulYes,
   helpfulNo: articles.helpfulNo,
+  warningCount: articles.warningCount,
   isActive: articles.isActive,
   updatedAt: articles.updatedAt,
   createdAt: articles.createdAt,
@@ -208,6 +210,7 @@ export async function listArticles(
         viewCount: articles.viewCount,
         helpfulYes: articles.helpfulYes,
         helpfulNo: articles.helpfulNo,
+        warningCount: articles.warningCount,
         isActive: articles.isActive,
         updatedAt: articles.updatedAt,
         createdAt: articles.createdAt,
@@ -280,6 +283,7 @@ export async function listPopularArticles(
         viewCount: articles.viewCount,
         helpfulYes: articles.helpfulYes,
         helpfulNo: articles.helpfulNo,
+        warningCount: articles.warningCount,
         isActive: articles.isActive,
         updatedAt: articles.updatedAt,
         createdAt: articles.createdAt,
@@ -320,6 +324,7 @@ export async function listRecentPublishedArticles(
         viewCount: articles.viewCount,
         helpfulYes: articles.helpfulYes,
         helpfulNo: articles.helpfulNo,
+        warningCount: articles.warningCount,
         isActive: articles.isActive,
         updatedAt: articles.updatedAt,
         createdAt: articles.createdAt,
@@ -438,6 +443,7 @@ export async function getRelatedArticles(
           viewCount: articles.viewCount,
           helpfulYes: articles.helpfulYes,
           helpfulNo: articles.helpfulNo,
+        warningCount: articles.warningCount,
           isActive: articles.isActive,
           updatedAt: articles.updatedAt,
           createdAt: articles.createdAt,
@@ -472,6 +478,7 @@ export async function getRelatedArticles(
         viewCount: articles.viewCount,
         helpfulYes: articles.helpfulYes,
         helpfulNo: articles.helpfulNo,
+        warningCount: articles.warningCount,
         isActive: articles.isActive,
         updatedAt: articles.updatedAt,
         createdAt: articles.createdAt,
@@ -571,6 +578,7 @@ export async function searchArticles(
         viewCount: articles.viewCount,
         helpfulYes: articles.helpfulYes,
         helpfulNo: articles.helpfulNo,
+        warningCount: articles.warningCount,
         isActive: articles.isActive,
         updatedAt: articles.updatedAt,
         createdAt: articles.createdAt,
@@ -721,6 +729,7 @@ export async function recordFeedback(
       .select({
         helpfulYes: articles.helpfulYes,
         helpfulNo: articles.helpfulNo,
+        warningCount: articles.warningCount,
       })
       .from(articles)
       .where(eq(articles.id, input.articleId))
@@ -815,6 +824,19 @@ export async function createArticle(
   try {
     const toc = extractTocV2(input.bodyMarkdown);
     const willPublish = input.publish === true || input.status === 'published';
+    // v1.5 — 발행 시 validation 워닝 수 저장 (드래프트는 0)
+    let warningCount = 0;
+    if (willPublish) {
+      const { validateBody, validateTitle, validateSummary } = await import(
+        '@/lib/articles/body-validator'
+      );
+      const bodyWarn = validateBody(input.bodyMarkdown, input.contentType).warnings;
+      const titleWarn = validateTitle(input.title).warnings;
+      const summaryWarn = validateSummary(input.summary ?? input.summary30s).warnings;
+      warningCount = bodyWarn.length + titleWarn.length + summaryWarn.length;
+      if ((input.keywords ?? []).length < 3) warningCount += 1;
+      if (!input.categoryPath || input.categoryPath.length === 0) warningCount += 1;
+    }
     const values: NewArticle = {
       productCode: input.productCode,
       contentType: input.contentType,
@@ -833,6 +855,7 @@ export async function createArticle(
       authorId,
       lastEditorId: authorId,
       publishedAt: willPublish ? new Date() : null,
+      warningCount,
     };
     const [row] = await db.insert(articles).values(values).returning({
       id: articles.id,
@@ -873,6 +896,23 @@ export async function updateArticleById(
     if (input.appliesTo !== undefined) patch.appliesTo = input.appliesTo;
     if (input.relatedSlugs) patch.relatedSlugs = input.relatedSlugs;
     if (editorId) patch.lastEditorId = editorId;
+
+    // v1.5 — 발행 상태일 때 워닝 카운트 갱신
+    const willPublish =
+      input.publish === true || input.status === 'published';
+    if (willPublish && input.contentType) {
+      const { validateBody, validateTitle, validateSummary } = await import(
+        '@/lib/articles/body-validator'
+      );
+      const bodyWarn = validateBody(input.bodyMarkdown, input.contentType).warnings;
+      const titleWarn = validateTitle(input.title).warnings;
+      const summaryWarn = validateSummary(input.summary ?? input.summary30s).warnings;
+      let warningCount = bodyWarn.length + titleWarn.length + summaryWarn.length;
+      if ((input.keywords ?? []).length < 3) warningCount += 1;
+      if (!input.categoryPath || input.categoryPath.length === 0) warningCount += 1;
+      patch.warningCount = warningCount;
+    }
+
     await db.update(articles).set(patch).where(eq(articles.id, id));
     return { ok: true };
   } catch (err) {

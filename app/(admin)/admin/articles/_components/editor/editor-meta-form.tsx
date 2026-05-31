@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -47,6 +47,12 @@ export interface EditorMetaFormProps {
   bodyForRecommend?: string;
   /** A5 AI 제안 (각 필드 옆 mini 카드 inline 표시). */
   aiSuggestion?: AiAssistOutput | null;
+  /** AI 호출 트리거 (각 필드 라벨 옆 ✨ 버튼). */
+  onTriggerAi?: () => void;
+  /** AI 호출 진행 중. true면 모든 ✨ 버튼 spinner. */
+  aiLoading?: boolean;
+  /** AI 호출 가능 여부 (본문 500자+ 또는 제목 입력). */
+  aiAvailable?: boolean;
   onAiApplySlug?: () => void;
   onAiRejectSlug?: () => void;
   onAiApplySummary?: () => void;
@@ -81,6 +87,9 @@ export function EditorMetaForm({
   related,
   bodyForRecommend = '',
   aiSuggestion,
+  onTriggerAi,
+  aiLoading = false,
+  aiAvailable = true,
   onAiApplySlug,
   onAiRejectSlug,
   onAiApplySummary,
@@ -141,6 +150,35 @@ export function EditorMetaForm({
     onKeywords(keywords.filter((x) => x !== k));
   }
 
+  // 각 필드 라벨 옆 ✨ 트리거 버튼 (재사용)
+  function AiTriggerBtn({ field }: { field: 'slug' | 'summary' | 'keywords' | 'related' }) {
+    if (!onTriggerAi) return null;
+    return (
+      <button
+        type="button"
+        onClick={onTriggerAi}
+        disabled={!aiAvailable || aiLoading}
+        title={
+          !aiAvailable
+            ? '본문 500자 또는 제목 입력 후 활성'
+            : `${field} 자동 작성 — 5종 한 번에 추출`
+        }
+        className={`inline-flex h-6 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition ${
+          aiAvailable && !aiLoading
+            ? 'border-brand-300 bg-brand-50 text-brand-700 hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-950/40 dark:text-brand-300'
+            : 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed dark:border-slate-700 dark:bg-slate-800'
+        }`}
+      >
+        {aiLoading ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <Sparkles className="h-3 w-3" />
+        )}
+        AI 자동
+      </button>
+    );
+  }
+
   return (
     <Card>
       <CardContent className="grid gap-4 p-5 sm:grid-cols-2">
@@ -180,9 +218,12 @@ export function EditorMetaForm({
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <Label htmlFor="slug">
-            Slug (URL) * — 운영 ID 권장: <code>{productCode || '{product}'}-{contentType}-001</code>
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="slug">
+              Slug (URL) * — 운영 ID 권장: <code>{productCode || '{product}'}-{contentType}-001</code>
+            </Label>
+            <AiTriggerBtn field="slug" />
+          </div>
           <div className="flex flex-wrap gap-2">
             <Input
               id="slug"
@@ -223,7 +264,10 @@ export function EditorMetaForm({
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <Label htmlFor="summary">요약 (summary) — 30초 요약 + 검색용</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="summary">요약 (summary) — 30초 요약 + 검색용</Label>
+            <AiTriggerBtn field="summary" />
+          </div>
           <Textarea
             id="summary"
             value={summary}
@@ -244,7 +288,10 @@ export function EditorMetaForm({
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <Label>키워드 (keywords) *</Label>
+          <div className="flex items-center justify-between">
+            <Label>키워드 (keywords) *</Label>
+            <AiTriggerBtn field="keywords" />
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {keywords.map((k) => (
               <span
@@ -315,7 +362,10 @@ export function EditorMetaForm({
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <Label>관련 문서 (선택)</Label>
+          <div className="flex items-center justify-between">
+            <Label>관련 문서 (선택)</Label>
+            <AiTriggerBtn field="related" />
+          </div>
           <RelatedArticleAutocomplete
             inputContext={{
               productCode,

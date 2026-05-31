@@ -1,0 +1,1 @@
+ALTER TABLE "articles" ADD COLUMN "warning_count" integer DEFAULT 0 NOT NULL;

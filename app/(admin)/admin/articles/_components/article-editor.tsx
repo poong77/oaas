@@ -33,6 +33,7 @@ import {
   validateSummary,
   extractBodyOutline,
   isPlaceholderOnly,
+  hardCheck,
 } from '@/lib/articles/body-validator';
 import { getTemplateBody } from '@/lib/articles/templates';
 import {
@@ -56,11 +57,9 @@ import {
   ArticleChecklistSidebar,
   type MetaCheck,
 } from './editor/article-checklist-sidebar';
-import {
-  AiAssistantPanel,
-  KbAiChatbotMetaCard,
-} from './editor/ai-assistant-panel';
+import { KbAiChatbotMetaCard } from './editor/ai-assistant-panel';
 import type { AiAssistOutput } from '@/lib/ai/prompts/article-assistant';
+import { aiAssistArticleAction } from '@/app/actions/article-actions';
 
 type EditorMode = 'create' | 'edit';
 
@@ -132,7 +131,7 @@ export function ArticleEditor({
     [body, contentType],
   );
   const validation = useMemo(() => {
-    const { errors, warnings } = validateBody(body, contentType);
+    const { warnings } = validateBody(body, contentType);
     const allWarnings = [
       ...warnings,
       ...validateTitle(title).warnings,
@@ -141,8 +140,17 @@ export function ArticleEditor({
     if (keywords.length < 3) {
       allWarnings.push('키워드 3개 이상 권장 — 검색 매칭률 향상');
     }
-    return { errors, warnings: allWarnings };
-  }, [body, contentType, title, summary, keywords.length]);
+    if (categoryPath.length === 0) {
+      allWarnings.push('메뉴 경로 미선택 — /help 사이드바 트리에 노출 안 됨');
+    }
+    return { errors: [] as string[], warnings: allWarnings };
+  }, [body, contentType, title, summary, keywords.length, categoryPath.length]);
+
+  // v1.5 — Hard 검증 (발행 차단). 워닝과는 별개.
+  const hard = useMemo(
+    () => hardCheck({ productCode, contentType, title, slug, bodyMarkdown: body }),
+    [productCode, contentType, title, slug, body],
+  );
 
   // 메타 체크리스트 (사이드바)
   const metaChecks: MetaCheck[] = [
@@ -178,6 +186,45 @@ export function ArticleEditor({
 
   // AI 제안 결과 (각 필드 옆 mini 카드로 분산 표시)
   const [aiSuggestion, setAiSuggestion] = useState<AiAssistOutput | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiCooldownUntil, setAiCooldownUntil] = useState(0);
+
+  const aiAvailable =
+    !!productCode &&
+    (title.trim().length > 0 || body.length >= 500) &&
+    Date.now() >= aiCooldownUntil;
+
+  async function handleTriggerAi() {
+    if (!aiAvailable || aiLoading) return;
+    setAiLoading(true);
+    try {
+      const result = await aiAssistArticleAction({
+        title,
+        body,
+        contentType,
+        productCode,
+        categoryPath,
+        existingKeywords: keywords,
+      });
+      if (!result.ok) {
+        toast.error(result.message);
+        if (result.reason === 'rate-limit') {
+          setAiCooldownUntil(Date.now() + 60_000);
+        }
+        return;
+      }
+      if (result.truncated) {
+        toast.info(
+          `본문이 길어 5000자만 분석했어요 (원본 ${result.originalLength?.toLocaleString()}자).`,
+        );
+      }
+      setAiSuggestion(result.data);
+      toast.success('AI 제안이 각 필드 옆에 표시됐어요. 적용/거부를 선택하세요.');
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
   function dismissField(field: 'slug' | 'summary' | 'keywords' | 'relatedHints' | 'chatbotMeta') {
     setAiSuggestion((prev) => {
       if (!prev) return null;
@@ -245,9 +292,10 @@ export function ArticleEditor({
   async function submit(publish: boolean) {
     setFieldErrors({});
 
-    if (publish && validation.errors.length > 0) {
+    // v1.5 — Hard 검증만 차단. 워닝은 안내 후 발행 가능.
+    if (publish && !hard.ok) {
       toast.error(
-        `발행 차단: ${validation.errors[0]} (총 ${validation.errors.length}건)`,
+        `발행 차단: ${hard.errors[0]} (총 ${hard.errors.length}건)`,
       );
       return;
     }
@@ -257,7 +305,7 @@ export function ArticleEditor({
         title: '아티클을 발행하시겠습니까?',
         description:
           validation.warnings.length > 0
-            ? `워닝 ${validation.warnings.length}건이 있습니다. 그래도 발행할까요?`
+            ? `보완 권장 ${validation.warnings.length}건이 있어요. 발행 후에도 편집해서 보완할 수 있어요. 그래도 발행할까요?`
             : '발행 즉시 호텔리어에게 노출됩니다.',
         confirmText: '발행',
       });
@@ -329,6 +377,9 @@ export function ArticleEditor({
           related={related}
           bodyForRecommend={body}
           aiSuggestion={aiSuggestion}
+          onTriggerAi={handleTriggerAi}
+          aiLoading={aiLoading}
+          aiAvailable={aiAvailable}
           onAiApplySlug={() => {
             if (aiSuggestion?.slug) {
               setSlug(aiSuggestion.slug);
@@ -374,19 +425,6 @@ export function ArticleEditor({
           fieldErrors={fieldErrors}
         />
 
-        <AiAssistantPanel
-          inputContext={{
-            title,
-            body,
-            contentType,
-            productCode,
-            categoryPath,
-            existingKeywords: keywords,
-          }}
-          disabled={title.trim().length === 0 && body.length < 500}
-          onResult={(output) => setAiSuggestion(output)}
-        />
-
         {/* 챗봇 KB 메타는 별도 카드 (사이드 표시) */}
         {aiSuggestion?.chatbot_meta && (
           <KbAiChatbotMetaCard
@@ -425,7 +463,8 @@ export function ArticleEditor({
           <Button
             type="button"
             onClick={() => submit(true)}
-            disabled={pending || validation.errors.length > 0}
+            disabled={pending || !hard.ok}
+            title={!hard.ok ? `발행 차단: ${hard.errors.join(', ')}` : undefined}
           >
             <Upload className="h-4 w-4" />
             {mode === 'edit' && initial?.isPublished

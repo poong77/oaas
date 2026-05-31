@@ -122,6 +122,12 @@ export const articles = pgTable(
     viewCount: integer('view_count').notNull().default(0),
     helpfulYes: integer('helpful_yes').notNull().default(0),
     helpfulNo: integer('helpful_no').notNull().default(0),
+    /**
+     * knowledge-base-overhaul v1.5 — 발행 시 validation 워닝 수.
+     * 0이면 깨끗, > 0이면 /admin/articles에 ⚠️ "보완 N건" 배지 표시.
+     * Hard 검증(productCode/title/slug/body)은 별도, 발행 차단 의미가 아님.
+     */
+    warningCount: integer('warning_count').notNull().default(0),
   },
   (table) => [
     uniqueIndex('articles_slug_uq').on(table.slug),

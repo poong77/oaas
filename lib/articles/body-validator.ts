@@ -41,36 +41,109 @@ export type ValidationResult = {
   warnings: string[];
 };
 
+/**
+ * v1.5 (knowledge-base-overhaul): 발행 차단 완화 정책.
+ *
+ * 기존 errors (필수 H2 누락)을 warnings로 강등.
+ * 발행 차단은 hardCheck() 결과로만 결정 (productCode/contentType/title/slug/body).
+ *
+ * validateBody 결과의 errors는 항상 [] (호환 유지). 모든 검증 결과는 warnings.
+ */
 export function validateBody(
   bodyMarkdown: string,
   contentType: ArticleContentType,
 ): ValidationResult {
-  const errors: string[] = [];
   const warnings: string[] = [];
 
-  // H2 추출 — Tiptap Option A로 본문이 markdown+inline HTML이어도 ## 라인은 markdown 그대로
   const h2Headings = [...bodyMarkdown.matchAll(/^##\s+(.+)$/gm)].map((m) =>
     m[1]!.trim(),
   );
 
   const required = REQUIRED_H2_BY_TYPE[contentType];
   for (const req of required) {
-    // 괄호 부분 제거 — "위치(메뉴 경로)" → "위치"
     const core = req.split('(')[0]!.trim();
     if (!h2Headings.some((h) => h.includes(core))) {
-      errors.push(`필수 H2 누락: "${req}"`);
+      warnings.push(`필수 H2 누락 (보완 권장): "${req}"`);
     }
   }
 
   for (const phrase of NON_SELF_CONTAINED_PHRASES) {
     if (bodyMarkdown.includes(phrase)) {
       warnings.push(
-        `자기완결 본문 위반: "${phrase}" — RAG 청크 독립 노출 원칙 위반`,
+        `자기완결 본문 위반: "${phrase}" — RAG 청크 독립 노출 원칙`,
       );
     }
   }
 
-  return { errors, warnings };
+  return { errors: [], warnings };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// v1.5 — Hard 검증 (발행 차단)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type HardCheckInput = {
+  productCode: string;
+  contentType: ArticleContentType | null | undefined;
+  title: string;
+  slug: string;
+  bodyMarkdown: string;
+};
+
+export type HardCheckResult = {
+  ok: boolean;
+  errors: string[];
+};
+
+const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+/**
+ * 발행 가능 여부 판정 (Hard Required만 검사).
+ *
+ * Hard 정의:
+ *   - productCode 비어있지 않음
+ *   - contentType 3종 中 1
+ *   - title trim 후 ≥ 2자
+ *   - slug 형식 통과 (영문/숫자/하이픈)
+ *   - 본문: H2 1개+ AND 실질 내용 ≥ 50자 (placeholder/heading 제외)
+ *
+ * 그 외 모든 부족(필수 H2 4개 中 일부 누락, summary 비어있음, keywords < 3 등)은
+ * validateBody의 warnings로 분류되며 발행 가능.
+ */
+export function hardCheck(input: HardCheckInput): HardCheckResult {
+  const errors: string[] = [];
+  if (!input.productCode?.trim()) errors.push('제품 미선택');
+  if (!input.contentType) errors.push('의도(content_type) 미선택');
+  if (!input.title || input.title.trim().length < 2) {
+    errors.push('제목 2자 이상 필요');
+  }
+  if (!input.slug?.trim()) {
+    errors.push('Slug 미입력');
+  } else if (!SLUG_PATTERN.test(input.slug.trim())) {
+    errors.push('Slug 형식 오류 (영문 소문자/숫자/하이픈만)');
+  }
+
+  // 본문: H2 1개+ AND 실질 내용 50자+
+  const body = input.bodyMarkdown ?? '';
+  const h2Count = (body.match(/^##\s+/gm) ?? []).length;
+  if (h2Count < 1) errors.push('본문 H2 최소 1개 필요');
+
+  const bodyText = body
+    .split('\n')
+    .filter((l) => {
+      const t = l.trim();
+      if (!t) return false;
+      if (t.startsWith('#')) return false;
+      if (t.startsWith('>')) return false;
+      return true;
+    })
+    .join(' ')
+    .trim();
+  if (bodyText.length < 50) {
+    errors.push('본문 실질 내용 50자 이상 필요 (placeholder 제외)');
+  }
+
+  return { ok: errors.length === 0, errors };
 }
 
 /** title 다중 의도 의심 — 별도 워닝. */
