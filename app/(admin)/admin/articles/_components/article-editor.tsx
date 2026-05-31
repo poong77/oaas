@@ -390,8 +390,15 @@ export function ArticleEditor({
               : 'Draft로 저장되었습니다'
             : '저장되었습니다',
         );
-        if (mode === 'create') router.push(`/admin/articles/${result.id}`);
-        else router.refresh();
+        // router 호출은 transition 밖에서 — refresh/push가 transition 안에
+        // 들어가면 RSC fetch가 끝날 때까지 transition pending = navigation 차단.
+        // setTimeout(0)으로 transition 콜백이 끝난 다음 tick에 실행되도록.
+        const resultId = result.id;
+        if (mode === 'create') {
+          setTimeout(() => router.push(`/admin/articles/${resultId}`), 0);
+        } else {
+          setTimeout(() => router.refresh(), 0);
+        }
       } else {
         if (result.fieldErrors) setFieldErrors(result.fieldErrors);
         toast.error(result.message ?? '저장 실패');
