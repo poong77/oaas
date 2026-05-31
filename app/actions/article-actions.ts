@@ -52,6 +52,13 @@ import {
   type KeywordRecommendation,
   type RelatedArticleRecommendation,
 } from '@/lib/articles/recommend';
+import { callClaudeAssistant } from '@/lib/ai/anthropic-client';
+import {
+  AiAssistOutputSchema,
+  truncateBody,
+  type AiAssistOutput,
+} from '@/lib/ai/prompts/article-assistant';
+import { rateLimitOrThrow, RateLimitExceededError } from '@/lib/ai/rate-limiter';
 import type { ArticleContentType } from '@/db/schema';
 
 // ─────────────────────────────────────────────────────────────────────
@@ -152,6 +159,84 @@ export async function searchArticlesForAutocompleteAction(
 ): Promise<Array<{ id: string; slug: string; title: string; productCode: string }>> {
   await requireRole(['manager', 'admin']);
   return searchArticlesForAutocomplete(q, productCode);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// A5 — Claude 보조
+// ─────────────────────────────────────────────────────────────────────
+
+type AiAssistResult =
+  | { ok: true; data: AiAssistOutput; truncated?: boolean; originalLength?: number }
+  | { ok: false; reason: 'rate-limit' | 'api-error' | 'parse-error'; message: string };
+
+/**
+ * A5 — Claude로 5종 메타데이터 추출 (slug/summary/keywords/related/chatbot_meta).
+ *
+ * - Rate limit: 매니저당 분당 10회 / 일 200회
+ * - 입력 본문 5000자 cap (truncation 시 사용자 알림)
+ * - 출력 zod 검증 통과한 결과만 반환
+ */
+export async function aiAssistArticleAction(input: {
+  title: string;
+  body: string;
+  contentType: ArticleContentType;
+  productCode: string;
+  categoryPath: string[];
+  existingKeywords: string[];
+}): Promise<AiAssistResult> {
+  const user = await requireRole(['manager', 'admin']);
+
+  try {
+    await rateLimitOrThrow(user.id, {
+      perMin: 10,
+      perDay: 200,
+      bucket: 'ai-assist',
+    });
+  } catch (e) {
+    if (e instanceof RateLimitExceededError) {
+      return { ok: false, reason: 'rate-limit', message: e.message };
+    }
+    throw e;
+  }
+
+  const truncated = truncateBody(input.body ?? '', 5000);
+
+  try {
+    const raw = await callClaudeAssistant({
+      title: input.title ?? '',
+      body: truncated.text,
+      contentType: input.contentType,
+      productCode: input.productCode ?? '',
+      categoryPath: input.categoryPath ?? [],
+      existingKeywords: input.existingKeywords ?? [],
+    });
+
+    const parsed = AiAssistOutputSchema.safeParse(raw);
+    if (!parsed.success) {
+      console.warn('[aiAssistArticleAction] zod 검증 실패:', parsed.error.flatten());
+      return {
+        ok: false,
+        reason: 'parse-error',
+        message:
+          'AI 출력 형식이 예상과 달라요. 다시 시도하면 보통 정상이에요.',
+      };
+    }
+
+    return {
+      ok: true,
+      data: parsed.data,
+      truncated: truncated.truncated,
+      originalLength: truncated.original,
+    };
+  } catch (err) {
+    console.error('[aiAssistArticleAction] Claude 호출 실패:', err);
+    return {
+      ok: false,
+      reason: 'api-error',
+      message:
+        'AI 보조가 일시적으로 동작하지 않아요. 수동으로 계속 작성하거나 잠시 후 다시 시도해주세요.',
+    };
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────

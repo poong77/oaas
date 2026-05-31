@@ -56,6 +56,10 @@ import {
   ArticleChecklistSidebar,
   type MetaCheck,
 } from './editor/article-checklist-sidebar';
+import {
+  AiAssistantPanel,
+  type AiAssistPatch,
+} from './editor/ai-assistant-panel';
 
 type EditorMode = 'create' | 'edit';
 
@@ -314,6 +318,34 @@ export function ArticleEditor({
           onKeywords={setKeywords}
           onRelated={setRelated}
           fieldErrors={fieldErrors}
+        />
+
+        <AiAssistantPanel
+          inputContext={{
+            title,
+            body,
+            contentType,
+            productCode,
+            categoryPath,
+            existingKeywords: keywords,
+          }}
+          disabled={title.trim().length === 0 && body.length < 500}
+          onApply={(patch: AiAssistPatch) => {
+            if (patch.slug) setSlug(patch.slug);
+            if (patch.summary) setSummary(patch.summary);
+            if (patch.keywords) {
+              const merged = Array.from(
+                new Set([...keywords, ...patch.keywords]),
+              ).slice(0, 30);
+              setKeywords(merged);
+            }
+            if (patch.relatedHints && patch.relatedHints.length > 0) {
+              // related 자동 추천은 단순 키워드 힌트 — 사용자가 검색에 쓰도록 별도 표시.
+              // 직접 related 필드 채우기보다 keyword 추천에 합치는 게 안전.
+              // v1.5: chatbotMeta 영속화
+            }
+            // chatbotMeta는 draft에 보관 — v2 (Stream C)에서 articles 컬럼 추가
+          }}
         />
 
         <EditorBody

@@ -21,6 +21,7 @@
     "test:e2e:report": "playwright show-report e2e/playwright-report"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
     "@aws-sdk/client-sesv2": "^3.726.0",
     "@neondatabase/serverless": "^0.10.4",
     "@radix-ui/react-dialog": "^1.1.4",
