@@ -11,7 +11,7 @@
  */
 
 import 'server-only';
-import { and, desc, eq, ne, sql } from 'drizzle-orm';
+import { and, arrayOverlaps, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { articles } from '@/db/schema';
@@ -228,7 +228,9 @@ export async function recommendRelatedArticles({
         .where(
           and(
             ...baseConds,
-            sql`${articles.keywords} && ${keywords}::text[]`,
+            // arrayOverlaps: keywords와 교집합 1개 이상. raw sql `&& ${배열}::text[]`는
+            // Drizzle이 배열을 record로 전개해 실패하므로 헬퍼 사용.
+            arrayOverlaps(articles.keywords, keywords),
           ),
         )
         .orderBy(desc(articles.viewCount))
@@ -257,7 +259,9 @@ export async function recommendRelatedArticles({
         .where(
           and(
             ...baseConds,
-            sql`${articles.slug} = ANY(${linkedSlugs}::text[])`,
+            // inArray: 본문 링크 slug 목록 중 하나. raw sql `= ANY(${배열}::text[])`는
+            // Drizzle이 배열을 record로 전개해 실패하므로 헬퍼 사용.
+            inArray(articles.slug, linkedSlugs),
           ),
         )
         .limit(5);

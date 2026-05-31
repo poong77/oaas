@@ -13,6 +13,7 @@
 import 'server-only';
 import {
   and,
+  arrayContains,
   arrayOverlaps,
   asc,
   desc,
@@ -204,10 +205,11 @@ export async function listArticles(
     conditions.push(eq(articles.contentType, params.contentType));
   }
   if (params.selectedPath && params.selectedPath.length > 0) {
-    // PostgreSQL 배열 contains: categoryPath가 selectedPath의 모든 라벨을 포함하면 매칭
-    conditions.push(
-      sql`${articles.categoryPath} @> ${params.selectedPath}::text[]`,
-    );
+    // PostgreSQL 배열 contains: categoryPath가 selectedPath의 모든 라벨을 포함하면 매칭.
+    // ⚠️ sql`... @> ${배열}::text[]`로 쓰면 Drizzle이 JS 배열을 ($1, $2) record로
+    // 전개해 'cannot cast record to text[]' 에러가 난다. arrayContains 헬퍼를 써야
+    // 단일 배열 파라미터('{a,b}')로 올바르게 바인딩된다. @see keywords arrayOverlaps
+    conditions.push(arrayContains(articles.categoryPath, params.selectedPath));
   }
   if (params.q && params.q.trim()) {
     // v1.2: 제품 가이드/목록 검색도 동의어(synonyms-master) 확장 적용.
