@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Eye, ThumbsUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { ArticleListItem } from '@/lib/services/articles';
+import { CONTENT_TYPE_META } from '@/lib/articles/content-type-meta';
 import { toQueryString } from '@/lib/url-query';
 
 export function ProductArticleList({
@@ -47,9 +48,36 @@ export function ProductArticleList({
                 href={`/help/${productCode}/${a.slug}`}
                 className="flex h-full flex-col gap-2 p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:p-5"
               >
-                <div className="flex items-center gap-2">
-                  {a.categoryPath?.[0] && (
-                    <Badge tone="slate">{a.categoryPath[0]}</Badge>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  {/* 의도 타입 칩 — 색으로 분류명과 구분 (사용방법/기능설명/문제해결) */}
+                  {a.contentType && CONTENT_TYPE_META[a.contentType] && (
+                    <Badge tone={CONTENT_TYPE_META[a.contentType].tone}>
+                      {CONTENT_TYPE_META[a.contentType].label}
+                    </Badge>
+                  )}
+                  {/* 대분류 › 중분류 › 소분류 — 비전문가도 계층을 직관적으로 이해하도록 */}
+                  {a.categoryPath && a.categoryPath.length > 0 && (
+                    <span className="inline-flex flex-wrap items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                      {a.categoryPath.map((seg, i) => (
+                        <span
+                          key={`${seg}-${i}`}
+                          className="inline-flex items-center gap-1"
+                        >
+                          {i > 0 && (
+                            <ChevronRight className="h-3 w-3 shrink-0 text-slate-300 dark:text-slate-600" />
+                          )}
+                          <span
+                            className={
+                              i === 0
+                                ? 'font-medium text-slate-600 dark:text-slate-300'
+                                : undefined
+                            }
+                          >
+                            {seg}
+                          </span>
+                        </span>
+                      ))}
+                    </span>
                   )}
                 </div>
                 <h3 className="line-clamp-2 text-base font-semibold text-slate-900 dark:text-slate-100">
