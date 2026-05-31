@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { listTermGroups } from '@/lib/services/master-synonyms';
+import { KeywordGapCard } from './_components/keyword-gap-card';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '동의어 사전 — 마스터' };
@@ -38,6 +39,8 @@ export default async function SynonymsIndexPage() {
         title="동의어 사전"
         description="통합 검색 동의어 그룹 관리. 대표어 + 이형어(N개)로 검색 결과 확장."
       />
+
+      <KeywordGapCard />
 
       <div className="flex justify-end">
         <Link href="/admin/master/synonyms/new">

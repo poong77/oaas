@@ -23,7 +23,7 @@ import {
   type TermGroupCategory,
   type TermSynonym,
 } from '@/db/schema';
-import { normalizeTerm } from '@/lib/text/normalize';
+import { collapseSpacing, normalizeTerm } from '@/lib/text/normalize';
 
 const SYNONYMS_CACHE_TAG = 'synonyms';
 
@@ -261,24 +261,30 @@ export async function loadSynonymIndex(): Promise<SynonymIndex> {
   const groupIdToTerms = new Map<string, string[]>();
   const groupIdToSuggestedCategoryId = new Map<string, string>();
 
+  // 한 term을 normalize 키 + collapse(공백·하이픈 제거) 키 양쪽으로 등록.
+  // → 사전에 한 형태만 있어도 '실시간 객실'↔'실시간객실', 'check-in'↔'check in'이 매칭됨.
+  const register = (term: string, gid: string) => {
+    for (const key of new Set([normalizeTerm(term), collapseSpacing(term)])) {
+      if (!key) continue;
+      if (!termToGroupIds.has(key)) termToGroupIds.set(key, new Set());
+      termToGroupIds.get(key)!.add(gid);
+    }
+  };
+
   const activeGroupIds = new Set(groups.map((g) => g.id));
   for (const g of groups) {
     groupIdToTerms.set(g.id, [g.canonicalTerm]);
     if (g.suggestedCategoryId) {
       groupIdToSuggestedCategoryId.set(g.id, g.suggestedCategoryId);
     }
-    const key = normalizeTerm(g.canonicalTerm);
-    if (!termToGroupIds.has(key)) termToGroupIds.set(key, new Set());
-    termToGroupIds.get(key)!.add(g.id);
+    register(g.canonicalTerm, g.id);
   }
   for (const s of synonyms) {
     if (!activeGroupIds.has(s.groupId)) continue;
     const arr = groupIdToTerms.get(s.groupId);
     if (!arr) continue;
     arr.push(s.term);
-    const key = normalizeTerm(s.term);
-    if (!termToGroupIds.has(key)) termToGroupIds.set(key, new Set());
-    termToGroupIds.get(key)!.add(s.groupId);
+    register(s.term, s.groupId);
   }
   return { termToGroupIds, groupIdToTerms, groupIdToSuggestedCategoryId };
 }

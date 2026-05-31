@@ -47,6 +47,10 @@
 
 > **검색 동의어 확장 (v1.2, 2026-05-31)** — SS-01 통합 검색뿐 아니라 SS-02 제품별 가이드 목록 검색(`listArticles`)도 `synonyms-master`(`term_groups`/`term_synonyms`) 기반 동의어 확장을 적용한다. `expandKeywords()`로 확장한 대표어·이형어를 ① `keywords` 배열 매칭(GIN) + ② title/summary/body ILIKE 로 OR 결합. 작성자가 `keywords`를 누락해도 본문 ILIKE로 매칭되도록 보강(예: "실시간객실" → "실시간 객실"). 두 검색 함수는 `buildArticleSearchCondition()` 헬퍼를 공유.
 
+> **공백·하이픈 무시 매칭 (v1.3, 2026-06-01)** — 동의어 사전에 한 형태만 등록해도 띄어쓰기·붙여쓰기·하이픈 변형이 모두 매칭된다. `collapseSpacing()`(`lib/text/normalize.ts`, NFC+lower+trim 후 `[\s\-_·.]` 제거)을 ① 인덱스(`loadSynonymIndex`)에 normalize 키와 함께 등록 + ② 질의(`expandKeywords`/`suggestCategoriesFromText`)에서 토큰·인접 bigram·전체입력 collapse 키로 탐색. 예: 사전 `check in` 하나로 `check-in`/`checkin` 매칭, 사전 `실시간 객실`로 `실시간객실` 매칭. 갭 탐지도 collapse 키로 집계하여 `실시간 객실`/`실시간객실`을 한 후보로 병합하고 둘 중 하나만 등록돼도 커버로 간주. → **운영자가 변형을 일일이 중복 입력할 필요 없음.**
+
+> **아티클 기반 동의어 갭 탐지 (v1.3 Phase A, 2026-06-01)** — 발행 아티클의 `keywords[]`(사람이 큐레이션한 한글 키워드)를 전수 집계해 빈도·아티클 수를 산출하고, `loadSynonymIndex().termToGroupIds`와 대조하여 **"아티클엔 있으나 동의어 사전엔 미등록"** 키워드를 추출한다. 읽기 전용 분석 — 스키마 변경 없음, 자동 INSERT 없음(검색 품질 오염 방지: 후보 제시 → 어드민 검수 → 반영 원칙). `analyzeKeywordGaps()`(`lib/services/keyword-gap.ts`) + `/admin/master/synonyms` 상단 "아티클 미등록 키워드" 카드(Top N, 빈도순). 각 후보는 "그룹 생성"(canonical 프리필) 링크로 기존 동의어 등록 흐름에 연결. **Phase B(LLM 그룹화 검수 큐)·Phase C(0건 검색 로그)는 후속.**
+
 ### 2. 셀프 픽스 (SF) — 스스로 문제 해결
 
 | ID | 기능 | 핵심 동작 | 권한 | 우선순위 |
@@ -636,6 +640,7 @@ created_at, is_active
 - [x] 솔루션 링크 프리셋 (`solution-links`)
 - [x] 시스템 설정 (key-value)
 - [x] 동의어 사전 (`synonyms`)
+  - [x] **아티클 기반 갭 탐지 (v1.3 Phase A, 2026-06-01)** — `analyzeKeywordGaps()` + `/admin/master/synonyms` "아티클 미등록 키워드" 카드. 읽기 전용 분석, 스키마 변경 없음.
 - [x] 메뉴 구조 (`menu-taxonomies`)
 - [x] 유입 채널 (`ticket-channels`)
 - [x] 호텔 마스터 (Phase 1 선행 완료)

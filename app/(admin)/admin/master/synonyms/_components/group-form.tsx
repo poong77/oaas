@@ -40,11 +40,17 @@ type SuggestedCategoryOption = {
 type Props = {
   group?: TermGroup;
   suggestedCategoryOptions: SuggestedCategoryOption[];
+  /** 신규 생성 시 대표어 프리필 (아티클 갭 탐지 "그룹 생성" 진입). */
+  defaultCanonical?: string;
 };
 
 const INITIAL: GroupActionState = { ok: false };
 
-export function GroupForm({ group, suggestedCategoryOptions }: Props) {
+export function GroupForm({
+  group,
+  suggestedCategoryOptions,
+  defaultCanonical,
+}: Props) {
   const router = useRouter();
   const isEdit = !!group;
 
@@ -70,7 +76,7 @@ export function GroupForm({ group, suggestedCategoryOptions }: Props) {
           <Input
             id="canonicalTerm"
             name="canonicalTerm"
-            defaultValue={group?.canonicalTerm ?? ''}
+            defaultValue={group?.canonicalTerm ?? defaultCanonical ?? ''}
             placeholder="체크인"
             required
             maxLength={60}

@@ -14,7 +14,34 @@
 import 'server-only';
 
 import { loadSynonymIndex } from './master-synonyms';
-import { tokenizeQuery } from '@/lib/text/normalize';
+import { collapseSpacing, tokenizeQuery } from '@/lib/text/normalize';
+
+/**
+ * 질의에서 동의어 인덱스를 탐색할 후보 키 집합 생성.
+ *
+ * - 각 토큰 (정확 매칭)
+ * - 각 토큰의 collapse 키 (붙임 표기)
+ * - 인접 토큰을 이어붙인 collapse 키 (예: "얼리 체크인" → "얼리체크인")
+ * - 전체 입력의 collapse 키 (다단어 사전어를 띄어 친 경우)
+ *
+ * 사전 인덱스가 normalize + collapse 키 양쪽으로 등록돼 있으므로
+ * 띄어쓰기/붙여쓰기/하이픈 변형이 모두 같은 그룹으로 매칭된다.
+ */
+function buildProbeKeys(trimmed: string, tokens: string[]): Set<string> {
+  const keys = new Set<string>();
+  for (const tok of tokens) {
+    keys.add(tok);
+    keys.add(collapseSpacing(tok));
+  }
+  // 인접 토큰 결합 (bigram) — "얼리 체크인 가능" 같은 내포 다단어어 매칭
+  for (let i = 0; i < tokens.length - 1; i++) {
+    keys.add(collapseSpacing(`${tokens[i]}${tokens[i + 1]}`));
+  }
+  // 전체 입력 결합 — "실시간 객실"처럼 입력 전체가 한 단어인 경우
+  keys.add(collapseSpacing(trimmed));
+  keys.delete('');
+  return keys;
+}
 
 export type ExpandKeywordsOptions = {
   /** 결과 토큰 상한 (안전장치). 기본 64. */
@@ -56,10 +83,14 @@ export async function expandKeywords(
 
   try {
     const index = await loadSynonymIndex();
-    for (const tok of tokens) {
-      const groupIds = index.termToGroupIds.get(tok);
+    const probeKeys = buildProbeKeys(trimmed, tokens);
+    const seenGroups = new Set<string>();
+    for (const key of probeKeys) {
+      const groupIds = index.termToGroupIds.get(key);
       if (!groupIds) continue;
       for (const gid of groupIds) {
+        if (seenGroups.has(gid)) continue;
+        seenGroups.add(gid);
         const terms = index.groupIdToTerms.get(gid) ?? [];
         for (const t of terms) {
           result.add(t);
@@ -103,11 +134,14 @@ export async function suggestCategoriesFromText(
   try {
     const index = await loadSynonymIndex();
     const hits = new Map<string, number>();
+    const seenGroups = new Set<string>();
 
-    for (const tok of tokens) {
-      const groupIds = index.termToGroupIds.get(tok);
+    for (const key of buildProbeKeys(trimmed, tokens)) {
+      const groupIds = index.termToGroupIds.get(key);
       if (!groupIds) continue;
       for (const gid of groupIds) {
+        if (seenGroups.has(gid)) continue;
+        seenGroups.add(gid);
         const catId = index.groupIdToSuggestedCategoryId.get(gid);
         if (!catId) continue;
         hits.set(catId, (hits.get(catId) ?? 0) + 1);

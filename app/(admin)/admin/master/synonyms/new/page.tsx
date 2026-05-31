@@ -12,8 +12,13 @@ import { GroupForm } from '../_components/group-form';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '새 동의어 그룹 — 마스터' };
 
-export default async function SynonymsNewPage() {
+export default async function SynonymsNewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ canonical?: string }>;
+}) {
   await requireRole(['admin']);
+  const { canonical } = await searchParams;
 
   return (
     <div className="flex flex-col gap-5">
@@ -30,7 +35,10 @@ export default async function SynonymsNewPage() {
       />
       <Card>
         <CardContent className="p-5">
-          <GroupForm suggestedCategoryOptions={[]} />
+          <GroupForm
+            suggestedCategoryOptions={[]}
+            defaultCanonical={canonical?.trim() || undefined}
+          />
         </CardContent>
       </Card>
     </div>
