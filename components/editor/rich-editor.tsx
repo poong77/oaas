@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Pencil } from 'lucide-react';
+import { toast } from 'sonner';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
@@ -81,6 +83,26 @@ export function RichEditor({
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
+
+  // 본문 이미지 마우스오버 → "편집" 오버레이 버튼 표시 (재편집 기능)
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const [hoveredImg, setHoveredImg] = useState<{
+    src: string;
+    alt: string | null;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    node: HTMLImageElement;
+  } | null>(null);
+  const hideTimerRef = useRef<number | null>(null);
+  // 재편집 모드 — 다이얼로그에 initialFile 전달 + 업로드 결과를 기존 node 에 적용
+  const [editingImage, setEditingImage] = useState<{
+    file: File;
+    node: HTMLImageElement;
+    alt: string | null;
+  } | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
   const [draftCandidate, setDraftCandidate] = useState<{
     content: string;
     updatedAt: Date | null;
@@ -233,6 +255,96 @@ export function RichEditor({
     onAutosaveStatusChange(autoSaveResult.status, autoSaveResult.lastSavedAt);
   }, [onAutosaveStatusChange, autoSaveResult.status, autoSaveResult.lastSavedAt]);
 
+  // ─── 본문 이미지 hover → 편집 오버레이 ───────────────────────────────
+  useEffect(() => {
+    const root = editorContainerRef.current;
+    if (!root || disabled) return;
+
+    function clearHideTimer() {
+      if (hideTimerRef.current !== null) {
+        window.clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+    }
+    function scheduleHide() {
+      clearHideTimer();
+      hideTimerRef.current = window.setTimeout(() => {
+        setHoveredImg(null);
+        hideTimerRef.current = null;
+      }, 180);
+    }
+    function showFor(img: HTMLImageElement) {
+      clearHideTimer();
+      const r = img.getBoundingClientRect();
+      const pr = root!.getBoundingClientRect();
+      setHoveredImg({
+        src: img.src,
+        alt: img.getAttribute('alt') || null,
+        x: r.left - pr.left,
+        y: r.top - pr.top,
+        width: r.width,
+        height: r.height,
+        node: img,
+      });
+    }
+    function onOver(e: MouseEvent) {
+      const t = e.target as HTMLElement;
+      if (t && t.tagName === 'IMG' && root!.contains(t)) {
+        showFor(t as HTMLImageElement);
+      }
+    }
+    function onOut(e: MouseEvent) {
+      const t = e.target as HTMLElement;
+      if (t && t.tagName === 'IMG') {
+        scheduleHide();
+      }
+    }
+    function onScroll() {
+      // 스크롤 중에는 오버레이 좌표가 어긋남 — hide 후 다음 hover 때 다시 계산
+      setHoveredImg(null);
+    }
+
+    root.addEventListener('mouseover', onOver);
+    root.addEventListener('mouseout', onOut);
+    window.addEventListener('scroll', onScroll, true);
+    return () => {
+      root.removeEventListener('mouseover', onOver);
+      root.removeEventListener('mouseout', onOut);
+      window.removeEventListener('scroll', onScroll, true);
+      clearHideTimer();
+    };
+  }, [disabled, editor]);
+
+  const handleEditExistingImage = useCallback(
+    async (target: { src: string; alt: string | null; node: HTMLImageElement }) => {
+      if (editLoading) return;
+      setEditLoading(true);
+      try {
+        const res = await fetch(target.src);
+        if (!res.ok) throw new Error(`다운로드 실패 (${res.status})`);
+        const blob = await res.blob();
+        const urlPath = target.src.split('?')[0]?.split('#')[0] ?? '';
+        const filename =
+          urlPath.split('/').pop() ||
+          `image-${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
+        const file = new File([blob], filename, { type: blob.type || 'image/png' });
+
+        setEditingImage({ file, node: target.node, alt: target.alt });
+        setImageDialogOpen(true);
+        setHoveredImg(null);
+      } catch (err) {
+        toast.error(
+          err instanceof Error
+            ? `이미지를 불러오지 못했어요: ${err.message}`
+            : '이미지를 불러오지 못했어요',
+        );
+      } finally {
+        setEditLoading(false);
+      }
+    },
+    [editLoading],
+  );
+
   return (
     <div
       className={cn(
@@ -264,15 +376,82 @@ export function RichEditor({
           />
         )}
       </div>
-      <div style={{ minHeight }}>
+      <div ref={editorContainerRef} className="relative" style={{ minHeight }}>
         <EditorContent editor={editor} />
+        {/* 이미지 마우스오버 시 우상단에 "편집" 오버레이 버튼 */}
+        {hoveredImg && !disabled && (
+          <div
+            className="pointer-events-none absolute z-10"
+            style={{
+              left: hoveredImg.x,
+              top: hoveredImg.y,
+              width: hoveredImg.width,
+              height: hoveredImg.height,
+            }}
+          >
+            <button
+              type="button"
+              onMouseEnter={() => {
+                if (hideTimerRef.current !== null) {
+                  window.clearTimeout(hideTimerRef.current);
+                  hideTimerRef.current = null;
+                }
+              }}
+              onMouseLeave={() => {
+                if (hideTimerRef.current !== null)
+                  window.clearTimeout(hideTimerRef.current);
+                hideTimerRef.current = window.setTimeout(
+                  () => setHoveredImg(null),
+                  180,
+                );
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                void handleEditExistingImage(hoveredImg);
+              }}
+              disabled={editLoading}
+              className="pointer-events-auto absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-slate-900/85 px-2.5 py-1.5 text-xs font-medium text-white shadow-lg backdrop-blur transition hover:bg-slate-900 disabled:opacity-50"
+            >
+              <Pencil className="h-3 w-3" />
+              {editLoading ? '불러오는 중…' : '편집'}
+            </button>
+          </div>
+        )}
       </div>
 
       <ImageUploadDialog
         open={imageDialogOpen}
-        onClose={() => setImageDialogOpen(false)}
+        onClose={() => {
+          setImageDialogOpen(false);
+          setEditingImage(null);
+        }}
+        initialFile={editingImage?.file ?? null}
+        initialAlt={editingImage?.alt ?? null}
         onUploaded={(url, alt) => {
-          editor?.chain().focus().setImage({ src: url, alt }).run();
+          if (editingImage && editor) {
+            // 기존 image 노드의 DOM 위치 → ProseMirror pos → 노드 attrs 업데이트
+            try {
+              const pos = editor.view.posAtDOM(editingImage.node, 0);
+              if (pos >= 0) {
+                editor
+                  .chain()
+                  .focus()
+                  .command(({ tr }) => {
+                    tr.setNodeMarkup(pos, undefined, { src: url, alt });
+                    return true;
+                  })
+                  .run();
+              } else {
+                // 폴백: 새 노드로 삽입
+                editor.chain().focus().setImage({ src: url, alt }).run();
+              }
+            } catch {
+              editor.chain().focus().setImage({ src: url, alt }).run();
+            }
+            setEditingImage(null);
+          } else {
+            editor?.chain().focus().setImage({ src: url, alt }).run();
+          }
         }}
       />
       <LinkInputDialog

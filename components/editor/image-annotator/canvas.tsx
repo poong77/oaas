@@ -32,6 +32,8 @@ import {
 import {
   type AnnotationColor,
   type AnnotationShape,
+  type BgColor,
+  BG_GRADIENTS,
   COLOR_HEX,
   type FrameStyle,
   newId,
@@ -52,6 +54,7 @@ interface CanvasProps {
   tool: Tool;
   color: AnnotationColor;
   frame: FrameStyle;
+  bgColor: BgColor;
   selectedId: string | null;
   onSelectId: (id: string | null) => void;
   onRequestText: (worldX: number, worldY: number) => void;
@@ -61,6 +64,21 @@ interface CanvasProps {
 const BROWSER_BAR_HEIGHT = 36;
 const BROWSER_PAD = 16;
 const SHADOW_PAD = 24;
+// iPhone (Dynamic Island 세대)
+const IPHONE_BEZEL = 12;
+const IPHONE_TOP_CHIN = 22;     // Dynamic Island 영역 여백
+const IPHONE_BOTTOM_CHIN = 16;
+const IPHONE_OUTER_PAD = 28;    // 그림자 + 배경 패딩
+const IPHONE_BODY_RADIUS = 38;
+const IPHONE_SCREEN_RADIUS = 22;
+// MacBook
+const MAC_BEZEL = 12;
+const MAC_TOP_BEZEL = 18;       // 카메라 노치 영역
+const MAC_BOTTOM_CHIN = 18;
+const MAC_BASE_HEIGHT = 8;      // 디스플레이 아래 스탠드 표시
+const MAC_BASE_OVERHANG = 28;   // 디스플레이 양옆에서 스탠드가 더 넓게
+const MAC_OUTER_PAD = 28;
+const MAC_DISPLAY_RADIUS = 12;
 
 interface FrameMetrics {
   /** 이미지 좌상단의 stage x */
@@ -94,12 +112,62 @@ function getFrameMetrics(
       stageTotalH: stageH + BROWSER_BAR_HEIGHT + BROWSER_PAD * 2,
     };
   }
+  if (frame === 'iphone') {
+    return {
+      imgOffsetX: IPHONE_OUTER_PAD + IPHONE_BEZEL,
+      imgOffsetY: IPHONE_OUTER_PAD + IPHONE_BEZEL + IPHONE_TOP_CHIN,
+      stageTotalW: stageW + (IPHONE_OUTER_PAD + IPHONE_BEZEL) * 2,
+      stageTotalH:
+        stageH +
+        (IPHONE_OUTER_PAD + IPHONE_BEZEL) * 2 +
+        IPHONE_TOP_CHIN +
+        IPHONE_BOTTOM_CHIN,
+    };
+  }
+  if (frame === 'macbook') {
+    return {
+      imgOffsetX: MAC_OUTER_PAD + MAC_BASE_OVERHANG + MAC_BEZEL,
+      imgOffsetY: MAC_OUTER_PAD + MAC_TOP_BEZEL,
+      stageTotalW: stageW + (MAC_OUTER_PAD + MAC_BASE_OVERHANG + MAC_BEZEL) * 2,
+      stageTotalH:
+        stageH +
+        MAC_TOP_BEZEL +
+        MAC_BOTTOM_CHIN +
+        MAC_BASE_HEIGHT +
+        MAC_OUTER_PAD * 2,
+    };
+  }
   return {
     imgOffsetX: 0,
     imgOffsetY: 0,
     stageTotalW: stageW,
     stageTotalH: stageH,
   };
+}
+
+/** 사용 가능한 viewport 에서 프레임 padding 빼고 이미지에 할당 가능한 영역 계산. */
+function getFramePadding(frame: FrameStyle): { w: number; h: number } {
+  switch (frame) {
+    case 'shadow':
+      return { w: SHADOW_PAD * 2, h: SHADOW_PAD * 2 };
+    case 'browser':
+      return { w: BROWSER_PAD * 2, h: BROWSER_PAD * 2 + BROWSER_BAR_HEIGHT };
+    case 'iphone':
+      return {
+        w: (IPHONE_OUTER_PAD + IPHONE_BEZEL) * 2,
+        h:
+          (IPHONE_OUTER_PAD + IPHONE_BEZEL) * 2 +
+          IPHONE_TOP_CHIN +
+          IPHONE_BOTTOM_CHIN,
+      };
+    case 'macbook':
+      return {
+        w: (MAC_OUTER_PAD + MAC_BASE_OVERHANG + MAC_BEZEL) * 2,
+        h: MAC_TOP_BEZEL + MAC_BOTTOM_CHIN + MAC_BASE_HEIGHT + MAC_OUTER_PAD * 2,
+      };
+    default:
+      return { w: 0, h: 0 };
+  }
 }
 
 export const AnnotatorCanvas = forwardRef<AnnotatorCanvasHandle, CanvasProps>(
@@ -114,6 +182,7 @@ export const AnnotatorCanvas = forwardRef<AnnotatorCanvasHandle, CanvasProps>(
       tool,
       color,
       frame,
+      bgColor,
       selectedId,
       onSelectId,
       onRequestText,
@@ -126,21 +195,9 @@ export const AnnotatorCanvas = forwardRef<AnnotatorCanvasHandle, CanvasProps>(
 
     // fit-scale 계산 — 프레임 padding 까지 고려해서 viewport 안에 들어가도록
     const scale = useMemo(() => {
-      // browser 가 가장 큰 padding (양옆 BROWSER_PAD*2 + 상하 BROWSER_PAD*2 + BAR)
-      const maxFrameW =
-        frame === 'browser'
-          ? BROWSER_PAD * 2
-          : frame === 'shadow'
-            ? SHADOW_PAD * 2
-            : 0;
-      const maxFrameH =
-        frame === 'browser'
-          ? BROWSER_PAD * 2 + BROWSER_BAR_HEIGHT
-          : frame === 'shadow'
-            ? SHADOW_PAD * 2
-            : 0;
-      const availW = maxView.width - maxFrameW;
-      const availH = maxView.height - maxFrameH;
+      const pad = getFramePadding(frame);
+      const availW = maxView.width - pad.w;
+      const availH = maxView.height - pad.h;
       const sx = availW / width;
       const sy = availH / height;
       return Math.min(1, sx, sy);
@@ -342,19 +399,22 @@ export const AnnotatorCanvas = forwardRef<AnnotatorCanvasHandle, CanvasProps>(
         style={{ cursor: tool === 'cursor' ? 'default' : 'crosshair' }}
       >
         <Layer>
-          {/* 프레임 배경 (export 시 투명 영역 방지) — 부드러운 그라데이션 */}
-          {frame !== 'none' && (
-            <Rect
-              x={0}
-              y={0}
-              width={stageTotalW}
-              height={stageTotalH}
-              fillLinearGradientStartPoint={{ x: 0, y: 0 }}
-              fillLinearGradientEndPoint={{ x: stageTotalW, y: stageTotalH }}
-              fillLinearGradientColorStops={[0, '#f1f5f9', 1, '#e2e8f0']}
-              name="frame-bg"
-            />
-          )}
+          {/* 프레임 배경 (export 시 투명 영역 방지) — 사용자 선택 그라데이션 */}
+          {frame !== 'none' && (() => {
+            const [c0, c1] = BG_GRADIENTS[bgColor];
+            return (
+              <Rect
+                x={0}
+                y={0}
+                width={stageTotalW}
+                height={stageTotalH}
+                fillLinearGradientStartPoint={{ x: 0, y: 0 }}
+                fillLinearGradientEndPoint={{ x: stageTotalW, y: stageTotalH }}
+                fillLinearGradientColorStops={[0, c0, 1, c1]}
+                name="frame-bg"
+              />
+            );
+          })()}
 
           {/* 그림자 프레임 (소프트 다층 그림자 + 라운드 코너) */}
           {frame === 'shadow' && (
@@ -479,6 +539,163 @@ export const AnnotatorCanvas = forwardRef<AnnotatorCanvasHandle, CanvasProps>(
               />
             </Group>
           )}
+
+          {/* iPhone 프레임 — Dynamic Island 세대 */}
+          {frame === 'iphone' && (() => {
+            const bodyX = IPHONE_OUTER_PAD;
+            const bodyY = IPHONE_OUTER_PAD;
+            const bodyW = stageW + IPHONE_BEZEL * 2;
+            const bodyH =
+              stageH + IPHONE_BEZEL * 2 + IPHONE_TOP_CHIN + IPHONE_BOTTOM_CHIN;
+            // Dynamic Island: 중앙 상단 pill
+            const diW = Math.min(110, bodyW * 0.32);
+            const diH = 24;
+            const diX = bodyX + (bodyW - diW) / 2;
+            const diY = bodyY + 12;
+            return (
+              <Group
+                shadowColor="#0f172a"
+                shadowBlur={30}
+                shadowOpacity={0.3}
+                shadowOffsetY={14}
+              >
+                {/* 본체 (matte black) */}
+                <Rect
+                  x={bodyX}
+                  y={bodyY}
+                  width={bodyW}
+                  height={bodyH}
+                  fill="#0b0b0d"
+                  cornerRadius={IPHONE_BODY_RADIUS}
+                  stroke="#2a2a2e"
+                  strokeWidth={1}
+                  name="frame-bg"
+                />
+                {/* 본체 highlight (위쪽 살짝 라이트) */}
+                <Rect
+                  x={bodyX + 4}
+                  y={bodyY + 2}
+                  width={bodyW - 8}
+                  height={bodyH - 4}
+                  cornerRadius={IPHONE_BODY_RADIUS - 4}
+                  fillLinearGradientStartPoint={{ x: 0, y: 0 }}
+                  fillLinearGradientEndPoint={{ x: 0, y: bodyH }}
+                  fillLinearGradientColorStops={[0, '#1a1a1c', 0.5, '#0b0b0d', 1, '#1a1a1c']}
+                  listening={false}
+                />
+                {/* 실제 이미지 (스크린) */}
+                <KImage
+                  image={image}
+                  x={imgOffsetX}
+                  y={imgOffsetY}
+                  width={stageW}
+                  height={stageH}
+                  name="bg-image"
+                  cornerRadius={IPHONE_SCREEN_RADIUS}
+                />
+                {/* Dynamic Island (스크린 위 floating) */}
+                <Rect
+                  x={diX}
+                  y={diY}
+                  width={diW}
+                  height={diH}
+                  fill="#0a0a0a"
+                  cornerRadius={diH / 2}
+                  stroke="#1f1f22"
+                  strokeWidth={0.5}
+                  listening={false}
+                />
+              </Group>
+            );
+          })()}
+
+          {/* MacBook 프레임 */}
+          {frame === 'macbook' && (() => {
+            const displayX = MAC_OUTER_PAD + MAC_BASE_OVERHANG;
+            const displayY = MAC_OUTER_PAD;
+            const displayW = stageW + MAC_BEZEL * 2;
+            const displayH = stageH + MAC_TOP_BEZEL + MAC_BOTTOM_CHIN;
+            // 스탠드 (디스플레이 양옆으로 더 넓게)
+            const baseX = MAC_OUTER_PAD;
+            const baseY = displayY + displayH;
+            const baseW = displayW + MAC_BASE_OVERHANG * 2;
+            const baseH = MAC_BASE_HEIGHT;
+            // 카메라 노치
+            const notchW = 56;
+            const notchH = 8;
+            const notchX = displayX + (displayW - notchW) / 2;
+            const notchY = displayY + 4;
+            return (
+              <Group
+                shadowColor="#0f172a"
+                shadowBlur={28}
+                shadowOpacity={0.28}
+                shadowOffsetY={14}
+              >
+                {/* 디스플레이 본체 */}
+                <Rect
+                  x={displayX}
+                  y={displayY}
+                  width={displayW}
+                  height={displayH}
+                  fill="#1a1a1c"
+                  cornerRadius={MAC_DISPLAY_RADIUS}
+                  stroke="#3a3a3e"
+                  strokeWidth={1}
+                  name="frame-bg"
+                />
+                {/* 실제 이미지 (스크린) */}
+                <KImage
+                  image={image}
+                  x={imgOffsetX}
+                  y={imgOffsetY}
+                  width={stageW}
+                  height={stageH}
+                  name="bg-image"
+                />
+                {/* 카메라 노치 */}
+                <Rect
+                  x={notchX}
+                  y={notchY}
+                  width={notchW}
+                  height={notchH}
+                  fill="#0a0a0a"
+                  cornerRadius={4}
+                  listening={false}
+                />
+                {/* 하단 chin 의 작은 "<>" Apple 표시 자리 (도트 1개로 단순화) */}
+                <Circle
+                  x={displayX + displayW / 2}
+                  y={displayY + displayH - MAC_BOTTOM_CHIN / 2}
+                  radius={1.2}
+                  fill="#3a3a3e"
+                  listening={false}
+                />
+                {/* 스탠드 (사다리꼴 느낌 — Konva 는 polygon 없이 trapezoid 어려워 둥근 사각형으로 대체) */}
+                <Rect
+                  x={baseX}
+                  y={baseY}
+                  width={baseW}
+                  height={baseH}
+                  fillLinearGradientStartPoint={{ x: 0, y: 0 }}
+                  fillLinearGradientEndPoint={{ x: 0, y: baseH }}
+                  fillLinearGradientColorStops={[0, '#2a2a2e', 1, '#1a1a1c']}
+                  cornerRadius={[0, 0, 4, 4]}
+                  listening={false}
+                />
+                {/* 스탠드 가운데 살짝 패인 그루브 */}
+                <Rect
+                  x={baseX + baseW / 2 - 30}
+                  y={baseY}
+                  width={60}
+                  height={2}
+                  fill="#0a0a0a"
+                  cornerRadius={1}
+                  listening={false}
+                />
+              </Group>
+            );
+          })()}
 
           {/* 프레임 없음 — 이미지만 */}
           {frame === 'none' && (

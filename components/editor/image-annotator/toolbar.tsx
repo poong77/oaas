@@ -8,10 +8,13 @@
  * 우측: 프레임 / 실행취소 / 모두 지우기 / 완료
  */
 
-import { ArrowUpRight, MousePointer2, Redo2, Square, Trash2, Type, Undo2 } from 'lucide-react';
+import { ArrowUpRight, Laptop, MousePointer2, Redo2, Smartphone, Square, Trash2, Type, Undo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   type AnnotationColor,
+  type BgColor,
+  bgSwatchCss,
+  BG_LABEL,
   COLOR_HEX,
   COLOR_LABEL,
   FRAME_LABEL,
@@ -26,12 +29,16 @@ interface ToolbarProps {
   onColor: (c: AnnotationColor) => void;
   frame: FrameStyle;
   onFrame: (f: FrameStyle) => void;
+  bgColor: BgColor;
+  onBgColor: (c: BgColor) => void;
   canUndo: boolean;
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
   onClear: () => void;
 }
+
+const BG_COLORS: BgColor[] = ['slate', 'sky', 'sunset', 'mint', 'lavender', 'sand'];
 
 export function AnnotatorToolbar({
   tool,
@@ -40,6 +47,8 @@ export function AnnotatorToolbar({
   onColor,
   frame,
   onFrame,
+  bgColor,
+  onBgColor,
   canUndo,
   canRedo,
   onUndo,
@@ -111,6 +120,47 @@ export function AnnotatorToolbar({
         >
           <span className="px-1">{FRAME_LABEL.browser}</span>
         </ToolBtn>
+        <ToolBtn
+          active={frame === 'iphone'}
+          onClick={() => onFrame('iphone')}
+          title="iPhone 프레임 (Dynamic Island)"
+        >
+          <Smartphone className="h-3.5 w-3.5" />
+        </ToolBtn>
+        <ToolBtn
+          active={frame === 'macbook'}
+          onClick={() => onFrame('macbook')}
+          title="MacBook 프레임"
+        >
+          <Laptop className="h-3.5 w-3.5" />
+        </ToolBtn>
+      </div>
+
+      <Divider />
+
+      {/* 배경 그라데이션 (프레임 뒤 배경) */}
+      <div className="flex items-center gap-1">
+        {BG_COLORS.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onBgColor(c);
+            }}
+            title={`배경 ${BG_LABEL[c]}`}
+            aria-label={`배경 ${BG_LABEL[c]}`}
+            disabled={frame === 'none'}
+            className={cn(
+              'h-5 w-5 rounded-full border-2 transition',
+              bgColor === c
+                ? 'border-slate-900 ring-1 ring-slate-300 dark:border-white'
+                : 'border-slate-200 hover:border-slate-400 dark:border-slate-700',
+              frame === 'none' && 'cursor-not-allowed opacity-30',
+            )}
+            style={{ background: bgSwatchCss(c) }}
+          />
+        ))}
       </div>
 
       <Divider />

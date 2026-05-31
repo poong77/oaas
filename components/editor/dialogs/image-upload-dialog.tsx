@@ -27,6 +27,12 @@ interface ImageUploadDialogProps {
   open: boolean;
   onClose: () => void;
   onUploaded: (url: string, alt: string) => void;
+  /**
+   * 기존 이미지 재편집 모드. 전달되면 file selection 단계 스킵 + 바로 annotate 진입.
+   * alt 기본값으로 initialAlt 사용.
+   */
+  initialFile?: File | null;
+  initialAlt?: string | null;
 }
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif';
@@ -34,7 +40,13 @@ const MAX_DISPLAY_SIZE_PX = 1600;
 
 type Stage = 'select' | 'annotate';
 
-export function ImageUploadDialog({ open, onClose, onUploaded }: ImageUploadDialogProps) {
+export function ImageUploadDialog({
+  open,
+  onClose,
+  onUploaded,
+  initialFile,
+  initialAlt,
+}: ImageUploadDialogProps) {
   const [stage, setStage] = useState<Stage>('select');
   const [file, setFile] = useState<File | null>(null);
   const [annotatedFile, setAnnotatedFile] = useState<File | null>(null);
@@ -50,8 +62,15 @@ export function ImageUploadDialog({ open, onClose, onUploaded }: ImageUploadDial
       setAnnotatedFile(null);
       setAlt('');
       setError(null);
+      return;
     }
-  }, [open]);
+    // open=true 이고 initialFile 이 있으면 → 바로 annotate 단계로
+    if (initialFile) {
+      setFile(initialFile);
+      setAlt(initialAlt ?? '');
+      setStage('annotate');
+    }
+  }, [open, initialFile, initialAlt]);
 
   const activeFile = annotatedFile ?? file;
 

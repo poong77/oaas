@@ -308,19 +308,28 @@ test.describe('KB-10 image upload dialog — 마크업 편집', () => {
       dialog.locator('button[title^="텍스트"]'),
     ).toBeVisible();
 
-    // 프레임 토글 3개 (없음 / 그림자 / 브라우저 mac 신호등)
-    await expect(
-      dialog.locator('button[title="프레임 없음"]'),
-    ).toBeVisible();
-    await expect(
-      dialog.locator('button[title="그림자 프레임"]'),
-    ).toBeVisible();
+    // 프레임 토글 5개 (없음 / 그림자 / 브라우저 / iPhone / MacBook)
+    await expect(dialog.locator('button[title="프레임 없음"]')).toBeVisible();
+    await expect(dialog.locator('button[title="그림자 프레임"]')).toBeVisible();
     await expect(
       dialog.locator('button[title="브라우저 프레임 (mac 스타일)"]'),
     ).toBeVisible();
+    await expect(
+      dialog.locator('button[title="iPhone 프레임 (Dynamic Island)"]'),
+    ).toBeVisible();
+    await expect(
+      dialog.locator('button[title="MacBook 프레임"]'),
+    ).toBeVisible();
 
-    // 브라우저 프레임 클릭 → 활성 상태로 전환되는지 (스타일 검증은 어려우니 클릭만 검증)
-    await dialog.locator('button[title="브라우저 프레임 (mac 스타일)"]').click();
+    // 배경 그라데이션 swatch 6개 (slate/sky/sunset/mint/lavender/sand)
+    await expect(dialog.locator('button[title="배경 하늘"]')).toBeVisible();
+    await expect(dialog.locator('button[title="배경 노을"]')).toBeVisible();
+    await expect(dialog.locator('button[title="배경 민트"]')).toBeVisible();
+
+    // 디바이스 프레임 클릭 후 배경색 swatch 활성화 검증
+    await dialog.locator('button[title="iPhone 프레임 (Dynamic Island)"]').click();
+    await dialog.locator('button[title="배경 노을"]').click();
+    await dialog.locator('button[title="MacBook 프레임"]').click();
 
     // 완료 버튼
     await expect(

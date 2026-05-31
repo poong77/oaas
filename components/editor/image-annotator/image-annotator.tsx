@@ -19,6 +19,7 @@ import { AnnotatorCanvas, type AnnotatorCanvasHandle } from './canvas';
 import {
   type AnnotationColor,
   type AnnotationShape,
+  type BgColor,
   type FrameStyle,
   newId,
   type Tool,
@@ -44,6 +45,7 @@ export function ImageAnnotator({ file, onComplete, onCancel }: ImageAnnotatorPro
   const [tool, setTool] = useState<Tool>('arrow');
   const [color, setColor] = useState<AnnotationColor>('red');
   const [frame, setFrame] = useState<FrameStyle>('none');
+  const [bgColor, setBgColor] = useState<BgColor>('sky');
   const [shapes, setShapes] = useState<AnnotationShape[]>([]);
   const [history, setHistory] = useState<AnnotationShape[][]>([[]]);
   const [historyIdx, setHistoryIdx] = useState(0);
@@ -230,6 +232,8 @@ export function ImageAnnotator({ file, onComplete, onCancel }: ImageAnnotatorPro
         onColor={setColor}
         frame={frame}
         onFrame={setFrame}
+        bgColor={bgColor}
+        onBgColor={setBgColor}
         canUndo={historyIdx > 0}
         canRedo={historyIdx < history.length - 1}
         onUndo={handleUndo}
@@ -252,6 +256,7 @@ export function ImageAnnotator({ file, onComplete, onCancel }: ImageAnnotatorPro
           tool={tool}
           color={color}
           frame={frame}
+          bgColor={bgColor}
           selectedId={selectedId}
           onSelectId={setSelectedId}
           onRequestText={handleRequestText}
