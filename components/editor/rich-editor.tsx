@@ -44,6 +44,8 @@ export interface RichEditorProps {
   minHeight?: number;
   /** 자동 저장 활성화 시 scope/targetId 전달 */
   autoSave?: AutoSaveConfig;
+  /** 자동 저장 상태가 변할 때마다 부모로 emit (외부 사이드바 표시바 동기용). */
+  onAutosaveStatusChange?: (status: import('./panels/save-indicator').SaveStatus, lastSavedAt: number | null) => void;
   disabled?: boolean;
   className?: string;
   /** 본문 영역 추가 className (prose 위에 덧붙임) */
@@ -69,6 +71,7 @@ export function RichEditor({
   placeholder = '내용을 입력하세요...',
   minHeight = 280,
   autoSave,
+  onAutosaveStatusChange,
   disabled = false,
   className,
   contentClassName,
@@ -215,6 +218,12 @@ export function RichEditor({
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [editor, autoSave, autoSaveResult]);
+
+  // 외부(사이드바 등)로 자동저장 상태 emit — knowledge-base-overhaul A8
+  useEffect(() => {
+    if (!onAutosaveStatusChange) return;
+    onAutosaveStatusChange(autoSaveResult.status, autoSaveResult.lastSavedAt);
+  }, [onAutosaveStatusChange, autoSaveResult.status, autoSaveResult.lastSavedAt]);
 
   return (
     <div

@@ -40,6 +40,12 @@ import {
   getMenuTaxonomyTreeByProduct,
   type MenuTaxonomyTreeNode,
 } from '@/lib/services/master-menu-taxonomies';
+import {
+  resolveArticleTemplate,
+  type ResolvedTemplate,
+} from '@/lib/services/master-article-templates';
+import { generateOpsIdSlug, isOpsIdSlug } from '@/lib/articles/ops-id-slug';
+import type { ArticleContentType } from '@/db/schema';
 
 // ─────────────────────────────────────────────────────────────────────
 // knowledge-base-overhaul Phase 1 (A2/B1) — 메뉴 트리 조회
@@ -56,6 +62,39 @@ export async function getMenuTaxonomyTreeAction(
   await requireRole(['manager', 'admin']);
   if (!productCode?.trim()) return [];
   return getMenuTaxonomyTreeByProduct(productCode.trim());
+}
+
+/**
+ * A7 — 운영 ID slug 채번 (atomic UPSERT).
+ *
+ * 형식: `{productCode}-{contentType}-{seq3}` 예: `pms-howto-042`.
+ * 매니저가 "자동 생성" 버튼 클릭 시 호출.
+ */
+export async function generateOpsIdSlugAction(
+  productCode: string,
+  contentType: ArticleContentType,
+): Promise<{ ok: true; slug: string; seq: number } | { ok: false; message: string }> {
+  await requireRole(['manager', 'admin']);
+  if (!productCode?.trim()) return { ok: false, message: '제품 코드가 비어 있습니다.' };
+  try {
+    const { slug, seq } = await generateOpsIdSlug(productCode, contentType);
+    return { ok: true, slug, seq };
+  } catch (err) {
+    console.error('[generateOpsIdSlugAction] 실패:', err);
+    return { ok: false, message: 'slug 생성에 실패했습니다.' };
+  }
+}
+
+/**
+ * A1+ — content_type별 본문 골격 fetch (DB 우선, 코드 폴백).
+ *
+ * 어드민에서 골격 편집해도 매니저 에디터에 자동 반영됨 (캐시 적용).
+ */
+export async function resolveArticleTemplateAction(
+  contentType: ArticleContentType,
+): Promise<ResolvedTemplate> {
+  await requireRole(['manager', 'admin']);
+  return resolveArticleTemplate(contentType);
 }
 
 // ─────────────────────────────────────────────────────────────────────

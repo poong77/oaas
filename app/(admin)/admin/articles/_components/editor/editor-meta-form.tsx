@@ -22,7 +22,7 @@ import type { ProductCategoryView } from '@/lib/services/categories';
 import type { ArticleContentType } from '@/db/schema';
 import {
   checkSlugAvailable,
-  generateArticleSlug,
+  generateOpsIdSlugAction,
 } from '@/app/actions/article-actions';
 import { MenuPathCascader } from './menu-path-cascader';
 
@@ -79,11 +79,13 @@ export function EditorMetaForm({
       toast.info('먼저 제품을 선택해주세요.');
       return;
     }
-    // 현재 generateArticleSlug 시그니처는 title 받음 (호환 유지).
-    // Phase 1 Step C에서 generateOpsIdSlug(productCode, contentType)로 교체 예정.
-    const result = await generateArticleSlug(title.trim() || productCode);
+    const result = await generateOpsIdSlugAction(productCode, contentType);
+    if (!result.ok) {
+      toast.error(result.message);
+      return;
+    }
     onSlug(result.slug);
-    toast.success(`slug 자동 생성: ${result.slug}`);
+    toast.success(`운영 ID 채번 완료: ${result.slug} (seq=${result.seq})`);
   }
 
   async function handleCheckSlug() {

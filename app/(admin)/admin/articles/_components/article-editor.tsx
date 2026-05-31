@@ -22,7 +22,7 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { Save, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -35,12 +35,17 @@ import {
   isPlaceholderOnly,
 } from '@/lib/articles/body-validator';
 import { getTemplateBody } from '@/lib/articles/templates';
-import { useAutosaveStatus } from '@/lib/editor/use-autosave-status';
+import {
+  useAutosaveStatus,
+  type AutosaveStatus,
+} from '@/lib/editor/use-autosave-status';
 import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
 import {
   createArticleAction,
   updateArticleAction,
+  resolveArticleTemplateAction,
 } from '@/app/actions/article-actions';
+import type { ResolvedTemplate } from '@/lib/services/master-article-templates';
 import type { ProductCategoryView } from '@/lib/services/categories';
 import type { ArticleContentType } from '@/db/schema';
 
@@ -148,8 +153,50 @@ export function ArticleEditor({
     },
   ];
 
-  // 자동저장 토글 (UI는 사이드바에서, 실제 저장은 RichEditor 내부)
+  // 자동저장 토글 + 상태 동기 (UI는 사이드바에서, 실제 저장은 RichEditor 내부)
   const autosave = useAutosaveStatus(initial?.id ?? null);
+  const handleAutosaveChange = useCallback(
+    (
+      saveStatus:
+        | 'idle'
+        | 'saving'
+        | 'saved'
+        | 'offline'
+        | 'error',
+    ) => {
+      const mapped: Exclude<AutosaveStatus, 'off'> =
+        saveStatus === 'offline' ? 'dirty' : saveStatus;
+      autosave.reportStatus(mapped);
+    },
+    [autosave],
+  );
+
+  // 골격 마스터 (DB 우선, 폴백 코드 상수) — 마운트 시 3종 fetch
+  const [templates, setTemplates] = useState<
+    Partial<Record<ArticleContentType, ResolvedTemplate>>
+  >({});
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      resolveArticleTemplateAction('howto'),
+      resolveArticleTemplateAction('feature'),
+      resolveArticleTemplateAction('troubleshoot'),
+    ])
+      .then(([h, f, t]) => {
+        if (cancelled) return;
+        setTemplates({ howto: h, feature: f, troubleshoot: t });
+      })
+      .catch(() => {
+        // 폴백: 코드 상수 (handleIntentChange가 getTemplateBody로 처리)
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function templateBody(t: ArticleContentType): string {
+    return templates[t]?.bodyMarkdown ?? getTemplateBody(t);
+  }
 
   // 의도 변경 핸들러 (A1)
   async function handleIntentChange(next: ArticleContentType) {
@@ -158,7 +205,7 @@ export function ArticleEditor({
     // 빈 본문(골격만) → 즉시 골격 주입
     if (isPlaceholderOnly(body)) {
       setContentType(next);
-      setBody(getTemplateBody(next));
+      setBody(templateBody(next));
       return;
     }
 
@@ -170,7 +217,7 @@ export function ArticleEditor({
       cancelText: '의도만 바꾸기',
     });
     setContentType(next);
-    if (ok) setBody(getTemplateBody(next));
+    if (ok) setBody(templateBody(next));
   }
 
   async function submit(publish: boolean) {
@@ -276,6 +323,7 @@ export function ArticleEditor({
               ? { scope: 'article', targetId: initial?.id ?? null }
               : null
           }
+          onAutosaveStatusChange={handleAutosaveChange}
           fieldError={fieldErrors.bodyMarkdown}
         />
 
