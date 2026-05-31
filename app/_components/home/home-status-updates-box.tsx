@@ -2,7 +2,8 @@
  * LP-01 Hero 우측 컴팩트 박스.
  *
  * - 상단: 서비스 상태 1줄 (정상이어도 항상 노출)
- * - 하단: 최근 업데이트 2건 (pinned 우선 → notices → articles 통합 정렬)
+ * - 하단: 최근 공지/업데이트 2건 (pinned 우선 → 발행 공지 최신순)
+ *   가이드 아티클은 노출하지 않는다 — 공지 테이블(공지·릴리즈·장애)만 표시.
  *
  * Hero와 같은 줄에 들어가는 컴팩트 위젯이므로 자체 패딩/배경만 가진다.
  * (전체 섹션의 패딩/배경은 부모 Hero가 담당)
@@ -27,7 +28,6 @@ import {
   listPinnedPublishedNotices,
   listRecentPublishedNotices,
 } from '@/lib/services/notices';
-import { listRecentPublishedArticles } from '@/lib/services/articles';
 import {
   NOTICE_KIND_CLASSES,
   NOTICE_KIND_META,
@@ -69,7 +69,7 @@ const STATUS_BG_CLASS: Record<ServiceStatusValue, string> = {
 };
 
 type UpdateItem = {
-  source: 'notice' | 'article';
+  source: 'notice';
   id: string;
   href: string;
   label: string;
@@ -80,66 +80,38 @@ type UpdateItem = {
 };
 
 export async function HomeStatusUpdatesBox({ latest }: { latest: LatestStatus }) {
-  // pinned 1 + notices 2 + articles 1 통합 → 최대 2건
-  const [pinnedNotices, recentNotices, recentArticles] = await Promise.all([
+  // pinned 1 + 최근 공지 → 공지/업데이트만 최대 2건 (가이드 아티클 제외)
+  const [pinnedNotices, recentNotices] = await Promise.all([
     listPinnedPublishedNotices(1),
-    listRecentPublishedNotices(2),
-    listRecentPublishedArticles(1),
+    listRecentPublishedNotices(3),
   ]);
 
   const pinnedIds = new Set(pinnedNotices.map((n) => n.id));
   const items: UpdateItem[] = [];
 
-  for (const n of pinnedNotices) {
-    items.push({
-      source: 'notice',
-      id: n.id,
-      href: `/notices/${n.id}`,
-      label: NOTICE_KIND_META[n.kind as NoticeKind].label,
-      labelClass: NOTICE_KIND_CLASSES[n.kind as NoticeKind],
-      title: n.title,
-      publishedAt: n.publishedAt,
-      pinned: true,
-    });
-  }
-
-  const pool: UpdateItem[] = [];
-  for (const n of recentNotices) {
-    if (pinnedIds.has(n.id)) continue;
-    pool.push({
-      source: 'notice',
-      id: n.id,
-      href: `/notices/${n.id}`,
-      label: NOTICE_KIND_META[n.kind as NoticeKind].label,
-      labelClass: NOTICE_KIND_CLASSES[n.kind as NoticeKind],
-      title: n.title,
-      publishedAt: n.publishedAt,
-      pinned: false,
-    });
-  }
-  for (const a of recentArticles) {
-    pool.push({
-      source: 'article',
-      id: a.id,
-      href: `/help/${a.productCode}/${a.slug}`,
-      label: `가이드 · ${a.productCode}`,
-      labelClass:
-        'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-      title: a.title,
-      publishedAt: a.publishedAt,
-      pinned: false,
-    });
-  }
-  pool.sort((a, b) => {
-    const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-    const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-    return tb - ta;
+  const toItem = (
+    n: (typeof pinnedNotices)[number],
+    pinned: boolean,
+  ): UpdateItem => ({
+    source: 'notice',
+    id: n.id,
+    href: `/notices/${n.id}`,
+    label: NOTICE_KIND_META[n.kind as NoticeKind].label,
+    labelClass: NOTICE_KIND_CLASSES[n.kind as NoticeKind],
+    title: n.title,
+    publishedAt: n.publishedAt,
+    pinned,
   });
 
-  // pinned 우선 채우고 총 2건
-  for (const item of pool) {
+  for (const n of pinnedNotices) {
+    items.push(toItem(n, true));
+  }
+
+  // pinned 우선 채우고 최근 공지(최신순)로 총 2건
+  for (const n of recentNotices) {
     if (items.length >= 2) break;
-    items.push(item);
+    if (pinnedIds.has(n.id)) continue;
+    items.push(toItem(n, false));
   }
   const shown = items.slice(0, 2);
 
