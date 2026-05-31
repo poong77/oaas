@@ -19,7 +19,6 @@ import bcrypt from 'bcryptjs';
 import { eq, sql } from 'drizzle-orm';
 
 import {
-  articles,
   businessHolidays,
   businessHoursDefault,
   categories,
@@ -43,7 +42,6 @@ import {
   tickets,
   users,
   type ChecklistStepAction,
-  type NewArticle,
   type NewCategory,
   type NewChecklist,
   type NewChecklistStep,
@@ -63,7 +61,6 @@ import {
   type NoticeKind,
   type TicketContactMethod,
   type TicketStatus,
-  type TocEntry,
 } from './schema';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? '';
@@ -215,233 +212,14 @@ async function main() {
     console.log('[seed]   ↳ 이미 active row 존재, 스킵');
   }
 
-  // ─── 6. articles (Phase 3) ──────────────────────────────────────
-  console.log('[seed] sample 아티클 (Phase 3) 확인...');
-  // manager@oa.local 작성자
+  // ─── 6. manager author lookup (notices 등에서 사용) ────────────
+  // article 시드는 help.oapms.com 분류 이관 직전 폐기.
+  // 신규 아티클은 어드민 UI에서 소분류별로 작성 (별도 작업).
   const [managerRow] = await db
     .select({ id: users.id })
     .from(users)
     .where(sql`${users.email} = 'manager@oa.local'`);
   const authorId = managerRow?.id ?? null;
-
-  type SeedArticle = {
-    productCode: string;
-    slug: string;
-    title: string;
-    summary30s: string;
-    bodyMarkdown: string;
-    categoryPath: string[];
-  };
-
-  const seedArticles: SeedArticle[] = [
-    {
-      productCode: 'pms',
-      slug: 'pms-payment-error-troubleshooting',
-      title: 'PMS 결제 오류 발생 시 점검 절차',
-      summary30s:
-        '결제 단말 통신 실패와 카드 승인 오류는 원인이 다릅니다. 단말 상태 → 네트워크 → 가맹점 한도 순으로 빠르게 확인하세요.',
-      categoryPath: ['결제', '오류'],
-      bodyMarkdown: `## 증상 확인
-
-PMS 결제 화면에서 "승인 실패" 또는 "통신 오류" 메시지가 표시되는 경우 다음 항목을 순서대로 점검하세요.
-
-## 1단계 — 단말 상태 점검
-
-- 단말 화면에 "준비" 표시가 떠 있는지 확인
-- 카드 슬롯 / IC 단자 청결 상태 확인
-- 단말 재부팅(전원 분리 후 30초 대기)
-
-## 2단계 — 네트워크 점검
-
-PMS 서버와 단말의 연결을 확인합니다. 객실 단말이 사내 Wi-Fi에 정상 접속되어 있는지 확인하고, 라우터 재시작도 시도해보세요.
-
-## 3단계 — 가맹점 한도 / VAN사 점검
-
-승인이 거절되면 VAN사 콜센터에 가맹점 한도, 사용 가능 카드사 목록을 확인하세요.
-
-## 추가 안내
-
-해결되지 않으면 문의 접수 시 단말 시리얼 번호, 오류 메시지, 발생 시각을 함께 적어주세요.`,
-    },
-    {
-      productCode: 'cms',
-      slug: 'cms-inventory-sync-issue',
-      title: 'CMS 객실 재고 미반영 해결 가이드',
-      summary30s:
-        '예약된 객실의 재고가 CMS와 PMS 사이에서 불일치할 때 동기화 큐를 강제 재실행하는 방법입니다.',
-      categoryPath: ['객실관리', '동기화'],
-      bodyMarkdown: `## 문제 상황
-
-CMS에서 예약을 변경했는데 PMS 룸차트에 반영되지 않는 경우가 있습니다.
-
-## 점검 순서
-
-### 1. 동기화 상태 확인
-
-CMS 관리자 화면 우측 상단 "동기화 상태"가 정상(녹색)인지 확인합니다.
-
-### 2. 강제 재동기화
-
-상태가 비정상이면 "재동기화" 버튼을 클릭하세요. 5분 이내에 자동 보정됩니다.
-
-### 3. 그래도 안 되면
-
-큐가 막혀있을 수 있습니다. 매니저에게 큐 점검을 요청하세요.
-
-## 예방
-
-야간 일괄 동기화는 매일 03:00에 자동 실행됩니다. 매뉴얼 작업은 가급적 운영 시간 외에 해주세요.`,
-    },
-    {
-      productCode: 'keyless',
-      slug: 'keyless-key-issue-failure',
-      title: 'Keyless 카드키 발급 실패 해결',
-      summary30s:
-        '신규 카드키 발급 실패는 보통 카드 리더 펌웨어 또는 객실 락 등록 문제입니다.',
-      categoryPath: ['카드키', '발급'],
-      bodyMarkdown: `## 증상
-
-체크인 시 카드키 발급기에서 "발급 실패" 메시지가 표시됩니다.
-
-## 원인별 해결
-
-### 카드 리더 펌웨어
-
-카드 리더 상태 LED가 적색이면 펌웨어 오작동입니다. 재부팅 후에도 적색이면 단말 교체가 필요합니다.
-
-### 객실 락 등록 미완료
-
-신규 객실은 락 마스터에 등록되어야 카드키 발급이 가능합니다. 시스템 → 객실 → 락 등록 메뉴에서 확인하세요.
-
-### 만료된 카드 자재
-
-빈 카드 재고가 손상된 경우 다른 카드로 시도해보세요.
-
-## 긴급 응대
-
-게스트가 대기중일 때는 비상 마스터키로 우선 응대 후 별도 처리하세요.`,
-    },
-    {
-      productCode: 'kiosk',
-      slug: 'kiosk-payment-terminal-disconnect',
-      title: '키오스크 결제 단말 연결 안 될 때',
-      summary30s:
-        '키오스크와 결제 단말 사이 USB / 시리얼 연결이 끊어진 경우 빠른 복구 방법입니다.',
-      categoryPath: ['키오스크', '단말'],
-      bodyMarkdown: `## 증상
-
-키오스크 결제 단계에서 "단말 연결 실패" 메시지가 표시됩니다.
-
-## 1. 케이블 확인
-
-- USB 케이블 양쪽이 깊게 꽂혀 있는지 확인
-- 케이블 손상(꺾임, 단선) 확인
-
-## 2. 키오스크 재시작
-
-상단 메뉴 → 시스템 → 결제 단말 재초기화를 실행합니다. 약 30초 소요됩니다.
-
-## 3. 시리얼 포트 충돌
-
-다른 USB 장치를 분리한 후 결제 단말만 연결해보세요. COM 포트 번호 변경 시 재시작이 필요합니다.
-
-## 대안 안내
-
-복구 전까지는 프런트 직접 결제로 전환할 수 있습니다.`,
-    },
-    {
-      productCode: 'web',
-      slug: 'web-domain-ssl-renewal',
-      title: '웹서비스 도메인 SSL 갱신 가이드',
-      summary30s:
-        '호텔 홈페이지 SSL 인증서는 90일 주기로 자동 갱신됩니다. 갱신 실패 시 점검 방법입니다.',
-      categoryPath: ['웹서비스', 'SSL'],
-      bodyMarkdown: `## 자동 갱신 정책
-
-OA 웹서비스는 Let's Encrypt 인증서를 사용하며, 만료 30일 전부터 자동 갱신을 시도합니다.
-
-## 갱신 실패 시 확인
-
-### 1. DNS 레코드 점검
-
-A 레코드가 OA 서버 IP를 올바르게 가리키는지 확인하세요.
-
-### 2. 도메인 NS 변경 여부
-
-최근 도메인 등록 업체를 변경했다면 NS 전파에 24~48시간이 걸릴 수 있습니다.
-
-### 3. CAA 레코드
-
-CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
-
-## 수동 갱신 요청
-
-자동 갱신이 3회 연속 실패하면 매니저에게 문의하여 수동 갱신을 요청하세요.`,
-    },
-    {
-      productCode: 'config',
-      slug: 'admin-password-recovery',
-      title: '관리자 비밀번호 분실 시 복구 절차',
-      summary30s:
-        '관리자 본인이 비밀번호를 잊어버렸을 때 안전하게 복구하는 절차입니다.',
-      categoryPath: ['계정', '복구'],
-      bodyMarkdown: `## 1단계 — 본인 인증
-
-등록된 휴대폰 번호로 인증 코드를 받습니다. 휴대폰 변경 시 OA 운영팀에 직접 연락하세요.
-
-## 2단계 — 임시 비밀번호 발급
-
-인증 완료 후 임시 비밀번호가 SMS로 발송됩니다.
-
-## 3단계 — 새 비밀번호 설정
-
-첫 로그인 시 새 비밀번호 설정이 강제됩니다. 안전한 비밀번호 규칙:
-
-- 영문 대소문자 + 숫자 + 특수문자 조합
-- 8자 이상
-- 이전 3개 비밀번호와 다름
-
-## 보안 안내
-
-복구 절차 중 발생한 활동은 모두 감사 로그에 기록됩니다.`,
-    },
-  ];
-
-  let createdCount = 0;
-  let skippedCount = 0;
-  for (const a of seedArticles) {
-    // idempotent: slug 중복 확인
-    const existing = await db
-      .select({ id: articles.id })
-      .from(articles)
-      .where(sql`${articles.slug} = ${a.slug}`)
-      .limit(1);
-    if (existing.length > 0) {
-      skippedCount++;
-      continue;
-    }
-    const toc = extractTocLocal(a.bodyMarkdown);
-    const row: NewArticle = {
-      productCode: a.productCode,
-      contentType: 'howto', // 시드는 일단 howto. Do-11에서 content_type별 샘플 3개 추가 예정
-      status: 'published',
-      categoryPath: a.categoryPath,
-      slug: a.slug,
-      title: a.title,
-      summary: a.summary30s,
-      summary30s: a.summary30s,
-      bodyMarkdown: a.bodyMarkdown,
-      toc,
-      authorId,
-      lastEditorId: authorId,
-      publishedAt: new Date(),
-    };
-    await db.insert(articles).values(row);
-    createdCount++;
-  }
-  console.log(
-    `[seed] articles: ${createdCount}건 신규 / ${skippedCount}건 스킵 (이미 존재)`,
-  );
 
   // ─── 7. faqs (Phase 4) ─────────────────────────────────────────
   console.log('[seed] sample FAQ (Phase 4) 확인...');
@@ -2207,31 +1985,65 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
     roots: MenuSeedNode[];
   };
 
+  // help.oapms.com (Channel Talk Help Center) 분류 트리에서 이관.
+  // - 대분류 = productCode (categories 테이블의 product 타입)
+  // - 중분류 = root (parent_id IS NULL)
+  // - 소분류 = child (parent_id = root.id)
+  // FAQ 카테고리는 제외, "OA " 접두사는 대분류에서만 제거(중분류는 실제 메뉴명 그대로).
   const seedMenu: MenuSeedProduct[] = [
     {
       productCode: 'pms',
       roots: [
         {
-          label: '예약 관리',
-          description: '예약 등록/수정/취소/단체 예약 등 예약 운영',
+          label: '객실관리',
           children: [
-            { label: '예약 등록' },
-            { label: '예약 현황' },
-            { label: '상태값 사전' },
-            { label: '채널 연동' },
+            { label: '실시간 객실(오늘)' },
+            { label: '객실현황(이달)' },
+            { label: '예약등록' },
+            { label: '예약조회' },
+            { label: '예약 캘린더' },
+            { label: '체크인/아웃' },
+            { label: '객실매출 상세조회' },
+            { label: '체크인/아웃 조회' },
+            { label: '객실재고 (타입별)' },
+            { label: '객실재고 (일자별)' },
+            { label: '객실예약금' },
+            { label: '미결산 내역' },
+            { label: '객실식사인원조회' },
+            { label: '분실물 관리' },
           ],
         },
         {
-          label: '객실 관리',
+          label: '고객관리',
           children: [
-            { label: '객실 등록' },
-            { label: '객실 요금' },
-            { label: '청소 상태' },
+            { label: '고객정보 등록' },
+            { label: '고객정보 조회' },
           ],
         },
         {
-          label: '매출 / 정산',
-          children: [{ label: '일별 매출' }, { label: '정산 내역' }],
+          label: '객실 일마감',
+          children: [
+            { label: '일마감 사전체크' },
+            { label: '일마감' },
+          ],
+        },
+        {
+          label: '보고서',
+          children: [
+            { label: 'Daily Report' },
+            { label: 'Sales Report' },
+            { label: 'Sales Statistics' },
+            { label: 'Daily Morning Report' },
+            { label: 'Forecast' },
+            { label: '입금 상세 조회' },
+            { label: '객실별 잔액 현황' },
+            { label: '대외후불 관리' },
+            { label: '일별 매출 리스트' },
+            { label: '매출 상세 리스트' },
+            { label: '유형별 매출집계' },
+            { label: '거래처별 매출집계' },
+            { label: '객실별 매출집계' },
+          ],
         },
       ],
     },
@@ -2239,12 +2051,29 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
       productCode: 'cms',
       roots: [
         {
-          label: '채널 관리',
-          children: [{ label: '채널 연결' }, { label: '채널 매핑' }],
+          label: 'HG CMS',
+          children: [
+            { label: 'HG CMS 접속 방법' },
+            { label: '[OTA] 채널 별 CMS 설정 방법' },
+            { label: '[CMS] HG CMS 연동 방법' },
+            { label: '[PMS] HG CMS 연동 방법' },
+          ],
         },
         {
-          label: '객실 동기화',
-          children: [{ label: '동기화 설정' }, { label: '오류 로그' }],
+          label: 'TL LINCOLN CMS',
+          children: [{ label: 'TL LINCOLN CMS 연동 방법' }],
+        },
+        {
+          label: 'OA 홈페이지 & 부킹엔진',
+          children: [
+            { label: '홈페이지 예약 및 결제 과정' },
+            { label: '홈페이지 예약취소 및 환불' },
+            { label: '홈페이지 예약관리' },
+            { label: '객실 상품 및 가격' },
+            { label: '객실 타입 및 재고' },
+            { label: '지점 정보/관리' },
+            { label: '홈페이지 관리자 페이지' },
+          ],
         },
       ],
     },
@@ -2252,12 +2081,21 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
       productCode: 'keyless',
       roots: [
         {
-          label: '키 발급',
-          children: [{ label: '모바일 키 발급' }, { label: '카드 키 발급' }],
+          label: 'OA 키리스',
+          children: [
+            { label: '객실 제어' },
+            { label: '도어락 관리' },
+            { label: '미처리 관리' },
+            { label: '모바일키 사용 가이드' },
+          ],
         },
         {
-          label: '도어락 관리',
-          children: [{ label: '도어락 등록' }, { label: '원격 제어' }],
+          label: 'OA 도어락',
+          children: [
+            { label: '저전력모듈 세팅 어플(APP) & AP 설정' },
+            { label: '도어락 초기화 설정(하이원 제품 기준)' },
+            { label: '카드키 발급/조회' },
+          ],
         },
       ],
     },
@@ -2265,12 +2103,13 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
       productCode: 'kiosk',
       roots: [
         {
-          label: '설치 / 설정',
-          children: [{ label: '기기 설치' }, { label: '네트워크 설정' }],
-        },
-        {
-          label: '결제',
-          children: [{ label: '결제 설정' }, { label: '영수증 출력' }],
+          label: 'OA 키오스크',
+          children: [
+            { label: '예약 고객 키오스크 체크인 방법' },
+            { label: '미예약 (워크인) 고객 키오스크 체크인 방법' },
+            { label: '키오스크 객실 이미지 변경' },
+            { label: '키오스크 판매 가격 변경' },
+          ],
         },
       ],
     },
@@ -2278,12 +2117,43 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
       productCode: 'web',
       roots: [
         {
-          label: '사이트 관리',
-          children: [{ label: '홈 편집' }, { label: '메뉴 편집' }],
+          label: 'OA 메시지',
+          children: [
+            { label: 'SMS 전송' },
+            { label: 'SMS 전송내역' },
+            { label: 'SMS 샘플관리(OA)' },
+            { label: 'SMS 샘플관리(EON)' },
+            { label: '알림톡 채널등록 방법' },
+            { label: '알림톡 전송' },
+            { label: '알림톡 템플릿관리' },
+          ],
         },
         {
-          label: '부킹 엔진',
-          children: [{ label: '상품 등록' }, { label: '가격 설정' }],
+          label: 'OA 게시판',
+          children: [{ label: '게시판 작성하기' }],
+        },
+        {
+          label: 'OA 하우스키퍼',
+          children: [
+            { label: '프론트' },
+            { label: '매니저' },
+            { label: '객실' },
+            { label: '관리자' },
+          ],
+        },
+        {
+          label: 'OA 웹POS',
+          children: [
+            { label: 'POS 설정' },
+            { label: '주문하기' },
+            { label: '결제' },
+            { label: '보고서' },
+            { label: '마감' },
+          ],
+        },
+        {
+          label: 'OA 스마트 TV',
+          children: [{ label: 'OA 스마트 TV' }],
         },
       ],
     },
@@ -2291,12 +2161,19 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
       productCode: 'config',
       roots: [
         {
-          label: '계정',
-          children: [{ label: '비밀번호 변경' }, { label: '권한 설정' }],
+          label: '공통설정',
+          children: [
+            { label: '거래처 설정' },
+            { label: '게시판 설정' },
+          ],
         },
         {
-          label: '시스템',
-          children: [{ label: '백업' }, { label: '활동 로그' }],
+          label: '객실설정',
+          children: [
+            { label: '객실단가설정' },
+            { label: '객실요금설정' },
+            { label: '객실수리등록' },
+          ],
         },
       ],
     },
@@ -2487,38 +2364,6 @@ CAA 레코드가 \`letsencrypt.org\`를 허용하는지 확인하세요.
   console.log('       admin@oa.local    / oa1234!  (어드민)');
   console.log('       manager@oa.local  / oa1234!  (매니저)');
   console.log('       hotelier@oa.local / oa1234!  (호텔리어)\n');
-}
-
-/**
- * 시드용 TOC 추출 (lib/services/articles.ts의 extractToc과 같은 규칙).
- * 시드 스크립트 단독 실행을 위해 인라인 구현 (server-only import 회피).
- */
-function extractTocLocal(markdown: string): TocEntry[] {
-  const lines = markdown.split('\n');
-  const entries: TocEntry[] = [];
-  let inCodeBlock = false;
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (line.startsWith('```')) {
-      inCodeBlock = !inCodeBlock;
-      continue;
-    }
-    if (inCodeBlock) continue;
-    const m = /^(#{1,3})\s+(.+?)\s*$/.exec(line);
-    if (!m) continue;
-    const level = m[1]!.length as 1 | 2 | 3;
-    const text = m[2]!.replace(/[*_`~]/g, '').trim();
-    if (!text) continue;
-    const anchor =
-      text
-        .toLowerCase()
-        .replace(/[^\wㄱ-힝\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .slice(0, 80) || `h-${Math.random().toString(36).slice(2, 8)}`;
-    entries.push({ level, text, anchor });
-  }
-  return entries;
 }
 
 main().catch((err) => {
