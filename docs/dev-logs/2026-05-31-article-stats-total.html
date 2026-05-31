@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2026-05-31 — 아티클 관리 통계 카드 전체 기준 집계</title>
+<style>
+  :root {
+    --brand-50: #f5f3ff;
+    --brand-100: #ede9fe;
+    --brand-500: #8b5cf6;
+    --brand-600: #7c3aed;
+    --brand-700: #6d28d9;
+    --brand-900: #4c1d95;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+    --emerald-50: #ecfdf5;
+    --emerald-600: #059669;
+    --amber-50: #fffbeb;
+    --amber-600: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif;
+    background: var(--slate-50);
+    color: var(--slate-900);
+    line-height: 1.6;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+  header { padding: 24px 0; border-bottom: 3px solid var(--brand-500); margin-bottom: 24px; }
+  h1 { margin: 0 0 4px; font-size: 22px; color: var(--brand-700); }
+  h2 { font-size: 17px; color: var(--brand-700); margin: 24px 0 8px; }
+  h3 { font-size: 14px; color: var(--slate-700); margin: 12px 0 6px; }
+  .meta { color: var(--slate-500); font-size: 13px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .card.brand { border-left: 3px solid var(--brand-500); }
+  .card.success { border-left: 3px solid var(--emerald-600); background: var(--emerald-50); }
+  .card.warn { border-left: 3px solid var(--amber-600); background: var(--amber-50); }
+  .stat-num { font-size: 24px; font-weight: 700; color: var(--brand-700); }
+  .stat-label { font-size: 12px; color: var(--slate-500); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--slate-200); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+  td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  ul.check { list-style: none; padding-left: 0; }
+  ul.check li::before { content: "✅ "; }
+  ul.todo li::before { content: "⏳ "; }
+  ul.next li::before { content: "→ "; color: var(--brand-600); font-weight: 700; }
+  code { background: var(--slate-100); padding: 2px 5px; border-radius: 3px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, monospace; }
+  pre { background: var(--slate-900); color: #e2e8f0; padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 12px; line-height: 1.5; }
+  pre code { background: none; color: inherit; padding: 0; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge.ok { background: #d1fae5; color: #065f46; }
+  .badge.info { background: var(--brand-100); color: var(--brand-700); }
+  .badge.warn { background: #fef3c7; color: #92400e; }
+  blockquote {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--brand-500);
+    background: var(--brand-50);
+    border-radius: 4px;
+    color: var(--slate-700);
+    font-size: 13px;
+  }
+  .before-after { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+  .ba-box { border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+  .ba-box.before { background: var(--amber-50); border: 1px solid #fde68a; }
+  .ba-box.after { background: var(--emerald-50); border: 1px solid #a7f3d0; }
+  .ba-box h3 { margin-top: 0; }
+  @media (max-width: 640px) {
+    h1 { font-size: 19px; }
+    .grid { grid-template-columns: 1fr; }
+    .before-after { grid-template-columns: 1fr; }
+    th, td { font-size: 12px; padding: 4px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>아티클 관리 통계 카드 — 전체 기준 집계 수정</h1>
+  <p class="meta">📅 2026-05-31 · 어드민 아티클 목록 상단 통계 카드 버그 수정 ·
+    <span class="badge ok">Pushed main</span> <span class="badge info">1 commit</span> <span class="badge info">2 files</span>
+  </p>
+</header>
+
+<section>
+  <h2>📊 한눈에 보기</h2>
+  <div class="grid">
+    <div class="card brand">
+      <div class="stat-num">1</div>
+      <div class="stat-label">커밋 (39ec91f)</div>
+    </div>
+    <div class="card brand">
+      <div class="stat-num">2</div>
+      <div class="stat-label">변경 파일 (page.tsx · articles.ts)</div>
+    </div>
+    <div class="card success">
+      <div class="stat-num">0</div>
+      <div class="stat-label">추가 DB 쿼리 (기존 count 쿼리에 통합)</div>
+    </div>
+    <div class="card success">
+      <div class="stat-num">Pass</div>
+      <div class="stat-label">tsc --noEmit 타입체크</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>🎯 4-Perspective 가치 요약</h2>
+  <table>
+    <thead><tr><th>관점</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Problem</b></td>
+        <td>아티클 관리 페이지 상단 "전체 (이 페이지)" 통계 카드가 현재 페이지 항목 수(20)만 표시. 헤더 설명문은 "전체 95건"인데 카드는 20 → 수치 불일치로 운영자 혼란.</td>
+      </tr>
+      <tr>
+        <td><b>Solution</b></td>
+        <td><code>listArticles</code>의 total count 쿼리에 PostgreSQL <code>count(*) filter (...)</code>를 추가해 발행/Draft 수를 한 번에 집계. 페이지(<code>items</code>) 기준 계산을 제거하고 필터 전체 기준 값으로 교체.</td>
+      </tr>
+      <tr>
+        <td><b>Function·UX</b></td>
+        <td>(1) "전체" 카드 = 필터 조건 전체 건수(95) (2) "발행"/"Draft" 카드도 전체 기준 → 카드 합과 헤더 "전체 N건"이 항상 일치 (3) 검색·필터 적용 시에도 해당 조건 전체 기준으로 정확 집계.</td>
+      </tr>
+      <tr>
+        <td><b>Core Value</b></td>
+        <td>운영자가 통계 카드만 봐도 전체 콘텐츠 규모·발행 현황을 즉시 파악. 추가 쿼리 없이(기존 count 쿼리 1개 재활용) 성능 영향 없음.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>🔧 변경 전후 비교</h2>
+  <div class="before-after">
+    <div class="ba-box before">
+      <h3>Before <span class="badge warn">page 기준</span></h3>
+      <pre><code>const publishedCount =
+  items.filter(a =&gt; a.publishedAt).length;
+const draftCount =
+  items.filter(a =&gt; !a.publishedAt).length;
+
+&lt;StatCard label="전체 (이 페이지)"
+  value={items.length} /&gt;   // 20
+&lt;StatCard label="발행"
+  value={publishedCount} /&gt;  // 20
+&lt;StatCard label="Draft"
+  value={draftCount} /&gt;      // 0</code></pre>
+    </div>
+    <div class="ba-box after">
+      <h3>After <span class="badge ok">전체 기준</span></h3>
+      <pre><code>// 서비스에서 전체 기준 집계 반환
+const { total, totalPublished,
+        totalDraft } = await listArticles(...)
+
+&lt;StatCard label="전체"
+  value={total} /&gt;           // 95
+&lt;StatCard label="발행"
+  value={totalPublished} /&gt;  // 전체 발행 수
+&lt;StatCard label="Draft"
+  value={totalDraft} /&gt;      // 전체 Draft 수</code></pre>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>🧱 변경 상세</h2>
+  <table>
+    <thead><tr><th>파일</th><th>변경 내용</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">lib/services/<br>articles.ts</td>
+        <td>
+          • <code>ListArticlesResult</code> 타입에 <code>totalPublished</code>·<code>totalDraft</code> 필드 추가<br>
+          • total count 쿼리에 <code>count(*) filter (where published_at is not null/is null)</code> 집계 추가<br>
+          • <code>db</code> 미연결 / catch fallback 반환값에도 신규 필드 0으로 반영
+        </td>
+      </tr>
+      <tr>
+        <td class="mono">app/(admin)/admin/<br>articles/page.tsx</td>
+        <td>
+          • 페이지 기준 <code>publishedCount</code>/<code>draftCount</code> 계산 제거<br>
+          • 구조분해에 <code>totalPublished</code>·<code>totalDraft</code> 추가<br>
+          • 카드 라벨 "전체 (이 페이지)" → "전체", value를 전체 기준 값으로 교체
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>핵심 쿼리 (단일 쿼리로 3개 집계)</h3>
+  <pre><code>const totalRows = await db
+  .select({
+    count:     sql`count(*)::int`,
+    published: sql`count(*) filter (where ${articles.publishedAt} is not null)::int`,
+    draft:     sql`count(*) filter (where ${articles.publishedAt} is null)::int`,
+  })
+  .from(articles)
+  .where(whereExpr);</code></pre>
+</section>
+
+<section>
+  <h2>💡 인사이트</h2>
+  <blockquote>
+    <b>"이 페이지 내 집계"는 페이지네이션 환경의 흔한 함정.</b> 통계 카드는 사용자가 "전체 현황"으로 인식하므로
+    반드시 서버 측 전체 집계로 채워야 함. PostgreSQL <code>FILTER</code> 절을 쓰면 발행/Draft 분리 집계를
+    <b>추가 쿼리 없이</b> total 쿼리 하나에 묶을 수 있어 성능 비용 0.
+  </blockquote>
+  <ul class="check">
+    <li>리스트 서비스 반환 타입에 집계 필드를 추가할 땐 <b>모든 early-return 경로</b>(db null, catch)도 함께 갱신해야 tsc 통과</li>
+    <li>같은 패턴을 <code>getArticleCountsByProduct</code> 등 다른 카운트 API에도 점검 여지 (발행/비발행 분리 필요 시)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>📄 잔여 / 검증</h2>
+  <ul class="check">
+    <li><code>npx tsc --noEmit</code> 통과 — 타입 안정성 확인</li>
+    <li>커밋 <code>39ec91f</code> → <code>origin/main</code> 푸시 완료 (무관한 scripts 변경은 제외)</li>
+  </ul>
+  <ul class="todo">
+    <li>Vercel 배포 후 실제 화면에서 95/발행/Draft 수치 일치 육안 확인 (운영 DB 기준)</li>
+  </ul>
+</section>
+
+<footer style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--slate-200); color: var(--slate-500); font-size: 12px;">
+  Commit: <code>39ec91f</code> fix(articles): 관리 통계 카드를 전체 기준 집계로 수정 ·
+  Files: <code>app/(admin)/admin/articles/page.tsx</code>, <code>lib/services/articles.ts</code>
+</footer>
+
+</div>
+</body>
+</html>
