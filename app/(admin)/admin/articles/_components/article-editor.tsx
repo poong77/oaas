@@ -23,8 +23,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
-import { Save, Upload } from 'lucide-react';
+import { Eye, Save, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { savePreview } from '@/lib/articles/preview-store';
 import { Button } from '@/components/ui/button';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import {
@@ -289,6 +290,48 @@ export function ArticleEditor({
     if (ok) setBody(templateBody(next));
   }
 
+  function handleOpenPreview() {
+    if (!productCode) {
+      toast.error('제품을 선택해야 미리볼 수 있어요.');
+      return;
+    }
+    if (title.trim().length === 0) {
+      toast.error('제목을 입력해야 미리볼 수 있어요.');
+      return;
+    }
+    if (body.trim().length === 0 || isPlaceholderOnly(body)) {
+      toast.error('본문을 입력해야 미리볼 수 있어요.');
+      return;
+    }
+
+    try {
+      const productLabel =
+        categories.find((c) => c.code === productCode)?.label ?? productCode;
+      const nonce = savePreview({
+        productCode,
+        productLabel,
+        contentType,
+        categoryPath,
+        title: title.trim(),
+        slug: slug.trim() || 'preview',
+        summary: summary.trim(),
+        keywords,
+        bodyMarkdown: body,
+        authorName: null,
+        isPublishedSource: initial?.isPublished ?? false,
+      });
+      const url = `/articles-preview?key=${encodeURIComponent(nonce)}`;
+      const opened = window.open(url, '_blank', 'noopener');
+      if (!opened) {
+        toast.error('팝업이 차단됐어요. 브라우저 팝업 허용 후 다시 시도해주세요.');
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : '미리보기 준비 중 오류가 발생했어요.',
+      );
+    }
+  }
+
   async function submit(publish: boolean) {
     setFieldErrors({});
 
@@ -466,6 +509,16 @@ export function ArticleEditor({
           >
             <Save className="h-4 w-4" />
             Draft 저장
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleOpenPreview}
+            disabled={pending}
+            title="저장하지 않고 실제 도움말 페이지 모양으로 미리 봅니다 (새 탭, 10분 한정)."
+          >
+            <Eye className="h-4 w-4" />
+            미리보기
           </Button>
           <Button
             type="button"

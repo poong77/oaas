@@ -204,6 +204,8 @@
 | 저장 포맷 | 마크다운 (기존 `*_markdown` 컬럼 유지, **마이그레이션 0**) |
 | 렌더링 | 기존 `components/articles/markdown-view.tsx` 재사용 |
 | 이미지 업로드 | 기존 `/api/upload` + `purpose='editor'` 분기 + Rate Limit (분당 30회) |
+| 이미지 마크업 | react-konva 기반 인라인 에디터. 도구: 화살표·박스·텍스트 (3색) + 그림자 프레임. 업로드 다이얼로그 안에서 [편집] → PNG 합성 → 기존 upload 흐름 (스크린샷 가공 용도, MVP) |
+| 본문 미리보기 | 편집 중 상태 그대로 새 탭에서 `/help` 레이아웃으로 렌더. localStorage 10분 TTL, 어드민/매니저 권한 가드 |
 | 첨부 | 이미지(jpg/png/webp/gif) + PDF, 개당 10MB. 영상 Phase 1 제외 |
 | 자동 저장 | localStorage 2초 + `editor_drafts` 테이블 30초 |
 | 신규 테이블 | `editor_drafts` (id, user_id, scope, target_id, draft_key, content_markdown, metadata, ...) |
