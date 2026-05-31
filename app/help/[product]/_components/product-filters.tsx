@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useTransition, type FormEvent } from 'react';
+import { useEffect, useState, useTransition, type FormEvent } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -22,6 +22,13 @@ export function ProductFilters({
   const sp = useSearchParams();
   const [q, setQ] = useState(initial.q ?? '');
   const [pending, startTransition] = useTransition();
+
+  // URL의 q가 외부에서 바뀌면(예: 사이드바 카테고리 클릭으로 q 제거, 브라우저 뒤로가기)
+  // 입력창도 동기화. 사용자가 타이핑 중에는 urlQ가 그대로라 effect가 덮어쓰지 않는다.
+  const urlQ = sp.get('q') ?? '';
+  useEffect(() => {
+    setQ(urlQ);
+  }, [urlQ]);
 
   function applyFilters(updates: Record<string, string | undefined>) {
     const next = new URLSearchParams(sp.toString());

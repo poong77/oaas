@@ -85,6 +85,9 @@ export function MenuTreeSidebar({
     const params = new URLSearchParams(searchParams.toString());
     params.delete('path');
     for (const part of nextPath) params.append('path', part);
+    // 카테고리 브라우징은 키워드 검색과 별개 모드 — 클릭 시 이전 검색어/페이지 초기화.
+    // (q가 남아 있으면 path AND q 조합으로 0건이 나오는 혼란 방지)
+    params.delete('q');
     params.delete('page');
     router.push(`/help/${productCode}?${toQueryString(params)}`);
   }
