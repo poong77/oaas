@@ -7,6 +7,8 @@
  *   - 비활성 = `is_active = false` (소프트 삭제)
  *   - banner=true 인 공지는 `emergency-banner.tsx`에서 전역 상단 띠로 노출
  *   - banner_until 이 있으면 그 시각 이후 자동 비표시 (조회 시점 lazy 체크 — 별도 cron 없음)
+ *   - popup_enabled=true 인 공지는 `home-popup-banner.tsx`에서 홈 진입 시 모달로 노출 (NT-04)
+ *     · popup_image_url 필수, popup_until 경과 시 자동 비표시 (lazy)
  *
  * 인덱스:
  *   - (is_active, published_at desc) — 통합 발행 목록 (가장 빈번)
@@ -48,6 +50,21 @@ export const noticeKindEnum = pgEnum('notice_kind', [
 
 export type NoticeKind = (typeof noticeKindEnum.enumValues)[number];
 
+/**
+ * 홈 팝업 배너 크기 프리셋 (NT-04).
+ *
+ * small  — max-w-sm  (작은 안내/이벤트)
+ * medium — max-w-md  (기본)
+ * large  — max-w-2xl (메인 프로모션)
+ */
+export const noticePopupSizeEnum = pgEnum('notice_popup_size', [
+  'small',
+  'medium',
+  'large',
+]);
+
+export type NoticePopupSize = (typeof noticePopupSizeEnum.enumValues)[number];
+
 export const notices = pgTable(
   'notices',
   {
@@ -63,6 +80,14 @@ export const notices = pgTable(
     banner: boolean('banner').notNull().default(false),
     /** banner=true일 때 자동 해제 시각. null이면 무기한 */
     bannerUntil: timestamp('banner_until', { withTimezone: true }),
+    /** NT-04 홈 팝업 배너 노출 여부 (텍스트 띠 banner와 독립) */
+    popupEnabled: boolean('popup_enabled').notNull().default(false),
+    /** 팝업 배너 이미지 URL (Vercel Blob). popup_enabled=true의 노출 필수 조건 */
+    popupImageUrl: text('popup_image_url'),
+    /** 팝업 모달 크기 프리셋 */
+    popupSize: noticePopupSizeEnum('popup_size').notNull().default('medium'),
+    /** 팝업 자동 종료 시각. null이면 무기한 (조회 시점 lazy 체크) */
+    popupUntil: timestamp('popup_until', { withTimezone: true }),
     /** null이면 draft. 발행 시점에 채워짐 */
     publishedAt: timestamp('published_at', { withTimezone: true }),
     viewCount: integer('view_count').notNull().default(0),
@@ -80,6 +105,7 @@ export const notices = pgTable(
       table.publishedAt,
     ),
     index('notices_banner_active_idx').on(table.banner, table.isActive),
+    index('notices_popup_active_idx').on(table.popupEnabled, table.isActive),
   ],
 );
 

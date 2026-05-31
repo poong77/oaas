@@ -53,6 +53,11 @@ const NoticeWriteSchema = z.object({
   banner: z.boolean().optional(),
   /** ISO string from datetime-local input — '' / undefined / 'null' 모두 null로 변환 */
   bannerUntilIso: z.string().optional().nullable(),
+  // NT-04 홈 팝업 배너
+  popupEnabled: z.boolean().optional(),
+  popupImageUrl: z.string().url('유효한 이미지 URL이 아닙니다').optional().nullable(),
+  popupSize: z.enum(['small', 'medium', 'large']).optional(),
+  popupUntilIso: z.string().optional().nullable(),
   publish: z.boolean().optional(),
 });
 
@@ -78,6 +83,9 @@ function parseFormDataInput(formData: FormData): {
       : 'draft';
   const productCodeRaw = get('productCode').trim();
   const bannerUntilRaw = get('bannerUntil').trim();
+  const popupImageUrlRaw = get('popupImageUrl').trim();
+  const popupSizeRaw = get('popupSize').trim();
+  const popupUntilRaw = get('popupUntil').trim();
 
   const raw: Record<string, unknown> = {
     kind: get('kind'),
@@ -87,6 +95,10 @@ function parseFormDataInput(formData: FormData): {
     pinned: getBool('pinned'),
     banner: getBool('banner'),
     bannerUntilIso: bannerUntilRaw || null,
+    popupEnabled: getBool('popupEnabled'),
+    popupImageUrl: popupImageUrlRaw || null,
+    popupSize: popupSizeRaw || undefined,
+    popupUntilIso: popupUntilRaw || null,
     publish: publishMode === 'publish',
   };
   return { raw, publishMode };
@@ -112,6 +124,18 @@ function buildWriteInput(
   // banner=false 면 banner_until 강제 null
   if (!parsed.banner) bannerUntil = null;
 
+  // NT-04 팝업 배너
+  let popupUntil: Date | null = null;
+  if (parsed.popupUntilIso) {
+    const d = new Date(parsed.popupUntilIso);
+    if (!isNaN(d.getTime())) popupUntil = d;
+  }
+  const popupEnabled = parsed.popupEnabled ?? false;
+  // popup_enabled=false 면 부속 필드 강제 초기화
+  const popupImageUrl = popupEnabled ? (parsed.popupImageUrl ?? null) : null;
+  const popupSize = popupEnabled ? (parsed.popupSize ?? 'medium') : 'medium';
+  if (!popupEnabled) popupUntil = null;
+
   return {
     kind: parsed.kind,
     productCode: parsed.productCode ?? null,
@@ -120,6 +144,10 @@ function buildWriteInput(
     pinned: parsed.pinned ?? false,
     banner: parsed.banner ?? false,
     bannerUntil,
+    popupEnabled,
+    popupImageUrl,
+    popupSize,
+    popupUntil,
     publish: parsed.publish,
   };
 }
@@ -154,6 +182,7 @@ export async function createNoticeAction(
       publish: !!input.publish,
       pinned: !!input.pinned,
       banner: !!input.banner,
+      popup: !!input.popupEnabled,
     },
   });
   revalidatePath('/admin/notices');
@@ -193,6 +222,7 @@ export async function updateNoticeAction(
       title: input.title,
       pinned: !!input.pinned,
       banner: !!input.banner,
+      popup: !!input.popupEnabled,
     },
   });
   revalidatePath('/admin/notices');

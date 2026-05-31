@@ -2,19 +2,25 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { Save, Upload } from 'lucide-react';
+import { Eye, ImageIcon, Save, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { RichEditor } from '@/components/editor/rich-editor';
+import { ImageUploadDialog } from '@/components/editor/dialogs/image-upload-dialog';
+import { PopupBannerModal } from '@/components/notices/popup-banner-modal';
 import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
 import type { ProductCategoryView } from '@/lib/services/categories';
-import type { NoticeKind } from '@/db/schema';
-import { NOTICE_KIND_META } from '@/lib/services/notices-meta';
+import type { NoticeKind, NoticePopupSize } from '@/db/schema';
+import {
+  NOTICE_KIND_META,
+  NOTICE_POPUP_SIZE_META,
+} from '@/lib/services/notices-meta';
 import {
   createNoticeAction,
   updateNoticeAction,
@@ -32,10 +38,27 @@ type InitialValues = {
   banner: boolean;
   /** ISO string for datetime-local */
   bannerUntilIso: string | null;
+  popupEnabled: boolean;
+  popupImageUrl: string | null;
+  popupSize: NoticePopupSize;
+  /** ISO string for datetime-local */
+  popupUntilIso: string | null;
   isPublished: boolean;
 };
 
 const KIND_OPTIONS: NoticeKind[] = ['notice', 'release', 'incident'];
+const POPUP_SIZE_OPTIONS: NoticePopupSize[] = ['small', 'medium', 'large'];
+
+/** 'YYYY-MM-DDTHH:mm' (local) — N일 뒤 또는 빈 문자열 */
+function daysFromNowInput(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}
 
 export function NoticeEditor({
   mode,
@@ -62,6 +85,22 @@ export function NoticeEditor({
     initial?.bannerUntilIso ?? '',
   );
 
+  // NT-04 홈 팝업 배너
+  const [popupEnabled, setPopupEnabled] = useState(
+    initial?.popupEnabled ?? false,
+  );
+  const [popupImageUrl, setPopupImageUrl] = useState<string | null>(
+    initial?.popupImageUrl ?? null,
+  );
+  const [popupSize, setPopupSize] = useState<NoticePopupSize>(
+    initial?.popupSize ?? 'medium',
+  );
+  const [popupUntil, setPopupUntil] = useState<string>(
+    initial?.popupUntilIso ?? '',
+  );
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   async function submit(publish: boolean) {
@@ -75,6 +114,33 @@ export function NoticeEditor({
           title: '배너 노출 종료 시각이 이미 과거입니다',
           description:
             '저장해도 배너로 노출되지 않습니다. 그래도 진행하시겠습니까?',
+          confirmText: '진행',
+          tone: 'danger',
+        });
+        if (!proceed) return;
+      }
+    }
+
+    // 팝업 켰는데 이미지가 없으면 노출 불가 — 경고
+    if (popupEnabled && !popupImageUrl) {
+      const proceed = await confirm({
+        title: '팝업 배너 이미지가 없습니다',
+        description:
+          '이미지를 등록하지 않으면 홈 팝업으로 노출되지 않습니다. 그래도 진행하시겠습니까?',
+        confirmText: '진행',
+        tone: 'danger',
+      });
+      if (!proceed) return;
+    }
+
+    // 팝업 종료 시각이 이미 과거이면 경고
+    if (popupEnabled && popupUntil) {
+      const until = new Date(popupUntil);
+      if (!isNaN(until.getTime()) && until.getTime() < Date.now()) {
+        const proceed = await confirm({
+          title: '팝업 노출 종료 시각이 이미 과거입니다',
+          description:
+            '저장해도 팝업으로 노출되지 않습니다. 그래도 진행하시겠습니까?',
           confirmText: '진행',
           tone: 'danger',
         });
@@ -101,6 +167,10 @@ export function NoticeEditor({
     formData.set('pinned', pinned ? 'on' : '');
     formData.set('banner', banner ? 'on' : '');
     formData.set('bannerUntil', banner ? bannerUntil : '');
+    formData.set('popupEnabled', popupEnabled ? 'on' : '');
+    formData.set('popupImageUrl', popupEnabled ? (popupImageUrl ?? '') : '');
+    formData.set('popupSize', popupSize);
+    formData.set('popupUntil', popupEnabled ? popupUntil : '');
     formData.set('publishMode', publish ? 'publish' : 'draft');
 
     startTransition(async () => {
@@ -226,6 +296,156 @@ export function NoticeEditor({
                 />
               </div>
             )}
+
+            {/* NT-04 홈 팝업 배너 */}
+            <div className="mt-1 border-t border-slate-200 pt-2 dark:border-slate-700">
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={popupEnabled}
+                  onChange={(e) => setPopupEnabled(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                <span>
+                  <strong>홈 팝업 배너</strong> — 홈 진입 시 이미지 팝업으로 노출
+                </span>
+              </label>
+            </div>
+
+            {popupEnabled && (
+              <div className="ml-6 flex flex-col gap-4">
+                {/* 이미지 */}
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs text-slate-600 dark:text-slate-400">
+                    배너 이미지 *
+                  </Label>
+                  {popupImageUrl ? (
+                    <div className="flex items-start gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={popupImageUrl}
+                        alt="팝업 배너 미리보기"
+                        className="h-24 w-auto rounded-md border border-slate-200 object-contain dark:border-slate-700"
+                      />
+                      <div className="flex flex-col gap-1.5">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setImageDialogOpen(true)}
+                        >
+                          <ImageIcon className="h-3.5 w-3.5" />
+                          이미지 변경
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPopupImageUrl(null)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          이미지 제거
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-fit"
+                      onClick={() => setImageDialogOpen(true)}
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      이미지 업로드
+                    </Button>
+                  )}
+                </div>
+
+                {/* 크기 프리셋 */}
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs text-slate-600 dark:text-slate-400">
+                    배너 크기
+                  </Label>
+                  <div className="inline-flex w-fit overflow-hidden rounded-md border border-slate-300 dark:border-slate-600">
+                    {POPUP_SIZE_OPTIONS.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setPopupSize(s)}
+                        className={cn(
+                          'px-4 py-1.5 text-sm transition',
+                          popupSize === s
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700',
+                        )}
+                      >
+                        {NOTICE_POPUP_SIZE_META[s].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 종료일자 + 빠른 설정 */}
+                <div className="flex flex-col gap-1.5">
+                  <Label
+                    htmlFor="popupUntil"
+                    className="text-xs text-slate-600 dark:text-slate-400"
+                  >
+                    노출 종료일자 (비워두면 수동 해제 시까지)
+                  </Label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Input
+                      id="popupUntil"
+                      type="datetime-local"
+                      value={popupUntil}
+                      onChange={(e) => setPopupUntil(e.target.value)}
+                      className="max-w-xs"
+                    />
+                    <div className="flex gap-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPopupUntil(daysFromNowInput(3))}
+                      >
+                        3일 노출
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPopupUntil(daysFromNowInput(7))}
+                      >
+                        7일 노출
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPopupUntil('')}
+                      >
+                        무기한
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 미리보기 */}
+                <div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={!popupImageUrl}
+                    onClick={() => setPreviewOpen(true)}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    팝업 미리보기
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -270,6 +490,27 @@ export function NoticeEditor({
         </Button>
         {pending && <span className="text-xs text-slate-500">저장 중...</span>}
       </div>
+
+      {/* 팝업 배너 이미지 업로드 */}
+      <ImageUploadDialog
+        open={imageDialogOpen}
+        onClose={() => setImageDialogOpen(false)}
+        onUploaded={(url) => {
+          setPopupImageUrl(url);
+          setImageDialogOpen(false);
+        }}
+      />
+
+      {/* 팝업 미리보기 */}
+      {previewOpen && popupImageUrl && (
+        <PopupBannerModal
+          imageUrl={popupImageUrl}
+          size={popupSize}
+          title={title || '팝업 배너 미리보기'}
+          preview
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
     </div>
   );
 }

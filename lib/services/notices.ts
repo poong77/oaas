@@ -35,6 +35,7 @@ import {
   type Notice,
   type NewNotice,
   type NoticeKind,
+  type NoticePopupSize,
 } from '@/db/schema';
 
 // ─────────────────────────────────────────────────────────────────────
@@ -273,6 +274,66 @@ export async function listActiveBannerNotices(): Promise<NoticeListItem[]> {
     return rows;
   } catch (err) {
     console.error('[notices.listActiveBannerNotices] 실패:', err);
+    return [];
+  }
+}
+
+/**
+ * 활성 홈 팝업 배너 공지 목록 (home-popup-banner.tsx에서 사용) — NT-04.
+ *
+ * 조건:
+ *   - is_active = true
+ *   - popup_enabled = true
+ *   - published_at IS NOT NULL
+ *   - popup_image_url IS NOT NULL (이미지 없으면 노출 불가)
+ *   - popup_until IS NULL OR popup_until > now()
+ */
+export type PopupNoticeItem = {
+  id: string;
+  kind: NoticeKind;
+  title: string;
+  popupImageUrl: string;
+  popupSize: NoticePopupSize;
+};
+
+export async function listActivePopupNotices(): Promise<PopupNoticeItem[]> {
+  if (!db) return [];
+  try {
+    const now = new Date();
+    const rows = await db
+      .select({
+        id: notices.id,
+        kind: notices.kind,
+        title: notices.title,
+        popupImageUrl: notices.popupImageUrl,
+        popupSize: notices.popupSize,
+      })
+      .from(notices)
+      .where(
+        and(
+          eq(notices.isActive, true),
+          eq(notices.popupEnabled, true),
+          isNotNull(notices.publishedAt),
+          isNotNull(notices.popupImageUrl),
+          or(isNull(notices.popupUntil), gt(notices.popupUntil, now)),
+        ),
+      )
+      .orderBy(desc(notices.publishedAt))
+      .limit(5);
+    // popupImageUrl IS NOT NULL 조건으로 걸렀으므로 non-null 단언 안전
+    return rows
+      .filter((r): r is typeof r & { popupImageUrl: string } =>
+        Boolean(r.popupImageUrl),
+      )
+      .map((r) => ({
+        id: r.id,
+        kind: r.kind,
+        title: r.title,
+        popupImageUrl: r.popupImageUrl,
+        popupSize: r.popupSize,
+      }));
+  } catch (err) {
+    console.error('[notices.listActivePopupNotices] 실패:', err);
     return [];
   }
 }
@@ -571,6 +632,11 @@ export type NoticeWriteInput = {
   pinned?: boolean;
   banner?: boolean;
   bannerUntil?: Date | null;
+  /** NT-04 홈 팝업 배너 */
+  popupEnabled?: boolean;
+  popupImageUrl?: string | null;
+  popupSize?: NoticePopupSize;
+  popupUntil?: Date | null;
   publish?: boolean;
 };
 
@@ -588,6 +654,10 @@ export async function createNotice(
       pinned: input.pinned ?? false,
       banner: input.banner ?? false,
       bannerUntil: input.bannerUntil ?? null,
+      popupEnabled: input.popupEnabled ?? false,
+      popupImageUrl: input.popupImageUrl ?? null,
+      popupSize: input.popupSize ?? 'medium',
+      popupUntil: input.popupUntil ?? null,
       authorId,
       publishedAt: input.publish ? new Date() : null,
     };
@@ -618,6 +688,10 @@ export async function updateNoticeById(
         pinned: input.pinned ?? false,
         banner: input.banner ?? false,
         bannerUntil: input.bannerUntil ?? null,
+        popupEnabled: input.popupEnabled ?? false,
+        popupImageUrl: input.popupImageUrl ?? null,
+        popupSize: input.popupSize ?? 'medium',
+        popupUntil: input.popupUntil ?? null,
       })
       .where(eq(notices.id, id));
     return { ok: true };

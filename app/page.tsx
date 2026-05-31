@@ -20,6 +20,8 @@ import { getProductCategories } from '@/lib/services/categories';
 import { getLatestServiceStatus } from '@/lib/services/service-status';
 import { listVisibleQuickActions } from '@/lib/services/master-quick-actions';
 import { listActiveRoleStarters } from '@/lib/services/master-role-starters';
+import { listActivePopupNotices } from '@/lib/services/notices';
+import { HomePopupBanner } from '@/components/notices/home-popup-banner';
 import { HomeHero } from './_components/home/home-hero';
 import { HomeStatusUpdatesBox } from './_components/home/home-status-updates-box';
 import { CategoryGrid } from './_components/home/category-grid';
@@ -36,16 +38,23 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  const [categories, latestStatus, quickActionRows, roleStarterRows] =
-    await Promise.all([
-      getProductCategories(),
-      getLatestServiceStatus(),
-      listVisibleQuickActions(),
-      listActiveRoleStarters(),
-    ]);
+  const [
+    categories,
+    latestStatus,
+    quickActionRows,
+    roleStarterRows,
+    popupNotices,
+  ] = await Promise.all([
+    getProductCategories(),
+    getLatestServiceStatus(),
+    listVisibleQuickActions(),
+    listActiveRoleStarters(),
+    listActivePopupNotices(),
+  ]);
 
   return (
     <>
+      <HomePopupBanner notices={popupNotices} />
       <HomeHero
         sidebar={
           /* HomeStatusUpdatesBox는 async 서버 컴포넌트 — JSX로 직접 전달 */

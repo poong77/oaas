@@ -47,6 +47,9 @@ export default async function EditNoticePage({
   const bannerUntilIso = notice.bannerUntil
     ? toLocalInputValue(new Date(notice.bannerUntil))
     : null;
+  const popupUntilIso = notice.popupUntil
+    ? toLocalInputValue(new Date(notice.popupUntil))
+    : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -60,6 +63,7 @@ export default async function EditNoticePage({
               <Badge tone="warn">Draft</Badge>
             )}
             {notice.banner && <Badge tone="danger">배너</Badge>}
+            {notice.popupEnabled && <Badge tone="warn">팝업</Badge>}
             {!notice.isActive && <Badge tone="danger">비활성</Badge>}
           </span>
         }
@@ -96,6 +100,10 @@ export default async function EditNoticePage({
           pinned: notice.pinned,
           banner: notice.banner,
           bannerUntilIso,
+          popupEnabled: notice.popupEnabled,
+          popupImageUrl: notice.popupImageUrl,
+          popupSize: notice.popupSize,
+          popupUntilIso,
           isPublished: Boolean(notice.publishedAt),
         }}
       />

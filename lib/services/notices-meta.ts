@@ -4,7 +4,7 @@
  * notices.ts는 server-only이므로 Client Component에서는 이 파일을 import.
  */
 
-import type { NoticeKind } from '@/db/schema';
+import type { NoticeKind, NoticePopupSize } from '@/db/schema';
 
 export const NOTICE_KIND_META: Record<
   NoticeKind,
@@ -62,4 +62,17 @@ export const NOTICE_BANNER_CLASSES: Record<
     container: 'border-b border-red-700 bg-red-600 text-white',
     label: '[장애]',
   },
+};
+
+/**
+ * NT-04 홈 팝업 배너 크기 프리셋 → 모달 최대 너비 className.
+ * 편집 미리보기와 실제 노출(home-popup-banner)에서 공통 사용.
+ */
+export const NOTICE_POPUP_SIZE_META: Record<
+  NoticePopupSize,
+  { label: string; maxWidth: string }
+> = {
+  small: { label: '소', maxWidth: 'max-w-sm' },
+  medium: { label: '중', maxWidth: 'max-w-md' },
+  large: { label: '대', maxWidth: 'max-w-2xl' },
 };

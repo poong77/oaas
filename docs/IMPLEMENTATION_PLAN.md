@@ -114,6 +114,7 @@
 | NT-01 | 공지사항 목록·상세 | 점검·장애·업데이트. 제품 태그 필터. 상단 고정 | 매니저·어드민 | P1 |
 | NT-02 | 릴리즈 노트 | 제품별 업데이트 내역 | 매니저 | P2 |
 | NT-03 | 긴급 공지 배너 | 장애 발생 시 홈 최상단 자동 배너. 정상화 시 자동 해제 | 매니저(설정) | P1 |
+| NT-04 | 홈 팝업 배너 | 공지 편집 노출옵션. 이미지+크기 프리셋(소/중/대)+종료일자(3·7일). 홈 모달 노출, 미리보기, 오늘 하루 안 보기 | 매니저·어드민(설정) | P1 |
 
 ### 7. 권한 관리 (PM)
 
@@ -390,9 +391,16 @@ created_at, updated_at, is_active
 id, kind enum('notice' | 'release' | 'incident'),
 product_code (nullable), title, body_markdown,
 pinned bool, banner bool, banner_until timestamp,
+// NT-04 홈 팝업 배너 (텍스트 띠 banner와 독립)
+popup_enabled bool, popup_image_url text (nullable),
+popup_size enum('small' | 'medium' | 'large') default 'medium',
+popup_until timestamp (nullable, null이면 무기한),
 published_at, author_id (FK users),
 created_at, updated_at, is_active
 ```
+> NT-04: `popup_enabled=true`이고 발행·활성·이미지 보유·`popup_until` 미경과인 공지를
+> 홈 진입 시 모달로 노출. 크기 프리셋(소/중/대), 종료일자(3·7일 빠른 설정), 편집 미리보기.
+> 사용자가 "오늘 하루 안 보기" 선택 시 브라우저 localStorage로 당일 미노출.
 
 ### 7.2 시스템·운영 테이블
 
