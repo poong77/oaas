@@ -321,7 +321,9 @@ export function ArticleEditor({
         isPublishedSource: initial?.isPublished ?? false,
       });
       const url = `/articles-preview?key=${encodeURIComponent(nonce)}`;
-      const opened = window.open(url, '_blank', 'noopener');
+      // noopener 를 쓰면 window.open 반환값이 항상 null 이라 팝업 차단 감지 불가.
+      // 같은 origin 의 내부 어드민 경로이므로 noopener 없이 호출하고, 반환값으로 차단 감지.
+      const opened = window.open(url, '_blank');
       if (!opened) {
         toast.error('팝업이 차단됐어요. 브라우저 팝업 허용 후 다시 시도해주세요.');
       }

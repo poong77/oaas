@@ -74,17 +74,27 @@ export function ImageAnnotator({ file, onComplete, onCancel }: ImageAnnotatorPro
 
   // 파일 → HTMLImageElement
   useEffect(() => {
+    let cancelled = false;
     const url = URL.createObjectURL(file);
     const el = new window.Image();
-    el.crossOrigin = 'anonymous';
+    // crossOrigin 은 설정하지 않음 — blob: URL 은 같은 origin 이고,
+    // 일부 헤드리스 Chromium 환경에서 crossOrigin='anonymous' + blob: 조합이 로드 실패한다.
     el.onload = () => {
+      if (cancelled) return;
       setImg({ el, width: el.naturalWidth, height: el.naturalHeight });
     };
     el.onerror = () => {
+      // cancel 된 effect 의 잔여 onerror 는 무시
+      // (React 19 Strict Mode 더블 마운트 시 첫 Image 가 revoke 된 URL 로딩 실패해도 무해)
+      if (cancelled) return;
       setLoadError('이미지를 불러올 수 없어요.');
     };
     el.src = url;
-    return () => URL.revokeObjectURL(url);
+    return () => {
+      cancelled = true;
+      // revoke 는 약간 지연 (이미 로드 시작된 image 가 안전하게 디코드 완료하도록)
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+    };
   }, [file]);
 
   // shapes 변경 시 히스토리 push (직접 set 한 경우만)
