@@ -13,6 +13,7 @@
 import 'server-only';
 import {
   and,
+  arrayOverlaps,
   asc,
   desc,
   eq,
@@ -143,11 +144,8 @@ const ARTICLE_LIST_SELECT = {
 function buildArticleSearchCondition(expanded: string[]): SQL | undefined {
   if (expanded.length === 0) return undefined;
   const orParts: SQL[] = [];
-  // (1) keywords 배열 매칭
-  const expandedLit = sql.raw(
-    `ARRAY[${expanded.map((t) => `'${t.replace(/'/g, "''")}'`).join(',')}]::text[]`,
-  );
-  orParts.push(sql`${articles.keywords} && ${expandedLit}`);
+  // (1) keywords 배열 매칭 (파라미터 바인딩 — sql.raw 수동 이스케이프 제거)
+  orParts.push(arrayOverlaps(articles.keywords, expanded));
   // (2) 확장 term 각각 ILIKE — title/summary/summary30s/body
   for (const term of expanded) {
     const pattern = `%${term}%`;
