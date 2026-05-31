@@ -396,8 +396,12 @@ export function ArticleEditor({
           onAiRejectSummary={() => dismissField('summary')}
           onAiApplyKeywords={() => {
             if (aiSuggestion?.keywords) {
+              // v1.5 정책: 한글 키워드만 적용 (AI가 영어 섞어도 필터)
+              const koreanOnly = aiSuggestion.keywords.filter((k) =>
+                /[가-힣]/u.test(k) && !/[a-zA-Z]/.test(k),
+              );
               const merged = Array.from(
-                new Set([...keywords, ...aiSuggestion.keywords]),
+                new Set([...keywords, ...koreanOnly]),
               ).slice(0, 30);
               setKeywords(merged);
               dismissField('keywords');
@@ -405,10 +409,13 @@ export function ArticleEditor({
           }}
           onAiRejectKeywords={() => dismissField('keywords')}
           onAiApplyRelatedHints={() => {
-            // related_search_hints는 키워드 후보 — 검색용 힌트라 keywords로 일부 병합
+            // related_search_hints도 keywords와 동일 정책: 한글만 적용
             if (aiSuggestion?.related_search_hints) {
+              const koreanOnly = aiSuggestion.related_search_hints.filter(
+                (k) => /[가-힣]/u.test(k) && !/[a-zA-Z]/.test(k),
+              );
               const merged = Array.from(
-                new Set([...keywords, ...aiSuggestion.related_search_hints]),
+                new Set([...keywords, ...koreanOnly]),
               ).slice(0, 30);
               setKeywords(merged);
               dismissField('relatedHints');

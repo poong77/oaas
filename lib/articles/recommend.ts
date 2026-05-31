@@ -17,6 +17,7 @@ import { db } from '@/db';
 import { articles } from '@/db/schema';
 import { loadSynonymIndex } from '@/lib/services/master-synonyms';
 import { tokenizeQuery } from '@/lib/text/normalize';
+import { isKoreanKeyword } from '@/lib/articles/keyword-filter';
 
 export type KeywordRecommendation = {
   term: string;
@@ -135,8 +136,11 @@ export async function recommendKeywords({
     });
   }
 
-  // 3) weight 내림차순 + 7개 cap
+  // 3) 한글만 필터 (v1.5 정책: keywords 한글, 영어는 동의어 마스터)
+  //    영어 약어/단어는 추천 제외 — 검색 시 expandKeywords가 동의어 사전으로 자동 매칭
+  // 4) weight 내림차순 + 7개 cap
   return Array.from(recs.values())
+    .filter((r) => isKoreanKeyword(r.term))
     .sort((a, b) => b.weight - a.weight)
     .slice(0, 7);
 }

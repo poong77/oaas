@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Sparkles, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,6 +25,10 @@ import {
   checkSlugAvailable,
   generateOpsIdSlugAction,
 } from '@/app/actions/article-actions';
+import {
+  isKoreanKeyword,
+  KOREAN_KEYWORD_REJECT_MESSAGE,
+} from '@/lib/articles/keyword-filter';
 import { MenuPathCascader } from './menu-path-cascader';
 import { KeywordRecommender } from './keyword-recommender';
 import { RelatedArticleAutocomplete } from './related-article-autocomplete';
@@ -142,7 +147,19 @@ export function EditorMetaForm({
 
   function addKeyword() {
     const v = keywordDraft.trim();
-    if (!v || keywords.includes(v) || keywords.length >= 30) return;
+    if (!v) return;
+    if (keywords.includes(v)) {
+      toast.info('이미 추가된 키워드예요.');
+      return;
+    }
+    if (keywords.length >= 30) {
+      toast.error('키워드는 최대 30개까지 가능합니다.');
+      return;
+    }
+    if (!isKoreanKeyword(v)) {
+      toast.error(KOREAN_KEYWORD_REJECT_MESSAGE);
+      return;
+    }
     onKeywords([...keywords, v]);
     setKeywordDraft('');
   }
@@ -320,7 +337,7 @@ export function EditorMetaForm({
                   addKeyword();
                 }
               }}
-              placeholder="키워드 추가 (예: 체크인, CI, check-in)"
+              placeholder="키워드 추가 (예: 체크인, 예약 등록) — 한글만"
               maxLength={60}
             />
             <Button
@@ -334,7 +351,15 @@ export function EditorMetaForm({
             </Button>
           </div>
           <span className="text-xs text-slate-500">
-            {keywords.length} / 30 · 동의어·본문 토큰 자동 추천 (debounce 500ms)
+            {keywords.length} / 30 · 한글만 가능 · 영어 약어/동의어는{' '}
+            <Link
+              href="/admin/master/synonyms"
+              target="_blank"
+              className="underline hover:text-brand-600"
+            >
+              동의어 사전
+            </Link>{' '}
+            마스터에 등록
           </span>
           <KeywordRecommender
             inputContext={{
