@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
 import {
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -146,16 +147,24 @@ export function ArticlesListClient({
                   <div className="text-xs text-slate-500">/{a.slug}</div>
                 </td>
                 <td className="px-3 py-2">
-                  {a.publishedAt ? (
-                    <Badge tone="success">발행됨</Badge>
-                  ) : (
-                    <Badge tone="warn">Draft</Badge>
-                  )}
-                  {!a.isActive && (
-                    <Badge tone="danger" className="ml-1">
-                      비활성
-                    </Badge>
-                  )}
+                  <div className="flex flex-wrap items-center gap-1">
+                    {a.publishedAt ? (
+                      <Badge tone="success">발행됨</Badge>
+                    ) : (
+                      <Badge tone="warn">Draft</Badge>
+                    )}
+                    {!a.isActive && <Badge tone="danger">비활성</Badge>}
+                    {a.publishedAt && a.warningCount > 0 && (
+                      <Link
+                        href={`/admin/articles/${a.id}`}
+                        title={`보완 권장 ${a.warningCount}건 — 클릭으로 편집`}
+                        className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/40"
+                      >
+                        <AlertTriangle className="h-3 w-3" />
+                        보완 {a.warningCount}건
+                      </Link>
+                    )}
+                  </div>
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
                   {a.viewCount.toLocaleString()}
@@ -235,7 +244,7 @@ export function ArticlesListClient({
             key={a.id}
             className={`flex flex-col gap-2 rounded-md border border-slate-200 p-3 dark:border-slate-800 ${a.isActive ? '' : 'opacity-60'}`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge tone="brand" className="uppercase">
                 {productLabel(a.productCode)}
               </Badge>
@@ -245,6 +254,15 @@ export function ArticlesListClient({
                 <Badge tone="warn">Draft</Badge>
               )}
               {!a.isActive && <Badge tone="danger">비활성</Badge>}
+              {a.publishedAt && a.warningCount > 0 && (
+                <span
+                  className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                  title={`보완 권장 ${a.warningCount}건`}
+                >
+                  <AlertTriangle className="h-3 w-3" />
+                  보완 {a.warningCount}건
+                </span>
+              )}
             </div>
             <Link
               href={`/admin/articles/${a.id}`}
