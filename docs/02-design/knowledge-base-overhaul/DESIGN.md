@@ -18,8 +18,12 @@
 | **덮어쓰기** | 기존 본문 존재 시 `ConfirmDialog`로 의도 확인 |
 | **월 예산** | $50 (Sonnet 4.6 기준 약 5,000회) |
 | **Stream B (v1.1 추가)** | B1 `/help/[product]` menu_taxonomies 트리 사이드바 · B2 `/role/[key]` role_starters DB 연동 + 어드민 매핑 UI |
-| **신규/변경 파일 합계** | **35개** (신규 26, 변경 9) — Drizzle 변경 0 |
+| **신규/변경 파일 합계** | **49개** (신규 35, 변경 14) — **Drizzle 마이그레이션 3건** (v1.3) |
 | **A6 재편집 (v1.2)** | 4모드 (reorder · fill-gaps · tone · custom) + 사이드-바이-사이드 markdown diff + 섹션별 부분 적용. Phase 4 (Week 4)에서 구현. |
+| **A7 Slug ID (v1.3)** | `{productCode}-{contentType}-{seq3}` (atomic counter 테이블 `article_seq_counters`) |
+| **A1+ 마스터 이관 (v1.3)** | 골격 → `article_templates` DB (코드 상수 = seed 기본값), 어드민 `master/article-templates` 편집 UI |
+| **A8 자동저장 (v1.3)** | 사이드바 상태바 (✓ N초 전 저장 / ● 저장 중 / ⚠ 미저장) + ON/OFF 토글 (localStorage) |
+| **Stream D 이미지 (v1.3)** | D1 sharp 리사이징, D2 PNG→WebP 압축, D3 `tui-image-editor` 화살표·박스·번호·텍스트, D4 CSS 브라우저/모바일 프레임. Phase 5 (Week 5). |
 
 ### 4-Perspective Value
 
@@ -1103,6 +1107,7 @@ test('/role/front 매핑된 아티클이 순서대로 노출', async ({ page }) 
 - 2026-05-31 v1.0: 초안 작성 (Open Q 추천안 반영, Stream A만)
 - 2026-05-31 v1.1: **Stream B 세부 설계 추가** (§15). B1 `/help/[product]` 트리 사이드바, B2 `/role/[key]` 마스터 DB + 어드민 매핑 UI. e2e KB-07, KB-08. 신규/변경 파일 22 → 29.
 - 2026-05-31 v1.2: **A6 재편집 세부 설계 추가** (§16). 4모드(reorder/fill-gaps/tone/custom) + DiffPreviewModal + 섹션별 부분 적용. e2e KB-09. Phase 4 (Week 4) 신설. 일정 3주 → 4주. 신규/변경 파일 29 → 35.
+- 2026-05-31 v1.3: **A7 Slug + A1+ 마스터 이관 + A8 자동저장 + Stream D 이미지 4종** 추가. **Phase 5 (Week 5) 신설**. 일정 4주 → 5주. 신규/변경 파일 35 → 49. Drizzle 마이그레이션 3건 추가 (article_seq_counters, article_templates, article_images). 세부 명세는 [PLAN §12·§13](./PLAN.md#12-a7a8a1-보강-v13) 참조 (Plan에 통합 정리).
 
 ---
 

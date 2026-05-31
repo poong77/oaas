@@ -12,9 +12,9 @@
 |---|---|
 | **Feature** | knowledge-base-overhaul (Stream A MVP) |
 | **Goal** | 아티클 작성 자동화 (A1~A5) + 콘텐츠 품질 3대 목표 (1의도/빠른인식/챗봇KB) 달성 |
-| **MVP Scope** | A1 본문 템플릿 · A2 메뉴 캐스케이드 · A3 키워드 자동완성 · A4 관련문서 자동추천 · A5 Claude 보조 · **A6 재편집 4모드** · **B1 /help 메뉴 트리** · **B2 /role 마스터 DB 연동** |
+| **MVP Scope** | A1 본문 템플릿(+H3+마스터DB 이관) · A2 메뉴 캐스케이드 · A3 키워드 자동완성 · A4 관련문서 자동추천 · A5 Claude 보조 · A6 재편집 4모드 · **A7 Slug 운영 ID 규칙** · **A8 자동저장 가시화·토글** · B1 /help 메뉴 트리 · B2 /role 마스터 DB · **D1~D4 이미지 처리 (Stream D)** |
 | **Out-of-Scope (v2)** | Stream C (챗봇 KB 인덱싱·자기완결 errors 승격) — A5에서 chatbot_meta 추출은 하되 영속화는 v2에서 |
-| **예상 기간** | **4주** (Phase 1 ~ 4) · 5인 팀 병렬 진행 시 단축 가능 |
+| **예상 기간** | **5주** (Phase 1 ~ 5) · 5인 팀 병렬 진행 시 단축 가능 |
 | **핵심 의존성** | Anthropic Claude API · 기존 마스터 (menu_taxonomies/term_synonyms/articles) · Tiptap RichEditor |
 | **성공 지표** | 아티클 1건 평균 작성 시간 ↓ 60% / 발행 차단(errors) 비율 ↓ 80% / 챗봇 KB 메타 100% 자동 생성 |
 
@@ -287,6 +287,19 @@
 
 **Phase 4 Acceptance**: 매니저 5명이 A6-1(reorder)·A6-2(fill-gaps)·A6-3(tone)·A6-4(custom) 각 1회 이상 사용 + 적용률 ≥ 40% + 재편집 후 body-validator errors ≤ 0건.
 
+### Phase 5 (Week 5) — Stream D 이미지 처리 4종
+
+| 작업 | 담당 관점 | 완료 기준 |
+|---|---|---|
+| **D1** 자동 리사이징 (max 폭 1920px) — server `sharp` | [CTO] | 업로드 시 자동, 원본 보존 |
+| **D2** 포맷·압축 최적화 (PNG → WebP, JPEG quality 85) — server `sharp` | [CTO] | 평균 파일 크기 60% ↓ |
+| **D3** AS 이미지 에디터 (화살표·박스·번호·텍스트 라벨) — `tui-image-editor` 또는 `react-konva` | [UI][UX][AS] | 5종 도구 + Undo/Redo + 저장 |
+| **D4** 브라우저/모바일 프레임 — CSS overlay | [UI] | 3종(Mac chrome / iOS / Android) frame overlay |
+| 이미지 업로드 server action — S3 multipart, 메타데이터 저장 | [CTO] | 권한 검증 + 최대 10MB |
+| 통합 e2e KB-10 (업로드 → 리사이징 → 에디팅 → 저장 → 본문 삽입) | [전팀] | 전 단계 통과 |
+
+**Phase 5 Acceptance**: 매니저 5명이 D3 에디터로 화살표 1회 이상 추가 + D2 파일 크기 평균 60% 축소 측정.
+
 ---
 
 ## 6. Risks & Mitigations
@@ -516,7 +529,124 @@ tests/e2e/knowledge-base/
 
 - 2026-05-31 v1.0: 초안 작성 (5인 팀 PM Lite + Plan 일괄, Stream A만)
 - 2026-05-31 v1.1: **Stream B MVP 승격** (B1 /help 메뉴 트리, B2 /role 마스터 DB). 일정 3주 유지.
-- 2026-05-31 v1.2: **A6 재편집 신설** (4모드 + diff 미리보기). Phase 4 (Week 4) 추가. 일정 3주 → **4주**.
+- 2026-05-31 v1.2: **A6 재편집 신설** (4모드 + diff 미리보기). Phase 4 (Week 4) 추가. 일정 3주 → 4주.
+- 2026-05-31 v1.3: **A7 Slug ID 규칙 + A1+ H3·마스터DB 이관 + A8 자동저장 + Stream D 이미지 4종** 추가. **Phase 5 (Week 5) 신설**. 일정 4주 → **5주**. 자세히는 §12·§13 참조.
+
+## 12. A7·A8·A1+ 보강 (v1.3)
+
+### 12-1. A7 — Slug 운영 ID 규칙
+
+- **기존**: `slugify(title)` → 한글 시 fallback timestamp 6자리. URL이 무의미 hash.
+- **신규**: `{productCode}-{contentType}-{seq3}` 형식 (예: `pms-howto-042`, `cms-troubleshoot-013`).
+- **atomic counter**: 신규 테이블 `article_seq_counters (product_code, content_type, next_seq)` — tickets `ticket_no` 패턴과 동일 (커밋 `fa35d27` 참고).
+- **호환**: 기존 발행 slug는 그대로 유지. redirect 매핑 없이 새 규칙은 신규 작성부터.
+- **변경 함수**: `generateArticleSlug(productCode, contentType)` — title 인자 제거.
+
+[CTO] race-free 채번을 위해 atomic counter 테이블 사용. Drizzle 마이그레이션 1건 추가.
+[CS] URL을 운영자가 이해할 수 있는 패턴으로 통일 — CS 응대 시 slug만으로도 카테고리 추정 가능.
+
+### 12-2. A1+ — H3 sub-headings + 마스터 DB 이관
+
+- **신규 테이블 `article_templates`**: `(id, content_type, version, body_markdown, outline JSONB, hover_preview, is_active, ...)`. 코드 상수(`lib/articles/templates.ts`)는 seed 후 유지(기본값) + DB가 정본.
+- **H3 sub-headings 추가**: 
+  - `howto.단계` → H3 "준비물", "주의 사항"
+  - `troubleshoot.해결 단계` → H3 "1차 시도", "2차 시도", "확인 사항"
+- **어드민 페이지 `master/article-templates`**: 골격 편집 UI (markdown 에디터 + 미리보기). 운영팀이 직접 변경 + 변경 이력.
+- **에디터 통합**: `getArticleTemplate(contentType)`이 DB fetch로 전환. 캐시 적용.
+
+[AS] 골격이 자주 안 바뀌더라도 마스터 편집 가능한 게 CLAUDE.md "어드민 DB 편집 우선 설계" 원칙과 일치.
+
+### 12-3. A8 — 자동저장 가시화 + ON/OFF 토글
+
+- **현재**: RichEditor `autoSave={{scope, targetId}}` 3초 debounce → localStorage + `/api/drafts`. 사용자 인식 표시 없음.
+- **신규**:
+  - 사이드바 상태바 추가: "✓ 3초 전 자동저장됨" / "● 저장 중..." / "⚠ 변경됨, 저장 안 됨"
+  - 토글 스위치: ON / OFF (OFF 시 페이지 이탈 시 ConfirmDialog 경고)
+  - 상태는 `useAutosaveStatus()` 훅으로 관리, 사이드바에 표시.
+- **데이터**: localStorage에 `autosave-enabled-${userId}` 토글 상태 저장. 기본값 ON.
+
+[UX] 매니저가 안심하고 작성 가능. 토글 OFF는 "지금은 저장 안 했으면 좋겠음"(예: 실험 작성) 시나리오.
+
+---
+
+## 13. Stream D 보강 (v1.3) — 이미지 처리 4종
+
+### 13-1. D1·D2 자동 리사이징 + 압축 (서버 sharp)
+
+- **Route Handler**: `POST /api/articles/images` — multipart 업로드 → sharp 변환 → S3 저장 → 변환된 URL 반환.
+- **변환 규칙**:
+  - max width 1920px (비율 유지)
+  - PNG → WebP (RGBA 보존)
+  - JPEG quality 85 (visually lossless)
+  - 원본은 별도 S3 prefix `original/` 보관 (옵션)
+- **메타데이터 DB**: 신규 테이블 `article_images (id, article_id_nullable, uploaded_by, original_url, webp_url, width, height, byte_size, ...)`.
+
+### 13-2. D3 AS 이미지 에디터 (화살표·박스·번호·텍스트)
+
+- **라이브러리 결정**: `tui-image-editor` (TOAST UI, 한국어 우호적, 무료 + AGPL) 또는 `react-konva` (커스텀).
+  - **추천**: `tui-image-editor` — 즉시 사용 가능. 라이선스 검토 후 도입.
+- **5종 도구**: 화살표 / 박스 / 번호 라벨 / 텍스트 / 강조 highlight
+- **Undo/Redo** + 캔버스 export PNG → 다시 D1·D2 변환 → S3 저장
+- **모달 형태**: 본문 이미지 클릭 → "✏️ 편집" 버튼 → 모달 풀스크린.
+
+### 13-3. D4 브라우저/모바일 프레임 (CSS overlay)
+
+- **3종**: Mac Safari chrome / iOS iPhone frame / Android frame
+- **구현**: 이미지 위 CSS `background-image` overlay 또는 `<svg>` 프레임. 코드 가벼움.
+- **저장**: 프레임은 보기용 메타데이터로만 저장, 본 이미지는 그대로. 렌더링 시 frame 종류 적용.
+
+### 13-4. Phase 5 일정
+
+- D1·D2: 1.5일 (sharp 패키지 통합 + Route Handler + 메타데이터 DB)
+- D3: 2.5일 (tui-image-editor 통합 + 5종 도구 + 모달 UI)
+- D4: 0.5일 (CSS frames)
+- e2e KB-10: 0.5일
+- 통합 + 디버그: 1일
+
+총 약 6일 (Week 5 + 약간 여유).
+
+### 13-5. 신규 파일 (v1.3)
+
+```
+lib/
+  articles/
+    slug.ts                            [NEW]   A7: generateOpsId(productCode, contentType)
+    templates.ts                       [EDIT]  마스터 DB 우선, 코드 상수는 seed 기본값
+  services/
+    master-article-templates.ts        [NEW]   A1+: CRUD
+    article-images.ts                  [NEW]   D1·D2·D3: 메타데이터 + S3 wrapper
+  ai/
+    (unchanged)
+
+db/schema/
+  article-seq-counters.ts              [NEW]   A7: atomic counter
+  article-templates.ts                 [NEW]   A1+: 골격 DB
+  article-images.ts                    [NEW]   D: 이미지 메타데이터
+
+app/
+  actions/
+    article-actions.ts                 [EDIT]  generateArticleSlug 시그니처 변경
+    article-template-actions.ts        [NEW]   A1+: 어드민 CRUD
+    article-image-actions.ts           [NEW]   D: 업로드/변환 server action
+  api/articles/images/route.ts         [NEW]   D1·D2 multipart 업로드
+  (admin)/admin/articles/_components/editor/
+    autosave-status-bar.tsx            [NEW]   A8
+    image-editor-modal.tsx             [NEW]   D3
+  (admin)/admin/master/article-templates/
+    page.tsx                           [NEW]   A1+ 어드민 페이지
+    _components/
+      template-editor.tsx              [NEW]   markdown + outline 편집
+components/ui/
+  image-frame.tsx                      [NEW]   D4 CSS frames
+
+scripts/
+  seed-article-templates.ts            [NEW]   코드 상수 → DB seed
+
+tests/e2e/knowledge-base/
+  kb-10-image-pipeline.spec.ts         [NEW]   업로드 → 변환 → 에디팅 → 저장
+```
+
+총 신규 파일 +14, 변경 +2 → **합계 49개** (신규 35, 변경 14).
 
 ### A6 세부 (v1.2)
 
