@@ -185,6 +185,65 @@ export async function listChecklists(
   }
 }
 
+/**
+ * 현재 콘텐츠 필터(q/product/issueType)의 전체 카운트 — 어드민 통계 카드용.
+ * isActive 필터는 적용하지 않고 활성/비활성으로 분리해 total = active + inactive 보장.
+ */
+export type ChecklistStatusCounts = {
+  total: number;
+  active: number;
+  inactive: number;
+};
+
+export async function getChecklistCounts(
+  params: Pick<ListChecklistsParams, 'productCode' | 'issueType' | 'q'> = {},
+): Promise<ChecklistStatusCounts> {
+  if (!db) return { total: 0, active: 0, inactive: 0 };
+
+  const conditions: SQL[] = [];
+  if (params.productCode) {
+    conditions.push(eq(checklists.productCode, params.productCode));
+  }
+  if (params.issueType) {
+    conditions.push(eq(checklists.issueType, params.issueType));
+  }
+  if (params.q && params.q.trim()) {
+    const pattern = `%${params.q.trim()}%`;
+    const search = or(
+      ilike(checklists.title, pattern),
+      ilike(checklists.description, pattern),
+    );
+    if (search) conditions.push(search);
+  }
+
+  const whereExpr =
+    conditions.length === 0
+      ? undefined
+      : conditions.length === 1
+        ? conditions[0]
+        : and(...conditions);
+
+  try {
+    const rows = await db
+      .select({
+        total: sql<number>`count(*)::int`,
+        active: sql<number>`count(*) filter (where ${checklists.isActive} = true)::int`,
+        inactive: sql<number>`count(*) filter (where ${checklists.isActive} = false)::int`,
+      })
+      .from(checklists)
+      .where(whereExpr);
+    const r = rows[0];
+    return {
+      total: Number(r?.total ?? 0),
+      active: Number(r?.active ?? 0),
+      inactive: Number(r?.inactive ?? 0),
+    };
+  } catch (err) {
+    console.error('[checklists.getChecklistCounts] 실패:', err);
+    return { total: 0, active: 0, inactive: 0 };
+  }
+}
+
 export type ChecklistWithSteps = Checklist & { steps: ChecklistStep[] };
 
 /**

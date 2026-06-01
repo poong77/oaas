@@ -137,6 +137,65 @@ export async function listFaqs(
   }
 }
 
+/**
+ * 현재 콘텐츠 필터(q/product/issueType)의 전체 카운트 — 어드민 통계 카드용.
+ * isActive 필터는 적용하지 않고 활성/비활성으로 분리해 total = active + inactive 보장.
+ */
+export type FaqStatusCounts = {
+  total: number;
+  active: number;
+  inactive: number;
+};
+
+export async function getFaqCounts(
+  params: Pick<ListFaqsParams, 'productCode' | 'issueType' | 'q'> = {},
+): Promise<FaqStatusCounts> {
+  if (!db) return { total: 0, active: 0, inactive: 0 };
+
+  const conditions: SQL[] = [];
+  if (params.productCode) {
+    conditions.push(eq(faqs.productCode, params.productCode));
+  }
+  if (params.issueType) {
+    conditions.push(eq(faqs.issueType, params.issueType));
+  }
+  if (params.q && params.q.trim()) {
+    const pattern = `%${params.q.trim()}%`;
+    const search = or(
+      ilike(faqs.question, pattern),
+      ilike(faqs.answerMarkdown, pattern),
+    );
+    if (search) conditions.push(search);
+  }
+
+  const whereExpr =
+    conditions.length === 0
+      ? undefined
+      : conditions.length === 1
+        ? conditions[0]
+        : and(...conditions);
+
+  try {
+    const rows = await db
+      .select({
+        total: sql<number>`count(*)::int`,
+        active: sql<number>`count(*) filter (where ${faqs.isActive} = true)::int`,
+        inactive: sql<number>`count(*) filter (where ${faqs.isActive} = false)::int`,
+      })
+      .from(faqs)
+      .where(whereExpr);
+    const r = rows[0];
+    return {
+      total: Number(r?.total ?? 0),
+      active: Number(r?.active ?? 0),
+      inactive: Number(r?.inactive ?? 0),
+    };
+  } catch (err) {
+    console.error('[faqs.getFaqCounts] 실패:', err);
+    return { total: 0, active: 0, inactive: 0 };
+  }
+}
+
 export async function getFaqById(id: string): Promise<Faq | null> {
   if (!db) return null;
   try {

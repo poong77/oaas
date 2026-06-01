@@ -139,10 +139,15 @@ export async function listNotices(
         : params.sortBy === 'created_at'
           ? notices.createdAt
           : notices.publishedAt;
+  const orderDir = (params.sortOrder ?? 'desc') === 'asc' ? 'asc' : 'desc';
+  // published_at 정렬 시 draft(NULL)는 항상 맨 아래로 (NULLS LAST).
+  // desc 기본은 Postgres가 NULLS FIRST라 draft가 상단에 뜨는 문제 방지.
   const orderExpr =
-    (params.sortOrder ?? 'desc') === 'asc'
-      ? asc(sortColumn)
-      : desc(sortColumn);
+    sortColumn === notices.publishedAt
+      ? sql`${notices.publishedAt} ${sql.raw(orderDir)} nulls last`
+      : orderDir === 'asc'
+        ? asc(sortColumn)
+        : desc(sortColumn);
 
   try {
     // 핀 상단 → 정렬 컬럼 → fallback created_at
@@ -179,6 +184,76 @@ export async function listNotices(
   } catch (err) {
     console.error('[notices.listNotices] 실패:', err);
     return { items: [], total: 0, page, pageSize };
+  }
+}
+
+/**
+ * 현재 필터 조건의 "전체" 상태별 카운트 (페이지 무관) — 어드민 통계 카드용.
+ * listNotices와 동일한 where 조건(페이징/정렬 제외)을 적용한다.
+ */
+export type NoticeStatusCounts = {
+  total: number;
+  published: number;
+  draft: number;
+};
+
+export async function getNoticeCounts(
+  params: Pick<
+    ListNoticesParams,
+    'kind' | 'productCode' | 'q' | 'isActive' | 'publishedOnly'
+  > = {},
+): Promise<NoticeStatusCounts> {
+  if (!db) return { total: 0, published: 0, draft: 0 };
+
+  const conditions: SQL[] = [];
+  if (params.isActive !== 'all') {
+    conditions.push(eq(notices.isActive, params.isActive ?? true));
+  }
+  if (params.kind) {
+    conditions.push(eq(notices.kind, params.kind));
+  }
+  if (params.productCode) {
+    conditions.push(eq(notices.productCode, params.productCode));
+  }
+  if (params.publishedOnly === true) {
+    conditions.push(isNotNull(notices.publishedAt));
+  } else if (params.publishedOnly === false) {
+    conditions.push(isNull(notices.publishedAt));
+  }
+  if (params.q && params.q.trim()) {
+    const pattern = `%${params.q.trim()}%`;
+    const search = or(
+      ilike(notices.title, pattern),
+      ilike(notices.bodyMarkdown, pattern),
+    );
+    if (search) conditions.push(search);
+  }
+
+  const whereExpr =
+    conditions.length === 0
+      ? undefined
+      : conditions.length === 1
+        ? conditions[0]
+        : and(...conditions);
+
+  try {
+    const rows = await db
+      .select({
+        total: sql<number>`count(*)::int`,
+        published: sql<number>`count(*) filter (where ${notices.publishedAt} is not null)::int`,
+        draft: sql<number>`count(*) filter (where ${notices.publishedAt} is null)::int`,
+      })
+      .from(notices)
+      .where(whereExpr);
+    const r = rows[0];
+    return {
+      total: Number(r?.total ?? 0),
+      published: Number(r?.published ?? 0),
+      draft: Number(r?.draft ?? 0),
+    };
+  } catch (err) {
+    console.error('[notices.getNoticeCounts] 실패:', err);
+    return { total: 0, published: 0, draft: 0 };
   }
 }
 

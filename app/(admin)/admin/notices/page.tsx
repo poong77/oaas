@@ -7,7 +7,7 @@
 
 import Link from 'next/link';
 import { Megaphone, Plus } from 'lucide-react';
-import { listNotices } from '@/lib/services/notices';
+import { listNotices, getNoticeCounts } from '@/lib/services/notices';
 import { getProductCategories } from '@/lib/services/categories';
 import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
@@ -51,23 +51,28 @@ export default async function AdminNoticesPage({
     sp.active === 'all' ? 'all' : sp.active === 'inactive' ? false : true;
   const kind = sp.kind && sp.kind !== 'all' ? sp.kind : undefined;
 
-  const [{ items, total, pageSize }, categories] = await Promise.all([
+  const countFilter = {
+    q: sp.q,
+    kind,
+    productCode: sp.productCode,
+    publishedOnly,
+    isActive,
+  } as const;
+
+  const [{ items, total, pageSize }, counts, categories] = await Promise.all([
     listNotices({
-      q: sp.q,
-      kind,
-      productCode: sp.productCode,
-      publishedOnly,
-      isActive,
-      sortBy: sp.sortBy ?? 'updated_at',
+      ...countFilter,
+      sortBy: sp.sortBy ?? 'published_at',
       sortOrder: sp.sortOrder ?? 'desc',
       page,
       pageSize: 20,
     }),
+    getNoticeCounts(countFilter),
     getProductCategories(),
   ]);
 
-  const publishedCount = items.filter((n) => n.publishedAt).length;
-  const draftCount = items.filter((n) => !n.publishedAt).length;
+  const publishedCount = counts.published;
+  const draftCount = counts.draft;
 
   return (
     <div className="flex flex-col gap-5">
@@ -87,7 +92,7 @@ export default async function AdminNoticesPage({
       <NoticesAdminFilters initial={sp} categories={categories} />
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="이 페이지" value={items.length} />
+        <StatCard label="전체" value={total} />
         <StatCard label="발행" value={publishedCount} tone="success" />
         <StatCard label="Draft" value={draftCount} tone="warn" />
       </div>

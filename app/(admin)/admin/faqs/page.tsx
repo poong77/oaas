@@ -6,7 +6,7 @@
 
 import Link from 'next/link';
 import { Plus, HelpCircle } from 'lucide-react';
-import { listFaqs } from '@/lib/services/faqs';
+import { listFaqs, getFaqCounts } from '@/lib/services/faqs';
 import {
   getCategoriesByType,
   getProductCategories,
@@ -52,21 +52,30 @@ export default async function AdminFaqsPage({
         ? false
         : true;
 
-  const [{ items, total, pageSize }, productCategories, issueTypeCategories] =
-    await Promise.all([
-      listFaqs({
-        q: sp.q,
-        productCode: sp.productCode,
-        issueType: sp.issueType,
-        isActive,
-        sortBy: sp.sortBy ?? 'sort_order',
-        sortOrder: sp.sortOrder ?? 'asc',
-        page,
-        pageSize: 20,
-      }),
-      getProductCategories(),
-      getCategoriesByType('issue_type'),
-    ]);
+  const countFilter = {
+    q: sp.q,
+    productCode: sp.productCode,
+    issueType: sp.issueType,
+  } as const;
+
+  const [
+    { items, total, pageSize },
+    counts,
+    productCategories,
+    issueTypeCategories,
+  ] = await Promise.all([
+    listFaqs({
+      ...countFilter,
+      isActive,
+      sortBy: sp.sortBy ?? 'sort_order',
+      sortOrder: sp.sortOrder ?? 'asc',
+      page,
+      pageSize: 20,
+    }),
+    getFaqCounts(countFilter),
+    getProductCategories(),
+    getCategoriesByType('issue_type'),
+  ]);
 
   const productMap = buildProductMap(productCategories);
   const issueTypeMap = buildIssueTypeMap(
@@ -96,6 +105,12 @@ export default async function AdminFaqsPage({
         }))}
       />
 
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="전체" value={counts.total} />
+        <StatCard label="활성" value={counts.active} tone="success" />
+        <StatCard label="비활성" value={counts.inactive} tone="warn" />
+      </div>
+
       <Card>
         <CardContent className="p-0">
           {items.length === 0 ? (
@@ -124,5 +139,30 @@ export default async function AdminFaqsPage({
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  tone = 'slate',
+}: {
+  label: string;
+  value: number;
+  tone?: 'slate' | 'success' | 'warn';
+}) {
+  const valueClass =
+    tone === 'success'
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : tone === 'warn'
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-slate-900 dark:text-slate-100';
+  return (
+    <Card>
+      <CardContent className="flex flex-col gap-1 p-4">
+        <span className="text-xs font-medium text-slate-500">{label}</span>
+        <span className={`text-2xl font-bold ${valueClass}`}>{value}</span>
+      </CardContent>
+    </Card>
   );
 }

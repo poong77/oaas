@@ -6,7 +6,7 @@
 
 import Link from 'next/link';
 import { ListChecks, Plus } from 'lucide-react';
-import { listChecklists } from '@/lib/services/checklists';
+import { listChecklists, getChecklistCounts } from '@/lib/services/checklists';
 import { getProductCategories } from '@/lib/services/categories';
 import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
@@ -45,18 +45,24 @@ export default async function AdminChecklistsPage({
         ? false
         : true;
 
-  const [{ items, total, pageSize }, productCategories] = await Promise.all([
-    listChecklists({
-      q: sp.q,
-      productCode: sp.productCode,
-      isActive,
-      sortBy: sp.sortBy ?? 'sort_order',
-      sortOrder: sp.sortOrder ?? 'asc',
-      page,
-      pageSize: 20,
-    }),
-    getProductCategories(),
-  ]);
+  const countFilter = {
+    q: sp.q,
+    productCode: sp.productCode,
+  } as const;
+
+  const [{ items, total, pageSize }, counts, productCategories] =
+    await Promise.all([
+      listChecklists({
+        ...countFilter,
+        isActive,
+        sortBy: sp.sortBy ?? 'sort_order',
+        sortOrder: sp.sortOrder ?? 'asc',
+        page,
+        pageSize: 20,
+      }),
+      getChecklistCounts(countFilter),
+      getProductCategories(),
+    ]);
 
   const productMap = buildProductMap(productCategories);
 
@@ -75,6 +81,12 @@ export default async function AdminChecklistsPage({
       />
 
       <ChecklistsFilters initial={sp} productCategories={productCategories} />
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="전체" value={counts.total} />
+        <StatCard label="활성" value={counts.active} tone="success" />
+        <StatCard label="비활성" value={counts.inactive} tone="warn" />
+      </div>
 
       <Card>
         <CardContent className="p-0">
@@ -103,5 +115,30 @@ export default async function AdminChecklistsPage({
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  tone = 'slate',
+}: {
+  label: string;
+  value: number;
+  tone?: 'slate' | 'success' | 'warn';
+}) {
+  const valueClass =
+    tone === 'success'
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : tone === 'warn'
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-slate-900 dark:text-slate-100';
+  return (
+    <Card>
+      <CardContent className="flex flex-col gap-1 p-4">
+        <span className="text-xs font-medium text-slate-500">{label}</span>
+        <span className={`text-2xl font-bold ${valueClass}`}>{value}</span>
+      </CardContent>
+    </Card>
   );
 }
