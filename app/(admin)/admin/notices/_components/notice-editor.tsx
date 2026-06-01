@@ -356,13 +356,13 @@ export function NoticeEditor({
               <ToggleCard
                 active={pinned}
                 onClick={() => setPinned(!pinned)}
-                title="핀 고정"
+                title="상단 고정"
                 description="공지 목록 상단에 항상 고정 노출"
               />
               <ToggleCard
                 active={banner}
                 onClick={() => setBanner(!banner)}
-                title="홈 배너 노출"
+                title="홈 상단 티커"
                 description="모든 페이지 상단에 띠 노출 (긴급용)"
                 tone="warn"
               />
