@@ -11,7 +11,6 @@ import {
   Pin,
   Trash2,
   Undo2,
-  Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -214,28 +213,15 @@ export function NoticesListClient({
                         </Button>
                       ) : null}
                       {n.isActive ? (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            disabled={pending}
-                            onClick={() =>
-                              handleTogglePublish(n, !n.publishedAt)
-                            }
-                            title={n.publishedAt ? '발행 취소' : '발행'}
-                          >
-                            <Upload className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            disabled={pending}
-                            onClick={() => handleArchive(n)}
-                            title="비활성"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={pending}
+                          onClick={() => handleArchive(n)}
+                          title="비활성"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       ) : (
                         <Button
                           size="sm"

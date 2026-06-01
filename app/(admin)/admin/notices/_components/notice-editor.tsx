@@ -12,7 +12,9 @@ import {
   Sparkles,
   Trash2,
   Upload,
+  X,
 } from 'lucide-react';
+import { MarkdownView } from '@/components/articles/markdown-view';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +31,7 @@ import type { ProductCategoryView } from '@/lib/services/categories';
 import type { NoticeKind, NoticePopupSize } from '@/db/schema';
 import {
   NOTICE_KIND_META,
+  NOTICE_KIND_CLASSES,
   NOTICE_POPUP_SIZE_META,
 } from '@/lib/services/notices-meta';
 import {
@@ -122,6 +125,7 @@ export function NoticeEditor({
   );
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [bodyPreviewOpen, setBodyPreviewOpen] = useState(false);
   const [aiDrafting, setAiDrafting] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -572,6 +576,15 @@ export function NoticeEditor({
         <Button
           type="button"
           variant="outline"
+          onClick={() => setBodyPreviewOpen(true)}
+          disabled={pending}
+        >
+          <Eye className="h-4 w-4" />
+          미리보기
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => submit(false)}
           disabled={pending}
         >
@@ -586,6 +599,59 @@ export function NoticeEditor({
         </Button>
         {pending && <span className="text-xs text-slate-500">저장 중...</span>}
       </div>
+
+      {/* 본문 미리보기 — 호텔리어에게 보이는 화면 (현재 입력 기준, 저장 전) */}
+      {bodyPreviewOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:p-8"
+          onClick={() => setBodyPreviewOpen(false)}
+        >
+          <div
+            className="my-2 w-full max-w-3xl rounded-xl bg-white shadow-2xl dark:bg-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-5 py-3 dark:border-slate-700">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                미리보기 · 호텔리어에게 보이는 화면 (저장 전 현재 입력 기준)
+              </span>
+              <button
+                type="button"
+                onClick={() => setBodyPreviewOpen(false)}
+                className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                aria-label="닫기"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="px-6 py-5 sm:px-8 sm:py-6">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span
+                  className={cn(
+                    'rounded px-2 py-0.5 text-xs font-medium',
+                    NOTICE_KIND_CLASSES[kind],
+                  )}
+                >
+                  {NOTICE_KIND_META[kind].label}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {categories.find((c) => c.code === productCode)?.label ??
+                    '전체 공지'}
+                </span>
+              </div>
+              <h1 className="mb-5 text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+                {title.trim() || '(제목 없음)'}
+              </h1>
+              {body.trim() ? (
+                <MarkdownView source={body} />
+              ) : (
+                <p className="py-8 text-center text-sm text-slate-400">
+                  본문이 비어있습니다.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 팝업 배너 이미지 업로드 */}
       <ImageUploadDialog
