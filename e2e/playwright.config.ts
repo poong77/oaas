@@ -49,12 +49,15 @@ export default defineConfig({
     },
   ],
 
-  // dev 서버가 이미 실행 중이면 재사용, 아니면 자동 시작
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    cwd: '../',
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  // dev 서버가 이미 실행 중이면 재사용, 아니면 자동 시작.
+  // SKIP_WEB_SERVER=1 로 명시적으로 skip 가능 (외부에서 dev 띄운 상황 — port 충돌 회피)
+  webServer: process.env.SKIP_WEB_SERVER
+    ? undefined
+    : {
+        command: 'npm run dev',
+        url: 'http://localhost:3000',
+        cwd: '../',
+        reuseExistingServer: true,
+        timeout: 120_000,
+      },
 });

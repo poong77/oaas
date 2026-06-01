@@ -15,8 +15,32 @@ import type { TEST_USERS } from '../fixtures/users';
 type TestUser = (typeof TEST_USERS)[keyof typeof TEST_USERS];
 
 export async function loginViaUI(page: Page, user: TestUser): Promise<void> {
+  // NT-04 홈 팝업 배너가 로그인 페이지 input을 가리는 케이스 회피:
+  // 진입 전에 localStorage로 "오늘 하루 안 보기"를 사전 설정
+  await page.goto('/');
+  await page.evaluate(() => {
+    try {
+      localStorage.setItem(
+        'home-popup-dismissed-today',
+        new Date().toDateString(),
+      );
+    } catch {
+      // localStorage 미지원/차단 환경은 무시
+    }
+  });
+
   await page.goto('/login');
   await page.waitForLoadState('domcontentloaded');
+
+  // 혹시 다른 모달이 가렸으면 닫기 시도 (best effort)
+  const overlayClose = page
+    .locator(
+      'button[aria-label*="닫기"], button[aria-label*="close" i], button:has-text("오늘 하루 안 보기")',
+    )
+    .first();
+  if (await overlayClose.isVisible({ timeout: 500 }).catch(() => false)) {
+    await overlayClose.click().catch(() => undefined);
+  }
 
   // /login 페이지의 폼 필드 — 라벨/플레이스홀더 기반으로 안정적 선택
   // (data-testid가 없는 경우 input[name] 또는 type 기반)
