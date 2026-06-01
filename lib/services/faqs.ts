@@ -35,7 +35,12 @@ export type ListFaqsParams = {
   issueType?: string;
   q?: string;
   isActive?: boolean | 'all';
-  sortBy?: 'sort_order' | 'view_count' | 'helpful' | 'updated_at' | 'created_at';
+  sortBy?:
+    | 'sort_order'
+    | 'view_count'
+    | 'helpful'
+    | 'updated_at'
+    | 'created_at';
   sortOrder?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;
@@ -98,7 +103,9 @@ export async function listFaqs(
             ? faqs.createdAt
             : faqs.sortOrder;
   const orderExpr =
-    (params.sortOrder ?? (params.sortBy === 'sort_order' || !params.sortBy ? 'asc' : 'desc')) === 'asc'
+    (params.sortOrder ??
+      (params.sortBy === 'sort_order' || !params.sortBy ? 'asc' : 'desc')) ===
+    'asc'
       ? asc(sortColumn)
       : desc(sortColumn);
 
@@ -236,7 +243,11 @@ export async function listPopularFaqs(limit = 3): Promise<FaqListItem[]> {
   }
 }
 
-export type SearchFaqHit = FaqListItem & { score: number };
+export type SearchFaqHit = FaqListItem & {
+  score: number;
+  /** 질문이 검색어(동의어 포함)와 일치하는지 — "질문 일치" 뱃지용. */
+  questionMatch: boolean;
+};
 
 export async function searchFaqs(
   q: string,
@@ -245,17 +256,31 @@ export async function searchFaqs(
   if (!db) return [];
   const query = q.trim();
   if (!query) return [];
-  const pattern = `%${query}%`;
   const limit = Math.min(100, Math.max(1, options.limit ?? 50));
   try {
+    // v1.6 — articles와 동일하게 동의어 확장 적용 (통합검색 일관성).
+    // 이전: 원본 검색어 ILIKE만 → "CI"로 "체크인" FAQ를 못 찾음.
+    const { expandKeywords } = await import('./synonym-expander');
+    const expanded = await expandKeywords(query, { maxTokens: 32 });
+    const terms = expanded.length > 0 ? expanded : [query];
+
     const conditions: SQL[] = [eq(faqs.isActive, true)];
     if (options.productCode) {
       conditions.push(eq(faqs.productCode, options.productCode));
     }
-    const searchCond = or(
-      ilike(faqs.question, pattern),
-      ilike(faqs.answerMarkdown, pattern),
-    );
+    // 확장 term 각각을 question/answer ILIKE로 OR 결합.
+    const orParts: SQL[] = [];
+    for (const term of terms) {
+      const p = `%${term}%`;
+      const c = or(ilike(faqs.question, p), ilike(faqs.answerMarkdown, p));
+      if (c) orParts.push(c);
+    }
+    const searchCond =
+      orParts.length === 0
+        ? undefined
+        : orParts.length === 1
+          ? orParts[0]
+          : or(...orParts);
     if (searchCond) conditions.push(searchCond);
     const rows = await db
       .select({
@@ -277,12 +302,16 @@ export async function searchFaqs(
       .orderBy(asc(faqs.sortOrder), desc(faqs.createdAt))
       .limit(limit);
 
+    const { matchesAnyTerm } = await import('@/lib/text/search-match');
     const lowered = query.toLowerCase();
     return rows.map((r) => {
-      let score = 0;
-      if (r.question.toLowerCase().includes(lowered)) score += 2;
-      if (r.answerMarkdown.toLowerCase().includes(lowered)) score += 0.5;
-      return { ...r, score };
+      let score = 0.5;
+      const questionMatch = matchesAnyTerm(r.question, terms);
+      if (questionMatch) score += 2.5;
+      if (matchesAnyTerm(r.answerMarkdown, terms)) score += 1;
+      // 원본 검색어가 질문에 그대로 있으면 가산(직접 일치 우대).
+      if (r.question.toLowerCase().includes(lowered)) score += 1;
+      return { ...r, score, questionMatch };
     });
   } catch (err) {
     console.error('[faqs.searchFaqs] 실패:', err);
@@ -490,10 +519,7 @@ export async function moveFaqOrder(
       const newMe = direction === 'up' ? me.sortOrder - 1 : me.sortOrder + 1;
       const newNeighbor =
         direction === 'up' ? neighbor.sortOrder + 1 : neighbor.sortOrder - 1;
-      await db
-        .update(faqs)
-        .set({ sortOrder: newMe })
-        .where(eq(faqs.id, me.id));
+      await db.update(faqs).set({ sortOrder: newMe }).where(eq(faqs.id, me.id));
       await db
         .update(faqs)
         .set({ sortOrder: newNeighbor })

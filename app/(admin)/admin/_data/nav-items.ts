@@ -19,6 +19,7 @@ import {
   Building2,
   Database,
   FileText,
+  Gauge,
   HelpCircle,
   Inbox,
   ListChecks,
@@ -48,6 +49,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/admin/notices', label: '공지 관리', icon: Megaphone, roles: ['manager', 'admin'], group: 'content' },
   { href: '/admin/faqs', label: 'FAQ', icon: HelpCircle, roles: ['manager', 'admin'], group: 'content' },
   { href: '/admin/checklists', label: '체크리스트', icon: ListChecks, roles: ['manager', 'admin'], group: 'content' },
+  { href: '/admin/search-quality', label: '검색 품질', icon: Gauge, roles: ['manager', 'admin'], group: 'content' },
   // 조직 & 마스터
   { href: '/admin/users', label: '사용자', icon: Users, roles: ['admin'], group: 'org' },
   { href: '/admin/hotels', label: '호텔', icon: Building2, roles: ['admin'], group: 'org' },

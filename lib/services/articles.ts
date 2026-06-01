@@ -169,6 +169,22 @@ function buildArticleSearchCondition(expanded: string[]): SQL | undefined {
   return orParts.length === 1 ? orParts[0] : or(...orParts);
 }
 
+/**
+ * 아티클 시맨틱 검색 임베딩 생성 (Phase 2).
+ * graceful: OPENAI_API_KEY 미설정/오류 시 null → 임베딩 없이 저장.
+ */
+async function generateArticleEmbedding(a: {
+  title: string;
+  summary?: string | null;
+  summary30s?: string | null;
+  keywords?: string[] | null;
+  bodyMarkdown?: string | null;
+}): Promise<number[] | null> {
+  const { embedText, buildArticleEmbeddingInput } =
+    await import('./embeddings');
+  return embedText(buildArticleEmbeddingInput(a));
+}
+
 export async function listArticles(
   params: ListArticlesParams = {},
 ): Promise<ListArticlesResult> {
@@ -214,9 +230,7 @@ export async function listArticles(
   if (params.q && params.q.trim()) {
     // v1.2: 제품 가이드/목록 검색도 동의어(synonyms-master) 확장 적용.
     // 예) "실시간객실" → "실시간 객실". searchArticles와 동일 로직 공유.
-    const { expandKeywords } = await import(
-      '@/lib/services/synonym-expander'
-    );
+    const { expandKeywords } = await import('@/lib/services/synonym-expander');
     // maxTokens 16: 목록(SS-02)은 단일 제품 범위라 통합검색(SS-01, 32)보다
     // 좁게 확장 — ILIKE 조건 수 과증가 방지.
     const expanded = await expandKeywords(params.q.trim(), { maxTokens: 16 });
@@ -240,9 +254,7 @@ export async function listArticles(
           ? articles.updatedAt
           : articles.publishedAt;
   const orderExpr =
-    (params.sortOrder ?? 'desc') === 'asc'
-      ? asc(sortColumn)
-      : desc(sortColumn);
+    (params.sortOrder ?? 'desc') === 'asc' ? asc(sortColumn) : desc(sortColumn);
 
   try {
     const items = await db
@@ -312,9 +324,7 @@ export async function getArticleCountsByProduct(): Promise<
         count: sql<number>`count(*)::int`,
       })
       .from(articles)
-      .where(
-        and(eq(articles.isActive, true), isNotNull(articles.publishedAt)),
-      )
+      .where(and(eq(articles.isActive, true), isNotNull(articles.publishedAt)))
       .groupBy(articles.productCode);
     const map: Record<string, number> = {};
     for (const r of rows) map[r.productCode] = Number(r.count);
@@ -355,9 +365,7 @@ export async function listPopularArticles(
         lastEditorId: articles.lastEditorId,
       })
       .from(articles)
-      .where(
-        and(eq(articles.isActive, true), isNotNull(articles.publishedAt)),
-      )
+      .where(and(eq(articles.isActive, true), isNotNull(articles.publishedAt)))
       .orderBy(desc(articles.viewCount), desc(articles.publishedAt))
       .limit(limit);
   } catch (err) {
@@ -396,9 +404,7 @@ export async function listRecentPublishedArticles(
         lastEditorId: articles.lastEditorId,
       })
       .from(articles)
-      .where(
-        and(eq(articles.isActive, true), isNotNull(articles.publishedAt)),
-      )
+      .where(and(eq(articles.isActive, true), isNotNull(articles.publishedAt)))
       .orderBy(desc(articles.publishedAt))
       .limit(limit);
   } catch (err) {
@@ -507,7 +513,7 @@ export async function getRelatedArticles(
           viewCount: articles.viewCount,
           helpfulYes: articles.helpfulYes,
           helpfulNo: articles.helpfulNo,
-        warningCount: articles.warningCount,
+          warningCount: articles.warningCount,
           isActive: articles.isActive,
           updatedAt: articles.updatedAt,
           createdAt: articles.createdAt,
@@ -570,8 +576,14 @@ export async function getRelatedArticles(
 // ─────────────────────────────────────────────────────────────────────
 
 export type SearchArticleHit = ArticleListItem & {
-  /** 단순 점수 — title 일치(2) > summary(1) > body(0.5). Phase 5에서 tsvector. */
+  /**
+   * 관련도 점수 — 동의어 확장 term 기준으로 계산.
+   * base(0.5) + title(2.5) + summary(1) + keywords(1) + 원본 검색어 직접 일치(1).
+   * Phase 5에서 tsvector/ts_rank로 대체 예정.
+   */
   score: number;
+  /** 제목이 검색어(동의어 포함)와 일치하는지 — "제목 일치" 뱃지용. */
+  titleMatch: boolean;
 };
 
 export async function searchArticles(
@@ -588,62 +600,100 @@ export async function searchArticles(
   const limit = Math.min(100, Math.max(1, options.limit ?? 50));
   try {
     // v1.1: synonyms-master로 쿼리 확장 (Plan §6, Design §11.1)
-    const { expandKeywords } = await import(
-      '@/lib/services/synonym-expander'
-    );
+    const { expandKeywords } = await import('@/lib/services/synonym-expander');
     const expanded = await expandKeywords(query, { maxTokens: 32 });
 
-    const conditions: SQL[] = [
+    // 공통 필터 (키워드/벡터 양쪽 동일).
+    const baseConds: SQL[] = [
       eq(articles.isActive, true),
       eq(articles.status, 'published'),
     ];
     if (options.productCode) {
-      conditions.push(eq(articles.productCode, options.productCode));
+      baseConds.push(eq(articles.productCode, options.productCode));
     }
     if (options.contentType) {
-      conditions.push(eq(articles.contentType, options.contentType));
+      baseConds.push(eq(articles.contentType, options.contentType));
     }
 
-    // 검색 조건: keywords 배열 OR + 확장 term 각각 ILIKE (listArticles와 공유)
+    // (1) 키워드 leg — keywords 배열 OR + 확장 term ILIKE (listArticles와 공유)
+    const keywordConds = [...baseConds];
     const searchCond = buildArticleSearchCondition(expanded);
-    if (searchCond) conditions.push(searchCond);
-
-    const rows = await db
-      .select({
-        id: articles.id,
-        slug: articles.slug,
-        title: articles.title,
-        summary: articles.summary,
-        summary30s: articles.summary30s,
-        productCode: articles.productCode,
-        contentType: articles.contentType,
-        status: articles.status,
-        categoryPath: articles.categoryPath,
-        keywords: articles.keywords,
-        publishedAt: articles.publishedAt,
-        viewCount: articles.viewCount,
-        helpfulYes: articles.helpfulYes,
-        helpfulNo: articles.helpfulNo,
-        warningCount: articles.warningCount,
-        isActive: articles.isActive,
-        updatedAt: articles.updatedAt,
-        createdAt: articles.createdAt,
-        authorId: articles.authorId,
-        lastEditorId: articles.lastEditorId,
-      })
+    if (searchCond) keywordConds.push(searchCond);
+    const keywordRows = await db
+      .select(ARTICLE_LIST_SELECT)
       .from(articles)
-      .where(and(...conditions))
+      .where(and(...keywordConds))
       .orderBy(desc(articles.publishedAt))
       .limit(limit);
 
-    // 클라이언트사이드 점수 부여 (Phase 3 단순화)
+    // (2) 벡터 leg — 쿼리 임베딩이 생성되면 코사인 최근접. graceful: 키 없으면 skip.
+    const { embedText, toVectorLiteral } = await import('./embeddings');
+    const qVec = await embedText(query);
+    const vectorRows: Array<(typeof keywordRows)[number] & { sim: number }> =
+      [];
+    if (qVec) {
+      const lit = toVectorLiteral(qVec);
+      // 코사인 유사도 = 1 - 거리(<=>). 거리 오름차순 = 유사도 내림차순.
+      const distance = sql<number>`(${articles.embedding} <=> ${lit}::vector)`;
+      const rows = await db
+        .select({ ...ARTICLE_LIST_SELECT, sim: sql<number>`1 - ${distance}` })
+        .from(articles)
+        .where(and(...baseConds, isNotNull(articles.embedding)))
+        .orderBy(distance)
+        .limit(limit);
+      for (const r of rows) vectorRows.push({ ...r, sim: Number(r.sim) });
+    }
+
+    // (3) 병합 + 점수. 키워드 점수(확장 term 기준)와 벡터 유사도를 합산.
+    // 동의어 결과가 0점으로 가라앉지 않도록 base(0.5) 보장.
+    const { matchesAnyTerm, keywordsMatchAnyTerm } =
+      await import('@/lib/text/search-match');
+    const terms = expanded.length > 0 ? expanded : [query];
     const lowered = query.toLowerCase();
-    return rows.map((r) => {
+    /** 벡터 유사도 가중치 — sim(0~1) × 4 가 제목 일치(2.5)와 견줄 수준. */
+    const VEC_WEIGHT = 4;
+
+    function keywordScore(r: ArticleListItem): {
+      score: number;
+      titleMatch: boolean;
+    } {
       let score = 0;
-      if (r.title.toLowerCase().includes(lowered)) score += 2;
-      if (r.summary30s?.toLowerCase().includes(lowered)) score += 1;
-      return { ...r, score };
-    });
+      const titleMatch = matchesAnyTerm(r.title, terms);
+      if (titleMatch) score += 2.5;
+      if (
+        matchesAnyTerm(r.summary, terms) ||
+        matchesAnyTerm(r.summary30s, terms)
+      )
+        score += 1;
+      if (keywordsMatchAnyTerm(r.keywords, terms)) score += 1;
+      // 동의어가 아닌 원본 검색어가 제목에 그대로 있으면 가산(직접 일치 우대).
+      if (r.title.toLowerCase().includes(lowered)) score += 1;
+      return { score, titleMatch };
+    }
+
+    const byId = new Map<string, SearchArticleHit>();
+    for (const r of keywordRows) {
+      const { score, titleMatch } = keywordScore(r);
+      byId.set(r.id, { ...r, score: 0.5 + score, titleMatch });
+    }
+    for (const r of vectorRows) {
+      const existing = byId.get(r.id);
+      if (existing) {
+        existing.score += r.sim * VEC_WEIGHT;
+      } else {
+        // 키워드로는 안 잡혔지만 의미적으로 가까운 글 (시맨틱 전용 hit).
+        const { score, titleMatch } = keywordScore(r);
+        byId.set(r.id, {
+          ...r,
+          score: 0.5 + score + r.sim * VEC_WEIGHT,
+          titleMatch,
+        });
+      }
+    }
+
+    return Array.from(byId.values())
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
   } catch (err) {
     console.error('[articles.searchArticles] 실패:', err);
     return [];
@@ -873,16 +923,32 @@ export async function createArticle(
     // v1.5 — 발행 시 validation 워닝 수 저장 (드래프트는 0)
     let warningCount = 0;
     if (willPublish) {
-      const { validateBody, validateTitle, validateSummary } = await import(
-        '@/lib/articles/body-validator'
-      );
-      const bodyWarn = validateBody(input.bodyMarkdown, input.contentType).warnings;
+      const { validateBody, validateTitle, validateSummary } =
+        await import('@/lib/articles/body-validator');
+      const bodyWarn = validateBody(
+        input.bodyMarkdown,
+        input.contentType,
+      ).warnings;
       const titleWarn = validateTitle(input.title).warnings;
-      const summaryWarn = validateSummary(input.summary ?? input.summary30s).warnings;
+      const summaryWarn = validateSummary(
+        input.summary ?? input.summary30s,
+      ).warnings;
       warningCount = bodyWarn.length + titleWarn.length + summaryWarn.length;
       if ((input.keywords ?? []).length < 3) warningCount += 1;
-      if (!input.categoryPath || input.categoryPath.length === 0) warningCount += 1;
+      if (!input.categoryPath || input.categoryPath.length === 0)
+        warningCount += 1;
     }
+    // Phase 2 — 발행 시 시맨틱 검색 임베딩 생성 (graceful: 실패 시 null).
+    const embedding = willPublish
+      ? await generateArticleEmbedding({
+          title: input.title,
+          summary: input.summary,
+          summary30s: input.summary30s,
+          keywords: input.keywords,
+          bodyMarkdown: input.bodyMarkdown,
+        })
+      : null;
+
     const values: NewArticle = {
       productCode: input.productCode,
       contentType: input.contentType,
@@ -902,6 +968,7 @@ export async function createArticle(
       lastEditorId: authorId,
       publishedAt: willPublish ? new Date() : null,
       warningCount,
+      embedding,
     };
     const [row] = await db.insert(articles).values(values).returning({
       id: articles.id,
@@ -944,18 +1011,23 @@ export async function updateArticleById(
     if (editorId) patch.lastEditorId = editorId;
 
     // v1.5 — 발행 상태일 때 워닝 카운트 갱신 + status/publishedAt 전환
-    const willPublish =
-      input.publish === true || input.status === 'published';
+    const willPublish = input.publish === true || input.status === 'published';
     if (willPublish && input.contentType) {
-      const { validateBody, validateTitle, validateSummary } = await import(
-        '@/lib/articles/body-validator'
-      );
-      const bodyWarn = validateBody(input.bodyMarkdown, input.contentType).warnings;
+      const { validateBody, validateTitle, validateSummary } =
+        await import('@/lib/articles/body-validator');
+      const bodyWarn = validateBody(
+        input.bodyMarkdown,
+        input.contentType,
+      ).warnings;
       const titleWarn = validateTitle(input.title).warnings;
-      const summaryWarn = validateSummary(input.summary ?? input.summary30s).warnings;
-      let warningCount = bodyWarn.length + titleWarn.length + summaryWarn.length;
+      const summaryWarn = validateSummary(
+        input.summary ?? input.summary30s,
+      ).warnings;
+      let warningCount =
+        bodyWarn.length + titleWarn.length + summaryWarn.length;
       if ((input.keywords ?? []).length < 3) warningCount += 1;
-      if (!input.categoryPath || input.categoryPath.length === 0) warningCount += 1;
+      if (!input.categoryPath || input.categoryPath.length === 0)
+        warningCount += 1;
       patch.warningCount = warningCount;
 
       // status='published'로 강제 전환 (편집 페이지 발행 버튼).
@@ -969,6 +1041,15 @@ export async function updateArticleById(
       if (!existing?.publishedAt) {
         patch.publishedAt = new Date();
       }
+
+      // Phase 2 — 본문/제목 변경 반영해 임베딩 재생성 (graceful).
+      patch.embedding = await generateArticleEmbedding({
+        title: input.title,
+        summary: input.summary,
+        summary30s: input.summary30s,
+        keywords: input.keywords,
+        bodyMarkdown: input.bodyMarkdown,
+      });
     }
 
     await db.update(articles).set(patch).where(eq(articles.id, id));
@@ -991,14 +1072,23 @@ export async function publishArticleById(
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
   try {
     const rows = await db
-      .select({ bodyMarkdown: articles.bodyMarkdown })
+      .select({
+        title: articles.title,
+        summary: articles.summary,
+        summary30s: articles.summary30s,
+        keywords: articles.keywords,
+        bodyMarkdown: articles.bodyMarkdown,
+      })
       .from(articles)
       .where(eq(articles.id, id))
       .limit(1);
     if (rows.length === 0) {
       return { ok: false, message: 'ARTICLE_NOT_FOUND' };
     }
-    const toc = extractTocV2(rows[0]!.bodyMarkdown);
+    const row = rows[0]!;
+    const toc = extractTocV2(row.bodyMarkdown);
+    // Phase 2 — 발행 시점 임베딩 생성 (graceful).
+    const embedding = await generateArticleEmbedding(row);
     await db
       .update(articles)
       .set({
@@ -1006,6 +1096,7 @@ export async function publishArticleById(
         publishedAt: new Date(),
         lastEditorId: editorId,
         toc,
+        embedding,
       })
       .where(eq(articles.id, id));
     return { ok: true };
@@ -1210,10 +1301,12 @@ export function extractToc(markdown: string): TocEntry[] {
 }
 
 function toAnchor(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\wㄱ-힝\s-]/g, '') // 한글 + word + 공백 + 하이픈만
-    .trim()
-    .replace(/\s+/g, '-')
-    .slice(0, 80) || `h-${Math.random().toString(36).slice(2, 8)}`;
+  return (
+    text
+      .toLowerCase()
+      .replace(/[^\wㄱ-힝\s-]/g, '') // 한글 + word + 공백 + 하이픈만
+      .trim()
+      .replace(/\s+/g, '-')
+      .slice(0, 80) || `h-${Math.random().toString(36).slice(2, 8)}`
+  );
 }

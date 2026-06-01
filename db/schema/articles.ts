@@ -40,6 +40,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  vector,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { commonColumns } from './_shared';
@@ -76,7 +77,8 @@ export type TocEntry = {
   anchor: string;
 };
 
-export type ArticleContentType = (typeof articleContentTypeEnum.enumValues)[number];
+export type ArticleContentType =
+  (typeof articleContentTypeEnum.enumValues)[number];
 export type ArticleStatus = (typeof articleStatusEnum.enumValues)[number];
 
 export const articles = pgTable(
@@ -101,14 +103,20 @@ export const articles = pgTable(
     /** deprecated — Q-13에 의해 summary로 통합. 마이그레이션 후 다음 사이클에 DROP. */
     summary30s: text('summary_30s'),
     /** synonyms-master 결합 검색 보강 (Q-3 + Plan §6). */
-    keywords: text('keywords').array().notNull().default(sql`'{}'::text[]`),
+    keywords: text('keywords')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     /** 적용 범위. null = 전체 (Plan §2.4 권장). */
     appliesTo: jsonb('applies_to').$type<ArticleAppliesTo>(),
     /** 본문 — markdown + 인라인 HTML hybrid (Tiptap Option A, html:true). */
     bodyMarkdown: text('body_markdown').notNull(),
     toc: jsonb('toc').$type<TocEntry[]>(),
     /** slug 기반 안정 참조 (Q-14). 발행 시 존재 여부 검증 (워닝). */
-    relatedSlugs: text('related_slugs').array().notNull().default(sql`'{}'::text[]`),
+    relatedSlugs: text('related_slugs')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     /** deprecated — Q-14에 의해 relatedSlugs로 전환. 다음 사이클에 DROP. */
     relatedArticleIds: uuid('related_article_ids').array(),
     authorId: uuid('author_id').references(() => users.id, {
@@ -128,6 +136,12 @@ export const articles = pgTable(
      * Hard 검증(productCode/title/slug/body)은 별도, 발행 차단 의미가 아님.
      */
     warningCount: integer('warning_count').notNull().default(0),
+    /**
+     * Phase 2 — 시맨틱 검색용 임베딩 (OpenAI text-embedding-3-small, 1536차원).
+     * 발행/수정 시 title+summary+body로 생성. null = 미생성(키워드 검색만 적용).
+     * OPENAI_API_KEY 미설정/오류 시 graceful degrade로 null 유지.
+     */
+    embedding: vector('embedding', { dimensions: 1536 }),
   },
   (table) => [
     uniqueIndex('articles_slug_uq').on(table.slug),
@@ -139,10 +153,7 @@ export const articles = pgTable(
       table.publishedAt,
     ),
     // 호텔리어 published 목록
-    index('articles_status_published_idx').on(
-      table.status,
-      table.publishedAt,
-    ),
+    index('articles_status_published_idx').on(table.status, table.publishedAt),
     // keywords 배열 OR 매칭 (synonyms-master expandKeywords 결합)
     index('articles_keywords_gin').using('gin', table.keywords),
     // 기존 인덱스 (호환)
@@ -160,6 +171,12 @@ export const articles = pgTable(
     index('articles_search_tsv').using(
       'gin',
       sql`to_tsvector('simple', coalesce(${table.title}, '') || ' ' || coalesce(${table.summary}, '') || ' ' || coalesce(${table.bodyMarkdown}, ''))`,
+    ),
+    // Phase 2 — 시맨틱 검색 HNSW 코사인 인덱스 (pgvector).
+    // CREATE EXTENSION vector 는 마이그레이션 SQL에서 수동 보강.
+    index('articles_embedding_hnsw').using(
+      'hnsw',
+      table.embedding.op('vector_cosine_ops'),
     ),
   ],
 );

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>검색 기능 점검 & Phase 1 개선 — 2026-06-01</title>
+    <style>
+      :root {
+        --brand: #2563eb;
+        --brand-50: #eff6ff;
+        --brand-700: #1d4ed8;
+        --ok: #16a34a;
+        --warn: #d97706;
+        --bad: #dc2626;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --bg: #f8fafc;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard,
+          "Apple SD Gothic Neo", sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.6;
+      }
+      .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+      header.page {
+        background: linear-gradient(135deg, var(--brand) 0%, var(--brand-700) 100%);
+        color: #fff;
+        border-radius: 16px;
+        padding: 28px 28px 24px;
+        margin-bottom: 24px;
+      }
+      header.page h1 { margin: 0 0 6px; font-size: 24px; }
+      header.page p { margin: 0; opacity: 0.9; font-size: 14px; }
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 22px 0; }
+      .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+      .card .n { font-size: 26px; font-weight: 700; color: var(--brand); }
+      .card .l { font-size: 13px; color: var(--muted); margin-top: 2px; }
+      h2 { font-size: 18px; margin: 34px 0 12px; padding-bottom: 8px; border-bottom: 2px solid var(--line); }
+      table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+      th, td { text-align: left; padding: 11px 13px; font-size: 13.5px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+      tr:last-child td { border-bottom: 0; }
+      code { background: #f1f5f9; padding: 1.5px 6px; border-radius: 6px; font-size: 12.5px; }
+      .tag { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; }
+      .t-bad { background: #fee2e2; color: var(--bad); }
+      .t-ok { background: #dcfce7; color: var(--ok); }
+      .t-warn { background: #fef3c7; color: var(--warn); }
+      ul.files { list-style: none; padding: 0; margin: 0; }
+      ul.files li { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 13.5px; }
+      ul.files li b { color: var(--brand-700); }
+      .note { background: #fff; border-left: 4px solid var(--warn); border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-size: 13.5px; }
+      .foot { margin-top: 40px; color: var(--muted); font-size: 12px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="page">
+        <h1>🔍 검색 기능 점검 &amp; Phase 1 개선</h1>
+        <p>통합 AS 플랫폼 · 2026-06-01 · 통합검색(SS-01) 관련도/동의어 정합성 수정</p>
+      </header>
+
+      <div class="cards">
+        <div class="card"><div class="n">7</div><div class="l">발견된 검색 기준 결함</div></div>
+        <div class="card"><div class="n">5</div><div class="l">수정 파일</div></div>
+        <div class="card"><div class="n">3</div><div class="l">동의어 확장 일원화 탭<br />(도움말·FAQ·공지)</div></div>
+        <div class="card"><div class="n">PASS</div><div class="l">tsc --noEmit</div></div>
+      </div>
+
+      <h2>1. 점검 결과 — 핵심 원인</h2>
+      <div class="note">
+        <b>"매칭은 동의어로 똑똑하게, 점수·정렬·하이라이트는 원본 글자로 멍청하게"</b> 하고 있었음.
+        동의어로 찾아낸 결과("CI"→"체크인")가 제목에 원본 글자가 없다는 이유로 <b>score 0점</b>으로
+        가라앉아 관련도 정렬·뱃지·하이라이트에서 모두 누락되던 것이 "검색이 맘에 안 든다"의 주원인.
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>결함</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>동의어 매칭 결과가 원본 검색어 기준 점수라 0점 → 관련도 정렬 무력화</td><td><span class="tag t-ok">수정</span></td></tr>
+          <tr><td>2</td><td>점수가 구 필드 <code>summary30s</code>만 보고 신규 <code>summary</code> 미반영</td><td><span class="tag t-ok">수정</span></td></tr>
+          <tr><td>3</td><td><code>keywords</code> 배열 매칭이 점수에 미반영</td><td><span class="tag t-ok">수정</span></td></tr>
+          <tr><td>4</td><td>하이라이트가 원본 검색어만 — 동의어 매칭 단어 표시 안 됨</td><td><span class="tag t-ok">수정</span></td></tr>
+          <tr><td>5</td><td>FAQ·공지 검색은 동의어 확장을 아예 안 함(도움말만 적용)</td><td><span class="tag t-ok">수정</span></td></tr>
+          <tr><td>6</td><td>다단어 입력 시 OR 매칭이라 정밀도 낮음</td><td><span class="tag t-warn">Phase 2</span></td></tr>
+          <tr><td>7</td><td><code>articles_search_tsv</code> GIN 인덱스 생성만 하고 미사용(ILIKE 풀스캔)</td><td><span class="tag t-warn">Phase 2</span></td></tr>
+        </tbody>
+      </table>
+
+      <h2>2. Phase 1 변경 내용 (AI 없이, 즉시 체감)</h2>
+      <table>
+        <thead><tr><th>영역</th><th>Before</th><th>After</th></tr></thead>
+        <tbody>
+          <tr><td>점수 기준</td><td>원본 검색어로 title(2)+summary30s(1)</td><td>동의어 확장 term 기준 · base(0.5)+title(2.5)+summary/summary30s(1)+keywords(1)+원본 직접일치(1)</td></tr>
+          <tr><td>"제목/질문 일치" 뱃지</td><td><code>score &gt;= 2</code> 추정</td><td>명시적 <code>titleMatch</code>/<code>questionMatch</code> 플래그</td></tr>
+          <tr><td>하이라이트</td><td>원본 검색어 첫 일치 1회</td><td>확장 term 전체를 정규식으로 모두 하이라이트</td></tr>
+          <tr><td>FAQ/공지 매칭</td><td>원본 ILIKE만</td><td>동의어 확장 후 term별 ILIKE OR (도움말과 동일)</td></tr>
+        </tbody>
+      </table>
+
+      <h2>3. 수정 파일</h2>
+      <ul class="files">
+        <li><b>lib/text/search-match.ts</b> — 신규. <code>matchesAnyTerm</code>, <code>keywordsMatchAnyTerm</code>, <code>buildHighlightRegex</code> 공용 헬퍼</li>
+        <li><b>lib/services/articles.ts</b> — <code>searchArticles</code> 점수 로직을 확장 term 기준으로 교체, <code>titleMatch</code> 추가</li>
+        <li><b>lib/services/faqs.ts</b> — <code>searchFaqs</code>에 동의어 확장 도입 + 점수/<code>questionMatch</code></li>
+        <li><b>lib/services/notices.ts</b> — <code>searchNotices</code>에 동의어 확장 도입 + 점수/<code>titleMatch</code></li>
+        <li><b>app/search/page.tsx</b> — 확장 term 하이라이트, 뱃지 플래그 연동, summary 우선 표시</li>
+      </ul>
+
+      <h2>4. 검증 / 주의사항</h2>
+      <div class="note"><code>npm run typecheck</code> 통과. 동작 검증은 실데이터 검색어("CI", "하우스키핑" 등)로 수동 확인 권장.</div>
+      <div class="note">정렬은 여전히 DB에서 <code>publishedAt DESC</code> 100건을 가져온 뒤 앱에서 점수 재정렬. 데이터가 100건을 크게 넘기면 관련도 높은 옛 글이 누락될 수 있음 → Phase 2(tsvector/시맨틱)에서 DB 랭킹으로 이관 예정.</div>
+
+      <h2>5. Phase 2 — 하이브리드 시맨틱 검색 (완료)</h2>
+      <div class="note">
+        <b>pgvector + OpenAI <code>text-embedding-3-small</code>(1536차원)</b> 도입.
+        <code>searchArticles</code>가 <b>키워드 leg(ILIKE+동의어) + 벡터 leg(코사인 최근접)</b>를
+        id로 병합하고 점수 = 키워드 점수 + <code>cosine_sim × 4</code>로 정렬. 키워드로 안 잡히는
+        의미 매칭("결제가 안돼요" → 결제 오류 문서)을 벡터 leg가 커버.
+      </div>
+      <table>
+        <thead><tr><th>구성</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td>스키마</td><td><code>articles.embedding vector(1536)</code> + HNSW 코사인 인덱스(<code>articles_embedding_hnsw</code>). 마이그레이션 <code>0020</code> — <code>CREATE EXTENSION vector</code> 수동 보강(멱등)</td></tr>
+          <tr><td>임베딩 생성</td><td>발행/수정 시 자동(<code>generateArticleEmbedding</code> · title+summary+keywords+body). 기존 데이터는 <code>npm run db:backfill-embeddings</code></td></tr>
+          <tr><td>graceful degrade</td><td><code>OPENAI_API_KEY</code> 미설정/quota 오류 → 임베딩 null → 키워드 검색 폴백. <b>서비스 중단 없음, 키 활성 즉시 시맨틱 자동 ON</b></td></tr>
+          <tr><td>적용 절차</td><td><code>db:migrate</code>(완료) → 결제 정상화 → <code>db:backfill-embeddings</code> → 시맨틱 활성</td></tr>
+        </tbody>
+      </table>
+
+      <h2>6. DB 적용 검증 (마이그레이션 0020)</h2>
+      <table>
+        <thead><tr><th>항목</th><th>결과</th></tr></thead>
+        <tbody>
+          <tr><td>vector 확장</td><td><span class="tag t-ok">OK</span></td></tr>
+          <tr><td>embedding 컬럼(vector)</td><td><span class="tag t-ok">OK</span></td></tr>
+          <tr><td>HNSW 코사인 인덱스</td><td><span class="tag t-ok">OK</span></td></tr>
+          <tr><td>코사인 캐스트 sanity</td><td><span class="tag t-ok">sim=1.0</span></td></tr>
+          <tr><td>발행 아티클 / 임베딩 보유</td><td>147 / 0 <span class="tag t-warn">백필 대기</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="note" style="border-left-color: var(--bad);">
+        <b>⚠️ OpenAI 계정 quota 초과</b> — 제공된 키 2개 모두 동일 계정(<code>sk-proj-</code>)으로
+        임베딩 호출이 거부됨(<code>exceeded your current quota</code>). 키는 <code>.env.local</code>에
+        저장 완료. <b>결제/잔액 해결 후 <code>npm run db:backfill-embeddings</code> 1회 실행</b>하면
+        147건 임베딩 생성 → 시맨틱 검색 자동 활성화. 그 전까지는 Phase 1 키워드 검색으로 정상 동작.
+      </div>
+
+      <h2>7. 남은 후속 (Phase 3 후보)</h2>
+      <table>
+        <thead><tr><th>항목</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td>tsvector/ts_rank</td><td>점수·정렬을 DB 랭킹으로 이관(현재 100건 컷 후 앱 재정렬)</td></tr>
+          <tr><td>FAQ/공지 임베딩</td><td>현재 시맨틱은 도움말만 — FAQ·공지로 확대</td></tr>
+          <tr><td>RAG 즉답</td><td>상위 문서 근거 한줄 답변(<code>@anthropic-ai/sdk</code> 설치됨)</td></tr>
+          <tr><td>0건 검색어 분석</td><td>미매칭 쿼리 → 동의어/콘텐츠 갭 AI 제안</td></tr>
+        </tbody>
+      </table>
+
+      <p class="foot">통합 AS 플랫폼 — support.oapms.com · 개발 일지 자동 생성</p>
+    </div>
+  </body>
+</html>

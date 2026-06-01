@@ -51,6 +51,14 @@
 
 > **아티클 기반 동의어 갭 탐지 (v1.3 Phase A, 2026-06-01)** — 발행 아티클의 `keywords[]`(사람이 큐레이션한 한글 키워드)를 전수 집계해 빈도·아티클 수를 산출하고, `loadSynonymIndex().termToGroupIds`와 대조하여 **"아티클엔 있으나 동의어 사전엔 미등록"** 키워드를 추출한다. 읽기 전용 분석 — 스키마 변경 없음, 자동 INSERT 없음(검색 품질 오염 방지: 후보 제시 → 어드민 검수 → 반영 원칙). `analyzeKeywordGaps()`(`lib/services/keyword-gap.ts`) + `/admin/master/synonyms` 상단 "아티클 미등록 키워드" 카드(Top N, 빈도순). 각 후보는 "그룹 생성"(canonical 프리필) 링크로 기존 동의어 등록 흐름에 연결. **Phase B(LLM 그룹화 검수 큐)·Phase C(0건 검색 로그)는 후속.**
 
+> **검색 관련도 정합성 수정 (v1.6 Phase 1, 2026-06-01)** — 검색 매칭은 동의어 확장 결과로 하면서 점수·하이라이트는 **원본 검색어 글자**로만 계산하던 불일치를 수정. ① 점수를 확장 term 기준으로 재계산(`lib/text/search-match.ts`의 `matchesAnyTerm`/`keywordsMatchAnyTerm`): `base(0.5) + title(2.5) + summary/summary30s(1) + keywords(1) + 원본 직접일치(1)`. 신규 `summary` 필드와 작성자 `keywords`도 순위에 반영. ② "제목/질문 일치" 뱃지를 `score>=2` 추정 대신 명시적 `titleMatch`/`questionMatch` 플래그로. ③ 하이라이트를 원본어 1회 → 확장 term 전체 정규식(`buildHighlightRegex`). ④ **FAQ(`searchFaqs`)·공지(`searchNotices`)도 동의어 확장 적용** — 이전엔 도움말만 확장하고 FAQ/공지는 원본 ILIKE만 했음(통합검색 불일치 해소).
+
+> **시맨틱 검색 — 하이브리드 (v1.6 Phase 2, 2026-06-01)** — `articles.embedding vector(1536)`(pgvector) + OpenAI `text-embedding-3-small`. `searchArticles`가 **키워드 leg(ILIKE+동의어) + 벡터 leg(코사인 최근접)** 를 id로 병합, 점수 = 키워드 점수 + `cosine_sim × 4`. 키워드로 안 잡히는 의미 매칭("결제가 안돼요" → 결제 오류 문서)을 시맨틱 leg가 커버. **HNSW 코사인 인덱스**(`articles_embedding_hnsw`), 마이그레이션 `0020`에서 `CREATE EXTENSION vector` 수동 보강(멱등). 임베딩은 발행/수정 시 자동 생성(`generateArticleEmbedding`), 기존 데이터는 `npm run db:backfill-embeddings`(147건 적용 완료). **graceful degrade**: `OPENAI_API_KEY` 미설정/quota 오류 시 임베딩 null → 기존 키워드 검색으로 폴백(서비스 중단 없음, 키 활성 즉시 시맨틱 자동 ON). 마이그레이션은 `drizzle-kit migrate`로만 적용(`db:push`는 `articles_search_tsv` GIN 인덱스를 DROP하므로 금지). **남은 한계**: tsvector/ts_rank DB 랭킹 이관, FAQ/공지 임베딩 확대는 후속.
+
+> **검색 품질 측정 — Layer A 오프라인 평가 (v1.6, 2026-06-01)** — `/admin/search-quality`. 골든셋(`search_eval_queries`: 질의→정답 아티클slug/FAQid)을 실제 `searchArticles`+`searchFaqs`에 돌려 **Hit@1·Hit@3·MRR·nDCG@5**(`lib/services/search-eval.ts`)를 산출, 실행 스냅샷을 `search_eval_runs`에 저장(추세·회귀 비교). 골든셋은 ① FAQ 자동 시드(question→해당 FAQ) ② LLM 질의 자동 생성(`gpt-4o-mini`, 아티클→현실 질의) ③ 수기 등록. 판정 모드 label/llm/hybrid(LLM-as-a-judge 0~3 채점). 실패 질의(top3 밖) 테이블로 콘텐츠·동의어 보강 후보 노출. **첫 실측(FAQ 12건, label)**: Hit@1 67% / Hit@3 83% / MRR 0.78 / nDCG 0.81. LLM은 `lib/services/llm.ts`.
+
+> **검색 품질 측정 — Layer B 온라인 지표 (v1.6, 2026-06-01)** — `/admin/search-quality/usage`. `search_logs`에 실사용 검색 1행씩 기록(`logSearch`, best-effort), 결과 클릭(`recordClick`)·접수 전환(`recordTicketIntent`)은 `<TrackedLink>` → `navigator.sendBeacon` → `POST /api/search/track`로 사후 업데이트. 대시보드 지표: **0건 검색률 + 0건 top 질의(콘텐츠/동의어 갭)·CTR·평균 클릭 위치·검색→접수 전환율·자가해결(deflection) 추정**(`getUsageStats`/`topZeroQueries`/`topQueries`). 최근 30일 window. 권한 manager+admin. 마이그레이션 `0022`.
+
 ### 2. 셀프 픽스 (SF) — 스스로 문제 해결
 
 | ID | 기능 | 핵심 동작 | 권한 | 우선순위 |

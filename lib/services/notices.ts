@@ -338,10 +338,7 @@ export async function listActiveBannerNotices(): Promise<NoticeListItem[]> {
           eq(notices.isActive, true),
           eq(notices.banner, true),
           isNotNull(notices.publishedAt),
-          or(
-            isNull(notices.bannerUntil),
-            gt(notices.bannerUntil, now),
-          ),
+          or(isNull(notices.bannerUntil), gt(notices.bannerUntil, now)),
         ),
       )
       .orderBy(desc(notices.publishedAt))
@@ -476,12 +473,7 @@ export async function listRecentPublishedNotices(
         authorId: notices.authorId,
       })
       .from(notices)
-      .where(
-        and(
-          eq(notices.isActive, true),
-          isNotNull(notices.publishedAt),
-        ),
-      )
+      .where(and(eq(notices.isActive, true), isNotNull(notices.publishedAt)))
       .orderBy(desc(notices.publishedAt))
       .limit(limit);
   } catch (err) {
@@ -611,8 +603,10 @@ export async function listRelatedNotices(
 // ─────────────────────────────────────────────────────────────────────
 
 export type SearchNoticeHit = NoticeListItem & {
-  /** 단순 점수 — title 일치(2) > body(0.5). */
+  /** 관련도 점수 — 동의어 확장 term 기준. */
   score: number;
+  /** 제목이 검색어(동의어 포함)와 일치하는지 — "제목 일치" 뱃지용. */
+  titleMatch: boolean;
 };
 
 export async function searchNotices(
@@ -622,9 +616,13 @@ export async function searchNotices(
   if (!db) return [];
   const query = q.trim();
   if (!query) return [];
-  const pattern = `%${query}%`;
   const limit = Math.min(100, Math.max(1, options.limit ?? 50));
   try {
+    // v1.6 — articles/faqs와 동일하게 동의어 확장 적용.
+    const { expandKeywords } = await import('./synonym-expander');
+    const expanded = await expandKeywords(query, { maxTokens: 32 });
+    const terms = expanded.length > 0 ? expanded : [query];
+
     const conditions: SQL[] = [
       eq(notices.isActive, true),
       isNotNull(notices.publishedAt),
@@ -632,10 +630,18 @@ export async function searchNotices(
     if (options.productCode) {
       conditions.push(eq(notices.productCode, options.productCode));
     }
-    const searchCond = or(
-      ilike(notices.title, pattern),
-      ilike(notices.bodyMarkdown, pattern),
-    );
+    const orParts: SQL[] = [];
+    for (const term of terms) {
+      const p = `%${term}%`;
+      const c = or(ilike(notices.title, p), ilike(notices.bodyMarkdown, p));
+      if (c) orParts.push(c);
+    }
+    const searchCond =
+      orParts.length === 0
+        ? undefined
+        : orParts.length === 1
+          ? orParts[0]
+          : or(...orParts);
     if (searchCond) conditions.push(searchCond);
 
     const rows = await db
@@ -660,11 +666,16 @@ export async function searchNotices(
       .orderBy(desc(notices.pinned), desc(notices.publishedAt))
       .limit(limit);
 
+    const { matchesAnyTerm } = await import('@/lib/text/search-match');
     const lowered = query.toLowerCase();
     return rows.map((r) => {
-      let score = 0;
-      if (r.title.toLowerCase().includes(lowered)) score += 2;
-      return { ...r, score };
+      let score = 0.5;
+      const titleMatch = matchesAnyTerm(r.title, terms);
+      if (titleMatch) score += 2.5;
+      if (matchesAnyTerm(r.bodyMarkdown, terms)) score += 1;
+      // 원본 검색어가 제목에 그대로 있으면 가산(직접 일치 우대).
+      if (r.title.toLowerCase().includes(lowered)) score += 1;
+      return { ...r, score, titleMatch };
     });
   } catch (err) {
     console.error('[notices.searchNotices] 실패:', err);
@@ -799,10 +810,7 @@ export async function archiveNoticeById(
 ): Promise<{ ok: boolean; message?: string }> {
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
   try {
-    await db
-      .update(notices)
-      .set({ isActive: false })
-      .where(eq(notices.id, id));
+    await db.update(notices).set({ isActive: false }).where(eq(notices.id, id));
     return { ok: true };
   } catch (err) {
     console.error('[notices.archiveNoticeById] 실패:', err);
@@ -815,10 +823,7 @@ export async function restoreNoticeById(
 ): Promise<{ ok: boolean; message?: string }> {
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
   try {
-    await db
-      .update(notices)
-      .set({ isActive: true })
-      .where(eq(notices.id, id));
+    await db.update(notices).set({ isActive: true }).where(eq(notices.id, id));
     return { ok: true };
   } catch (err) {
     console.error('[notices.restoreNoticeById] 실패:', err);

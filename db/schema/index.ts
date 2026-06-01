@@ -62,3 +62,7 @@ export * from './business-hours-overrides';
 // knowledge-base-overhaul (Phase 1 v1.3) — slug 채번 + 골격 마스터
 export * from './article-seq-counters';
 export * from './article-templates';
+// 검색 품질 평가 (v1.6 Layer A) — 골든셋 + 평가 실행
+export * from './search-eval';
+// 검색 실사용 로그 (v1.6 Layer B) — 0건율·CTR·전환율
+export * from './search-logs';

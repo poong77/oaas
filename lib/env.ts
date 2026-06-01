@@ -36,15 +36,26 @@ export const env = {
   SLACK_WEBHOOK_URGENT: process.env.SLACK_WEBHOOK_URGENT ?? '',
   SLACK_WEBHOOK_DEV: process.env.SLACK_WEBHOOK_DEV ?? '',
   /** support.oapms.com URL — 알림 본문의 티켓 링크 생성에 사용. */
-  PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL ?? process.env.NEXTAUTH_URL ?? '',
+  PUBLIC_BASE_URL:
+    process.env.PUBLIC_BASE_URL ?? process.env.NEXTAUTH_URL ?? '',
 
   // Chatbot (Phase 8)
   OACHAT_EMBED_URL: process.env.OACHAT_EMBED_URL ?? '',
 
   // Cron 인증 (rich-editor 후속 — editor_drafts 30일 정리)
   CRON_SECRET: process.env.CRON_SECRET ?? '',
+
+  // OpenAI (Phase 2 — 시맨틱 검색 임베딩)
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? '',
+  OPENAI_EMBEDDING_MODEL:
+    process.env.OPENAI_EMBEDDING_MODEL ?? 'text-embedding-3-small',
 } as const;
 
 export function isDbConfigured(): boolean {
   return env.DATABASE_URL.length > 0 && env.DATABASE_URL.startsWith('postgres');
+}
+
+/** 시맨틱 검색용 OpenAI 키 설정 여부. 미설정 시 키워드 검색으로 graceful degrade. */
+export function isOpenAIConfigured(): boolean {
+  return env.OPENAI_API_KEY.length > 0;
 }
