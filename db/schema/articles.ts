@@ -154,7 +154,13 @@ export const articles = pgTable(
       table.isActive,
       table.publishedAt,
     ),
-    // 풀텍스트 GIN (title + summary + body_markdown) — 표현식 인덱스, 마이그레이션 수동 추가
+    // 풀텍스트 GIN (title + summary + body_markdown) — 표현식 인덱스.
+    // 0015 마이그레이션 SQL과 정확히 일치하도록 raw SQL 보간 사용.
+    // 이렇게 schema에 명시해야 drizzle generate 시 매번 DROP INDEX 시도하지 않음 (D1 부채).
+    index('articles_search_tsv').using(
+      'gin',
+      sql`to_tsvector('simple', coalesce(${table.title}, '') || ' ' || coalesce(${table.summary}, '') || ' ' || coalesce(${table.bodyMarkdown}, ''))`,
+    ),
   ],
 );
 
