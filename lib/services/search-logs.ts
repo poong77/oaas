@@ -14,6 +14,7 @@ import { db } from '@/db';
 import {
   articles,
   faqs,
+  notices,
   searchLogs,
   type SearchResultCounts,
   type NewSearchLog,
@@ -349,8 +350,9 @@ export type SearchLogRow = {
   dwellSeconds: number | null;
   /** 클릭해 도착한 아티클/FAQ 하단 반응표 집계. 반응표 없는 대상/미클릭이면 null. */
   helpful: HelpfulTally | null;
-  /** 유출(이동) 페이지 URL — 클릭/접수 결과. 없으면 null(이탈). */
+  /** 유출(이동) 페이지의 정식 URL — 클릭/접수 결과. 없으면 null(이탈/삭제). */
   outflowUrl: string | null;
+  /** 유출 페이지 표시 타이틀(아티클 title/FAQ question/공지 title 등). 이탈이면 null. */
   outflowLabel: string | null;
 };
 
@@ -384,27 +386,54 @@ function kstPeriodRange(period: SearchLogPeriod): { start: Date; end: Date } {
   return { start, end: todayStart };
 }
 
-/** 클릭/접수 결과로부터 유출 페이지 URL을 복원 (track 라우트의 ref 규칙 역산). */
-function buildOutflow(row: {
-  clicked: boolean;
-  clickedKind: string | null;
-  clickedRef: string | null;
-  ledToTicket: boolean;
-  productCode: string | null;
-}): { url: string | null; label: string | null } {
+/** 클릭한 아티클(slug) 메타 — 정식 URL·타이틀 복원용. */
+type ArticleMeta = {
+  title: string;
+  productCode: string;
+  contentType: string;
+  yes: number;
+  no: number;
+};
+
+/**
+ * 클릭/접수 결과 → 유출 페이지의 {정식 URL, 표시 타이틀}.
+ * URL은 실제 라우트 규칙대로 생성(아티클은 /help/{product}/{content_type}/{slug} 3세그먼트).
+ * 대상이 삭제돼 메타를 못 찾으면 깨진 링크 대신 url=null(텍스트만)로 안전 처리.
+ */
+function resolveOutflow(
+  row: {
+    clicked: boolean;
+    clickedKind: string | null;
+    clickedRef: string | null;
+    ledToTicket: boolean;
+  },
+  maps: {
+    article: Map<string, ArticleMeta>;
+    faqTitle: Map<string, string>;
+    noticeTitle: Map<string, string>;
+  },
+): { url: string | null; label: string | null } {
   if (row.clicked && row.clickedKind && row.clickedRef) {
+    const ref = row.clickedRef;
     switch (row.clickedKind) {
-      case 'help':
+      case 'help': {
+        const a = maps.article.get(ref);
+        if (!a) return { url: null, label: '(삭제된 아티클)' };
         return {
-          url: row.productCode
-            ? `/help/${row.productCode}/${row.clickedRef}`
-            : `/help/${row.clickedRef}`,
-          label: '아티클',
+          url: `/help/${a.productCode}/${a.contentType}/${ref}`,
+          label: a.title,
         };
+      }
       case 'faq':
-        return { url: `/faq#faq-${row.clickedRef}`, label: 'FAQ' };
+        return {
+          url: `/faq#faq-${ref}`,
+          label: maps.faqTitle.get(ref) ?? '(삭제된 FAQ)',
+        };
       case 'notice':
-        return { url: `/notices/${row.clickedRef}`, label: '공지' };
+        return {
+          url: `/notices/${ref}`,
+          label: maps.noticeTitle.get(ref) ?? '(삭제된 공지)',
+        };
       case 'incident':
         return { url: '/status', label: '서비스 상태' };
       default:
@@ -487,7 +516,7 @@ export async function listSearchLogs(input: {
         .where(where),
     ]);
 
-    // 클릭해 도착한 아티클(slug)·FAQ(id) 하단 반응표 집계를 배치 조회.
+    // 클릭해 도착한 대상의 메타(정식 URL·타이틀·반응표)를 종류별로 배치 조회.
     const helpSlugs = [
       ...new Set(
         rows
@@ -502,48 +531,96 @@ export async function listSearchLogs(input: {
           .map((r) => r.clickedRef as string),
       ),
     ];
+    const noticeIds = [
+      ...new Set(
+        rows
+          .filter((r) => r.clicked && r.clickedKind === 'notice' && r.clickedRef)
+          .map((r) => r.clickedRef as string),
+      ),
+    ];
 
-    const [articleRows, faqRows] = await Promise.all([
+    const [articleRows, faqRows, noticeRows] = await Promise.all([
       helpSlugs.length
         ? db
             .select({
               slug: articles.slug,
+              title: articles.title,
+              productCode: articles.productCode,
+              contentType: articles.contentType,
               yes: articles.helpfulYes,
               no: articles.helpfulNo,
             })
             .from(articles)
             .where(inArray(articles.slug, helpSlugs))
-        : Promise.resolve([] as { slug: string; yes: number; no: number }[]),
+        : Promise.resolve(
+            [] as {
+              slug: string;
+              title: string;
+              productCode: string;
+              contentType: string;
+              yes: number;
+              no: number;
+            }[],
+          ),
       faqIds.length
         ? db
             .select({
               id: faqs.id,
+              question: faqs.question,
               yes: faqs.helpfulYes,
               no: faqs.helpfulNo,
             })
             .from(faqs)
             .where(inArray(faqs.id, faqIds))
-        : Promise.resolve([] as { id: string; yes: number; no: number }[]),
+        : Promise.resolve(
+            [] as { id: string; question: string; yes: number; no: number }[],
+          ),
+      noticeIds.length
+        ? db
+            .select({ id: notices.id, title: notices.title })
+            .from(notices)
+            .where(inArray(notices.id, noticeIds))
+        : Promise.resolve([] as { id: string; title: string }[]),
     ]);
 
-    const helpfulBySlug = new Map(
-      articleRows.map((a) => [a.slug, { yes: a.yes, no: a.no }]),
+    const articleBySlug = new Map<string, ArticleMeta>(
+      articleRows.map((a) => [
+        a.slug,
+        {
+          title: a.title,
+          productCode: a.productCode,
+          contentType: a.contentType,
+          yes: a.yes,
+          no: a.no,
+        },
+      ]),
     );
-    const helpfulByFaq = new Map(
-      faqRows.map((f) => [f.id, { yes: f.yes, no: f.no }]),
+    const faqById = new Map(
+      faqRows.map((f) => [f.id, { question: f.question, yes: f.yes, no: f.no }]),
     );
+    const noticeTitleById = new Map(noticeRows.map((n) => [n.id, n.title]));
+
+    const outflowMaps = {
+      article: articleBySlug,
+      faqTitle: new Map(
+        faqRows.map((f) => [f.id, f.question] as [string, string]),
+      ),
+      noticeTitle: noticeTitleById,
+    };
 
     const s = statRows[0];
     const items: SearchLogRow[] = rows.map((r) => {
-      const outflow = buildOutflow(r);
+      const outflow = resolveOutflow(r, outflowMaps);
       const dwell =
         r.dwellSeconds == null ? null : Math.round(Number(r.dwellSeconds));
       let helpful: HelpfulTally | null = null;
       if (r.clicked && r.clickedRef) {
         if (r.clickedKind === 'help') {
-          helpful = helpfulBySlug.get(r.clickedRef) ?? null;
+          const a = articleBySlug.get(r.clickedRef);
+          helpful = a ? { yes: a.yes, no: a.no } : null;
         } else if (r.clickedKind === 'faq') {
-          helpful = helpfulByFaq.get(r.clickedRef) ?? null;
+          const f = faqById.get(r.clickedRef);
+          helpful = f ? { yes: f.yes, no: f.no } : null;
         }
       }
       return {

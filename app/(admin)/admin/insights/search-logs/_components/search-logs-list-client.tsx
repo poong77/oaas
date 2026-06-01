@@ -56,11 +56,12 @@ function Outflow({ row }: { row: SearchLogRow }) {
     <Link
       href={row.outflowUrl}
       target="_blank"
-      className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline dark:text-brand-300"
-      title={row.outflowUrl}
+      rel="noopener noreferrer"
+      className="inline-flex max-w-full items-center gap-1 text-xs text-brand-600 hover:underline dark:text-brand-300"
+      title={`${row.outflowLabel}\n${row.outflowUrl}`}
     >
       <ExternalLink className="h-3 w-3 shrink-0" />
-      <span className="truncate">{row.outflowUrl}</span>
+      <span className="truncate">{row.outflowLabel}</span>
     </Link>
   );
 }
@@ -97,7 +98,7 @@ export function SearchLogsListClient({
               <th className="px-3 py-2 text-left">유입일시</th>
               <th className="px-3 py-2 text-right">세션 체류</th>
               <th className="px-3 py-2 text-left">도움됨 (반응표)</th>
-              <th className="px-3 py-2 text-left">유출 채널 (페이지 URL)</th>
+              <th className="px-3 py-2 text-left">유출 채널 (도착 페이지)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
