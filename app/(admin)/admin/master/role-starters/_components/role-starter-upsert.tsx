@@ -14,8 +14,18 @@ import {
 } from '@/app/actions/master-actions';
 import { KNOWN_ROLE_KEYS } from '@/lib/services/master-meta';
 import type { RoleStarter } from '@/db/schema';
+import {
+  RoleStarterArticleMapper,
+  type MappedArticle,
+} from './role-starter-article-mapper';
 
-export function RoleStarterUpsert({ item }: { item?: RoleStarter }) {
+export function RoleStarterUpsert({
+  item,
+  initialArticles = [],
+}: {
+  item?: RoleStarter;
+  initialArticles?: MappedArticle[];
+}) {
   const router = useRouter();
   const confirm = useConfirmDialog();
   const [pending, startTransition] = useTransition();
@@ -121,6 +131,19 @@ export function RoleStarterUpsert({ item }: { item?: RoleStarter }) {
           />
         </div>
       </div>
+
+      {/* D3 — articleIds 매핑 (편집 모드에서만; 신규는 먼저 업서트 후 편집으로) */}
+      {isEdit && (
+        <div className="flex flex-col gap-1.5 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30">
+          <Label className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+            매핑된 가이드 (articleIds · 순서대로 노출)
+          </Label>
+          <RoleStarterArticleMapper initial={initialArticles} />
+          <p className="text-[10px] text-slate-500">
+            /role/{item!.roleKey} 페이지에 이 순서대로 카드 노출됩니다.
+          </p>
+        </div>
+      )}
 
       <div className="flex items-center gap-2">
         <Button type="submit" disabled={pending}>

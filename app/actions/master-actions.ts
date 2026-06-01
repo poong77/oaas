@@ -370,12 +370,22 @@ export async function setQuickActionActiveAction(
 // 5. role_starters (홈 노출)
 // ─────────────────────────────────────────────────────────────────────
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const RoleStarterSchema = z.object({
   roleKey: z.string().min(1).max(30),
   label: z.string().min(1).max(50),
   description: z.string().max(300).nullable().optional(),
   icon: z.string().max(50).nullable().optional(),
   sortOrder: z.number().int().default(0),
+  /**
+   * D3 — 매핑된 articleIds (순서 보존). FormData.getAll('articleIds')에서 수신.
+   * uuid 형식만 허용 + 30개 cap (대시보드 무한 확장 방지).
+   */
+  articleIds: z
+    .array(z.string().regex(UUID_RE))
+    .max(30)
+    .default([]),
 });
 
 export async function upsertRoleStarterAction(
@@ -383,12 +393,18 @@ export async function upsertRoleStarterAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const user = await requireRole(['manager', 'admin']);
+  // articleIds는 hidden input 여러 개로 직렬화돼서 옴 (순서 보존)
+  const rawArticleIds = formData
+    .getAll('articleIds')
+    .map((v) => v.toString().trim())
+    .filter(Boolean);
   const raw = {
     roleKey: getStr(formData, 'roleKey'),
     label: getStr(formData, 'label'),
     description: getOptStr(formData, 'description'),
     icon: getOptStr(formData, 'icon'),
     sortOrder: getInt(formData, 'sortOrder', 0),
+    articleIds: rawArticleIds,
   };
   const parsed = RoleStarterSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, message: '입력값 확인' };
@@ -399,9 +415,14 @@ export async function upsertRoleStarterAction(
     action: 'master.role_starter.upsert',
     targetType: 'role_starter',
     targetId: r.id,
-    payload: { roleKey: parsed.data.roleKey },
+    payload: {
+      roleKey: parsed.data.roleKey,
+      articleCount: parsed.data.articleIds.length,
+    },
   });
   revalidateAdminMaster('/admin/master/role-starters', '/');
+  // /role/[key] 페이지도 즉시 반영
+  revalidateAdminMaster(`/role/${parsed.data.roleKey}`, '/');
   return { ok: true, id: r.id };
 }
 
