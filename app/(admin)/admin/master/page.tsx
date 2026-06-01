@@ -139,6 +139,7 @@ export default async function AdminMasterIndexPage() {
     <div className="flex flex-col gap-5">
       <PageHeader
         title="마스터 데이터"
+        guideAnchor="master"
         description="어드민 편집 가능한 마스터 데이터를 도메인별로 관리합니다."
       />
 

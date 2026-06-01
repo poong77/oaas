@@ -96,6 +96,7 @@ export default async function AdminArticlesPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title="아티클 관리"
+        guideAnchor="articles"
         description={`전체 ${total}건 (${pageSize}건/페이지). 호텔리어가 보는 핸드북 콘텐츠를 관리합니다.`}
         actions={
           <Button asChild>

@@ -114,6 +114,7 @@ export default async function AdminTicketsQueuePage({
           </span>
         }
         description={`총 ${ticketsResult.total}건의 티켓이 필터 조건에 해당합니다.`}
+        guideAnchor="tickets"
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" size="sm">

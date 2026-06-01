@@ -37,6 +37,7 @@ export default async function AdminServiceStatusPage() {
     <div className="flex flex-col gap-5">
       <PageHeader
         title="서비스 상태 관리"
+        guideAnchor="master"
         description="홈/긴급 배너에 노출되는 서비스 상태를 관리합니다. 변경 시 모든 사용자에게 즉시 반영됩니다."
       />
 

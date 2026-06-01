@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { ExternalLink, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS, GROUP_ORDER, GROUP_LABEL } from '../_data/nav-items';
+import { AdminGuideLink } from './admin-guide-link';
 import { AdminHelpButton } from './admin-help-button';
 import { AdminNavItem } from './admin-nav-item';
 import { AdminSidebarToggle } from './admin-sidebar-toggle';
@@ -116,10 +117,13 @@ export function AdminSidebar({ collapsed, userRole, className }: AdminSidebarPro
         {/* TODO[sidebar-daily-kpi]: 오늘 처리한 티켓 카운터 (footer 영역) */}
         <div
           className={cn(
-            'border-b border-slate-100 dark:border-slate-800',
-            collapsed ? 'py-1' : 'px-1 py-1',
+            'flex border-b border-slate-100 dark:border-slate-800',
+            collapsed ? 'flex-col gap-0.5 py-1' : 'flex-col gap-0.5 px-1 py-1',
           )}
         >
+          <AdminGuideLink
+            placement={collapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}
+          />
           <AdminHelpButton
             placement={collapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}
           />

@@ -86,6 +86,7 @@ export default async function AdminFaqsPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title="FAQ 관리"
+        guideAnchor="faqs"
         description={`전체 ${total}건. 호텔리어가 보는 자주 묻는 질문을 관리합니다.`}
         actions={
           <Button asChild>

@@ -50,6 +50,7 @@ export default async function AdminUsersPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title="사용자 관리"
+        guideAnchor="accounts"
         description={`전체 ${total}명 (${pageSize}명/페이지). 호텔리어·매니저·어드민 계정을 통합 관리합니다.`}
         actions={
           <Button asChild>

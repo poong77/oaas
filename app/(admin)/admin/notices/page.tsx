@@ -78,6 +78,7 @@ export default async function AdminNoticesPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title="공지 관리"
+        guideAnchor="notices"
         description={`전체 ${total}건 (${pageSize}건/페이지). 공지·릴리즈노트·장애 공지를 통합 관리합니다.`}
         actions={
           <Button asChild>

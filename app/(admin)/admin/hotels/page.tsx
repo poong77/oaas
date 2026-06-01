@@ -44,6 +44,7 @@ export default async function AdminHotelsPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title="호텔 마스터"
+        guideAnchor="accounts"
         description={`총 ${total}개 호텔. OA PMS 매핑 ID와 기본 정보를 관리합니다.`}
       />
 

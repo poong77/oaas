@@ -70,6 +70,7 @@ export default async function AdminChecklistsPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title="체크리스트 관리"
+        guideAnchor="checklists"
         description={`전체 ${total}건. 단계별 진단으로 셀프 픽스를 돕는 트러블슈팅을 관리합니다.`}
         actions={
           <Button asChild>
