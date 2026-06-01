@@ -30,14 +30,14 @@ import {
   type NoticeWriteInput,
 } from '@/lib/services/notices';
 import type { NoticeKind } from '@/db/schema';
-import { runClaudeJson } from '@/lib/ai/anthropic-client';
+import { runClaudeText } from '@/lib/ai/anthropic-client';
 import { rateLimitOrThrow, RateLimitExceededError } from '@/lib/ai/rate-limiter';
 import { MOCK_ENABLED } from '@/lib/ai/mock';
 import {
   buildDrafterSystem,
   buildDrafterUserMessage,
   truncateOutline,
-  NoticeDraftOutputSchema,
+  sanitizeDraft,
 } from '@/lib/ai/prompts/notice-drafter';
 
 // ─────────────────────────────────────────────────────────────────────
@@ -377,7 +377,7 @@ export async function aiDraftNoticeAction(input: {
   }
 
   try {
-    const raw = await runClaudeJson({
+    const raw = await runClaudeText({
       system: buildDrafterSystem(input.kind),
       user: buildDrafterUserMessage({
         kind: input.kind,
@@ -389,36 +389,28 @@ export async function aiDraftNoticeAction(input: {
       maxTokens: 2000,
     });
 
-    const parsed = NoticeDraftOutputSchema.safeParse(raw);
-    if (!parsed.success) {
-      console.warn(
-        '[aiDraftNoticeAction] zod 검증 실패:',
-        parsed.error.flatten(),
-      );
+    const draftBody = sanitizeDraft(raw);
+    if (!draftBody) {
       return {
         ok: false,
         reason: 'parse-error',
-        message: 'AI 출력 형식이 예상과 달라요. 다시 시도하면 보통 정상이에요.',
+        message: 'AI 응답이 비어있어요. 다시 시도하면 보통 정상이에요.',
       };
     }
 
     return {
       ok: true,
-      draftBody: parsed.data.draftBody,
+      draftBody,
       truncated: outline.truncated,
     };
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     console.error('[aiDraftNoticeAction] Claude 호출 실패:', errMsg);
-    const showDetail =
-      process.env.VERCEL_ENV !== 'production' ||
-      process.env.NODE_ENV !== 'production';
+    // 안정화 기간: 내부 어드민 도구이므로 실제 원인을 그대로 노출해 진단.
     return {
       ok: false,
       reason: 'api-error',
-      message: showDetail
-        ? `AI 초안 작성 실패: ${errMsg.slice(0, 200)}`
-        : 'AI 초안 작성이 일시적으로 동작하지 않아요. 잠시 후 다시 시도해주세요.',
+      message: `AI 초안 작성 실패: ${errMsg.slice(0, 200)}`,
     };
   }
 }

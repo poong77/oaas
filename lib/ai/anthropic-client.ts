@@ -150,6 +150,58 @@ export async function runClaudeJson(opts: RunClaudeOptions): Promise<unknown> {
   }
 }
 
+/**
+ * Claude 단일 호출 → text 응답을 그대로 반환 (JSON.parse 안 함).
+ *
+ * 긴 멀티라인 마크다운처럼 JSON 래핑이 깨지기 쉬운 출력에 사용.
+ * cache_control 'ephemeral' system 자동 적용 + cost 추적.
+ *
+ * @throws Anthropic SDK 에러 (network/auth/rate-limit) 또는 빈 응답.
+ */
+export async function runClaudeText(opts: RunClaudeOptions): Promise<string> {
+  const model = opts.model ?? DEFAULT_SONNET;
+  const client = await getClient();
+
+  let message;
+  try {
+    message = await client.messages.create({
+      model,
+      max_tokens: opts.maxTokens ?? 1500,
+      system: [
+        {
+          type: 'text',
+          text: opts.system,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
+      messages: [{ role: 'user', content: opts.user }],
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(
+      `[anthropic-client] 호출 실패 model="${model}" bucket="${opts.bucket}":`,
+      err,
+    );
+    throw new Error(`Anthropic API 호출 실패 (model=${model}): ${msg}`);
+  }
+
+  trackCost({
+    inputTokens: message.usage.input_tokens,
+    outputTokens: message.usage.output_tokens,
+    cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
+    bucket: opts.bucket,
+  });
+
+  const block = message.content.find(
+    (b): b is { type: 'text'; text: string } =>
+      b.type === 'text' && typeof b.text === 'string',
+  );
+  if (!block || !block.text.trim()) {
+    throw new Error('AI 응답에 text block이 없습니다.');
+  }
+  return block.text;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // A5 — 메타 추출
 // ─────────────────────────────────────────────────────────────────────────────
