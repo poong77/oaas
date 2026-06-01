@@ -41,6 +41,7 @@ import {
 } from '@/lib/services/articles';
 import { getCurrentUser } from '@/lib/permissions';
 import { getProductCategories } from '@/lib/services/categories';
+import { formatDateKst } from '@/lib/business-hours/format';
 import { CONTENT_TYPE_LABEL } from '@/lib/articles/zod-schemas';
 import type { ArticleContentType } from '@/db/schema';
 
@@ -178,7 +179,7 @@ export default async function HelpArticlePage({
           {article.publishedAt && (
             <span className="inline-flex items-center gap-1">
               <CalendarDays className="h-3 w-3" />
-              {formatDate(article.publishedAt)} 발행
+              {formatDateKst(article.publishedAt)} 발행
             </span>
           )}
           {article.authorName && (
@@ -296,9 +297,3 @@ export default async function HelpArticlePage({
   );
 }
 
-function formatDate(d: Date | string | null): string {
-  if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '-';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}

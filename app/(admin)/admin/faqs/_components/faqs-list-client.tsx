@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { formatDateKst } from '@/lib/business-hours/format';
 import type { FaqListItem } from '@/lib/services/faqs';
 import type { ProductCategoryView } from '@/lib/services/categories';
 import {
@@ -183,7 +184,7 @@ export function FaqsListClient({
                   </div>
                 </td>
                 <td className="px-3 py-2 text-xs text-slate-500">
-                  {formatDate(f.updatedAt)}
+                  {formatDateKst(f.updatedAt)}
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex items-center justify-end gap-1">
@@ -256,7 +257,7 @@ export function FaqsListClient({
                 <span className="text-emerald-600">{f.helpfulYes}</span>/
                 <span className="text-rose-500">{f.helpfulNo}</span>
               </span>
-              <span>{formatDate(f.updatedAt)}</span>
+              <span>{formatDateKst(f.updatedAt)}</span>
             </div>
             <div className="flex flex-wrap items-center gap-1">
               <Button
@@ -339,9 +340,3 @@ export function FaqsListClient({
   );
 }
 
-function formatDate(d: Date | string | null): string {
-  if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '-';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}

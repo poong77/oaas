@@ -106,15 +106,15 @@ export function NoticesAdminFilters({
       </Select>
 
       <Select
-        value={`${initial.sortBy ?? 'updated_at'}:${initial.sortOrder ?? 'desc'}`}
+        value={`${initial.sortBy ?? 'published_at'}:${initial.sortOrder ?? 'desc'}`}
         onChange={(e) => {
           const [sortBy, sortOrder] = e.target.value.split(':');
           applyFilters({ sortBy, sortOrder });
         }}
         aria-label="정렬"
       >
-        <option value="updated_at:desc">최근 수정순</option>
         <option value="published_at:desc">최근 발행순</option>
+        <option value="updated_at:desc">최근 수정순</option>
         <option value="view_count:desc">조회수 많은순</option>
         <option value="created_at:desc">최근 작성순</option>
       </Select>

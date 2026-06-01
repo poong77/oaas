@@ -20,6 +20,7 @@ import {
   NOTICE_KIND_META,
 } from '@/lib/services/notices-meta';
 import type { NoticeKind } from '@/db/schema';
+import { formatDateKst } from '@/lib/business-hours/format';
 import { NoticesFilters } from './_components/notices-filters';
 
 export const dynamic = 'force-dynamic';
@@ -135,7 +136,7 @@ export default async function NoticesPage({
                       )}
                       {n.publishedAt && (
                         <span className="text-xs text-slate-400">
-                          {formatDate(n.publishedAt)}
+                          {formatDateKst(n.publishedAt)}
                         </span>
                       )}
                     </div>
@@ -238,9 +239,3 @@ function Pagination({
   );
 }
 
-function formatDate(d: Date | string | null): string {
-  if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '-';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}

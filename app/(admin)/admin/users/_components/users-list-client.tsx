@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { formatDateKst } from '@/lib/business-hours/format';
 import type { User, UserRole } from '@/db/schema';
 
 type ListItem = User & { hotelName: string | null };
@@ -65,10 +66,10 @@ export function UsersListClient({
                 </td>
                 <td className="px-3 py-2"><RoleBadge role={u.role} /></td>
                 <td className="px-3 py-2 text-xs text-slate-500">
-                  {formatDate(u.createdAt)}
+                  {formatDateKst(u.createdAt)}
                 </td>
                 <td className="px-3 py-2 text-xs text-slate-500">
-                  {u.lastLoginAt ? formatDate(u.lastLoginAt) : '미접속'}
+                  {u.lastLoginAt ? formatDateKst(u.lastLoginAt) : '미접속'}
                 </td>
                 <td className="px-3 py-2">
                   {u.isActive ? (
@@ -118,8 +119,8 @@ export function UsersListClient({
               <div>{u.email}</div>
               <div>{u.phone ?? '-'}</div>
               <div className="mt-1 text-slate-400">
-                가입 {formatDate(u.createdAt)} · 최근접속{' '}
-                {u.lastLoginAt ? formatDate(u.lastLoginAt) : '미접속'}
+                가입 {formatDateKst(u.createdAt)} · 최근접속{' '}
+                {u.lastLoginAt ? formatDateKst(u.lastLoginAt) : '미접속'}
               </div>
             </div>
           </Link>
@@ -167,12 +168,3 @@ function RoleBadge({ role }: { role: UserRole }) {
   return <Badge tone={tone}>{label}</Badge>;
 }
 
-function formatDate(d: Date | string | null) {
-  if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '-';
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}

@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { formatDateKst } from '@/lib/business-hours/format';
 import type { ArticleListItem } from '@/lib/services/articles';
 import type { ProductCategoryView } from '@/lib/services/categories';
 import { CONTENT_TYPE_META } from '@/lib/articles/content-type-meta';
@@ -191,7 +192,7 @@ export function ArticlesListClient({
                   </div>
                 </td>
                 <td className="px-3 py-2 text-xs text-slate-500">
-                  {formatDate(a.updatedAt)}
+                  {formatDateKst(a.updatedAt)}
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex items-center justify-end gap-1">
@@ -301,7 +302,7 @@ export function ArticlesListClient({
                 <span className="text-emerald-600">{a.helpfulYes}</span>/
                 <span className="text-rose-500">{a.helpfulNo}</span>
               </span>
-              <span>{formatDate(a.updatedAt)}</span>
+              <span>{formatDateKst(a.updatedAt)}</span>
             </div>
             <div className="flex items-center gap-1">
               {a.isActive ? (
@@ -379,9 +380,3 @@ export function ArticlesListClient({
   );
 }
 
-function formatDate(d: Date | string | null): string {
-  if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '-';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}

@@ -37,6 +37,25 @@ export function todayKst(now: Date = new Date()): string {
     .slice(0, 10);
 }
 
+/**
+ * 임의 시각 → KST 기준 날짜 'YYYY-MM-DD'.
+ *
+ * 주의: `Date.getFullYear/getMonth/getDate`는 **서버 로컬 타임존**(Vercel = UTC)
+ * 기준이라 저녁 KST 공지가 하루 빠른 날짜로 표시되는 버그가 있었음.
+ * 발행일자 등 날짜 표시는 반드시 이 함수를 사용해 KST로 고정한다.
+ *
+ * @param fallback null·무효 입력 시 반환값 (목록은 '-', 일부는 '')
+ */
+export function formatDateKst(
+  d: Date | string | null | undefined,
+  fallback = '-',
+): string {
+  if (!d) return fallback;
+  const date = typeof d === 'string' ? new Date(d) : d;
+  if (Number.isNaN(date.getTime())) return fallback;
+  return date.toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' }).slice(0, 10);
+}
+
 /** KST 기준 시각 'HH:MM' 포맷 (Date → "14:30"). */
 export function formatTimeKst(d: Date): string {
   return d.toLocaleTimeString('ko-KR', {

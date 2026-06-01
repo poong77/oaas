@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { formatDateKst } from '@/lib/business-hours/format';
 import type { NoticeListItem } from '@/lib/services/notices';
 import type { ProductCategoryView } from '@/lib/services/categories';
 import {
@@ -127,6 +128,7 @@ export function NoticesListClient({
               <th className="px-3 py-2 text-left">종류 / 제목</th>
               <th className="px-3 py-2 text-left">제품</th>
               <th className="px-3 py-2 text-left">상태</th>
+              <th className="px-3 py-2 text-left">발행일자</th>
               <th className="px-3 py-2 text-right">조회</th>
               <th className="px-3 py-2 text-left">마지막 수정</th>
               <th className="px-3 py-2 text-right">작업</th>
@@ -177,11 +179,20 @@ export function NoticesListClient({
                       </Badge>
                     )}
                   </td>
+                  <td className="px-3 py-2 text-xs tabular-nums">
+                    {n.publishedAt ? (
+                      <span className="text-slate-700 dark:text-slate-300">
+                        {formatDateKst(n.publishedAt)}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">미발행</span>
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-right tabular-nums">
                     {n.viewCount.toLocaleString()}
                   </td>
                   <td className="px-3 py-2 text-xs text-slate-500">
-                    {formatDate(n.updatedAt)}
+                    {formatDateKst(n.updatedAt)}
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center justify-end gap-1">
@@ -284,8 +295,9 @@ export function NoticesListClient({
                 {n.title}
               </Link>
               <div className="text-xs text-slate-500">
-                {productLabel(n.productCode)} · 조회{' '}
-                {n.viewCount.toLocaleString()} · {formatDate(n.updatedAt)}
+                {productLabel(n.productCode)} · 발행{' '}
+                {n.publishedAt ? formatDateKst(n.publishedAt) : '미발행'} · 조회{' '}
+                {n.viewCount.toLocaleString()} · 수정 {formatDateKst(n.updatedAt)}
               </div>
               <div className="flex items-center gap-1">
                 {n.isActive ? (
@@ -364,9 +376,3 @@ export function NoticesListClient({
   );
 }
 
-function formatDate(d: Date | string | null): string {
-  if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '-';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}

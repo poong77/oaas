@@ -22,6 +22,7 @@ import {
   NOTICE_KIND_CLASSES,
   NOTICE_KIND_META,
 } from '@/lib/services/notices-meta';
+import { formatDateKst } from '@/lib/business-hours/format';
 import { NoticeViewBumper } from './_components/notice-view-bumper';
 import { NoticeActionsBar } from './_components/notice-actions-bar';
 
@@ -117,7 +118,7 @@ export default async function NoticeDetailPage({
               <strong className="font-medium text-slate-700 dark:text-slate-200">
                 발행일
               </strong>
-              <span className="ml-1">{formatDate(notice.publishedAt)}</span>
+              <span className="ml-1">{formatDateKst(notice.publishedAt)}</span>
             </span>
             <span className="text-slate-300">·</span>
             <span>
@@ -173,7 +174,7 @@ export default async function NoticeDetailPage({
                       </span>
                       {r.publishedAt && (
                         <span className="text-xs text-slate-400">
-                          {formatDate(r.publishedAt)}
+                          {formatDateKst(r.publishedAt)}
                         </span>
                       )}
                     </div>
@@ -191,9 +192,3 @@ export default async function NoticeDetailPage({
   );
 }
 
-function formatDate(d: Date | string | null): string {
-  if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '-';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}

@@ -34,6 +34,7 @@ import {
   NOTICE_KIND_META,
 } from '@/lib/services/notices-meta';
 import { getProductCategories } from '@/lib/services/categories';
+import { formatDateKst } from '@/lib/business-hours/format';
 import { SearchTabs } from './_components/search-tabs';
 import { SearchFilters } from './_components/search-filters';
 
@@ -167,7 +168,7 @@ export default async function SearchPage({
                         )}
                         <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
                           {h.publishedAt && (
-                            <span>{formatDate(h.publishedAt)}</span>
+                            <span>{formatDateKst(h.publishedAt)}</span>
                           )}
                           <span>조회 {h.viewCount.toLocaleString()}</span>
                         </div>
@@ -274,7 +275,7 @@ export default async function SearchPage({
                           </p>
                           <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
                             {n.publishedAt && (
-                              <span>{formatDate(n.publishedAt)}</span>
+                              <span>{formatDateKst(n.publishedAt)}</span>
                             )}
                             <span>조회 {n.viewCount.toLocaleString()}</span>
                           </div>
@@ -301,7 +302,7 @@ export default async function SearchPage({
                       <div className="flex items-center gap-2">
                         <Badge tone="warn">{row.status}</Badge>
                         <span className="text-xs text-slate-500">
-                          {formatDate(row.startedAt)}
+                          {formatDateKst(row.startedAt)}
                         </span>
                       </div>
                       <p className="mt-2 text-sm font-medium">
@@ -472,9 +473,3 @@ function Highlight({ text, query }: { text: string; query: string }) {
   );
 }
 
-function formatDate(d: Date | string | null): string {
-  if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '-';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
