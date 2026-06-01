@@ -30,7 +30,7 @@ import {
   type NoticeWriteInput,
 } from '@/lib/services/notices';
 import type { NoticeKind } from '@/db/schema';
-import { runClaudeText } from '@/lib/ai/anthropic-client';
+import { runClaudeText, DEFAULT_HAIKU } from '@/lib/ai/anthropic-client';
 import { rateLimitOrThrow, RateLimitExceededError } from '@/lib/ai/rate-limiter';
 import { MOCK_ENABLED } from '@/lib/ai/mock';
 import {
@@ -386,6 +386,7 @@ export async function aiDraftNoticeAction(input: {
         outline: outline.text,
       }),
       bucket: 'ai-notice-draft',
+      model: DEFAULT_HAIKU,
       maxTokens: 2000,
     });
 
