@@ -37,7 +37,13 @@
   .nav a.sub{padding-left:26px;font-size:12.8px;color:#64748b}
 
   /* hero */
-  .hero{background:linear-gradient(135deg,#1e3a8a,#2563eb 55%,#0ea5e9);color:#fff;border-radius:20px;padding:38px 40px;margin-bottom:36px;box-shadow:var(--shadow)}
+  .hero{position:relative;overflow:hidden;color:#fff;border-radius:20px;padding:38px 40px;margin-bottom:36px;box-shadow:var(--shadow);
+    background:
+      linear-gradient(100deg, rgba(13,28,74,.93) 0%, rgba(18,42,108,.84) 36%, rgba(15,42,98,.46) 58%, rgba(15,42,98,.12) 78%, rgba(15,42,98,0) 100%),
+      url('/guide-hero-penguin.jpg') right center / cover no-repeat,
+      linear-gradient(135deg,#1e3a8a,#2563eb 55%,#0ea5e9)}
+  .hero h1,.hero p{position:relative;text-shadow:0 1px 3px rgba(8,20,55,.35)}
+  .hero .meta{position:relative}
   .hero h1{margin:0 0 10px;font-size:27px;letter-spacing:-.02em}
   .hero p{margin:0;opacity:.92;font-size:15px;max-width:720px}
   .hero .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
@@ -125,7 +131,11 @@
     .sidebar.open{transform:translateX(0)}
     .scrim.open{display:block}
     .content{padding:24px 18px 90px}
-    .hero{padding:26px 22px;border-radius:16px}
+    .hero{padding:26px 22px;border-radius:16px;
+      background:
+        linear-gradient(120deg, rgba(13,28,74,.95) 0%, rgba(16,38,98,.88) 50%, rgba(15,42,98,.62) 100%),
+        url('/guide-hero-penguin.jpg') right -20px center / cover no-repeat,
+        linear-gradient(135deg,#1e3a8a,#2563eb 55%,#0ea5e9)}
     .hero h1{font-size:21px}
   }
   /* dev spec */
