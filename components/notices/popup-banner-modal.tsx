@@ -20,6 +20,9 @@ export interface PopupBannerModalProps {
   imageUrl: string;
   size: NoticePopupSize;
   title: string;
+  /** 원본 px 치수 — 있으면 <img>에 부여해 로드 전 레이아웃 공간 예약(CLS 방지) */
+  width?: number | null;
+  height?: number | null;
   /** 이미지 클릭 시 이동할 경로. null이면 클릭 비활성 (미리보기) */
   href?: string | null;
   onClose: () => void;
@@ -33,12 +36,16 @@ export function PopupBannerModal({
   imageUrl,
   size,
   title,
+  width,
+  height,
   href,
   onClose,
   onDismissToday,
   preview = false,
 }: PopupBannerModalProps) {
   const maxWidth = NOTICE_POPUP_SIZE_META[size].maxWidth;
+  // 치수를 알면 width/height 부여 → 브라우저가 종횡비로 공간 예약(CLS 0). 레거시 행은 미부여(기존 동작).
+  const hasDims = Boolean(width && height);
 
   const image = (
     // 외부(Blob) 이미지이므로 next/image 대신 img 사용
@@ -48,6 +55,11 @@ export function PopupBannerModal({
       alt={title}
       className="h-auto w-full select-none rounded-t-lg object-contain"
       draggable={false}
+      // CLS 완화: 종횡비 공간 예약 + 디코딩을 메인 스레드에서 분리
+      width={hasDims ? (width as number) : undefined}
+      height={hasDims ? (height as number) : undefined}
+      style={hasDims ? { aspectRatio: `${width} / ${height}` } : undefined}
+      decoding="async"
     />
   );
 

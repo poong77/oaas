@@ -366,6 +366,9 @@ export type PopupNoticeItem = {
   title: string;
   popupImageUrl: string;
   popupSize: NoticePopupSize;
+  /** CLS 방지용 원본 px 치수. 레거시 행은 null */
+  popupImageWidth: number | null;
+  popupImageHeight: number | null;
 };
 
 export async function listActivePopupNotices(): Promise<PopupNoticeItem[]> {
@@ -379,6 +382,8 @@ export async function listActivePopupNotices(): Promise<PopupNoticeItem[]> {
         title: notices.title,
         popupImageUrl: notices.popupImageUrl,
         popupSize: notices.popupSize,
+        popupImageWidth: notices.popupImageWidth,
+        popupImageHeight: notices.popupImageHeight,
       })
       .from(notices)
       .where(
@@ -403,6 +408,8 @@ export async function listActivePopupNotices(): Promise<PopupNoticeItem[]> {
         title: r.title,
         popupImageUrl: r.popupImageUrl,
         popupSize: r.popupSize,
+        popupImageWidth: r.popupImageWidth,
+        popupImageHeight: r.popupImageHeight,
       }));
   } catch (err) {
     console.error('[notices.listActivePopupNotices] 실패:', err);
@@ -721,6 +728,8 @@ export type NoticeWriteInput = {
   /** NT-04 홈 팝업 배너 */
   popupEnabled?: boolean;
   popupImageUrl?: string | null;
+  popupImageWidth?: number | null;
+  popupImageHeight?: number | null;
   popupSize?: NoticePopupSize;
   popupUntil?: Date | null;
   publish?: boolean;
@@ -742,6 +751,8 @@ export async function createNotice(
       bannerUntil: input.bannerUntil ?? null,
       popupEnabled: input.popupEnabled ?? false,
       popupImageUrl: input.popupImageUrl ?? null,
+      popupImageWidth: input.popupImageWidth ?? null,
+      popupImageHeight: input.popupImageHeight ?? null,
       popupSize: input.popupSize ?? 'medium',
       popupUntil: input.popupUntil ?? null,
       authorId,
@@ -776,6 +787,8 @@ export async function updateNoticeById(
         bannerUntil: input.bannerUntil ?? null,
         popupEnabled: input.popupEnabled ?? false,
         popupImageUrl: input.popupImageUrl ?? null,
+        popupImageWidth: input.popupImageWidth ?? null,
+        popupImageHeight: input.popupImageHeight ?? null,
         popupSize: input.popupSize ?? 'medium',
         popupUntil: input.popupUntil ?? null,
       })

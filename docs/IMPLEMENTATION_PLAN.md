@@ -412,6 +412,7 @@ product_code (nullable), title, body_markdown,
 pinned bool, banner bool, banner_until timestamp,
 // NT-04 홈 팝업 배너 (텍스트 띠 banner와 독립)
 popup_enabled bool, popup_image_url text (nullable),
+popup_image_width int (nullable), popup_image_height int (nullable), // CLS 방지용 원본 px (마이그 0025)
 popup_size enum('small' | 'medium' | 'large') default 'medium',
 popup_until timestamp (nullable, null이면 무기한),
 published_at, author_id (FK users),

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>성능 최적화 작업 일지 — 2026-06-01</title>
+    <style>
+      :root {
+        --brand: #2563eb;
+        --brand-50: #eff6ff;
+        --brand-700: #1d4ed8;
+        --ok: #16a34a;
+        --warn: #d97706;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --bg: #f8fafc;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: var(--bg); color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+        line-height: 1.6; padding: 24px 16px;
+      }
+      .wrap { max-width: 880px; margin: 0 auto; }
+      header {
+        background: linear-gradient(135deg, var(--brand), var(--brand-700));
+        color: #fff; border-radius: 16px; padding: 28px 24px; margin-bottom: 20px;
+      }
+      header h1 { margin: 0 0 6px; font-size: 1.4rem; }
+      header p { margin: 0; opacity: 0.9; font-size: 0.9rem; }
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+      .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+      .card .n { font-size: 1.6rem; font-weight: 700; color: var(--brand); }
+      .card .l { font-size: 0.8rem; color: var(--muted); }
+      section { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 16px; }
+      section h2 { margin: 0 0 14px; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+      th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+      code { background: #f1f5f9; padding: 1px 6px; border-radius: 5px; font-size: 0.82em; color: #be123c; }
+      .badge { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+      .b-ok { background: #dcfce7; color: var(--ok); }
+      .b-warn { background: #fef3c7; color: var(--warn); }
+      ul { margin: 8px 0; padding-left: 20px; }
+      li { margin: 4px 0; }
+      .foot { color: var(--muted); font-size: 0.8rem; text-align: center; margin-top: 18px; }
+      @media (max-width: 560px) { th:nth-child(3), td:nth-child(3) { display: none; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>모바일 성능 최적화 — 안전 항목(P1)</h1>
+        <p>support.oapms.com · PageSpeed Insights 모바일 점검 기반 · 2026-06-01</p>
+      </header>
+
+      <div class="cards">
+        <div class="card"><div class="n">9</div><div class="l">수정 파일</div></div>
+        <div class="card"><div class="n">1</div><div class="l">마이그레이션(0025)</div></div>
+        <div class="card"><div class="n">0</div><div class="l">타입/빌드 오류</div></div>
+        <div class="card"><div class="n">14+130<span style="font-size:.7rem">KiB</span></div><div class="l">목표 절감(레거시·이미지)</div></div>
+      </div>
+
+      <section>
+        <h2>🎯 배경</h2>
+        <p>
+          PageSpeed Insights 모바일 분석에서 <b>레거시 JS, JS 실행 시간, 이미지 전송/치수,
+          레이아웃 변경(CLS)</b> 등이 지적되었다. 실제 코드를 점검해 원인을 파일 단위로 특정하고,
+          <b>리스크가 낮은 안전 항목(P1)</b>만 우선 적용했다. (홈 <code>force-dynamic</code> 근본
+          개선은 RoleScope 리아키텍처가 필요해 별도 기획 사이클로 분리)
+        </p>
+      </section>
+
+      <section>
+        <h2>✅ 적용 내역</h2>
+        <table>
+          <thead>
+            <tr><th>항목</th><th>변경</th><th>대상 PageSpeed 지표</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge b-ok">완료</span> react-markdown 서버 렌더</td>
+              <td><code>markdown-view.tsx</code>의 <code>'use client'</code> 제거 — 순수 렌더 컴포넌트라 서버 컴포넌트로 동작</td>
+              <td>JS 실행 1.4초 · 메인 스레드 3.0초 · 미사용 JS 25KiB · 레거시 JS</td>
+            </tr>
+            <tr>
+              <td><span class="badge b-ok">완료</span> browserslist 최신화</td>
+              <td><code>package.json</code>에 모던 타깃(Chrome100+/Safari15.4+ 등) 명시 → 불필요한 폴리필 트랜스파일 제거</td>
+              <td>레거시 JavaScript 14KiB</td>
+            </tr>
+            <tr>
+              <td><span class="badge b-ok">완료</span> 팝업 이미지 치수 저장</td>
+              <td>업로드 시 sharp가 측정한 px 치수를 <code>notices</code>에 저장 → 팝업 <code>&lt;img&gt;</code>에 width/height·aspect-ratio 부여</td>
+              <td>이미지 width/height 미명시 · 레이아웃 변경(CLS) · 강제 리플로우</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>🗂 변경 파일 (9) + 마이그레이션</h2>
+        <ul>
+          <li><code>components/articles/markdown-view.tsx</code> — <code>'use client'</code> 제거</li>
+          <li><code>package.json</code> — <code>browserslist</code> 추가</li>
+          <li><code>db/schema/notices.ts</code> — <code>popup_image_width/height</code> 컬럼</li>
+          <li><code>db/migrations/0025_lush_calypso.sql</code> — ADD COLUMN ×2 (nullable, 무해)</li>
+          <li><code>lib/services/notices.ts</code> — 타입·조회·insert/update 반영</li>
+          <li><code>app/actions/notice-actions.ts</code> — 검증·파싱·빌드 반영</li>
+          <li><code>components/editor/dialogs/image-upload-dialog.tsx</code> — <code>onUploaded</code> 3번째 인자(치수, 하위호환)</li>
+          <li><code>app/(admin)/admin/notices/_components/notice-editor.tsx</code> — 치수 상태·전송·미리보기</li>
+          <li><code>app/(admin)/admin/notices/[id]/page.tsx</code> — initial에 치수</li>
+          <li><code>components/notices/popup-banner-modal.tsx</code> · <code>home-popup-banner.tsx</code> — width/height 부여</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>🧪 검증</h2>
+        <ul>
+          <li><code>tsc --noEmit</code> — exit 0</li>
+          <li><code>db:generate</code> → <code>0025</code> 생성 (인덱스 손상 없음, ADD COLUMN만)</li>
+          <li><code>db:migrate</code> — 적용 성공 (push 미사용, 검색 인덱스 보존)</li>
+          <li><code>next build</code> — Compiled successfully, 정적 생성 정상</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>⚠️ 배포 시 주의 · 남은 작업</h2>
+        <ul>
+          <li><b>프로덕션 배포 전 <code>npm run db:migrate</code> 실행 필수</b> — 0025 미적용 시 팝업 조회 쿼리 오류</li>
+          <li>기존 팝업 공지(레거시 행)는 치수가 <code>null</code> → 기존과 동일하게 동작(점진 개선). <b>이미지 재업로드 시 자동으로 치수 저장</b></li>
+          <li><span class="badge b-warn">보류</span> 홈 <code>force-dynamic</code> → RoleScope PPR 리아키텍처 (LCP/TTFB 근본 개선, 회귀 테스트 동반 별도 사이클)</li>
+          <li>효과 확인: Vercel preview 배포 후 동일 URL PageSpeed 재측정</li>
+        </ul>
+      </section>
+
+      <div class="foot">통합 AS 플랫폼 · 성능 최적화 작업 일지 · Generated 2026-06-01</div>
+    </div>
+  </body>
+</html>

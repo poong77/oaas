@@ -40,6 +40,8 @@ type InitialValues = {
   bannerUntilIso: string | null;
   popupEnabled: boolean;
   popupImageUrl: string | null;
+  popupImageWidth: number | null;
+  popupImageHeight: number | null;
   popupSize: NoticePopupSize;
   /** ISO string for datetime-local */
   popupUntilIso: string | null;
@@ -91,6 +93,15 @@ export function NoticeEditor({
   );
   const [popupImageUrl, setPopupImageUrl] = useState<string | null>(
     initial?.popupImageUrl ?? null,
+  );
+  // CLS 방지용 이미지 px 치수 (업로드 응답에서 수신, 편집 시 initial 복원)
+  const [popupImageDims, setPopupImageDims] = useState<{
+    width: number;
+    height: number;
+  } | null>(
+    initial?.popupImageWidth && initial?.popupImageHeight
+      ? { width: initial.popupImageWidth, height: initial.popupImageHeight }
+      : null,
   );
   const [popupSize, setPopupSize] = useState<NoticePopupSize>(
     initial?.popupSize ?? 'medium',
@@ -169,6 +180,18 @@ export function NoticeEditor({
     formData.set('bannerUntil', banner ? bannerUntil : '');
     formData.set('popupEnabled', popupEnabled ? 'on' : '');
     formData.set('popupImageUrl', popupEnabled ? (popupImageUrl ?? '') : '');
+    formData.set(
+      'popupImageWidth',
+      popupEnabled && popupImageUrl && popupImageDims
+        ? String(popupImageDims.width)
+        : '',
+    );
+    formData.set(
+      'popupImageHeight',
+      popupEnabled && popupImageUrl && popupImageDims
+        ? String(popupImageDims.height)
+        : '',
+    );
     formData.set('popupSize', popupSize);
     formData.set('popupUntil', popupEnabled ? popupUntil : '');
     formData.set('publishMode', publish ? 'publish' : 'draft');
@@ -341,7 +364,10 @@ export function NoticeEditor({
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => setPopupImageUrl(null)}
+                          onClick={() => {
+                            setPopupImageUrl(null);
+                            setPopupImageDims(null);
+                          }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           이미지 제거
@@ -495,8 +521,9 @@ export function NoticeEditor({
       <ImageUploadDialog
         open={imageDialogOpen}
         onClose={() => setImageDialogOpen(false)}
-        onUploaded={(url) => {
+        onUploaded={(url, _alt, dims) => {
           setPopupImageUrl(url);
+          setPopupImageDims(dims ?? null);
           setImageDialogOpen(false);
         }}
       />
@@ -507,6 +534,8 @@ export function NoticeEditor({
           imageUrl={popupImageUrl}
           size={popupSize}
           title={title || '팝업 배너 미리보기'}
+          width={popupImageDims?.width ?? null}
+          height={popupImageDims?.height ?? null}
           preview
           onClose={() => setPreviewOpen(false)}
         />

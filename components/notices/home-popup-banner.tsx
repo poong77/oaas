@@ -57,6 +57,8 @@ export function HomePopupBanner({ notices }: { notices: PopupNoticeItem[] }) {
       imageUrl={active.popupImageUrl}
       size={active.popupSize}
       title={active.title}
+      width={active.popupImageWidth}
+      height={active.popupImageHeight}
       href={`/notices/${active.id}`}
       onClose={() => setActive(null)}
       onDismissToday={dismissToday}

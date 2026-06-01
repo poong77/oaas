@@ -56,6 +56,8 @@ const NoticeWriteSchema = z.object({
   // NT-04 홈 팝업 배너
   popupEnabled: z.boolean().optional(),
   popupImageUrl: z.string().url('유효한 이미지 URL이 아닙니다').optional().nullable(),
+  popupImageWidth: z.coerce.number().int().positive().optional().nullable(),
+  popupImageHeight: z.coerce.number().int().positive().optional().nullable(),
   popupSize: z.enum(['small', 'medium', 'large']).optional(),
   popupUntilIso: z.string().optional().nullable(),
   publish: z.boolean().optional(),
@@ -84,6 +86,8 @@ function parseFormDataInput(formData: FormData): {
   const productCodeRaw = get('productCode').trim();
   const bannerUntilRaw = get('bannerUntil').trim();
   const popupImageUrlRaw = get('popupImageUrl').trim();
+  const popupImageWidthRaw = get('popupImageWidth').trim();
+  const popupImageHeightRaw = get('popupImageHeight').trim();
   const popupSizeRaw = get('popupSize').trim();
   const popupUntilRaw = get('popupUntil').trim();
 
@@ -97,6 +101,8 @@ function parseFormDataInput(formData: FormData): {
     bannerUntilIso: bannerUntilRaw || null,
     popupEnabled: getBool('popupEnabled'),
     popupImageUrl: popupImageUrlRaw || null,
+    popupImageWidth: popupImageWidthRaw || null,
+    popupImageHeight: popupImageHeightRaw || null,
     popupSize: popupSizeRaw || undefined,
     popupUntilIso: popupUntilRaw || null,
     publish: publishMode === 'publish',
@@ -133,6 +139,11 @@ function buildWriteInput(
   const popupEnabled = parsed.popupEnabled ?? false;
   // popup_enabled=false 면 부속 필드 강제 초기화
   const popupImageUrl = popupEnabled ? (parsed.popupImageUrl ?? null) : null;
+  // 이미지가 없으면 치수도 무의미 → null
+  const popupImageWidth =
+    popupEnabled && popupImageUrl ? (parsed.popupImageWidth ?? null) : null;
+  const popupImageHeight =
+    popupEnabled && popupImageUrl ? (parsed.popupImageHeight ?? null) : null;
   const popupSize = popupEnabled ? (parsed.popupSize ?? 'medium') : 'medium';
   if (!popupEnabled) popupUntil = null;
 
@@ -146,6 +157,8 @@ function buildWriteInput(
     bannerUntil,
     popupEnabled,
     popupImageUrl,
+    popupImageWidth,
+    popupImageHeight,
     popupSize,
     popupUntil,
     publish: parsed.publish,

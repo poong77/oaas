@@ -102,6 +102,8 @@ export default async function EditNoticePage({
           bannerUntilIso,
           popupEnabled: notice.popupEnabled,
           popupImageUrl: notice.popupImageUrl,
+          popupImageWidth: notice.popupImageWidth,
+          popupImageHeight: notice.popupImageHeight,
           popupSize: notice.popupSize,
           popupUntilIso,
           isPublished: Boolean(notice.publishedAt),

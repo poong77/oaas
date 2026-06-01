@@ -26,7 +26,15 @@ const ImageAnnotator = dynamic(
 interface ImageUploadDialogProps {
   open: boolean;
   onClose: () => void;
-  onUploaded: (url: string, alt: string) => void;
+  /**
+   * @param dimensions 서버가 sharp로 측정한 최종 px 치수(이미지 최적화된 경우만). CLS 방지에 사용.
+   *                   GIF/HEIC 등 미최적화 케이스는 undefined.
+   */
+  onUploaded: (
+    url: string,
+    alt: string,
+    dimensions?: { width: number; height: number },
+  ) => void;
   /**
    * 기존 이미지 재편집 모드. 전달되면 file selection 단계 스킵 + 바로 annotate 진입.
    * alt 기본값으로 initialAlt 사용.
@@ -88,12 +96,17 @@ export function ImageUploadDialog({
         ok: boolean;
         blobUrl?: string;
         message?: string;
+        image?: { width?: number; height?: number };
       };
       if (!json.ok || !json.blobUrl) {
         setError(json.message ?? '업로드 실패');
         return;
       }
-      onUploaded(json.blobUrl, alt.trim() || activeFile.name);
+      const dims =
+        json.image?.width && json.image?.height
+          ? { width: json.image.width, height: json.image.height }
+          : undefined;
+      onUploaded(json.blobUrl, alt.trim() || activeFile.name, dims);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : '업로드 중 오류');

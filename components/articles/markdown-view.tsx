@@ -1,5 +1,6 @@
-'use client';
-
+// 순수 렌더링 컴포넌트(클라이언트 훅·이벤트 없음) → 서버 컴포넌트로 동작시켜
+// react-markdown + remark/rehype 플러그인 번들이 클라이언트로 새지 않도록 한다.
+// (서버 페이지에서 import 시 RSC 렌더, 클라 컴포넌트에서 import 시에만 클라 번들 포함)
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';

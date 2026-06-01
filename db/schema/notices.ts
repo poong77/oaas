@@ -86,6 +86,9 @@ export const notices = pgTable(
     popupImageUrl: text('popup_image_url'),
     /** 팝업 모달 크기 프리셋 */
     popupSize: noticePopupSizeEnum('popup_size').notNull().default('medium'),
+    /** 팝업 이미지 원본 px 치수 — CLS 방지용(<img> width/height). 업로드 시 sharp가 측정. nullable(레거시 행) */
+    popupImageWidth: integer('popup_image_width'),
+    popupImageHeight: integer('popup_image_height'),
     /** 팝업 자동 종료 시각. null이면 무기한 (조회 시점 lazy 체크) */
     popupUntil: timestamp('popup_until', { withTimezone: true }),
     /** null이면 draft. 발행 시점에 채워짐 */
