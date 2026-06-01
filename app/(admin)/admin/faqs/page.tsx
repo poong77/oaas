@@ -87,7 +87,7 @@ export default async function AdminFaqsPage({
       <PageHeader
         title="FAQ 관리"
         guideAnchor="faqs"
-        description={`전체 ${total}건. 호텔리어가 보는 자주 묻는 질문을 관리합니다.`}
+        description="호텔리어가 자주 묻는 질문을 짧은 Q&A로 관리합니다."
         actions={
           <Button asChild>
             <Link href="/admin/faqs/new">
