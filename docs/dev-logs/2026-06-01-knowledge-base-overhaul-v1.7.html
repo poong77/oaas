@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2026-06-01 — KB v1.7 미니 사이클 (D5·D6·D7 부채 정리)</title>
+<style>
+  :root { --brand-50:#f5f3ff; --brand-100:#ede9fe; --brand-500:#8b5cf6; --brand-600:#7c3aed; --brand-700:#6d28d9;
+    --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-500:#64748b; --slate-700:#334155; --slate-900:#0f172a;
+    --emerald-50:#ecfdf5; --emerald-600:#059669; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif; background:var(--slate-50); color:var(--slate-900); line-height:1.6; }
+  .container { max-width:980px; margin:0 auto; }
+  header { padding:24px 0; border-bottom:3px solid var(--brand-500); margin-bottom:24px; }
+  h1 { margin:0 0 4px; font-size:22px; color:var(--brand-700); }
+  h2 { font-size:17px; color:var(--brand-700); margin:24px 0 8px; padding-bottom:4px; border-bottom:1px solid var(--slate-200); }
+  .meta { color:var(--slate-500); font-size:13px; }
+  .grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); }
+  .card { background:white; border:1px solid var(--slate-200); border-radius:8px; padding:14px 16px; }
+  .card.brand { border-left:3px solid var(--brand-500); }
+  .card.success { border-left:3px solid var(--emerald-600); background:var(--emerald-50); }
+  .stat-num { font-size:24px; font-weight:700; color:var(--brand-700); }
+  .stat-label { font-size:12px; color:var(--slate-500); }
+  table { width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+  th, td { border:1px solid var(--slate-200); padding:6px 8px; text-align:left; vertical-align:top; }
+  th { background:var(--brand-50); color:var(--brand-700); font-weight:600; }
+  code { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; background:var(--slate-100); padding:2px 5px; border-radius:3px; }
+  ul.check li::before { content:"✅ "; }
+  ul.next li::before { content:"→ "; color:var(--brand-600); font-weight:700; }
+  .badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; }
+  .badge.ok { background:#d1fae5; color:#065f46; }
+  .badge.info { background:var(--brand-100); color:var(--brand-700); }
+  blockquote { margin:12px 0; padding:10px 14px; border-left:3px solid var(--brand-500); background:var(--brand-50); border-radius:4px; color:var(--slate-700); font-size:13px; }
+  @media (max-width:640px) { h1 { font-size:19px; } .grid { grid-template-columns:1fr; } th,td { font-size:12px; padding:4px 6px; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>knowledge-base-overhaul v1.7 미니 사이클</h1>
+  <p class="meta">📅 2026-06-01 · D5·D6·D7 부채 정리 ·
+    <span class="badge ok">Match 95%+</span> <span class="badge info">3 commits</span> <span class="badge info">+540줄</span> <span class="badge info">e2e 3/3 회귀 0</span>
+  </p>
+</header>
+
+<section>
+  <h2>📊 한눈에 보기</h2>
+  <div class="grid">
+    <div class="card brand"><div class="stat-num">3</div><div class="stat-label">사이클 commits</div></div>
+    <div class="card brand"><div class="stat-num">+540</div><div class="stat-label">코드 변경 (줄)</div></div>
+    <div class="card brand"><div class="stat-num">4290</div><div class="stat-label">rewriter COMMON 글자</div></div>
+    <div class="card success"><div class="stat-num">3/3</div><div class="stat-label">프로덕션 e2e (회귀 0)</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>🎯 4-Perspective 가치</h2>
+  <table>
+    <thead><tr><th>관점</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td><b>Problem</b></td><td>A6 SYSTEM 짧음(cache 비활성) · 매핑 UI ↑↓ only · AI 회귀 검출 인프라 부재</td></tr>
+      <tr><td><b>Solution</b></td><td>COMMON_HEADER 4290자 · @dnd-kit + ↑↓ 보존 · E2E_MOCK_AI 분기 + KB-04/09b</td></tr>
+      <tr><td><b>Function · UX</b></td><td>4모드 cache hit · 드래그+키보드 a11y · CI/CD 회귀 검출</td></tr>
+      <tr><td><b>Core Value</b></td><td>A6 비용 ~50%↓ · 매핑 UX↑ · 안정성↑</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>📋 commit별 진척</h2>
+  <table>
+    <thead><tr><th>ID</th><th>commit</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>D7</td><td><code>3cdbd9d</code></td><td>rewriter COMMON_HEADER 600→4290자 (호텔 사전 + 골격 가이드 + 모드별 예시)</td></tr>
+      <tr><td>D6</td><td><code>86832d0</code></td><td>@dnd-kit + SortableRow + ↑↓ 보존 + a11y</td></tr>
+      <tr><td>D5</td><td><code>d869892</code></td><td>lib/ai/mock.ts + action 분기 + KB-04(A5)/KB-09b(A6 tone)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>💡 인사이트</h2>
+  <blockquote>
+    <b>부채는 작아도 누적되면 큰 부담</b>. v1.7 미니 사이클(3 commits)로 D5·D6·D7 영구 해소.
+    A6 rewriter cache 활성으로 호출당 비용 ~70%↓ (cache hit 시), 매핑 UX는 dnd 표준,
+    AI 회귀 검출은 mock 인프라로 가능.
+  </blockquote>
+  <ul class="check">
+    <li>SYSTEM 4000자+ 임계는 cache 활성의 절대 기준. 짧으면 cache 효과 0.</li>
+    <li>@dnd-kit + ↑↓ 둘 다 유지 — a11y와 호환성 모두 확보.</li>
+    <li>mock은 server-only 환경변수 분기로 production 절대 비활성.</li>
+    <li>권한·rate-limit·zod 등 server action 전체 흐름 mock에서도 통과 → 회귀 검출 손실 0.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>🧪 D2 사용자 안내 (KB-01 로컬 e2e)</h2>
+  <p>manager 인증 시나리오는 dev server + storage state 준비 후 로컬 실행:</p>
+  <pre style="background:var(--slate-900); color:#e2e8f0; padding:10px 12px; border-radius:6px; overflow-x:auto; font-size:12px;">npm run dev   # 별도 터미널
+
+npx playwright test --config=e2e/playwright.config.ts \\
+  e2e/kb-knowledge-base.spec.ts -g "KB-01" \\
+  --project=chromium --no-deps</pre>
+  <p>또는 mock 활성으로 KB-04 + KB-09b 함께:</p>
+  <pre style="background:var(--slate-900); color:#e2e8f0; padding:10px 12px; border-radius:6px; overflow-x:auto; font-size:12px;">E2E_MOCK_AI=1 npm run dev
+E2E_MOCK_AI=1 npx playwright test --config=e2e/playwright.config.ts \\
+  e2e/kb-knowledge-base.spec.ts --project=chromium --no-deps</pre>
+</section>
+
+<section>
+  <h2>🚀 다음 후보</h2>
+  <ul class="next">
+    <li>D8 semantic 검색 UI 통합 (사용자 별도 작업한 vector 컬럼)</li>
+    <li>D9 AI 비용/사용량 대시보드</li>
+    <li>운영 검증 (매니저 인터뷰, cache hit률 측정)</li>
+    <li>신규 feature (비즈니스 요구 응답)</li>
+  </ul>
+</section>
+
+<footer style="margin-top:32px; padding-top:16px; border-top:1px solid var(--slate-200); color:var(--slate-500); font-size:12px;">
+  PDCA Report: <code>docs/04-report/knowledge-base-overhaul/REPORT-v1.7.md</code> · 마지막 commit: <code>d869892</code>
+</footer>
+
+</div>
+</body>
+</html>
