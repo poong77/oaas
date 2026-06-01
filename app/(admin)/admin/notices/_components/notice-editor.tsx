@@ -6,6 +6,7 @@ import { useState, useTransition } from 'react';
 import {
   ArrowUpRight,
   Eye,
+  Flame,
   ImageIcon,
   Save,
   Sparkles,
@@ -16,7 +17,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
+import { ChoiceCard, ToggleCard, FieldLabel } from '@/components/ui/choice-card';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
@@ -284,46 +285,57 @@ export function NoticeEditor({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* 메타 정보 폼 */}
+      {/* 메타 정보 폼 — 드롭다운 대신 버튼형 선택 카드로 통일 */}
       <Card>
-        <CardContent className="grid gap-4 p-5 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="kind">종류 *</Label>
-            <Select
-              id="kind"
-              value={kind}
-              onChange={(e) => setKind(e.target.value as NoticeKind)}
-            >
+        <CardContent className="flex flex-col gap-5 p-5 sm:p-6">
+          {/* 종류 */}
+          <div>
+            <FieldLabel title="종류" required error={fieldErrors.kind} />
+            <div className="grid grid-cols-3 gap-2">
               {KIND_OPTIONS.map((k) => (
-                <option key={k} value={k}>
-                  {NOTICE_KIND_META[k].label} — {NOTICE_KIND_META[k].description}
-                </option>
+                <ChoiceCard
+                  key={k}
+                  label={NOTICE_KIND_META[k].label}
+                  selected={kind === k}
+                  tone={k === 'incident' ? 'danger' : 'brand'}
+                  icon={
+                    k === 'incident' ? <Flame className="h-3.5 w-3.5" /> : undefined
+                  }
+                  onClick={() => setKind(k)}
+                />
               ))}
-            </Select>
-            {fieldErrors.kind && <FieldError msg={fieldErrors.kind} />}
+            </div>
+            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+              {NOTICE_KIND_META[kind].description}
+            </p>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="productCode">제품</Label>
-            <Select
-              id="productCode"
-              value={productCode}
-              onChange={(e) => setProductCode(e.target.value)}
-            >
-              <option value="">전체 공지 (제품 무관)</option>
+          {/* 제품 */}
+          <div>
+            <FieldLabel
+              title="제품"
+              hint="특정 제품 공지면 선택 · 전체면 '전체 공지'"
+            />
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              <ChoiceCard
+                label="전체 공지"
+                selected={productCode === ''}
+                onClick={() => setProductCode('')}
+              />
               {categories.map((c) => (
-                <option key={c.id} value={c.code}>
-                  {c.label}
-                </option>
+                <ChoiceCard
+                  key={c.id}
+                  label={c.label}
+                  selected={productCode === c.code}
+                  onClick={() => setProductCode(c.code)}
+                />
               ))}
-            </Select>
-            <span className="text-xs text-slate-500">
-              특정 제품 관련 공지면 선택. 전체 공지면 비워두세요.
-            </span>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <Label htmlFor="title">제목 *</Label>
+          {/* 제목 */}
+          <div>
+            <FieldLabel title="제목" required error={fieldErrors.title} />
             <Input
               id="title"
               value={title}
@@ -331,39 +343,36 @@ export function NoticeEditor({
               maxLength={200}
               placeholder="예: v1.1.0 릴리즈 노트 — 이슈 클레임 UX 개선"
             />
-            {fieldErrors.title && <FieldError msg={fieldErrors.title} />}
           </div>
 
-          {/* 노출 옵션 + 관련 설정 바로가기 (2단) */}
-          <div className="flex flex-col gap-4 sm:col-span-2 lg:flex-row lg:items-start">
-            {/* pinned + banner 옵션 */}
-            <div className="flex flex-1 flex-col gap-2 rounded-md border border-slate-200 p-3 dark:border-slate-700">
-            <Label className="text-sm font-semibold">노출 옵션</Label>
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={pinned}
-                onChange={(e) => setPinned(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300"
+          {/* 노출 옵션 — 토글 카드 */}
+          <div>
+            <FieldLabel title="노출 옵션" hint="여러 개 동시 선택 가능" />
+            <div className="grid gap-2 sm:grid-cols-3">
+              <ToggleCard
+                active={pinned}
+                onClick={() => setPinned(!pinned)}
+                title="핀 고정"
+                description="공지 목록 상단에 항상 고정 노출"
               />
-              <span>
-                <strong>핀 고정</strong> — 공지 목록 상단에 항상 고정 노출
-              </span>
-            </label>
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={banner}
-                onChange={(e) => setBanner(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300"
+              <ToggleCard
+                active={banner}
+                onClick={() => setBanner(!banner)}
+                title="홈 배너 노출"
+                description="모든 페이지 상단에 띠 노출 (긴급용)"
+                tone="warn"
               />
-              <span>
-                <strong>홈 배너 노출</strong> — 모든 페이지 상단에 띠 노출
-                (긴급용)
-              </span>
-            </label>
+              <ToggleCard
+                active={popupEnabled}
+                onClick={() => setPopupEnabled(!popupEnabled)}
+                title="홈 팝업 배너"
+                description="홈 진입 시 이미지 팝업으로 노출"
+              />
+            </div>
+
+            {/* 홈 배너 세부 — 자동 해제 시각 */}
             {banner && (
-              <div className="ml-6 flex flex-col gap-1.5">
+              <div className="mt-3 flex flex-col gap-1.5 rounded-md border border-slate-200 bg-slate-50/60 p-3 dark:border-slate-700 dark:bg-slate-800/40">
                 <Label
                   htmlFor="bannerUntil"
                   className="text-xs text-slate-600 dark:text-slate-400"
@@ -380,23 +389,9 @@ export function NoticeEditor({
               </div>
             )}
 
-            {/* NT-04 홈 팝업 배너 */}
-            <div className="mt-1 border-t border-slate-200 pt-2 dark:border-slate-700">
-              <label className="inline-flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={popupEnabled}
-                  onChange={(e) => setPopupEnabled(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300"
-                />
-                <span>
-                  <strong>홈 팝업 배너</strong> — 홈 진입 시 이미지 팝업으로 노출
-                </span>
-              </label>
-            </div>
-
+            {/* 홈 팝업 배너 세부 */}
             {popupEnabled && (
-              <div className="ml-6 flex flex-col gap-4">
+              <div className="mt-3 flex flex-col gap-4 rounded-md border border-slate-200 bg-slate-50/60 p-3 dark:border-slate-700 dark:bg-slate-800/40">
                 {/* 이미지 */}
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs text-slate-600 dark:text-slate-400">
@@ -448,26 +443,19 @@ export function NoticeEditor({
                   )}
                 </div>
 
-                {/* 크기 프리셋 */}
+                {/* 크기 프리셋 — 버튼형 선택 */}
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs text-slate-600 dark:text-slate-400">
                     배너 크기
                   </Label>
-                  <div className="inline-flex w-fit overflow-hidden rounded-md border border-slate-300 dark:border-slate-600">
+                  <div className="grid max-w-xs grid-cols-3 gap-2">
                     {POPUP_SIZE_OPTIONS.map((s) => (
-                      <button
+                      <ChoiceCard
                         key={s}
-                        type="button"
+                        label={NOTICE_POPUP_SIZE_META[s].label}
+                        selected={popupSize === s}
                         onClick={() => setPopupSize(s)}
-                        className={cn(
-                          'px-4 py-1.5 text-sm transition',
-                          popupSize === s
-                            ? 'bg-brand-600 text-white'
-                            : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700',
-                        )}
-                      >
-                        {NOTICE_POPUP_SIZE_META[s].label}
-                      </button>
+                      />
                     ))}
                   </div>
                 </div>
@@ -532,11 +520,10 @@ export function NoticeEditor({
                 </div>
               </div>
             )}
-            </div>
-
-            {/* 관련 설정 바로가기 — 장애/점검 공지 작성 시 함께 확인 */}
-            <RelatedSettingsPanel />
           </div>
+
+          {/* 관련 설정 바로가기 — 장애/점검 공지 작성 시 함께 확인 */}
+          <RelatedSettingsPanel />
         </CardContent>
       </Card>
 
@@ -722,9 +709,12 @@ const RELATED_SETTINGS = [
 
 function RelatedSettingsPanel() {
   return (
-    <aside className="flex flex-col gap-2 rounded-md border border-slate-200 bg-slate-50/60 p-3 dark:border-slate-700 dark:bg-slate-800/40 lg:w-[420px] lg:shrink-0">
-      <span className="text-sm font-semibold">관련 설정 바로가기</span>
-      <div className="grid grid-cols-2 gap-2">
+    <div className="border-t border-slate-200 pt-4 dark:border-slate-700">
+      <FieldLabel
+        title="관련 설정 바로가기"
+        hint="공지와 함께 점검하면 좋은 설정 · 새 탭"
+      />
+      <div className="grid gap-2 sm:grid-cols-2">
         {RELATED_SETTINGS.map(
           ({ href, Illustration, title, description, accent }) => (
           <Link
@@ -732,7 +722,7 @@ function RelatedSettingsPanel() {
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-start gap-3 rounded-md border border-slate-200 bg-white p-2.5 transition hover:border-brand-300 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-700"
+            className="group flex items-start gap-3 rounded-md border border-slate-200 bg-white p-3 transition hover:border-brand-300 hover:bg-brand-50/30 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-700 dark:hover:bg-brand-950/20"
           >
             <span
               className={cn(
@@ -755,6 +745,6 @@ function RelatedSettingsPanel() {
           ),
         )}
       </div>
-    </aside>
+    </div>
   );
 }
