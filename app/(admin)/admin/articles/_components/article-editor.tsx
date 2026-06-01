@@ -59,8 +59,17 @@ import {
   type MetaCheck,
 } from './editor/article-checklist-sidebar';
 import { KbAiChatbotMetaCard } from './editor/ai-assistant-panel';
+import { RewritePanel } from './editor/rewrite-panel';
+import { DiffPreviewModal } from './editor/diff-preview-modal';
 import type { AiAssistOutput } from '@/lib/ai/prompts/article-assistant';
-import { aiAssistArticleAction } from '@/app/actions/article-actions';
+import {
+  REWRITE_MODE_LABEL,
+  type RewriteMode,
+} from '@/lib/ai/prompts/article-rewriter';
+import {
+  aiAssistArticleAction,
+  aiRewriteArticleAction,
+} from '@/app/actions/article-actions';
 
 type EditorMode = 'create' | 'edit';
 
@@ -224,6 +233,63 @@ export function ArticleEditor({
     } finally {
       setAiLoading(false);
     }
+  }
+
+  // ── A6 재편집 (Phase 4) ──────────────────────────────────────────
+  const [rewriteLoading, setRewriteLoading] = useState(false);
+  const [rewriteCooldownUntil, setRewriteCooldownUntil] = useState(0);
+  const [rewritePreview, setRewritePreview] = useState<{
+    open: boolean;
+    mode: RewriteMode;
+    modelLabel: string;
+    beforeBody: string;
+    afterBody: string;
+    summaryOfChanges: string[];
+  } | null>(null);
+
+  async function handleRewriteRequest(mode: RewriteMode, command?: string) {
+    if (rewriteLoading) return;
+    setRewriteLoading(true);
+    try {
+      const result = await aiRewriteArticleAction({
+        mode,
+        body,
+        contentType,
+        title: title || undefined,
+        summary: summary || undefined,
+        productCode: productCode || undefined,
+        command: mode === 'custom' ? command : undefined,
+        // reorder는 의도 변경용. 현재 UX는 의도 카드에서 별도 처리 — 여기서는 fromType=현재로 두고
+        // 같은 의도로 골격 재정렬은 큰 의미 없음. v1.5 후속에서 IntentSelector와 통합 권장.
+      });
+      if (!result.ok) {
+        toast.error(result.message);
+        if (result.reason === 'rate-limit') {
+          setRewriteCooldownUntil(Date.now() + 60_000);
+        }
+        return;
+      }
+      if (result.truncated) {
+        toast.info(
+          `본문이 길어 5000자만 분석했어요 (원본 ${result.originalLength?.toLocaleString()}자).`,
+        );
+      }
+      setRewritePreview({
+        open: true,
+        mode: result.mode,
+        modelLabel: result.model,
+        beforeBody: body,
+        afterBody: result.data.revisedBody,
+        summaryOfChanges: result.data.summaryOfChanges,
+      });
+    } finally {
+      setRewriteLoading(false);
+    }
+  }
+
+  function handleRewriteApply(mergedBody: string) {
+    setBody(mergedBody);
+    toast.success('재편집 결과가 본문에 적용됐어요.');
   }
 
   function dismissField(field: 'slug' | 'summary' | 'keywords' | 'relatedHints' | 'chatbotMeta') {
@@ -508,6 +574,30 @@ export function ArticleEditor({
           onAutosaveStatusChange={handleAutosaveChange}
           fieldError={fieldErrors.bodyMarkdown}
         />
+
+        {/* A6 재편집 패널 — 본문 아래, 발행 버튼 위 */}
+        <RewritePanel
+          body={body}
+          loading={rewriteLoading}
+          cooldownUntil={rewriteCooldownUntil}
+          onRequest={(mode, command) => void handleRewriteRequest(mode, command)}
+        />
+
+        {/* A6 재편집 미리보기 모달 (조건부) */}
+        {rewritePreview?.open && (
+          <DiffPreviewModal
+            open={rewritePreview.open}
+            onClose={() =>
+              setRewritePreview((prev) => (prev ? { ...prev, open: false } : null))
+            }
+            modeLabel={REWRITE_MODE_LABEL[rewritePreview.mode]}
+            modelLabel={rewritePreview.modelLabel}
+            beforeBody={rewritePreview.beforeBody}
+            afterBody={rewritePreview.afterBody}
+            summaryOfChanges={rewritePreview.summaryOfChanges}
+            onApply={handleRewriteApply}
+          />
+        )}
 
         <div className="flex flex-wrap items-center gap-2">
           <Button

@@ -187,3 +187,70 @@ test.describe('KB-08 /role/[key] DB 연동 (public)', () => {
     expect(res?.status()).toBe(404);
   });
 });
+
+// ──────────────────────────────────────────────────────────────────
+// KB-09 — A6 재편집 (Phase 4) — UI 검증 (API mock는 v2)
+// ──────────────────────────────────────────────────────────────────
+//
+// 본 시나리오는 RewritePanel UI 동작만 검증.
+// 실제 aiRewriteArticleAction 호출(=Anthropic API)은 비용·결과 변동성 때문에 mock 인프라
+// 마련 후 KB-09b로 확장. 현재는 본문 미만 비활성 / 4모드 라디오 / Haiku 배지 / custom 명령
+// 입력 + 빠른 프리셋만 검증.
+//
+// 참조: DESIGN §16, lib/ai/prompts/article-rewriter.ts
+
+test.describe('KB-09 A6 재편집 패널 UI (manager)', () => {
+  test.use({ storageState: STORAGE_STATE_PATHS.manager });
+
+  test('KB-09 신규 작성 페이지에 재편집 패널이 렌더되고 본문 50자 미만 시 트리거 비활성', async ({
+    page,
+  }) => {
+    await page.goto('/admin/articles/new');
+
+    // 패널 헤더 노출
+    await expect(page.getByText('AI 재편집')).toBeVisible();
+
+    // 본문 비어있음(골격 placeholder만) 상태 → 트리거 비활성
+    const triggerBtn = page.getByRole('button', { name: /재편집 미리보기/ });
+    await expect(triggerBtn).toBeDisabled();
+    await expect(page.getByText('본문 50자 이상 입력 후 활성')).toBeVisible();
+  });
+
+  test('KB-09b 4모드 라디오 선택 + tone에 Haiku 배지', async ({ page }) => {
+    await page.goto('/admin/articles/new');
+
+    // 4모드 라벨 모두 노출
+    await expect(page.getByText('골격 재정렬 (의도 변경)')).toBeVisible();
+    await expect(page.getByText('빈 섹션 채우기')).toBeVisible();
+    await expect(page.getByText('CS 톤 보정')).toBeVisible();
+    await expect(page.getByText('자유 명령')).toBeVisible();
+
+    // tone 모드에 Haiku 배지
+    await expect(page.getByText('Haiku').first()).toBeVisible();
+
+    // 라디오 선택 (tone → reorder)
+    await page.getByRole('radio', { name: /골격 재정렬/ }).check();
+    await expect(page.getByRole('radio', { name: /골격 재정렬/ })).toBeChecked();
+  });
+
+  test('KB-09c custom 모드 선택 시 자유 명령 입력란 + 빠른 프리셋 노출', async ({
+    page,
+  }) => {
+    await page.goto('/admin/articles/new');
+
+    // custom 모드 선택
+    await page.getByRole('radio', { name: '자유 명령' }).check();
+
+    // 자유 명령 Input 노출
+    await expect(page.getByLabel(/자유 명령/)).toBeVisible();
+
+    // 빠른 프리셋 5개 모두 노출
+    for (const preset of ['더 짧게', '단계 자세히', '용어 통일', '초보 눈높이', '약어 풀어쓰기']) {
+      await expect(page.getByRole('button', { name: preset })).toBeVisible();
+    }
+
+    // 프리셋 클릭 → 명령란 채워짐
+    await page.getByRole('button', { name: '더 짧게' }).click();
+    await expect(page.getByLabel(/자유 명령/)).toHaveValue(/줄/);
+  });
+});
