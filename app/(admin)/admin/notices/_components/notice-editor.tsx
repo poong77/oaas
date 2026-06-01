@@ -1,8 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { Eye, ImageIcon, Save, Trash2, Upload } from 'lucide-react';
+import { ArrowUpRight, Eye, ImageIcon, Save, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -276,8 +277,10 @@ export function NoticeEditor({
             {fieldErrors.title && <FieldError msg={fieldErrors.title} />}
           </div>
 
-          {/* pinned + banner 옵션 */}
-          <div className="flex flex-col gap-2 rounded-md border border-slate-200 p-3 dark:border-slate-700 sm:col-span-2">
+          {/* 노출 옵션 + 관련 설정 바로가기 (2단) */}
+          <div className="flex flex-col gap-4 sm:col-span-2 lg:flex-row lg:items-start">
+            {/* pinned + banner 옵션 */}
+            <div className="flex flex-1 flex-col gap-2 rounded-md border border-slate-200 p-3 dark:border-slate-700">
             <Label className="text-sm font-semibold">노출 옵션</Label>
             <label className="inline-flex items-center gap-2 text-sm">
               <input
@@ -472,6 +475,10 @@ export function NoticeEditor({
                 </div>
               </div>
             )}
+            </div>
+
+            {/* 관련 설정 바로가기 — 장애/점검 공지 작성 시 함께 확인 */}
+            <RelatedSettingsPanel />
           </div>
         </CardContent>
       </Card>
@@ -546,4 +553,142 @@ export function NoticeEditor({
 
 function FieldError({ msg }: { msg: string }) {
   return <span className="text-xs text-rose-600">{msg}</span>;
+}
+
+/** 운영시간 일러스트 — 듀오톤 시계 (배경 원 + 시침/분침 + 상단 버튼) */
+function BusinessHoursIllustration() {
+  return (
+    <svg viewBox="0 0 40 40" fill="none" className="h-7 w-7" aria-hidden="true">
+      <circle cx="20" cy="21" r="14" className="fill-current" opacity="0.16" />
+      <circle
+        cx="20"
+        cy="21"
+        r="11"
+        className="stroke-current"
+        strokeWidth="2.2"
+      />
+      <path
+        d="M20 14.5V21l4.2 2.6"
+        className="stroke-current"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M16.5 5.5h7"
+        className="stroke-current"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M20 5.5v3"
+        className="stroke-current"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** 서비스 상태 일러스트 — 듀오톤 모니터 패널 + 하트비트 라인 + 상태 점 */
+function ServiceStatusIllustration() {
+  return (
+    <svg viewBox="0 0 40 40" fill="none" className="h-7 w-7" aria-hidden="true">
+      <rect
+        x="5"
+        y="9"
+        width="30"
+        height="21"
+        rx="3.5"
+        className="fill-current"
+        opacity="0.16"
+      />
+      <rect
+        x="5"
+        y="9"
+        width="30"
+        height="21"
+        rx="3.5"
+        className="stroke-current"
+        strokeWidth="2.2"
+      />
+      <path
+        d="M10 20h4l2.4-5 4 9.5 2.6-6 1.6 1.5H30"
+        className="stroke-current"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="31"
+        cy="10"
+        r="4.5"
+        className="fill-current stroke-white dark:stroke-slate-900"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
+/** 노출 옵션 우측: 장애·점검 공지 작성 시 함께 손봐야 하는 마스터 설정 바로가기 */
+const RELATED_SETTINGS = [
+  {
+    href: '/admin/master/business-hours?tab=hours',
+    Illustration: BusinessHoursIllustration,
+    title: '운영시간 설정',
+    description: '상담 가능 시간·공휴일이 바뀌었다면 함께 갱신하세요.',
+    accent: 'text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40',
+  },
+  {
+    href: '/admin/service-status',
+    Illustration: ServiceStatusIllustration,
+    title: '서비스 상태 변경',
+    description: '장애·점검 공지라면 상단 서비스 상태도 함께 전환하세요.',
+    accent: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40',
+  },
+] as const;
+
+function RelatedSettingsPanel() {
+  return (
+    <aside className="flex flex-col gap-2 rounded-md border border-slate-200 bg-slate-50/60 p-3 dark:border-slate-700 dark:bg-slate-800/40 lg:w-72 lg:shrink-0">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-sm font-semibold">관련 설정 바로가기</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          공지와 함께 점검하면 좋은 마스터 설정입니다. 새 탭으로 열려 작성 중인
+          내용은 유지됩니다.
+        </span>
+      </div>
+      <div className="flex flex-col gap-2">
+        {RELATED_SETTINGS.map(
+          ({ href, Illustration, title, description, accent }) => (
+          <Link
+            key={href}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-start gap-3 rounded-md border border-slate-200 bg-white p-2.5 transition hover:border-brand-300 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-700"
+          >
+            <span
+              className={cn(
+                'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg',
+                accent,
+              )}
+            >
+              <Illustration />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="flex items-center gap-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+                {title}
+                <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand-500" />
+              </span>
+              <span className="text-xs leading-snug text-slate-500 dark:text-slate-400">
+                {description}
+              </span>
+            </span>
+          </Link>
+          ),
+        )}
+      </div>
+    </aside>
+  );
 }
