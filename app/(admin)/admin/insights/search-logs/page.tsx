@@ -21,8 +21,9 @@ import { SearchLogsListClient } from './_components/search-logs-list-client';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '검색로그 — OA 통합 AS 어드민' };
 
-const VALID_PERIODS: SearchLogPeriod[] = ['yesterday', '7d', '30d'];
+const VALID_PERIODS: SearchLogPeriod[] = ['today', 'yesterday', '7d', '30d'];
 const PERIOD_LABEL: Record<SearchLogPeriod, string> = {
+  today: '오늘 (실시간)',
   yesterday: '어제 (1일)',
   '7d': '최근 7일',
   '30d': '최근 30일',
@@ -41,7 +42,7 @@ export default async function SearchLogsPage({
     sp.period as SearchLogPeriod,
   )
     ? (sp.period as SearchLogPeriod)
-    : '7d';
+    : 'today';
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1);
 
   const { items, total, pageSize, stats } = await listSearchLogs({

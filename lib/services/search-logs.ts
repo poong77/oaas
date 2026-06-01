@@ -331,8 +331,12 @@ export async function getUsageByQueries(
 // 검색 이력 (어드민 > 인사이트 > 검색로그) — 1행 = 1회 검색 visit
 // ─────────────────────────────────────────────────────────────────────
 
-/** 기간 필터. 모두 "어제"를 끝으로 함 (오늘은 집계 진행 중이라 제외). */
-export type SearchLogPeriod = 'yesterday' | '7d' | '30d';
+/**
+ * 기간 필터.
+ * - `today`   : 오늘 00:00 KST ~ 현재 시각 (실시간, 기본값)
+ * - 나머지     : "어제"를 끝으로 함 (오늘 제외)
+ */
+export type SearchLogPeriod = 'today' | 'yesterday' | '7d' | '30d';
 
 /** 클릭해서 도착한 페이지의 "도움됐어요/아니예요" 반응표 집계. */
 export type HelpfulTally = { yes: number; no: number };
@@ -361,16 +365,23 @@ export type SearchLogList = {
 /**
  * 기간 → [start, end) UTC 경계 (KST 자정 정렬).
  * Vercel(UTC)에서도 KST 하루 단위로 자르기 위해 KST 날짜를 기준으로 계산.
+ *
+ * - today    : [오늘 00:00 KST, 현재 시각) — 실시간
+ * - 그 외     : [오늘-N일 00:00, 오늘 00:00) — 어제를 끝으로 (오늘 제외)
  */
 function kstPeriodRange(period: SearchLogPeriod): { start: Date; end: Date } {
-  const todayKst = new Date()
+  const now = new Date();
+  const todayKst = now
     .toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' })
     .slice(0, 10); // 'YYYY-MM-DD'
-  // 오늘 00:00 KST = 어제의 끝. 모든 기간의 end.
-  const end = new Date(`${todayKst}T00:00:00+09:00`);
+  // 오늘 00:00 KST = 어제의 끝.
+  const todayStart = new Date(`${todayKst}T00:00:00+09:00`);
+  if (period === 'today') {
+    return { start: todayStart, end: now };
+  }
   const days = period === 'yesterday' ? 1 : period === '7d' ? 7 : 30;
-  const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
-  return { start, end };
+  const start = new Date(todayStart.getTime() - days * 24 * 60 * 60 * 1000);
+  return { start, end: todayStart };
 }
 
 /** 클릭/접수 결과로부터 유출 페이지 URL을 복원 (track 라우트의 ref 규칙 역산). */
