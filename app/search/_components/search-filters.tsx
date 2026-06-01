@@ -36,10 +36,10 @@ export function SearchFilters({
   }
 
   return (
-    <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30 sm:flex-row sm:flex-wrap sm:items-center">
       <form
         onSubmit={submitQuery}
-        className="relative sm:col-span-2 lg:col-span-1"
+        className="relative w-full sm:min-w-[200px] sm:flex-1"
       >
         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
@@ -56,6 +56,7 @@ export function SearchFilters({
         value={initial.product ?? ''}
         onChange={(e) => update({ product: e.target.value || undefined })}
         aria-label="제품 필터"
+        className="w-full shrink-0 sm:w-auto"
       >
         <option value="">모든 제품</option>
         {categories.map((c) => (
@@ -69,6 +70,7 @@ export function SearchFilters({
         value={initial.contentType ?? ''}
         onChange={(e) => update({ contentType: e.target.value || undefined })}
         aria-label="의도 필터"
+        className="w-full shrink-0 sm:w-auto"
       >
         <option value="">모든 의도</option>
         <option value="howto">사용방법 (howto)</option>
@@ -80,6 +82,7 @@ export function SearchFilters({
         value={initial.sort ?? 'relevance'}
         onChange={(e) => update({ sort: e.target.value })}
         aria-label="정렬"
+        className="w-full shrink-0 sm:w-auto"
       >
         <option value="relevance">관련도 순</option>
         <option value="recent">최신순</option>
@@ -87,9 +90,7 @@ export function SearchFilters({
       </Select>
 
       {pending && (
-        <span className="text-xs text-slate-500 sm:col-span-2 lg:col-span-1">
-          적용 중...
-        </span>
+        <span className="text-xs text-slate-500">적용 중...</span>
       )}
     </div>
   );
