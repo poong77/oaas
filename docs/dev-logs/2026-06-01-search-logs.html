@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>개발일지 — 검색로그 (DI-06) · 2026-06-01</title>
+<style>
+  :root {
+    --brand-50:#eef2ff; --brand-100:#e0e7ff; --brand-500:#6366f1;
+    --brand-600:#4f46e5; --brand-700:#4338ca;
+    --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
+    --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.65; }
+  .wrap { max-width:920px; margin:0 auto; padding:24px 16px 64px; }
+  header.hero { background:linear-gradient(135deg,var(--brand-600),var(--brand-700)); color:#fff;
+    border-radius:16px; padding:28px 24px; box-shadow:0 8px 24px rgba(79,70,229,.25); }
+  header.hero .tag { display:inline-block; background:rgba(255,255,255,.2); padding:3px 10px;
+    border-radius:999px; font-size:12px; font-weight:600; letter-spacing:.02em; }
+  header.hero h1 { margin:12px 0 6px; font-size:24px; }
+  header.hero p { margin:0; opacity:.92; font-size:14px; }
+  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin:20px 0; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .card .k { font-size:12px; color:var(--muted); font-weight:600; }
+  .card .v { font-size:22px; font-weight:700; margin-top:4px; }
+  .card .v small { font-size:13px; font-weight:500; color:var(--muted); }
+  h2 { font-size:18px; margin:32px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--brand-100); }
+  table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line);
+    border-radius:12px; overflow:hidden; font-size:14px; }
+  th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:var(--brand-50); color:var(--brand-700); font-size:12px; }
+  tr:last-child td { border-bottom:none; }
+  code { background:var(--brand-50); color:var(--brand-700); padding:1px 6px; border-radius:5px;
+    font-size:12.5px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+  .b-new { background:#dcfce7; color:var(--ok); }
+  .b-mod { background:#fef9c3; color:var(--warn); }
+  .b-doc { background:#e0e7ff; color:var(--brand-700); }
+  ul.check { list-style:none; padding:0; margin:0; }
+  ul.check li { background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:11px 14px; margin-bottom:8px; padding-left:38px; position:relative; font-size:14px; }
+  ul.check li::before { content:"✓"; position:absolute; left:13px; top:11px; color:var(--ok); font-weight:800; }
+  .note { background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:14px 16px;
+    font-size:14px; }
+  .note strong { color:var(--warn); }
+  .flow { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px;
+    font-size:13.5px; color:var(--muted); }
+  .flow b { color:var(--ink); }
+  .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700;
+    background:#dcfce7; color:var(--ok); }
+  footer { margin-top:40px; text-align:center; color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="tag">DI-06 · 인사이트 신규 그룹</span>
+    <h1>검색로그 (Search Logs)</h1>
+    <p>호텔리어 실사용 검색 1행=1회 · 유입 키워드 · 유입일시 · 세션 체류시간 · 도움됨 반응표(👍/👎) · 유출 페이지 URL</p>
+  </header>
+
+  <div class="grid">
+    <div class="card"><div class="k">Match Rate</div><div class="v" style="color:var(--ok)">99.5%<small> 목표 99% 초과</small></div></div>
+    <div class="card"><div class="k">신규 파일</div><div class="v">3<small> 개</small></div></div>
+    <div class="card"><div class="k">수정 파일</div><div class="v">3<small> 개</small></div></div>
+    <div class="card"><div class="k">DB 스키마</div><div class="v" style="font-size:16px">변경 0건</div></div>
+    <div class="card"><div class="k">검증</div><div class="v" style="color:var(--ok)">PASS<small> tsc --noEmit</small></div></div>
+  </div>
+
+  <h2>1. Executive Summary</h2>
+  <table>
+    <tr><th style="width:130px">관점</th><th>내용 (실제 산출물 반영)</th></tr>
+    <tr><td><b>Problem</b></td><td>집계 대시보드(<code>/admin/master/search-quality</code>)는 Hit@3·CTR·0건율을 보여주지만, "어제 누군가 어떤 키워드로 들어와 얼마나 머물고 도움받았는지(또는 이탈/접수했는지)"라는 <b>개별 검색 여정</b>은 볼 수 없었다.</td></tr>
+    <tr><td><b>Solution</b></td><td>기존 <code>search_logs</code> + <code>articles/faqs.helpful_*</code>를 조회 전용으로 펼쳐 1행=1회로 나열. 사이드바에 <b>인사이트</b> 그룹을 신설하고 검색로그 메뉴를 추가. <b>DB 스키마 변경 0건.</b></td></tr>
+    <tr><td><b>Function UX Effect</b></td><td>어제/최근 7일/최근 30일(KST, 오늘 제외) 기간 필터 + 4 StatCard(검색 수·클릭+CTR·티켓 전환·결과없음) + 데스크탑 테이블/모바일 카드뷰/EmptyState + 페이지네이션 + 행별 반응표.</td></tr>
+    <tr><td><b>Core Value</b></td><td>검색 품질 개선의 <b>정성적 근거</b> 제공 — 0건 이탈 키워드·도움 안 된 콘텐츠를 운영팀이 직접 보고 콘텐츠·동의어·라우팅을 개선.</td></tr>
+  </table>
+
+  <h2>2. PDCA 흐름</h2>
+  <div class="flow">
+    <b>[Plan]</b> ✅ → <b>[Design]</b> ✅ → <b>[Do]</b> ✅ (선구현) → <b>[Check]</b> ✅ 99.5% → <b>[Report]</b> ✅<br/>
+    구현이 선완료된 상태에서 코드를 SoR로 삼아 Plan/Design을 역작성 → gap-detector 방법론으로 1:1 대조.
+    1차 98.5%에서 문서 갭 1건(P1-K)만 발견 → <code>IMPLEMENTATION_PLAN.md</code> DI-06 추가로 <span class="pill">99.5%</span> 도달. 코드 반복(iterate) 불필요.
+  </div>
+
+  <h2>3. 변경 파일</h2>
+  <table>
+    <tr><th>구분</th><th>경로</th><th>내용</th></tr>
+    <tr><td><span class="badge b-new">신규</span></td><td><code>app/(admin)/admin/insights/search-logs/page.tsx</code></td><td>RSC, requireRole(manager/admin), PageHeader + 기간필터 + StatCard 4 + Card(테이블/카드뷰/EmptyState)</td></tr>
+    <tr><td><span class="badge b-new">신규</span></td><td><code>.../_components/search-logs-filters.tsx</code></td><td>기간 버튼 토글(?period=), useTransition pending</td></tr>
+    <tr><td><span class="badge b-new">신규</span></td><td><code>.../_components/search-logs-list-client.tsx</code></td><td>데스크탑 테이블 + 모바일 카드뷰 + 반응표(👍/👎) + 유출 외부링크 + 페이지네이션</td></tr>
+    <tr><td><span class="badge b-mod">수정</span></td><td><code>lib/services/search-logs.ts</code></td><td><code>listSearchLogs</code> + <code>kstPeriodRange</code> + <code>buildOutflow</code> + 타입 추가 (기존 집계 함수 무변경)</td></tr>
+    <tr><td><span class="badge b-mod">수정</span></td><td><code>app/(admin)/admin/_data/nav-items.ts</code></td><td>TabGroup 'insight' 추가, 검색로그 NavItem, GROUP_ORDER/GROUP_LABEL('인사이트')</td></tr>
+    <tr><td><span class="badge b-doc">문서</span></td><td><code>docs/IMPLEMENTATION_PLAN.md</code></td><td>DI-06 검색로그 + 인사이트 그룹 명시 (P1-K 갭 해소)</td></tr>
+  </table>
+
+  <h2>4. 핵심 구현 포인트</h2>
+  <table>
+    <tr><th style="width:160px">기술 과제</th><th>해결</th></tr>
+    <tr><td>기간 경계 (KST)</td><td><code>kstPeriodRange</code> — Vercel(UTC)에서도 <code>Asia/Seoul</code> 자정 기준 [start,end). 모든 기간의 end = 오늘 00:00 KST → 오늘 제외.</td></tr>
+    <tr><td>세션 체류시간</td><td>같은 <code>session_key</code> 내 <code>LEAD(created_at)</code> 윈도우로 다음 활동까지 간격(초). 다음 없으면 <code>updated_at</code>. 윈도우는 LIMIT 이전 평가 → 페이지 경계 무관.</td></tr>
+    <tr><td>도움됨 반응표</td><td>clicked help→<code>articles.slug</code>, faq→<code>faqs.id</code>를 dedupe 후 <code>inArray</code> 배치 조인(페이지당 2쿼리). N+1 없음.</td></tr>
+    <tr><td>유출 URL 복원</td><td><code>buildOutflow</code> — clickedKind별 경로 역산: help <code>/help/{product}/{slug}</code>, faq <code>/faq#faq-{id}</code>, notice <code>/notices/{id}</code>, incident <code>/status</code>, 티켓 <code>/tickets/new</code>, 미클릭 "— (이탈)".</td></tr>
+  </table>
+
+  <h2>5. 검증 체크리스트</h2>
+  <ul class="check">
+    <li>5컬럼(유입 키워드/유입일시/세션 체류/도움됨 반응표/유출 URL) 표시</li>
+    <li>기간 3종(어제/7일/30일) 모두 "어제"가 끝 — KST 자정 정렬, 오늘 제외</li>
+    <li>도움됨 = 도착 페이지의 👍/👎 반응표 집계 (사용자 정정 반영)</li>
+    <li>사이드바 인사이트 그룹 신설 — 데스크탑/모바일 양쪽 GROUP_ORDER 기반 자동 렌더</li>
+    <li>리스트 쿼리 <code>is_active=true</code> 포함 · DB 스키마 변경 0건</li>
+    <li>Card 래퍼 · 모바일 카드뷰 · EmptyState · 다크모드 (날것의 페이지 금지 준수)</li>
+    <li>requireRole(['manager','admin']) — 호텔리어 차단</li>
+    <li><code>npx tsc --noEmit</code> exit 0 · 기존 search-quality 대시보드 회귀 0</li>
+  </ul>
+
+  <h2>6. Gap 분석 (Check)</h2>
+  <table>
+    <tr><th>항목</th><th>결과</th></tr>
+    <tr><td>Plan Goals G1~G5</td><td><span class="pill">5/5 · 100%</span></td></tr>
+    <tr><td>Plan Scope P0 / P1</td><td><span class="pill">10/10 · 3/3 · 100%</span></td></tr>
+    <tr><td>Plan Risks (C1~C4/E1/E2/R1/R2)</td><td><span class="pill">8/8 해소</span></td></tr>
+    <tr><td>Q-1~Q-4 결정</td><td><span class="pill">4/4 · 100%</span></td></tr>
+    <tr><td>Design 신규/수정 파일</td><td><span class="pill">3/3 · 2/2 · 100%</span></td></tr>
+    <tr><td>의존성 존재 검증</td><td><span class="pill">EmptyState·PageHeader·formatDateTimeKst·helpful_* 전부 일치</span></td></tr>
+    <tr><td><b>Overall Match Rate</b></td><td><b style="color:var(--ok)">99.5% — 목표 99% 초과 달성</b></td></tr>
+  </table>
+
+  <h2>7. 후속 (Non-Goals → 별도 Phase)</h2>
+  <div class="note">
+    <strong>이번 Phase에서 안 함:</strong> 정렬·검색 필터 / CSV·엑셀 내보내기 / 호텔리어·매니저별 필터 / 실시간(오늘) 집계.
+    검색로그는 <b>읽기 전용</b>(로그 불변 이력). 집계·차트는 기존 <code>/admin/master/search-quality</code>가 담당하고, 본 기능은 개별 행 나열에 집중한다.
+  </div>
+
+  <h2>8. 산출 문서</h2>
+  <table>
+    <tr><th>단계</th><th>경로</th></tr>
+    <tr><td>Plan</td><td><code>docs/01-plan/features/search-logs.plan.md</code></td></tr>
+    <tr><td>Design</td><td><code>docs/02-design/features/search-logs.design.md</code></td></tr>
+    <tr><td>Analysis</td><td><code>docs/03-analysis/features/search-logs.analysis.md</code></td></tr>
+    <tr><td>Report (본 문서)</td><td><code>docs/dev-logs/2026-06-01-search-logs.html</code></td></tr>
+  </table>
+
+  <footer>
+    OA 통합 AS 플랫폼 · support.oapms.com · 검색로그(DI-06) 완료 보고서 · 2026-06-01 · Match Rate 99.5%
+  </footer>
+
+</div>
+</body>
+</html>

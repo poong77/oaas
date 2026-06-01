@@ -122,6 +122,9 @@
 | DI-03 | AI 자동해결률 트래킹 | AI/셀프 해결 비율, 목표치 설정 | 매니저·어드민 | P2 |
 | DI-04 | (AI) 정보칩 기반 인사이트 | 반복 이슈·빈출 키워드·미해결 다발 제품 자동 분석 리포트 | 어드민 | P3 |
 | DI-05 | 월간 리포트 자동 발송 | 월 1회 Slack 자동 발송 | — | P3 |
+| DI-06 | 검색로그 | 어드민>인사이트>검색로그. 호텔리어 실사용 검색 1행=1회 나열(유입 키워드·유입일시·세션 체류시간·도움됨 반응표·유출 페이지 URL). 기간 어제/7일/30일(KST, 오늘 제외). 읽기 전용 | 매니저·어드민 | P1 ✅ |
+
+> **사이드바 그룹**: 본 기능으로 어드민 사이드바에 **인사이트** 그룹(`GROUP_ORDER`: tickets → content → **insight** → org)을 신설했다. `search_logs` + `articles/faqs.helpful_*` 기존 자산을 조회 전용으로 활용(DB 스키마 변경 0건). 집계 대시보드는 `/admin/master/search-quality`(별도), 본 기능은 개별 행 나열에 집중. 상세: `docs/01-plan/features/search-logs.plan.md`, `docs/02-design/features/search-logs.design.md`.
 
 ### 6. 공지/업데이트 (NT)
 

@@ -23,12 +23,13 @@ import {
   Inbox,
   ListChecks,
   Megaphone,
+  Search,
   Users,
   type LucideIcon,
 } from 'lucide-react';
 import type { UserRole } from '@/db/schema';
 
-export type TabGroup = 'tickets' | 'content' | 'org';
+export type TabGroup = 'tickets' | 'content' | 'insight' | 'org';
 
 export interface NavItem {
   href: string;
@@ -84,6 +85,14 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['manager', 'admin'],
     group: 'content',
   },
+  // 인사이트
+  {
+    href: '/admin/insights/search-logs',
+    label: '검색로그',
+    icon: Search,
+    roles: ['manager', 'admin'],
+    group: 'insight',
+  },
   // 조직 & 마스터
   {
     href: '/admin/users',
@@ -108,10 +117,11 @@ export const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export const GROUP_ORDER: TabGroup[] = ['tickets', 'content', 'org'];
+export const GROUP_ORDER: TabGroup[] = ['tickets', 'content', 'insight', 'org'];
 
 export const GROUP_LABEL: Record<TabGroup, string> = {
   tickets: '티켓 운영',
   content: '콘텐츠',
+  insight: '인사이트',
   org: '조직 & 마스터',
 };

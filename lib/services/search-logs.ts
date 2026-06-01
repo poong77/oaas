@@ -8,10 +8,12 @@
  */
 
 import 'server-only';
-import { and, desc, eq, gte, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
+  articles,
+  faqs,
   searchLogs,
   type SearchResultCounts,
   type NewSearchLog,
@@ -322,6 +324,243 @@ export async function getUsageByQueries(
   } catch (err) {
     console.error('[search-logs.getUsageByQueries] 실패:', err);
     return {};
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 검색 이력 (어드민 > 인사이트 > 검색로그) — 1행 = 1회 검색 visit
+// ─────────────────────────────────────────────────────────────────────
+
+/** 기간 필터. 모두 "어제"를 끝으로 함 (오늘은 집계 진행 중이라 제외). */
+export type SearchLogPeriod = 'yesterday' | '7d' | '30d';
+
+/** 클릭해서 도착한 페이지의 "도움됐어요/아니예요" 반응표 집계. */
+export type HelpfulTally = { yes: number; no: number };
+
+export type SearchLogRow = {
+  id: string;
+  query: string;
+  createdAt: Date;
+  /** 같은 세션 내 다음 활동까지의 간격(초). 세션키 없거나 단발이면 null. */
+  dwellSeconds: number | null;
+  /** 클릭해 도착한 아티클/FAQ 하단 반응표 집계. 반응표 없는 대상/미클릭이면 null. */
+  helpful: HelpfulTally | null;
+  /** 유출(이동) 페이지 URL — 클릭/접수 결과. 없으면 null(이탈). */
+  outflowUrl: string | null;
+  outflowLabel: string | null;
+};
+
+export type SearchLogList = {
+  items: SearchLogRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  stats: { total: number; clicks: number; ticket: number; zero: number };
+};
+
+/**
+ * 기간 → [start, end) UTC 경계 (KST 자정 정렬).
+ * Vercel(UTC)에서도 KST 하루 단위로 자르기 위해 KST 날짜를 기준으로 계산.
+ */
+function kstPeriodRange(period: SearchLogPeriod): { start: Date; end: Date } {
+  const todayKst = new Date()
+    .toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' })
+    .slice(0, 10); // 'YYYY-MM-DD'
+  // 오늘 00:00 KST = 어제의 끝. 모든 기간의 end.
+  const end = new Date(`${todayKst}T00:00:00+09:00`);
+  const days = period === 'yesterday' ? 1 : period === '7d' ? 7 : 30;
+  const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
+  return { start, end };
+}
+
+/** 클릭/접수 결과로부터 유출 페이지 URL을 복원 (track 라우트의 ref 규칙 역산). */
+function buildOutflow(row: {
+  clicked: boolean;
+  clickedKind: string | null;
+  clickedRef: string | null;
+  ledToTicket: boolean;
+  productCode: string | null;
+}): { url: string | null; label: string | null } {
+  if (row.clicked && row.clickedKind && row.clickedRef) {
+    switch (row.clickedKind) {
+      case 'help':
+        return {
+          url: row.productCode
+            ? `/help/${row.productCode}/${row.clickedRef}`
+            : `/help/${row.clickedRef}`,
+          label: '아티클',
+        };
+      case 'faq':
+        return { url: `/faq#faq-${row.clickedRef}`, label: 'FAQ' };
+      case 'notice':
+        return { url: `/notices/${row.clickedRef}`, label: '공지' };
+      case 'incident':
+        return { url: '/status', label: '서비스 상태' };
+      default:
+        return { url: null, label: row.clickedKind };
+    }
+  }
+  if (row.ledToTicket) return { url: '/tickets/new', label: '티켓 접수' };
+  return { url: null, label: null };
+}
+
+/**
+ * 검색 이력 목록 — 기간 필터 + 페이징.
+ * 세션 체류시간은 같은 session_key 내 다음 활동까지의 간격을 LEAD 윈도우로 산출.
+ * (윈도우 함수는 WHERE 통과 전체 집합에 대해 LIMIT 이전에 평가되므로 페이지 경계와 무관하게 정확.)
+ */
+export async function listSearchLogs(input: {
+  period: SearchLogPeriod;
+  page?: number;
+  pageSize?: number;
+}): Promise<SearchLogList> {
+  const page = Math.max(1, input.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, input.pageSize ?? 30));
+  const empty: SearchLogList = {
+    items: [],
+    total: 0,
+    page,
+    pageSize,
+    stats: { total: 0, clicks: 0, ticket: 0, zero: 0 },
+  };
+  if (!db) return empty;
+
+  try {
+    const { start, end } = kstPeriodRange(input.period);
+    const where = and(
+      gte(searchLogs.createdAt, start),
+      lt(searchLogs.createdAt, end),
+      eq(searchLogs.isActive, true),
+    );
+
+    // 세션 내 다음 활동까지 간격(초). 세션키 없으면 null(단발 취급).
+    const dwellExpr = sql<number | null>`case
+      when ${searchLogs.sessionKey} is null then null
+      else extract(epoch from (
+        coalesce(
+          lead(${searchLogs.createdAt}) over (
+            partition by ${searchLogs.sessionKey} order by ${searchLogs.createdAt}
+          ),
+          ${searchLogs.updatedAt}
+        ) - ${searchLogs.createdAt}
+      ))
+    end`;
+
+    const [rows, statRows] = await Promise.all([
+      db
+        .select({
+          id: searchLogs.id,
+          query: searchLogs.query,
+          createdAt: searchLogs.createdAt,
+          clicked: searchLogs.clicked,
+          clickedKind: searchLogs.clickedKind,
+          clickedRef: searchLogs.clickedRef,
+          ledToTicket: searchLogs.ledToTicket,
+          zeroResult: searchLogs.zeroResult,
+          productCode: searchLogs.productCode,
+          dwellSeconds: dwellExpr,
+        })
+        .from(searchLogs)
+        .where(where)
+        .orderBy(desc(searchLogs.createdAt))
+        .limit(pageSize)
+        .offset((page - 1) * pageSize),
+      db
+        .select({
+          total: sql<number>`count(*)::int`,
+          clicks: sql<number>`count(*) filter (where ${searchLogs.clicked})::int`,
+          ticket: sql<number>`count(*) filter (where ${searchLogs.ledToTicket})::int`,
+          zero: sql<number>`count(*) filter (where ${searchLogs.zeroResult})::int`,
+        })
+        .from(searchLogs)
+        .where(where),
+    ]);
+
+    // 클릭해 도착한 아티클(slug)·FAQ(id) 하단 반응표 집계를 배치 조회.
+    const helpSlugs = [
+      ...new Set(
+        rows
+          .filter((r) => r.clicked && r.clickedKind === 'help' && r.clickedRef)
+          .map((r) => r.clickedRef as string),
+      ),
+    ];
+    const faqIds = [
+      ...new Set(
+        rows
+          .filter((r) => r.clicked && r.clickedKind === 'faq' && r.clickedRef)
+          .map((r) => r.clickedRef as string),
+      ),
+    ];
+
+    const [articleRows, faqRows] = await Promise.all([
+      helpSlugs.length
+        ? db
+            .select({
+              slug: articles.slug,
+              yes: articles.helpfulYes,
+              no: articles.helpfulNo,
+            })
+            .from(articles)
+            .where(inArray(articles.slug, helpSlugs))
+        : Promise.resolve([] as { slug: string; yes: number; no: number }[]),
+      faqIds.length
+        ? db
+            .select({
+              id: faqs.id,
+              yes: faqs.helpfulYes,
+              no: faqs.helpfulNo,
+            })
+            .from(faqs)
+            .where(inArray(faqs.id, faqIds))
+        : Promise.resolve([] as { id: string; yes: number; no: number }[]),
+    ]);
+
+    const helpfulBySlug = new Map(
+      articleRows.map((a) => [a.slug, { yes: a.yes, no: a.no }]),
+    );
+    const helpfulByFaq = new Map(
+      faqRows.map((f) => [f.id, { yes: f.yes, no: f.no }]),
+    );
+
+    const s = statRows[0];
+    const items: SearchLogRow[] = rows.map((r) => {
+      const outflow = buildOutflow(r);
+      const dwell =
+        r.dwellSeconds == null ? null : Math.round(Number(r.dwellSeconds));
+      let helpful: HelpfulTally | null = null;
+      if (r.clicked && r.clickedRef) {
+        if (r.clickedKind === 'help') {
+          helpful = helpfulBySlug.get(r.clickedRef) ?? null;
+        } else if (r.clickedKind === 'faq') {
+          helpful = helpfulByFaq.get(r.clickedRef) ?? null;
+        }
+      }
+      return {
+        id: r.id,
+        query: r.query,
+        createdAt: r.createdAt,
+        dwellSeconds: dwell != null && dwell >= 0 ? dwell : null,
+        helpful,
+        outflowUrl: outflow.url,
+        outflowLabel: outflow.label,
+      };
+    });
+
+    return {
+      items,
+      total: Number(s?.total ?? 0),
+      page,
+      pageSize,
+      stats: {
+        total: Number(s?.total ?? 0),
+        clicks: Number(s?.clicks ?? 0),
+        ticket: Number(s?.ticket ?? 0),
+        zero: Number(s?.zero ?? 0),
+      },
+    };
+  } catch (err) {
+    console.error('[search-logs.listSearchLogs] 실패:', err);
+    return empty;
   }
 }
 
