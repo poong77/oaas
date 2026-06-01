@@ -52,7 +52,22 @@ import {
   type KeywordRecommendation,
   type RelatedArticleRecommendation,
 } from '@/lib/articles/recommend';
-import { callClaudeAssistant } from '@/lib/ai/anthropic-client';
+import {
+  callClaudeAssistant,
+  runClaudeJson,
+} from '@/lib/ai/anthropic-client';
+import {
+  buildRewriterSystem,
+  buildRewriterUserMessage,
+  bucketForMode,
+  modelForMode,
+  REWRITE_MODES,
+  RewriteOutputSchema,
+  truncateRewriteBody,
+  type RewriteInput,
+  type RewriteMode,
+  type RewriteOutput,
+} from '@/lib/ai/prompts/article-rewriter';
 import {
   AiAssistOutputSchema,
   truncateBody,
@@ -240,6 +255,134 @@ export async function aiAssistArticleAction(input: {
       message: showDetail
         ? `AI 보조 실패: ${errMsg.slice(0, 200)}`
         : 'AI 보조가 일시적으로 동작하지 않아요. 수동으로 계속 작성하거나 잠시 후 다시 시도해주세요.',
+    };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// A6 — 재편집 (Phase 4, 4모드)
+// ─────────────────────────────────────────────────────────────────────
+
+type AiRewriteResult =
+  | {
+      ok: true;
+      data: RewriteOutput;
+      truncated?: boolean;
+      originalLength?: number;
+      model: string;
+      mode: RewriteMode;
+    }
+  | {
+      ok: false;
+      reason: 'rate-limit' | 'api-error' | 'parse-error' | 'invalid-input' | 'output-too-long';
+      message: string;
+    };
+
+/**
+ * A6 — Claude로 본문 재편집 (4모드).
+ *
+ * - 모드: reorder / fill-gaps / tone / custom
+ * - 모델: tone → Haiku, 나머지 → Sonnet (v1.4 비용 분기)
+ * - Rate limit: 분당 5회 / 일 100회 (메타 추출보다 보수)
+ * - 입력 본문 5000자 cap, 출력 5000자 cap (지나친 확장 방지)
+ * - graceful: rate-limit / api-error / parse-error / invalid-input / output-too-long
+ */
+export async function aiRewriteArticleAction(
+  input: RewriteInput,
+): Promise<AiRewriteResult> {
+  const user = await requireRole(['manager', 'admin']);
+
+  // 입력 유효성 (mode + body)
+  if (!input?.mode || !REWRITE_MODES.includes(input.mode)) {
+    return { ok: false, reason: 'invalid-input', message: '지원하지 않는 재편집 모드입니다.' };
+  }
+  if (!input.body || input.body.trim().length < 20) {
+    return {
+      ok: false,
+      reason: 'invalid-input',
+      message: '본문이 너무 짧아요 (최소 20자).',
+    };
+  }
+  if (input.mode === 'reorder' && !input.toType) {
+    return {
+      ok: false,
+      reason: 'invalid-input',
+      message: 'reorder 모드는 변경 대상 의도(toType)가 필요해요.',
+    };
+  }
+  if (input.mode === 'custom' && !input.command?.trim()) {
+    return {
+      ok: false,
+      reason: 'invalid-input',
+      message: 'custom 모드는 사용자 명령이 필요해요.',
+    };
+  }
+
+  // Rate limit (모드별 bucket 분리)
+  try {
+    await rateLimitOrThrow(user.id, {
+      perMin: 5,
+      perDay: 100,
+      bucket: bucketForMode(input.mode),
+    });
+  } catch (e) {
+    if (e instanceof RateLimitExceededError) {
+      return { ok: false, reason: 'rate-limit', message: e.message };
+    }
+    throw e;
+  }
+
+  // 입력 5000자 cap
+  const truncated = truncateRewriteBody(input.body, 5000);
+  const model = modelForMode(input.mode);
+
+  try {
+    const raw = await runClaudeJson({
+      system: buildRewriterSystem({ ...input, body: truncated.text }),
+      user: buildRewriterUserMessage({ ...input, body: truncated.text }),
+      model,
+      maxTokens: 4096,
+      bucket: bucketForMode(input.mode),
+    });
+
+    const parsed = RewriteOutputSchema.safeParse(raw);
+    if (!parsed.success) {
+      console.warn('[aiRewriteArticleAction] zod 검증 실패:', parsed.error.flatten());
+      return {
+        ok: false,
+        reason: 'parse-error',
+        message: 'AI 재편집 출력 형식이 예상과 달라요. 다시 시도해주세요.',
+      };
+    }
+
+    // 출력 본문도 cap 검증
+    if (parsed.data.revisedBody.length > 8000) {
+      return {
+        ok: false,
+        reason: 'output-too-long',
+        message: 'AI 출력이 너무 길어요 (8000자 초과). 더 작은 범위로 시도해주세요.',
+      };
+    }
+
+    return {
+      ok: true,
+      data: parsed.data,
+      truncated: truncated.truncated,
+      originalLength: truncated.original,
+      model,
+      mode: input.mode,
+    };
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error('[aiRewriteArticleAction] Claude 호출 실패:', errMsg);
+    const showDetail =
+      process.env.VERCEL_ENV !== 'production' || process.env.NODE_ENV !== 'production';
+    return {
+      ok: false,
+      reason: 'api-error',
+      message: showDetail
+        ? `AI 재편집 실패: ${errMsg.slice(0, 200)}`
+        : 'AI 재편집이 일시 중단됐어요. 수동 편집으로 계속하거나 잠시 후 재시도.',
     };
   }
 }
