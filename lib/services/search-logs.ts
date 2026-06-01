@@ -8,7 +8,7 @@
  */
 
 import 'server-only';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
@@ -205,6 +205,123 @@ export async function topZeroQueries(
   } catch (err) {
     console.error('[search-logs.topZeroQueries] 실패:', err);
     return [];
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 퍼널 (노출 → 클릭 → 접수) — #6
+// ─────────────────────────────────────────────────────────────────────
+
+export type FunnelStats = {
+  searches: number;
+  clicks: number;
+  /** 클릭 위치 분포 (1~4 / 5~8 / 9+위). */
+  clickTop4: number;
+  clickMid: number;
+  clickDeep: number;
+  /** 클릭 후 접수로 진행 (자가해결 실패의 일부). */
+  clickThenTicket: number;
+  /** 클릭 없이 바로 접수 (검색 실패 신호). */
+  ticketNoClick: number;
+  /** 검색 후 접수 안 함 = 자가해결 추정. */
+  deflectionRate: number;
+};
+
+export async function getFunnelStats(days = 30): Promise<FunnelStats> {
+  const empty: FunnelStats = {
+    searches: 0,
+    clicks: 0,
+    clickTop4: 0,
+    clickMid: 0,
+    clickDeep: 0,
+    clickThenTicket: 0,
+    ticketNoClick: 0,
+    deflectionRate: 0,
+  };
+  if (!db) return empty;
+  try {
+    const since = sinceDate(days);
+    const rows = await db
+      .select({
+        searches: sql<number>`count(*)::int`,
+        clicks: sql<number>`count(*) filter (where ${searchLogs.clicked})::int`,
+        clickTop4: sql<number>`count(*) filter (where ${searchLogs.clickedPosition} between 1 and 4)::int`,
+        clickMid: sql<number>`count(*) filter (where ${searchLogs.clickedPosition} between 5 and 8)::int`,
+        clickDeep: sql<number>`count(*) filter (where ${searchLogs.clickedPosition} >= 9)::int`,
+        clickThenTicket: sql<number>`count(*) filter (where ${searchLogs.clicked} and ${searchLogs.ledToTicket})::int`,
+        ticketNoClick: sql<number>`count(*) filter (where ${searchLogs.ledToTicket} and not ${searchLogs.clicked})::int`,
+        tickets: sql<number>`count(*) filter (where ${searchLogs.ledToTicket})::int`,
+      })
+      .from(searchLogs)
+      .where(gte(searchLogs.createdAt, since));
+    const r = rows[0];
+    const searches = Number(r?.searches ?? 0);
+    if (searches === 0) return empty;
+    const tickets = Number(r?.tickets ?? 0);
+    return {
+      searches,
+      clicks: Number(r?.clicks ?? 0),
+      clickTop4: Number(r?.clickTop4 ?? 0),
+      clickMid: Number(r?.clickMid ?? 0),
+      clickDeep: Number(r?.clickDeep ?? 0),
+      clickThenTicket: Number(r?.clickThenTicket ?? 0),
+      ticketNoClick: Number(r?.ticketNoClick ?? 0),
+      deflectionRate: 1 - tickets / searches,
+    };
+  } catch (err) {
+    console.error('[search-logs.getFunnelStats] 실패:', err);
+    return empty;
+  }
+}
+
+export type QueryUsage = {
+  searches: number;
+  ctr: number;
+  avgClickPosition: number | null;
+  ticketRate: number;
+};
+
+/**
+ * 골든셋 질의를 실사용 로그와 조인 — normalizedQuery별 실제 행동 지표.
+ * 오프라인 순위 옆에 "실제로 눌렀나/접수했나"를 붙이는 용도.
+ */
+export async function getUsageByQueries(
+  normalizedQueries: string[],
+  days = 90,
+): Promise<Record<string, QueryUsage>> {
+  if (!db || normalizedQueries.length === 0) return {};
+  try {
+    const since = sinceDate(days);
+    const rows = await db
+      .select({
+        nq: searchLogs.normalizedQuery,
+        searches: sql<number>`count(*)::int`,
+        clicks: sql<number>`count(*) filter (where ${searchLogs.clicked})::int`,
+        avgPos: sql<number | null>`avg(${searchLogs.clickedPosition})`,
+        tickets: sql<number>`count(*) filter (where ${searchLogs.ledToTicket})::int`,
+      })
+      .from(searchLogs)
+      .where(
+        and(
+          gte(searchLogs.createdAt, since),
+          inArray(searchLogs.normalizedQuery, normalizedQueries),
+        ),
+      )
+      .groupBy(searchLogs.normalizedQuery);
+    const out: Record<string, QueryUsage> = {};
+    for (const r of rows) {
+      const s = Number(r.searches);
+      out[r.nq] = {
+        searches: s,
+        ctr: s > 0 ? Number(r.clicks) / s : 0,
+        avgClickPosition: r.avgPos != null ? Number(r.avgPos) : null,
+        ticketRate: s > 0 ? Number(r.tickets) / s : 0,
+      };
+    }
+    return out;
+  } catch (err) {
+    console.error('[search-logs.getUsageByQueries] 실패:', err);
+    return {};
   }
 }
 

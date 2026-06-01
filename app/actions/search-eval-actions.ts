@@ -11,15 +11,25 @@ import { logActivity } from '@/lib/audit';
 import {
   archiveAllEvalQueries,
   archiveEvalQuery,
+  bulkCreateEvalQueries,
   createEvalQuery,
+  evaluateBatch,
   generateQueriesFromArticles,
   runEvaluation,
+  saveRun,
   seedFromFaqs,
+  suggestFromLogs,
+  suggestFromTroubleshoot,
   updateEvalQuery,
+  type SuggestedCandidate,
 } from '@/lib/services/search-eval';
-import type { SearchEvalJudge, SearchEvalSource } from '@/db/schema';
+import type {
+  SearchEvalDetail,
+  SearchEvalJudge,
+  SearchEvalSource,
+} from '@/db/schema';
 
-const PATH = '/admin/search-quality';
+const PATH = '/admin/master/search-quality';
 
 export async function runEvaluationAction(
   judgeMode: SearchEvalJudge = 'label',
@@ -37,6 +47,79 @@ export async function runEvaluationAction(
     revalidatePath(PATH);
   }
   return { ok: res.ok, runId: res.runId, message: res.message };
+}
+
+/** 배치 측정 — 진행률 프로그레스바용. 클라이언트가 10배치로 순차 호출. */
+export async function evaluateBatchAction(
+  queryIds: string[],
+  judgeMode: SearchEvalJudge = 'label',
+): Promise<{ ok: boolean; details: SearchEvalDetail[] }> {
+  await requireRole(['manager', 'admin']);
+  const details = await evaluateBatch(queryIds, judgeMode);
+  return { ok: true, details };
+}
+
+/** 배치 측정 누적 결과 저장 (마지막 단계). */
+export async function saveRunAction(
+  details: SearchEvalDetail[],
+  judgeMode: SearchEvalJudge = 'label',
+): Promise<{ ok: boolean; runId?: string; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const res = await saveRun(details, judgeMode, user.id);
+  if (res.ok) {
+    logActivity({
+      userId: user.id,
+      action: 'search_eval.run',
+      targetType: 'search_eval_run',
+      targetId: res.runId,
+      payload: { judgeMode, summary: res.summary, batched: true },
+    });
+    revalidatePath(PATH);
+  }
+  return { ok: res.ok, runId: res.runId, message: res.message };
+}
+
+export async function suggestFromLogsAction(): Promise<{
+  ok: boolean;
+  candidates: SuggestedCandidate[];
+}> {
+  await requireRole(['manager', 'admin']);
+  const candidates = await suggestFromLogs(15);
+  return { ok: true, candidates };
+}
+
+export async function suggestFromTroubleshootAction(): Promise<{
+  ok: boolean;
+  candidates: SuggestedCandidate[];
+}> {
+  await requireRole(['manager', 'admin']);
+  const candidates = await suggestFromTroubleshoot({
+    sampleSize: 15,
+    perArticle: 2,
+  });
+  return { ok: true, candidates };
+}
+
+export async function bulkCreateEvalQueriesAction(
+  candidates: Array<{
+    query: string;
+    expectedArticleSlugs?: string[];
+    expectedFaqIds?: string[];
+    note?: string | null;
+    source?: SearchEvalSource;
+  }>,
+): Promise<{ ok: boolean; created: number }> {
+  const user = await requireRole(['manager', 'admin']);
+  const res = await bulkCreateEvalQueries(candidates);
+  if (res.ok) {
+    logActivity({
+      userId: user.id,
+      action: 'search_eval.bulk_create',
+      payload: { created: res.created },
+    });
+    revalidatePath(PATH);
+  }
+  return res;
 }
 
 export async function seedFromFaqsAction(): Promise<{

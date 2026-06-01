@@ -15,7 +15,7 @@
  */
 
 import 'server-only';
-import { and, count, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
@@ -28,6 +28,7 @@ import {
   type SearchEvalJudge,
   type SearchEvalQuery,
   type SearchEvalRun,
+  type SearchEvalSource,
 } from '@/db/schema';
 import { searchArticles } from './articles';
 import { searchFaqs } from './faqs';
@@ -99,8 +100,7 @@ async function evaluateQuery(
 
   const hasLabels =
     q.expectedArticleSlugs.length > 0 || q.expectedFaqIds.length > 0;
-  const useLlm =
-    judgeMode === 'llm' || (judgeMode === 'hybrid' && !hasLabels);
+  const useLlm = judgeMode === 'llm' || (judgeMode === 'hybrid' && !hasLabels);
 
   // 등급 grades[i] 계산 (nDCG/적합 판정용).
   let grades: number[];
@@ -113,7 +113,9 @@ async function evaluateQuery(
       head.map((c) => ({ title: c.title, snippet: c.snippet })),
     );
     judgeScores = merged.map((_, i) => (scores ? scores[i] : undefined));
-    grades = merged.map((_, i) => (scores && i < scores.length ? scores[i]! : 0));
+    grades = merged.map((_, i) =>
+      scores && i < scores.length ? scores[i]! : 0,
+    );
   } else {
     // 라벨 기준 이진 등급 (전체 리스트 스캔 — API 비용 없음).
     const artSet = new Set(q.expectedArticleSlugs);
@@ -231,6 +233,142 @@ export async function runEvaluation(options: {
       message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
     };
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 배치 측정 (진행률 프로그레스바용 — 클라이언트가 10배치로 순차 호출)
+// ─────────────────────────────────────────────────────────────────────
+
+/** 활성 골든셋의 id를 등록 시각 순으로 반환 (배치 분할용). */
+export async function listEvalQueryIds(): Promise<string[]> {
+  if (!db) return [];
+  try {
+    const rows = await db
+      .select({ id: searchEvalQueries.id })
+      .from(searchEvalQueries)
+      .where(eq(searchEvalQueries.isActive, true))
+      .orderBy(searchEvalQueries.createdAt);
+    return rows.map((r) => r.id);
+  } catch {
+    return [];
+  }
+}
+
+/** 지정 id들만 평가해 details 반환 (저장 안 함). 진행률 배치 단위. */
+export async function evaluateBatch(
+  queryIds: string[],
+  judgeMode: SearchEvalJudge,
+): Promise<SearchEvalDetail[]> {
+  if (!db || queryIds.length === 0) return [];
+  try {
+    const queries = await db
+      .select()
+      .from(searchEvalQueries)
+      .where(
+        and(
+          eq(searchEvalQueries.isActive, true),
+          inArray(searchEvalQueries.id, queryIds),
+        ),
+      );
+    const details: SearchEvalDetail[] = [];
+    for (const q of queries) {
+      details.push(await evaluateQuery(q, judgeMode));
+    }
+    return details;
+  } catch (err) {
+    console.error('[search-eval.evaluateBatch] 실패:', err);
+    return [];
+  }
+}
+
+/** 누적된 details로 run을 집계·저장 (배치 측정 마지막 단계). */
+export async function saveRun(
+  details: SearchEvalDetail[],
+  judgeMode: SearchEvalJudge,
+  triggeredBy?: string | null,
+): Promise<RunEvaluationResult> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  const n = details.length;
+  if (n === 0) return { ok: false, message: 'NO_DETAILS' };
+  try {
+    const hit1 = details.filter((d) => d.hitTop1).length / n;
+    const hit3 = details.filter((d) => d.hitTop3).length / n;
+    const mrr = details.reduce((s, d) => s + d.reciprocalRank, 0) / n;
+    const ndcg = details.reduce((s, d) => s + d.ndcg, 0) / n;
+    const [run] = await db
+      .insert(searchEvalRuns)
+      .values({
+        queryCount: n,
+        hit1,
+        hit3,
+        mrr,
+        ndcg,
+        judgeMode,
+        params: { vecWeight: 4, ndcgK: NDCG_K },
+        details,
+        triggeredBy: triggeredBy ?? null,
+      })
+      .returning({ id: searchEvalRuns.id });
+    return {
+      ok: true,
+      runId: run?.id,
+      summary: { queryCount: n, hit1, hit3, mrr, ndcg },
+    };
+  } catch (err) {
+    console.error('[search-eval.saveRun] 실패:', err);
+    return { ok: false, message: 'INTERNAL_ERROR' };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 순위 이력 / 버킷 (대시보드)
+// ─────────────────────────────────────────────────────────────────────
+
+/** 순위 버킷 — 상위4 이내 / 8 이내 / 9위 이하 / 정답 없음. */
+export type RankBuckets = {
+  top4: number;
+  top8: number;
+  rest: number;
+  none: number;
+  total: number;
+};
+
+export function computeBuckets(run: SearchEvalRun | null): RankBuckets {
+  const b: RankBuckets = { top4: 0, top8: 0, rest: 0, none: 0, total: 0 };
+  if (!run) return b;
+  for (const d of run.details) {
+    b.total++;
+    const r = d.rankOfFirstRelevant;
+    if (r === null) b.none++;
+    else if (r <= 4) b.top4++;
+    else if (r <= 8) b.top8++;
+    else b.rest++;
+  }
+  return b;
+}
+
+/**
+ * 질의별 순위 이력 — 최근 N개 run에서 각 질의의 rankOfFirstRelevant 추출.
+ * @returns { runs: [oldest..newest] 메타, byQuery: queryId → (rank|null)[] (runs 순서) }
+ */
+export async function getRankHistory(runCount = 4): Promise<{
+  runs: { id: string; ranAt: Date }[];
+  byQuery: Record<string, (number | null)[]>;
+}> {
+  const recent = await listRuns(runCount); // newest first
+  const ordered = [...recent].reverse(); // oldest → newest
+  const byQuery: Record<string, (number | null)[]> = {};
+  ordered.forEach((run, idx) => {
+    for (const d of run.details) {
+      if (!byQuery[d.queryId])
+        byQuery[d.queryId] = new Array(ordered.length).fill(null);
+      byQuery[d.queryId]![idx] = d.rankOfFirstRelevant;
+    }
+  });
+  return {
+    runs: ordered.map((r) => ({ id: r.id, ranAt: r.ranAt })),
+    byQuery,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -498,5 +636,175 @@ export async function archiveAllEvalQueries(
   } catch (err) {
     console.error('[search-eval.archiveAllEvalQueries] 실패:', err);
     return { ok: false, archived: 0 };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AI 추천 (검수 후 추가) — 검색이력 기반 + 문제해결 아티클 기반
+// ─────────────────────────────────────────────────────────────────────
+
+export type SuggestedCandidate = {
+  query: string;
+  source: 'log' | 'troubleshoot';
+  reason: string;
+  /** 정답 확정 (troubleshoot=해당 아티클). log는 비우고 options로 어드민이 선택. */
+  expectedArticleSlugs: string[];
+  expectedFaqIds: string[];
+  note: string | null;
+  /** log 후보: 현재 검색 상위 결과 — 어드민이 정답 선택. */
+  options?: { kind: 'help' | 'faq'; ref: string; title: string }[];
+};
+
+/** 기존 골든셋 질의 정규화 집합 (중복 추천 방지). */
+async function existingQuerySet(): Promise<Set<string>> {
+  if (!db) return new Set();
+  const rows = await db
+    .select({ query: searchEvalQueries.query })
+    .from(searchEvalQueries);
+  return new Set(rows.map((r) => r.query.trim().toLowerCase()));
+}
+
+/**
+ * 검색 이력 기반 추천 — 실사용 빈번 질의 중 골든셋에 없는 것.
+ * 정답은 미정(어드민이 현재 top 결과에서 선택) — 순환 자동통과 방지.
+ */
+export async function suggestFromLogs(
+  limit = 15,
+): Promise<SuggestedCandidate[]> {
+  if (!db) return [];
+  try {
+    const { topQueries } = await import('./search-logs');
+    const top = await topQueries(60, 60);
+    const seen = await existingQuerySet();
+    const out: SuggestedCandidate[] = [];
+    for (const t of top) {
+      if (out.length >= limit) break;
+      if (seen.has(t.query.trim().toLowerCase())) continue;
+      // 현재 검색 상위 3개를 옵션으로 제시 (정답 후보)
+      const [arts, fqs] = await Promise.all([
+        searchArticles(t.query, { limit: 3 }),
+        searchFaqs(t.query, { limit: 3 }),
+      ]);
+      const options = [
+        ...arts.map((a) => ({
+          kind: 'help' as const,
+          ref: a.slug,
+          title: a.title,
+        })),
+        ...fqs.map((f) => ({
+          kind: 'faq' as const,
+          ref: f.id,
+          title: f.question,
+        })),
+      ].slice(0, 5);
+      out.push({
+        query: t.query,
+        source: 'log',
+        reason: `실사용 검색 ${t.count}회`,
+        expectedArticleSlugs: [],
+        expectedFaqIds: [],
+        note: '검색이력',
+        options,
+      });
+    }
+    return out;
+  } catch (err) {
+    console.error('[search-eval.suggestFromLogs] 실패:', err);
+    return [];
+  }
+}
+
+/**
+ * 문제해결(troubleshoot) 아티클 기반 추천 — LLM이 증상형 질의 생성.
+ * 해당 아티클이 정답이므로 expected 확정 (비순환).
+ */
+export async function suggestFromTroubleshoot(options: {
+  sampleSize?: number;
+  perArticle?: number;
+}): Promise<SuggestedCandidate[]> {
+  if (!db) return [];
+  const sampleSize = Math.min(40, Math.max(1, options.sampleSize ?? 15));
+  const perArticle = Math.min(3, Math.max(1, options.perArticle ?? 2));
+  try {
+    const arts = await db
+      .select({
+        slug: articles.slug,
+        title: articles.title,
+        summary: articles.summary,
+        bodyMarkdown: articles.bodyMarkdown,
+      })
+      .from(articles)
+      .where(
+        and(
+          eq(articles.isActive, true),
+          eq(articles.status, 'published'),
+          eq(articles.contentType, 'troubleshoot'),
+        ),
+      )
+      .orderBy(desc(articles.publishedAt))
+      .limit(sampleSize);
+    const seen = await existingQuerySet();
+    const out: SuggestedCandidate[] = [];
+    for (const a of arts) {
+      const queries = await generateEvalQueries(
+        { title: a.title, summary: a.summary, bodyExcerpt: a.bodyMarkdown },
+        perArticle,
+      );
+      for (const query of queries) {
+        const key = query.trim().toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({
+          query: query.trim(),
+          source: 'troubleshoot',
+          reason: `문제해결 문서: ${a.title.slice(0, 40)}`,
+          expectedArticleSlugs: [a.slug],
+          expectedFaqIds: [],
+          note: '문제해결',
+        });
+      }
+    }
+    return out;
+  } catch (err) {
+    console.error('[search-eval.suggestFromTroubleshoot] 실패:', err);
+    return [];
+  }
+}
+
+/** 검수 통과한 후보들을 골든셋에 일괄 추가 (중복 query skip). */
+export async function bulkCreateEvalQueries(
+  candidates: Array<{
+    query: string;
+    expectedArticleSlugs?: string[];
+    expectedFaqIds?: string[];
+    productCode?: string | null;
+    note?: string | null;
+    source?: SearchEvalSource;
+  }>,
+): Promise<{ ok: boolean; created: number }> {
+  if (!db || candidates.length === 0) return { ok: false, created: 0 };
+  try {
+    const seen = await existingQuerySet();
+    const rows: NewSearchEvalQuery[] = [];
+    for (const c of candidates) {
+      const q = c.query.trim();
+      const key = q.toLowerCase();
+      if (q.length < 2 || seen.has(key)) continue;
+      seen.add(key);
+      rows.push({
+        query: q,
+        expectedArticleSlugs: c.expectedArticleSlugs ?? [],
+        expectedFaqIds: c.expectedFaqIds ?? [],
+        productCode: c.productCode ?? null,
+        source: c.source ?? 'manual',
+        note: c.note ?? null,
+      });
+    }
+    if (rows.length === 0) return { ok: true, created: 0 };
+    await db.insert(searchEvalQueries).values(rows);
+    return { ok: true, created: rows.length };
+  } catch (err) {
+    console.error('[search-eval.bulkCreateEvalQueries] 실패:', err);
+    return { ok: false, created: 0 };
   }
 }

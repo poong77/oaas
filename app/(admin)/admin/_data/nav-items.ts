@@ -19,7 +19,6 @@ import {
   Building2,
   Database,
   FileText,
-  Gauge,
   HelpCircle,
   Inbox,
   ListChecks,
@@ -42,18 +41,71 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   // 티켓 운영
-  { href: '/admin/tickets', label: '티켓 큐', icon: Inbox, roles: ['manager', 'admin'], group: 'tickets' },
-  { href: '/admin/service-status', label: '서비스 상태', icon: Activity, roles: ['manager', 'admin'], group: 'tickets' },
+  {
+    href: '/admin/tickets',
+    label: '티켓 큐',
+    icon: Inbox,
+    roles: ['manager', 'admin'],
+    group: 'tickets',
+  },
+  {
+    href: '/admin/service-status',
+    label: '서비스 상태',
+    icon: Activity,
+    roles: ['manager', 'admin'],
+    group: 'tickets',
+  },
   // 콘텐츠
-  { href: '/admin/articles', label: '아티클', icon: FileText, roles: ['manager', 'admin'], group: 'content' },
-  { href: '/admin/notices', label: '공지 관리', icon: Megaphone, roles: ['manager', 'admin'], group: 'content' },
-  { href: '/admin/faqs', label: 'FAQ', icon: HelpCircle, roles: ['manager', 'admin'], group: 'content' },
-  { href: '/admin/checklists', label: '체크리스트', icon: ListChecks, roles: ['manager', 'admin'], group: 'content' },
-  { href: '/admin/search-quality', label: '검색 품질', icon: Gauge, roles: ['manager', 'admin'], group: 'content' },
+  {
+    href: '/admin/articles',
+    label: '아티클',
+    icon: FileText,
+    roles: ['manager', 'admin'],
+    group: 'content',
+  },
+  {
+    href: '/admin/notices',
+    label: '공지 관리',
+    icon: Megaphone,
+    roles: ['manager', 'admin'],
+    group: 'content',
+  },
+  {
+    href: '/admin/faqs',
+    label: 'FAQ',
+    icon: HelpCircle,
+    roles: ['manager', 'admin'],
+    group: 'content',
+  },
+  {
+    href: '/admin/checklists',
+    label: '체크리스트',
+    icon: ListChecks,
+    roles: ['manager', 'admin'],
+    group: 'content',
+  },
   // 조직 & 마스터
-  { href: '/admin/users', label: '사용자', icon: Users, roles: ['admin'], group: 'org' },
-  { href: '/admin/hotels', label: '호텔', icon: Building2, roles: ['admin'], group: 'org' },
-  { href: '/admin/master', label: '마스터 데이터', icon: Database, roles: ['manager', 'admin'], group: 'org' },
+  {
+    href: '/admin/users',
+    label: '사용자',
+    icon: Users,
+    roles: ['admin'],
+    group: 'org',
+  },
+  {
+    href: '/admin/hotels',
+    label: '호텔',
+    icon: Building2,
+    roles: ['admin'],
+    group: 'org',
+  },
+  {
+    href: '/admin/master',
+    label: '마스터 데이터',
+    icon: Database,
+    roles: ['manager', 'admin'],
+    group: 'org',
+  },
 ];
 
 export const GROUP_ORDER: TabGroup[] = ['tickets', 'content', 'org'];
