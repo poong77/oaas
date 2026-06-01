@@ -5,6 +5,7 @@
  */
 
 import 'server-only';
+import { unstable_cache } from 'next/cache';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/db';
@@ -14,6 +15,13 @@ import {
   type NewRoleStarter,
   type RoleStarter,
 } from '@/db/schema';
+
+/**
+ * role_starters 캐시 태그.
+ * 어드민 변경 시 master-actions에서 `revalidateTag(ROLE_STARTERS_CACHE_TAG, 'default')`.
+ * 홈(listActiveRoleStarters)·역할 페이지(getRoleStarterWithArticles) 공통.
+ */
+export const ROLE_STARTERS_CACHE_TAG = 'master:role-starters';
 
 export const KNOWN_ROLE_KEYS = [
   'front',
@@ -43,9 +51,15 @@ export async function listRoleStarters(
   }
 }
 
-/** 홈 페이지용 — 활성만. */
+/** 홈 페이지용 — 활성만 (1시간 캐시 + 태그 무효화). */
+const _listActiveRoleStartersCached = unstable_cache(
+  async (): Promise<RoleStarter[]> => listRoleStarters(false),
+  ['role-starters:active:v1'],
+  { revalidate: 3600, tags: [ROLE_STARTERS_CACHE_TAG] },
+);
+
 export async function listActiveRoleStarters(): Promise<RoleStarter[]> {
-  return listRoleStarters(false);
+  return _listActiveRoleStartersCached();
 }
 
 /**

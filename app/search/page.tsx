@@ -12,10 +12,12 @@
  *   - 빈 결과 시 문의 접수 안내
  */
 
+import { Suspense } from 'react';
 import { sql, and, desc, gte, ne } from 'drizzle-orm';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
+import { SearchResultsSkeleton } from '@/components/ui/skeletons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -88,6 +90,65 @@ export default async function SearchPage({
   const product = sp.product || undefined;
   const contentType = sp.contentType || undefined;
 
+  return (
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <PageHeader
+        title={query ? `검색 결과 — "${query}"` : '검색'}
+        description={
+          query
+            ? '도움말·FAQ·공지·장애를 통합 검색합니다.'
+            : '검색어를 입력하면 도움말·FAQ·공지·장애를 통합 검색합니다.'
+        }
+      />
+
+      {!query ? (
+        <Card>
+          <CardContent className="p-6">
+            <EmptyState
+              icon={<Search className="h-6 w-6" />}
+              title="검색어를 입력하세요"
+              description="상단 검색창에서 키워드(예: 결제 오류, SSL 갱신, 카드키 발급)를 입력하면 결과가 표시됩니다."
+              action={
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/">홈으로 돌아가기</Link>
+                </Button>
+              }
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        // 쿼리/탭/필터가 바뀔 때마다 key 변경 → 결과를 스트리밍하는 동안 즉시 스켈레톤.
+        // (loading.tsx는 /search 최초 진입만 커버하므로, 검색어 변경 대기 체감은 여기서 처리)
+        <Suspense
+          key={`${query}|${tab}|${sort}|${product ?? ''}|${contentType ?? ''}`}
+          fallback={<SearchResultsSkeleton />}
+        >
+          <SearchResults
+            query={query}
+            tab={tab}
+            sort={sort}
+            product={product}
+            contentType={contentType}
+          />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+
+async function SearchResults({
+  query,
+  tab,
+  sort,
+  product,
+  contentType,
+}: {
+  query: string;
+  tab: 'all' | 'help' | 'faq' | 'notice' | 'incident';
+  sort: 'relevance' | 'recent' | 'views';
+  product?: string;
+  contentType?: 'howto' | 'feature' | 'troubleshoot';
+}) {
   const categories = await getProductCategories();
 
   // 결과 카운트는 모든 탭 한꺼번에 가져와서 뱃지로 표시 (단순 N+1)
@@ -146,34 +207,8 @@ export default async function SearchPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <PageHeader
-        title={query ? `검색 결과 — "${query}"` : '검색'}
-        description={
-          query
-            ? '도움말·FAQ·공지·장애를 통합 검색합니다.'
-            : '검색어를 입력하면 도움말·FAQ·공지·장애를 통합 검색합니다.'
-        }
-      />
-
-      {!query ? (
-        <Card>
-          <CardContent className="p-6">
-            <EmptyState
-              icon={<Search className="h-6 w-6" />}
-              title="검색어를 입력하세요"
-              description="상단 검색창에서 키워드(예: 결제 오류, SSL 갱신, 카드키 발급)를 입력하면 결과가 표시됩니다."
-              action={
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/">홈으로 돌아가기</Link>
-                </Button>
-              }
-            />
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <SearchTabs counts={counts} current={tab} query={query} />
+    <>
+      <SearchTabs counts={counts} current={tab} query={query} />
 
           {tab === 'all' && (
             <>
@@ -438,8 +473,6 @@ export default async function SearchPage({
             </>
           )}
         </>
-      )}
-    </div>
   );
 }
 

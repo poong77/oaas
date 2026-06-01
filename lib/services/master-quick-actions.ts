@@ -6,6 +6,7 @@
  */
 
 import 'server-only';
+import { unstable_cache } from 'next/cache';
 import { and, asc, eq } from 'drizzle-orm';
 
 import { db } from '@/db';
@@ -14,6 +15,13 @@ import {
   type NewQuickAction,
   type QuickAction,
 } from '@/db/schema';
+
+/**
+ * 홈 노출 quick_actions 캐시 태그.
+ * 어드민 변경 시 master-actions에서 `revalidateTag(QUICK_ACTIONS_CACHE_TAG, 'default')`.
+ * 어드민 목록(includeHidden/Inactive)은 캐시하지 않고 항상 최신 조회.
+ */
+export const QUICK_ACTIONS_CACHE_TAG = 'master:quick-actions';
 
 export async function listQuickActions(
   options: { includeHidden?: boolean; includeInactive?: boolean } = {},
@@ -35,9 +43,16 @@ export async function listQuickActions(
   }
 }
 
-/** 홈 페이지용 — 가시 + 활성만. */
+/** 홈 페이지용 — 가시 + 활성만 (1시간 캐시 + 태그 무효화). */
+const _listVisibleQuickActionsCached = unstable_cache(
+  async (): Promise<QuickAction[]> =>
+    listQuickActions({ includeHidden: false, includeInactive: false }),
+  ['quick-actions:visible:v1'],
+  { revalidate: 3600, tags: [QUICK_ACTIONS_CACHE_TAG] },
+);
+
 export async function listVisibleQuickActions(): Promise<QuickAction[]> {
-  return listQuickActions({ includeHidden: false, includeInactive: false });
+  return _listVisibleQuickActionsCached();
 }
 
 export async function getQuickActionById(

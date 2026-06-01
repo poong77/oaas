@@ -8,10 +8,18 @@
  */
 
 import 'server-only';
+import { unstable_cache } from 'next/cache';
 import { and, asc, eq } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { categories, type Category, type CategoryType } from '@/db/schema';
+
+/**
+ * 마스터 카테고리 캐시 태그.
+ * 거의 변하지 않는 마스터 데이터 → unstable_cache(1시간) + 어드민 변경 시
+ * master-actions의 `revalidateTag(CATEGORIES_CACHE_TAG, 'default')`로 즉시 무효화.
+ */
+export const CATEGORIES_CACHE_TAG = 'master:categories';
 
 /** DB 미연결 시 fallback. 시드와 동일한 6개 product. */
 const FALLBACK_PRODUCT_CATEGORIES: Array<
@@ -35,45 +43,65 @@ export type ProductCategoryView = {
   sortOrder: number;
 };
 
-export async function getProductCategories(): Promise<ProductCategoryView[]> {
-  if (!db) {
-    return FALLBACK_PRODUCT_CATEGORIES.map(({ fallback: _f, ...rest }) => rest);
-  }
-  try {
-    const rows = await db
-      .select({
-        id: categories.id,
-        code: categories.code,
-        label: categories.label,
-        icon: categories.icon,
-        sortOrder: categories.sortOrder,
-      })
-      .from(categories)
-      .where(and(eq(categories.type, 'product'), eq(categories.isActive, true)))
-      .orderBy(asc(categories.sortOrder), asc(categories.label));
-    if (rows.length === 0) {
+const _getProductCategoriesCached = unstable_cache(
+  async (): Promise<ProductCategoryView[]> => {
+    if (!db) {
       return FALLBACK_PRODUCT_CATEGORIES.map(({ fallback: _f, ...rest }) => rest);
     }
-    return rows;
-  } catch (err) {
-    console.error('[categories.getProductCategories] 실패:', err);
-    return FALLBACK_PRODUCT_CATEGORIES.map(({ fallback: _f, ...rest }) => rest);
-  }
+    try {
+      const rows = await db
+        .select({
+          id: categories.id,
+          code: categories.code,
+          label: categories.label,
+          icon: categories.icon,
+          sortOrder: categories.sortOrder,
+        })
+        .from(categories)
+        .where(
+          and(eq(categories.type, 'product'), eq(categories.isActive, true)),
+        )
+        .orderBy(asc(categories.sortOrder), asc(categories.label));
+      if (rows.length === 0) {
+        return FALLBACK_PRODUCT_CATEGORIES.map(
+          ({ fallback: _f, ...rest }) => rest,
+        );
+      }
+      return rows;
+    } catch (err) {
+      console.error('[categories.getProductCategories] 실패:', err);
+      return FALLBACK_PRODUCT_CATEGORIES.map(({ fallback: _f, ...rest }) => rest);
+    }
+  },
+  ['product-categories:v1'],
+  { revalidate: 3600, tags: [CATEGORIES_CACHE_TAG] },
+);
+
+export async function getProductCategories(): Promise<ProductCategoryView[]> {
+  return _getProductCategoriesCached();
 }
 
-/** 일반 타입별 조회 (검색 등에서 재사용). */
+/** 일반 타입별 조회 (검색 등에서 재사용). 타입 인자는 캐시 키에 자동 포함. */
+const _getCategoriesByTypeCached = unstable_cache(
+  async (type: CategoryType): Promise<Category[]> => {
+    if (!db) return [];
+    try {
+      return await db
+        .select()
+        .from(categories)
+        .where(and(eq(categories.type, type), eq(categories.isActive, true)))
+        .orderBy(asc(categories.sortOrder), asc(categories.label));
+    } catch (err) {
+      console.error('[categories.getCategoriesByType] 실패:', err);
+      return [];
+    }
+  },
+  ['categories-by-type:v1'],
+  { revalidate: 3600, tags: [CATEGORIES_CACHE_TAG] },
+);
+
 export async function getCategoriesByType(
   type: CategoryType,
 ): Promise<Category[]> {
-  if (!db) return [];
-  try {
-    return await db
-      .select()
-      .from(categories)
-      .where(and(eq(categories.type, type), eq(categories.isActive, true)))
-      .orderBy(asc(categories.sortOrder), asc(categories.label));
-  } catch (err) {
-    console.error('[categories.getCategoriesByType] 실패:', err);
-    return [];
-  }
+  return _getCategoriesByTypeCached(type);
 }

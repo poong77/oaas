@@ -10,11 +10,12 @@
  * 모든 액션은 fire-and-forget audit log + revalidate.
  */
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 
 import { requireRole } from '@/lib/permissions';
 import { logActivity } from '@/lib/audit';
+import { CATEGORIES_CACHE_TAG } from '@/lib/services/categories';
 import * as MC from '@/lib/services/master-categories';
 import * as MT from '@/lib/services/master-templates';
 import * as MQR from '@/lib/services/master-quick-replies';
@@ -51,7 +52,18 @@ function getBool(fd: FormData, k: string): boolean {
 
 function revalidateAdminMaster(...subPaths: string[]) {
   revalidatePath('/admin/master');
-  for (const p of subPaths) revalidatePath(p);
+  for (const p of subPaths) {
+    revalidatePath(p);
+    // 홈/공개 화면이 unstable_cache로 캐싱하는 마스터 데이터는 path가 아닌 tag로만
+    // 무효화된다. 해당 도메인 변경 시 캐시 태그도 함께 만료시킨다.
+    if (p === '/admin/master/categories') {
+      revalidateTag(CATEGORIES_CACHE_TAG, 'default');
+    } else if (p === '/admin/master/quick-actions') {
+      revalidateTag(MQA.QUICK_ACTIONS_CACHE_TAG, 'default');
+    } else if (p === '/admin/master/role-starters') {
+      revalidateTag(MRS.ROLE_STARTERS_CACHE_TAG, 'default');
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────
