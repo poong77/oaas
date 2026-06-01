@@ -48,7 +48,7 @@ export const metadata = { title: '검색 — OA 통합 AS' };
 
 type SearchParams = Promise<{
   q?: string;
-  tab?: 'help' | 'faq' | 'notice' | 'incident';
+  tab?: 'all' | 'help' | 'faq' | 'notice' | 'incident';
   product?: string;
   contentType?: 'howto' | 'feature' | 'troubleshoot';
   sort?: 'relevance' | 'recent' | 'views';
@@ -61,6 +61,21 @@ type IncidentRow = {
   startedAt: Date;
 };
 
+/** 전체(통합) 탭 항목 — 도움말·FAQ·공지를 한 줄 관련도 순위로 병합. */
+type MergedHit = {
+  kind: 'help' | 'faq' | 'notice';
+  key: string;
+  /** 클릭 추적용 ref (help=slug, faq/notice=id). */
+  ref: string;
+  href: string;
+  title: string;
+  snippet: string;
+  score: number;
+  date: Date | null;
+  viewCount: number;
+  productCode: string | null;
+};
+
 export default async function SearchPage({
   searchParams,
 }: {
@@ -68,7 +83,7 @@ export default async function SearchPage({
 }) {
   const sp = await searchParams;
   const query = (sp.q ?? '').trim();
-  const tab = sp.tab ?? 'help';
+  const tab = sp.tab ?? 'all';
   const sort = sp.sort ?? 'relevance';
   const product = sp.product || undefined;
   const contentType = sp.contentType || undefined;
@@ -99,12 +114,18 @@ export default async function SearchPage({
     ]);
   }
 
-  // 정렬 적용 (도움말 탭만)
+  // 정렬 적용 (탭별)
   const sortedHelp = applySort(helpHits, sort);
   const sortedFaq = applyFaqSort(faqHits, sort);
   const sortedNotice = applyNoticeSort(noticeHits, sort);
 
+  // 전체(통합) 탭 — 도움말·FAQ·공지를 한 리스트로 병합 후 관련도(점수) 순.
+  // 골든셋 평가의 통합 순위(searchUnified)와 동일 기준 → 측정=실제화면 일치.
+  const mergedAll = buildMerged(helpHits, faqHits, noticeHits);
+  const sortedAll = applyMergedSort(mergedAll, sort);
+
   const counts = {
+    all: mergedAll.length,
     help: helpHits.length,
     faq: faqHits.length,
     notice: noticeHits.length,
@@ -153,6 +174,60 @@ export default async function SearchPage({
       ) : (
         <>
           <SearchTabs counts={counts} current={tab} query={query} />
+
+          {tab === 'all' && (
+            <>
+              <SearchFilters
+                initial={{ product, sort, contentType }}
+                categories={categories}
+              />
+              {sortedAll.length === 0 ? (
+                <EmptyResults query={query} logId={logId} />
+              ) : (
+                <ul className="grid gap-3">
+                  {sortedAll.map((m, i) => (
+                    <li key={m.key}>
+                      <TrackedLink
+                        logId={logId}
+                        track="click"
+                        kind={m.kind}
+                        refId={m.ref}
+                        position={i + 1}
+                        href={m.href}
+                        className="hover:border-brand-300 hover:bg-brand-50/30 dark:hover:border-brand-700 dark:hover:bg-brand-950/20 flex flex-col gap-1 rounded-lg border border-slate-200 bg-white p-4 transition-colors dark:border-slate-700 dark:bg-slate-900"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Badge tone={MERGED_KIND_TONE[m.kind]}>
+                            {MERGED_KIND_LABEL[m.kind]}
+                          </Badge>
+                          {m.productCode && (
+                            <Badge tone="slate" className="uppercase">
+                              {m.productCode}
+                            </Badge>
+                          )}
+                        </div>
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                          <Highlight text={m.title} regex={highlightRegex} />
+                        </h3>
+                        {m.snippet && (
+                          <p className="line-clamp-2 text-sm text-slate-600 dark:text-slate-300">
+                            <Highlight
+                              text={m.snippet}
+                              regex={highlightRegex}
+                            />
+                          </p>
+                        )}
+                        <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
+                          {m.date && <span>{formatDateKst(m.date)}</span>}
+                          <span>조회 {m.viewCount.toLocaleString()}</span>
+                        </div>
+                      </TrackedLink>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
 
           {tab === 'help' && (
             <>
@@ -396,6 +471,83 @@ async function fetchRecentIncidents(q: string): Promise<IncidentRow[]> {
     console.error('[search.fetchRecentIncidents] 실패:', err);
     return [];
   }
+}
+
+const MERGED_KIND_LABEL: Record<MergedHit['kind'], string> = {
+  help: '도움말',
+  faq: 'FAQ',
+  notice: '공지',
+};
+const MERGED_KIND_TONE: Record<
+  MergedHit['kind'],
+  'brand' | 'success' | 'warn'
+> = {
+  help: 'brand',
+  faq: 'success',
+  notice: 'warn',
+};
+
+/** 도움말·FAQ·공지를 단일 MergedHit[] 로 병합 (전체 탭). */
+function buildMerged(
+  help: SearchArticleHit[],
+  faq: SearchFaqHit[],
+  notice: SearchNoticeHit[],
+): MergedHit[] {
+  const out: MergedHit[] = [];
+  for (const h of help)
+    out.push({
+      kind: 'help',
+      key: `help:${h.slug}`,
+      ref: h.slug,
+      href: `/help/${h.productCode}/${h.slug}`,
+      title: h.title,
+      snippet: h.summary ?? h.summary30s ?? '',
+      score: h.score,
+      date: h.publishedAt ?? null,
+      viewCount: h.viewCount,
+      productCode: h.productCode,
+    });
+  for (const f of faq)
+    out.push({
+      kind: 'faq',
+      key: `faq:${f.id}`,
+      ref: f.id,
+      href: `/faq#faq-${f.id}`,
+      title: f.question,
+      snippet: f.answerMarkdown,
+      score: f.score,
+      date: f.createdAt ? new Date(f.createdAt) : null,
+      viewCount: f.viewCount,
+      productCode: f.productCode,
+    });
+  for (const n of notice)
+    out.push({
+      kind: 'notice',
+      key: `notice:${n.id}`,
+      ref: n.id,
+      href: `/notices/${n.id}`,
+      title: n.title,
+      snippet: summarizeNoticeBody(n.bodyMarkdown, 140),
+      score: n.score,
+      date: n.publishedAt ?? null,
+      viewCount: n.viewCount,
+      productCode: n.productCode,
+    });
+  return out;
+}
+
+function applyMergedSort(
+  hits: MergedHit[],
+  sort: 'relevance' | 'recent' | 'views',
+): MergedHit[] {
+  const t = (d: Date | null) => (d ? new Date(d).getTime() : 0);
+  if (sort === 'recent') return [...hits].sort((a, b) => t(b.date) - t(a.date));
+  if (sort === 'views')
+    return [...hits].sort((a, b) => b.viewCount - a.viewCount);
+  // relevance: 점수 desc → 최신
+  return [...hits].sort((a, b) =>
+    b.score !== a.score ? b.score - a.score : t(b.date) - t(a.date),
+  );
 }
 
 function applySort(

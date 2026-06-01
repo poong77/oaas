@@ -5,6 +5,7 @@ import { useTransition } from 'react';
 import { cn } from '@/lib/utils';
 
 const TABS = [
+  { key: 'all', label: '전체' },
   { key: 'help', label: '도움말' },
   { key: 'faq', label: 'FAQ' },
   { key: 'notice', label: '공지' },
