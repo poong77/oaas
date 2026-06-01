@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Menu, X, LogOut, User } from 'lucide-react';
+import { Moon, Sun, Menu, X, LogOut, User, Bell } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { useCurrentUser } from '@/lib/hooks/use-current-user';
@@ -19,12 +19,13 @@ import { BusinessStatusBadge } from '@/components/contact/business-status-badge'
  * - 모바일 햄버거 메뉴
  * - 검색 인풋은 홈 hero 검색으로 일원화되어 GNB에서 제거됨.
  */
+// GNB — 사용자 행동 기준 4개 (2026-06-01 UX 재구성).
+// 공지/업데이트는 우측 🔔 종 아이콘으로 이동. 셀프픽스 메뉴 미사용.
 const NAV_ITEMS = [
   { label: '홈', href: '/' },
-  { label: '빠른 해결', href: '/faq' },
-  { label: '제품별 가이드', href: '/help' },
-  { label: '문의 접수', href: '/tickets/new' },
-  { label: '공지/업데이트', href: '/notices' },
+  { label: '도움말 찾기', href: '/search' },
+  { label: '문의하기', href: '/tickets/new' },
+  { label: '서비스 현황', href: '/status' },
 ];
 
 function isActiveNav(pathname: string, href: string) {
@@ -90,6 +91,19 @@ export function Header() {
           <div className="hidden sm:block">
             <BusinessStatusBadge size="sm" linkTo="#contact" />
           </div>
+          <Link
+            href="/notices"
+            aria-label="공지/업데이트"
+            title="공지/업데이트"
+            className={cn(
+              'inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors',
+              isActiveNav(pathname, '/notices')
+                ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300'
+                : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
+            )}
+          >
+            <Bell className="h-5 w-5" />
+          </Link>
           <ThemeToggle />
           {status === 'authenticated' && user ? (
             <>
@@ -160,6 +174,19 @@ export function Header() {
                 </Link>
               );
             })}
+            <Link
+              href="/notices"
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
+                isActiveNav(pathname, '/notices')
+                  ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300'
+                  : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
+              )}
+            >
+              <Bell className="h-4 w-4" />
+              공지/업데이트
+            </Link>
           </nav>
           <div className="flex flex-col gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
             {status === 'authenticated' && user ? (

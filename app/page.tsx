@@ -1,33 +1,30 @@
 /**
  * LP-01 통합 홈 — Phase 2.
  *
- * 구성:
- *   ① Hero (좌: 검색 / 우: 서비스 상태 + 최근 업데이트 박스)
- *   ② 카테고리 그리드 (DB product)
- *   ③ 자주찾는작업 (DB)
- *   ④ 역할별 시작하기 (DB)
- *   ⑤ CTA 3개
- *   (푸터는 RoleScope의 글로벌 SiteFooter로 통합 — 별도 렌더 없음)
+ * 구성 (2026-06-01 UX 재구성):
+ *   ① Hero (좌: 검색 / 우: 서비스 상태 + 최근 업데이트 박스) — 기존 유지
+ *   ② 빠른 행동 2갈래 택1 (답 찾기 /search · 문의하기 /tickets/new) + 내 문의 보조링크
+ *   ③ 제품·역할로 찾기 (탭 병합: 제품별 /help · 역할별 /role)
+ *   (푸터 연락 정보/약관은 RoleScope의 ContactPanel + SiteFooter로 통합 — 별도 렌더 없음)
  *
  * 변경 이력:
  *   - 2026-05-29: 서비스 상태/최근 업데이트를 Hero 우측 박스로 통합. 하단 중복 섹션 제거.
  *   - 2026-05-30: HomeFooter 제거 → 글로벌 SiteFooter(RoleScope)로 이전.
+ *   - 2026-06-01: UX 재구성. 자주찾는작업·CTA → 빠른행동 2갈래로 통합(접수 동선 단일화),
+ *                 카테고리+역할 → 탭 병합. 계정 작업은 프로필로 이동.
  *
  * DB 호출이 있으므로 force-dynamic.
  */
 
 import { getProductCategories } from '@/lib/services/categories';
 import { getLatestServiceStatus } from '@/lib/services/service-status';
-import { listVisibleQuickActions } from '@/lib/services/master-quick-actions';
 import { listActiveRoleStarters } from '@/lib/services/master-role-starters';
 import { listActivePopupNotices } from '@/lib/services/notices';
 import { HomePopupBanner } from '@/components/notices/home-popup-banner';
 import { HomeHero } from './_components/home/home-hero';
 import { HomeStatusUpdatesBox } from './_components/home/home-status-updates-box';
-import { CategoryGrid } from './_components/home/category-grid';
-import { QuickActions } from './_components/home/quick-actions';
-import { RoleStarters } from './_components/home/role-starters';
-import { HomeCTA } from './_components/home/home-cta';
+import { HomeQuickChoice } from './_components/home/home-quick-choice';
+import { HomeFindTabs } from './_components/home/home-find-tabs';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,19 +35,13 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  const [
-    categories,
-    latestStatus,
-    quickActionRows,
-    roleStarterRows,
-    popupNotices,
-  ] = await Promise.all([
-    getProductCategories(),
-    getLatestServiceStatus(),
-    listVisibleQuickActions(),
-    listActiveRoleStarters(),
-    listActivePopupNotices(),
-  ]);
+  const [categories, latestStatus, roleStarterRows, popupNotices] =
+    await Promise.all([
+      getProductCategories(),
+      getLatestServiceStatus(),
+      listActiveRoleStarters(),
+      listActivePopupNotices(),
+    ]);
 
   return (
     <>
@@ -61,10 +52,8 @@ export default async function HomePage() {
           <HomeStatusUpdatesBox latest={latestStatus} />
         }
       />
-      <CategoryGrid categories={categories} />
-      <QuickActions items={quickActionRows} />
-      <RoleStarters items={roleStarterRows} />
-      <HomeCTA />
+      <HomeQuickChoice />
+      <HomeFindTabs categories={categories} roleStarters={roleStarterRows} />
     </>
   );
 }

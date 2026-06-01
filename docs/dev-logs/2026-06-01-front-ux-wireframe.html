@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>통합 AS 프론트 UX/UI 최적화 — 확정 와이어프레임</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --line:#334155; --ink:#e2e8f0;
+    --muted:#94a3b8; --brand:#6366f1; --brandbg:#312e81; --danger:#ef4444;
+    --ok:#22c55e; --warn:#f59e0b; --card:#0b1220;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",Segoe UI,Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.5; padding:0 0 80px;
+  }
+  .wrap{max-width:1240px;margin:0 auto;padding:24px 20px}
+  header.top{padding:36px 20px 16px;border-bottom:1px solid var(--line);background:#0b1120}
+  header.top .wrap{padding-top:0;padding-bottom:0}
+  h1{font-size:24px;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:14px}
+  .badge-final{display:inline-block;margin-top:10px;font-size:12px;font-weight:700;color:#86efac;background:#0f3d2e;border:1px solid #166534;border-radius:999px;padding:4px 12px}
+  h2{font-size:18px;margin:42px 0 4px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+  h2 .num{display:inline-flex;width:26px;height:26px;border-radius:8px;background:var(--brand);color:#fff;font-size:13px;align-items:center;justify-content:center;font-weight:700}
+  .h2desc{color:var(--muted);font-size:13px;margin:2px 0 18px 34px}
+
+  /* device frame */
+  .device{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+  .device.desktop{max-width:760px}
+  .device.mobile{max-width:340px}
+  .browserbar{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#0b1120;border-bottom:1px solid var(--line)}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .dot.r{background:#ef4444}.dot.y{background:#f59e0b}.dot.g{background:#22c55e}
+  .url{margin-left:8px;font-size:11px;color:var(--muted);background:#1e293b;padding:3px 10px;border-radius:6px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .screen{padding:14px}
+
+  /* GNB */
+  .gnb{display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px;flex-wrap:wrap}
+  .logo{font-weight:800;font-size:13px;color:#fff;margin-right:6px}
+  .nav-item{font-size:12px;padding:6px 10px;border-radius:7px;background:#1e293b;color:var(--ink);white-space:nowrap}
+  .nav-item.active{background:var(--brandbg);color:#c7d2fe;font-weight:700}
+  .spacer{flex:1}
+  .ico{width:28px;height:28px;border-radius:7px;background:#1e293b;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+  .ico.badge{position:relative}
+  .ico.badge::after{content:"3";position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;font-size:9px;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .biz-badge{font-size:11px;font-weight:700;color:#86efac;background:#0f3d2e;border:1px solid #166534;border-radius:999px;padding:5px 10px;white-space:nowrap}
+
+  /* footer */
+  .wirefooter{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+  .contactrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+  @media(max-width:560px){.contactrow{grid-template-columns:1fr 1fr}}
+  .contact-item{background:#1e293b;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:11px;color:#cbd5e1;display:flex;flex-direction:column;gap:3px}
+  .contact-item .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+  .contact-item.urgent{background:#3f1d2b;border-color:#7f1d2b;color:#fecaca}
+  .footlinks{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted)}
+  .footlinks .copy{margin-left:auto;opacity:.7}
+
+  /* wire blocks */
+  .block{border:1px dashed var(--line);border-radius:10px;padding:12px;margin-top:12px;background:#0b1220}
+  .block.key{border-style:solid;border-color:#4f46e5}
+  .block .bt{font-size:12px;font-weight:700;color:#cbd5e1;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .searchbar{display:flex;gap:8px;align-items:center;background:#1e293b;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13px;color:var(--muted)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .chip{font-size:11px;background:#1e293b;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted)}
+
+  .cards{display:grid;gap:8px}
+  .cards.c2{grid-template-columns:1fr 1fr}
+  .cards.c4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:560px){.cards.c4{grid-template-columns:1fr 1fr}}
+  .mini{background:#1e293b;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:11px;color:#cbd5e1;min-height:54px;display:flex;flex-direction:column;gap:4px;justify-content:center}
+  .mini .ic{font-size:15px}
+  .mini.primary{background:var(--brandbg);border-color:#4f46e5;color:#e0e7ff}
+  .mini.danger{background:#3f1d2b;border-color:#7f1d2b;color:#fecaca}
+
+  .pill{font-size:11px;padding:2px 8px;border-radius:6px;background:#1e293b;color:var(--muted)}
+  .tabrow{display:flex;gap:6px;margin-bottom:8px}
+  .tab{font-size:11px;padding:5px 12px;border-radius:7px;background:#1e293b;color:var(--muted);border:1px solid var(--line)}
+  .tab.on{background:var(--brandbg);color:#c7d2fe;font-weight:700;border-color:#4f46e5}
+
+  .note{margin-top:8px;font-size:12px;color:var(--muted)}
+  .newflag{font-size:10px;color:#86efac;background:#0f3d2e;border-radius:5px;padding:1px 6px;font-weight:700}
+
+  .callout{margin-top:16px;border:1px solid var(--line);border-left:4px solid var(--brand);background:#0b1220;border-radius:8px;padding:12px 14px;font-size:13px}
+  .callout b{color:#c7d2fe}
+
+  .twocol{display:grid;grid-template-columns:760px 340px;gap:24px;align-items:start}
+  @media(max-width:1180px){.twocol{grid-template-columns:1fr;justify-items:start}}
+
+  table.diff{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
+  table.diff th,table.diff td{border:1px solid var(--line);padding:9px 11px;text-align:left}
+  table.diff th{background:#0b1120;color:#cbd5e1;font-size:12px}
+  table.diff td.a{color:#86efac}
+  .foot{margin-top:30px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>통합 AS 프론트 UX/UI 최적화 — 확정 와이어프레임</h1>
+    <div class="sub">support.oapms.com · 호텔리어 대면 화면 · 저충실도(Low-fi) · 2026-06-01</div>
+    <div class="badge-final">✅ 확정안 — 셀프픽스 미사용 · Hero 기존 유지 · 빠른행동 2갈래 · 제품/역할 병합</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ========== GNB ========== -->
+  <h2><span class="num">1</span> 상단 메뉴 (GNB)</h2>
+  <div class="h2desc">사용자 행동 기준 4개 + 공지 종 아이콘. (셀프픽스 메뉴는 사용하지 않음)</div>
+
+  <div class="device desktop">
+    <div class="browserbar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">support.oapms.com</span></div>
+    <div class="screen">
+      <div class="gnb">
+        <span class="logo">OAtech</span>
+        <span class="nav-item active">홈</span>
+        <span class="nav-item">도움말 찾기</span>
+        <span class="nav-item">문의하기</span>
+        <span class="nav-item">서비스 현황</span>
+        <span class="spacer"></span>
+        <span class="biz-badge">🟢 운영 중 · 마감까지 2h</span>
+        <span class="ico badge">🔔</span>
+        <span class="ico">🌙</span>
+        <span class="ico">👤</span>
+      </div>
+      <div class="note">홈 · 도움말 찾기(<code>/search</code>) · 문의하기(<code>/tickets</code> 접수/내문의 탭) · 서비스 현황(<code>/status</code>) · <b>🟢 운영시간 배지 유지</b> · 🔔 공지(<code>/notices</code> 배지)</div>
+    </div>
+  </div>
+
+  <!-- ========== HOME ========== -->
+  <h2><span class="num">2</span> 홈 화면 (데스크탑 / 모바일)</h2>
+  <div class="h2desc">① Hero(기존 유지) → ② 빠른 행동 2갈래 택1 → ③ 제품·역할로 찾기. 셀프픽스 추천 섹션 없음.</div>
+
+  <div class="twocol">
+
+    <!-- DESKTOP -->
+    <div class="device desktop">
+      <div class="browserbar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">/</span></div>
+      <div class="screen">
+
+        <!-- ① Hero (기존 유지) -->
+        <div class="block">
+          <div class="bt">① Hero <span class="pill">기존 유지 · 검색 + 상태박스</span></div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:8px">
+            <div>
+              <div class="searchbar">🔍 무엇을 도와드릴까요?</div>
+              <div class="chips"><span class="chip">체크인 오류</span><span class="chip">결제 실패</span><span class="chip">키 발급 안됨</span><span class="chip">객실 동기화</span></div>
+            </div>
+            <div class="mini" style="min-height:64px">🟢 서비스 상태<br><span style="color:var(--muted)">최근 업데이트…</span></div>
+          </div>
+        </div>
+
+        <!-- ② 빠른 행동 -->
+        <div class="block key">
+          <div class="bt">② 빠른 행동 — 2갈래 택1 <span class="newflag">접수 동선 단일화</span></div>
+          <div class="cards c2">
+            <div class="mini primary" style="min-height:80px"><span class="ic">🔍</span><b>답 찾기</b><span style="opacity:.8">FAQ · 제품별 가이드 통합 검색</span></div>
+            <div class="mini danger" style="min-height:80px"><span class="ic">✍️</span><b>문의하기</b><span style="opacity:.8">오류·기능문의 접수 / 내 문의 조회</span></div>
+          </div>
+          <div class="note">접수 진입 4곳 → 1곳. 오류/일반 구분은 <u>접수 폼 안</u>에서 선택.</div>
+        </div>
+
+        <!-- ③ 제품·역할로 찾기 -->
+        <div class="block">
+          <div class="bt">③ 제품 · 역할로 찾기 <span class="newflag">2섹션 병합</span></div>
+          <div class="tabrow"><span class="tab on">제품별</span><span class="tab">역할별</span></div>
+          <div class="cards c4">
+            <div class="mini">PMS</div><div class="mini">CMS</div><div class="mini">Keyless</div><div class="mini">키오스크</div>
+          </div>
+        </div>
+
+        <div class="note">✅ 계정 작업(비번 초기화·솔루션 링크·직원 추가)은 <b>프로필</b>로 이동 — "작업"과 분리.</div>
+
+        <!-- 푸터 연락 정보 (유지) -->
+        <div class="wirefooter">
+          <div class="bt" style="margin-bottom:8px">📞 연락 정보 <span class="newflag">유지</span></div>
+          <div class="contactrow">
+            <div class="contact-item"><span class="k">대표전화</span>1600-0000</div>
+            <div class="contact-item"><span class="k">ARS · 이메일</span>support@oa.com</div>
+            <div class="contact-item"><span class="k">운영시간</span>평일 09:00–18:00</div>
+            <div class="contact-item urgent"><span class="k">운영시간 외 긴급</span>010-0000-0000</div>
+          </div>
+          <div class="footlinks">
+            <span>공지/업데이트</span><span>서비스 상태</span><span>oapms.com</span><span>이용약관</span><span>개인정보 처리방침</span>
+            <span class="copy">© 2022 OA Tech.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE -->
+    <div class="device mobile">
+      <div class="browserbar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="url">m · /</span></div>
+      <div class="screen">
+        <div class="gnb" style="padding:8px 10px">
+          <span class="logo">OAtech</span><span class="spacer"></span>
+          <span class="ico badge">🔔</span><span class="ico">☰</span>
+        </div>
+
+        <div class="block" style="margin-top:10px">
+          <div class="searchbar">🔍 무엇을 도와드릴까요?</div>
+          <div class="chips"><span class="chip">체크인 오류</span><span class="chip">결제 실패</span></div>
+        </div>
+
+        <div class="mini" style="margin-top:10px;min-height:34px;flex-direction:row;gap:8px">🟢 모든 서비스 정상 →</div>
+
+        <div class="cards c2" style="margin-top:10px">
+          <div class="mini primary" style="min-height:72px"><span class="ic">🔍</span><b>답 찾기</b></div>
+          <div class="mini danger" style="min-height:72px"><span class="ic">✍️</span><b>문의하기</b></div>
+        </div>
+
+        <div class="block" style="margin-top:10px">
+          <div class="bt">제품 · 역할로 찾기</div>
+          <div class="tabrow"><span class="tab on">제품별</span><span class="tab">역할별</span></div>
+          <div class="cards c2">
+            <div class="mini">PMS</div><div class="mini">CMS</div><div class="mini">Keyless</div><div class="mini">키오스크</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout">
+    <b>섹션 우선순위:</b> ① 검색(답 찾기 1순위) → ② 답 찾기 / 문의하기 택1 → ③ 제품·역할 탐색. 홈 세로 길이는 기존 5섹션 → 3섹션으로 단축.
+  </div>
+
+  <!-- ========== SUMMARY ========== -->
+  <h2><span class="num">3</span> 확정 변경 요약</h2>
+  <table class="diff">
+    <tr><th>항목</th><th>확정 내용</th></tr>
+    <tr><td>GNB</td><td class="a">홈 · 도움말 찾기 · 문의하기 · 서비스 현황 + 🟢 운영시간 배지 + 🔔 공지 (셀프픽스 없음)</td></tr>
+    <tr><td>운영시간 배지</td><td class="a">GNB 우측 유지 — 🟢 운영 중 · 마감까지 N시간</td></tr>
+    <tr><td>푸터 연락 정보</td><td class="a">유지 — 대표전화 · ARS/이메일 · 운영시간 · 운영시간 외 긴급전화 + 약관/정책 링크</td></tr>
+    <tr><td>Hero</td><td class="a">기존 유지 — 좌 검색+인기키워드 / 우 서비스 상태박스</td></tr>
+    <tr><td>빠른 행동</td><td class="a">"답 찾기" vs "문의하기" 2갈래 택1 — 접수 4곳→1곳</td></tr>
+    <tr><td>제품·역할</td><td class="a">카테고리 + 역할별 시작 → 1섹션 탭 병합</td></tr>
+    <tr><td>셀프픽스</td><td class="a">미사용 — GNB·홈에서 제외</td></tr>
+    <tr><td>계정 작업</td><td class="a">비번·솔루션링크·직원 → 프로필로 이동</td></tr>
+    <tr><td>홈 섹션 수</td><td class="a">5개 → 3개</td></tr>
+    <tr><td>페이지 삭제</td><td class="a">없음 (메뉴/배치 재배치만)</td></tr>
+  </table>
+
+  <div class="callout" style="margin-top:18px">
+    <b>실행 단계(개발은 승인 후):</b> A. GNB 재구성(header.tsx NAV_ITEMS + 🔔) · B. 홈 ② 빠른행동 블록(자주찾는작업+CTA 통합, 접수 동선 단일화) · C. 제품+역할 병합 섹션 · D. 계정 작업 프로필 이동. 모두 <u>페이지 삭제 없는 재배치</u>.
+  </div>
+
+  <div class="foot">
+    저충실도 와이어프레임 — 실제 색/타이포/간격은 디자인 시스템(shadcn/ui + brand 스케일) 적용 시 확정. 구조·정보 위계 검토용입니다.
+  </div>
+
+</div>
+</body>
+</html>
