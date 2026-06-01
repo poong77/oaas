@@ -534,11 +534,15 @@ export function NoticeEditor({
             <Label>본문 *</Label>
             <Button
               type="button"
-              variant="outline"
               size="sm"
               onClick={generateDraft}
               disabled={aiDrafting || pending}
               title="종류·제품·제목·현재 본문(목차)을 근거로 AI가 본문 초안을 작성합니다"
+              className={cn(
+                'border-0 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 text-white shadow-sm transition-all',
+                'hover:from-violet-600 hover:via-purple-600 hover:to-fuchsia-600 hover:shadow-md hover:shadow-purple-500/25',
+                'disabled:opacity-60',
+              )}
             >
               <Sparkles
                 className={cn('h-3.5 w-3.5', aiDrafting && 'animate-pulse')}
