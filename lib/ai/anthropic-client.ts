@@ -1,13 +1,15 @@
 /**
- * Claude API client (Anthropic SDK wrapper) — A5.
+ * Claude API client (Anthropic SDK wrapper) — A5 + A6.
  *
- * 모델: claude-sonnet-4-6 (System knowledge 2026-01 기준 최신 Sonnet)
+ * 호출 패턴:
+ *   - `runClaudeJson({ system, user, model?, ... })` — 내부 공용 호출 (JSON 응답)
+ *   - `callClaudeAssistant(input)` — A5 5종 메타 추출 (Sonnet)
+ *   - `callClaudeRewriter(input, mode)` — A6 재편집 4모드 (tone만 Haiku, 나머지 Sonnet)
  *
- * Prompt caching 적용:
- *   - SYSTEM_PROMPT가 ≥ 4000자 (cache_control 'ephemeral' 마킹)
- *   - 동일 system을 5분 이내 재호출 시 토큰 비용 절감
+ * Prompt caching:
+ *   - system이 ≥ 4000자일 때 cache_control 'ephemeral' 효과 발생 (5분 TTL)
  *
- * @see docs/02-design/knowledge-base-overhaul/DESIGN.md §5-3
+ * @see docs/02-design/knowledge-base-overhaul/DESIGN.md §5-3, §16-0
  */
 
 import 'server-only';
@@ -21,19 +23,20 @@ import {
 import { trackCost } from './cost-tracker';
 
 /**
- * 모델 ID — 환경변수 override 가능 (Vercel ANTHROPIC_MODEL).
- * Anthropic Console에서 정확한 모델 ID 확인 후 override 권장.
- * 폴백: claude-sonnet-4-5 (안전한 alias).
+ * 모델 ID 폴백.
+ * Sonnet: 환경변수 ANTHROPIC_MODEL > 'claude-sonnet-4-5'
+ * Haiku:  환경변수 ANTHROPIC_MODEL_HAIKU > 'claude-haiku-4-5'
  */
-const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-5';
+export const DEFAULT_SONNET =
+  process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-5';
+export const DEFAULT_HAIKU =
+  process.env.ANTHROPIC_MODEL_HAIKU ?? 'claude-haiku-4-5';
 
 function getClient(): Anthropic {
   // Vercel 환경별 분리:
   //   - Development(`vercel dev` 또는 Vercel 환경=Development): ANTHROPIC_API_KEY_DEV 우선
   //   - Production / Preview / 로컬 npm run dev (.env.local): ANTHROPIC_API_KEY
   //   - 폴백 순서: _DEV → 일반
-  //
-  // 의도: dev 환경에서 별도 키로 quota/요금 격리 (Anthropic Console에서 분리).
   const apiKey =
     process.env.ANTHROPIC_API_KEY_DEV ?? process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -44,40 +47,61 @@ function getClient(): Anthropic {
   return new Anthropic({ apiKey });
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 공용 호출 (JSON 응답)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type RunClaudeOptions = {
+  /** system 프롬프트 (cache_control 자동 적용). */
+  system: string;
+  /** user 메시지. */
+  user: string;
+  /** 모델 ID. 미지정 시 DEFAULT_SONNET. */
+  model?: string;
+  /** 최대 출력 토큰. 기본 1500. */
+  maxTokens?: number;
+  /** cost-tracker에 기록될 bucket 라벨 (예: 'ai-assist', 'ai-rewrite-tone'). */
+  bucket: string;
+};
+
 /**
- * 아티클 보조 메타데이터 추출 호출.
+ * Claude 단일 호출 → JSON.parse 결과 반환.
  *
- * @returns JSON.parse된 결과 (스키마 검증은 호출처에서 zod safeParse).
- * @throws Anthropic SDK 에러 — 에러 메시지에 모델 ID 포함하여 디버깅 용이.
+ * - cache_control 'ephemeral' system 자동 적용
+ * - 호출 실패 시 model ID를 에러 메시지에 포함
+ * - JSON.parse 실패 시 응답 앞 200자 console.error
+ *
+ * @throws Anthropic SDK 에러 (network/auth/rate-limit) 또는 JSON 파싱 에러.
  */
-export async function callClaudeAssistant(input: AiAssistInput): Promise<unknown> {
+export async function runClaudeJson(opts: RunClaudeOptions): Promise<unknown> {
+  const model = opts.model ?? DEFAULT_SONNET;
   const client = getClient();
+
   let message;
   try {
     message = await client.messages.create({
-      model: MODEL,
-      max_tokens: 1500,
+      model,
+      max_tokens: opts.maxTokens ?? 1500,
       system: [
         {
           type: 'text',
-          text: SYSTEM_PROMPT,
+          text: opts.system,
           cache_control: { type: 'ephemeral' },
         },
       ],
-      messages: [{ role: 'user', content: buildUserMessage(input) }],
+      messages: [{ role: 'user', content: opts.user }],
     });
   } catch (err) {
-    // 에러 메시지에 모델 ID와 원본 메시지 포함 (Vercel 로그에서 즉시 진단)
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[anthropic-client] 호출 실패 model="${MODEL}":`, err);
-    throw new Error(`Anthropic API 호출 실패 (model=${MODEL}): ${msg}`);
+    console.error(`[anthropic-client] 호출 실패 model="${model}" bucket="${opts.bucket}":`, err);
+    throw new Error(`Anthropic API 호출 실패 (model=${model}): ${msg}`);
   }
 
   trackCost({
     inputTokens: message.usage.input_tokens,
     outputTokens: message.usage.output_tokens,
     cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
-    bucket: 'ai-assist',
+    bucket: opts.bucket,
   });
 
   const block = message.content.find((b) => b.type === 'text');
@@ -85,14 +109,33 @@ export async function callClaudeAssistant(input: AiAssistInput): Promise<unknown
     throw new Error('AI 응답에 text block이 없습니다.');
   }
 
-  // JSON.parse 실패 시 원문 일부 로깅 (디버깅용)
   try {
     return JSON.parse(block.text);
   } catch (err) {
     console.error(
-      `[anthropic-client] JSON.parse 실패 model="${MODEL}". 응답 앞 200자:`,
+      `[anthropic-client] JSON.parse 실패 model="${model}" bucket="${opts.bucket}". 응답 앞 200자:`,
       block.text.slice(0, 200),
     );
     throw new Error(`AI 응답 JSON 파싱 실패: ${(err as Error).message}`);
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// A5 — 메타 추출
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A5 — 아티클 메타데이터 5종 추출 (Sonnet).
+ *
+ * 시그니처는 v1.4와 동일 (외부 호출처 100% 호환). 내부 구현만 runClaudeJson으로 위임.
+ *
+ * @returns JSON.parse 결과 (zod safeParse는 호출처에서).
+ */
+export async function callClaudeAssistant(input: AiAssistInput): Promise<unknown> {
+  return runClaudeJson({
+    system: SYSTEM_PROMPT,
+    user: buildUserMessage(input),
+    bucket: 'ai-assist',
+    // model 미지정 → DEFAULT_SONNET
+  });
 }
