@@ -57,6 +57,11 @@ import {
   runClaudeJson,
 } from '@/lib/ai/anthropic-client';
 import {
+  MOCK_ENABLED,
+  mockAssistOutput,
+  mockRewriteOutput,
+} from '@/lib/ai/mock';
+import {
   buildRewriterSystem,
   buildRewriterUserMessage,
   bucketForMode,
@@ -216,6 +221,19 @@ export async function aiAssistArticleAction(input: {
 
   const truncated = truncateBody(input.body ?? '', 5000);
 
+  // D5 — E2E_MOCK_AI=1일 때 mock 응답 (server-only, production 비활성)
+  if (MOCK_ENABLED) {
+    const data = mockAssistOutput({
+      title: input.title ?? '',
+      body: truncated.text,
+      contentType: input.contentType,
+      productCode: input.productCode ?? '',
+      categoryPath: input.categoryPath ?? [],
+      existingKeywords: input.existingKeywords ?? [],
+    });
+    return { ok: true, data, truncated: truncated.truncated, originalLength: truncated.original };
+  }
+
   try {
     const raw = await callClaudeAssistant({
       title: input.title ?? '',
@@ -335,6 +353,19 @@ export async function aiRewriteArticleAction(
   // 입력 5000자 cap
   const truncated = truncateRewriteBody(input.body, 5000);
   const model = modelForMode(input.mode);
+
+  // D5 — E2E_MOCK_AI=1일 때 mock 응답
+  if (MOCK_ENABLED) {
+    const data = mockRewriteOutput({ ...input, body: truncated.text });
+    return {
+      ok: true,
+      data,
+      truncated: truncated.truncated,
+      originalLength: truncated.original,
+      model,
+      mode: input.mode,
+    };
+  }
 
   try {
     const raw = await runClaudeJson({

@@ -254,3 +254,74 @@ test.describe('KB-09 A6 재편집 패널 UI (manager)', () => {
     await expect(page.getByLabel(/자유 명령/)).toHaveValue(/줄/);
   });
 });
+
+// ──────────────────────────────────────────────────────────────────
+// KB-04 (A5 적용) · KB-09b (A6 재편집 적용) — mock Anthropic (D5)
+// ──────────────────────────────────────────────────────────────────
+//
+// E2E_MOCK_AI=1 환경변수에서만 활성. dev server를 다음처럼 띄우고 실행:
+//   E2E_MOCK_AI=1 npm run dev
+//   npx playwright test e2e/kb-knowledge-base.spec.ts -g "KB-04|KB-09b"
+//
+// production은 항상 mock 비활성 (lib/ai/mock.ts MOCK_ENABLED 분기).
+//
+// 참조: docs/04-report/knowledge-base-overhaul/REPORT-v1.6.md D5
+
+const MOCK_ON = process.env.E2E_MOCK_AI === '1';
+
+test.describe('KB-04 A5 AI 보조 적용 (mock)', () => {
+  test.skip(!MOCK_ON, 'E2E_MOCK_AI=1 환경변수가 필요합니다');
+  test.use({ storageState: STORAGE_STATE_PATHS.manager });
+
+  test('KB-04 AI 자동 트리거 → slug/summary/keywords mock 제안 표시 → 적용', async ({
+    page,
+  }) => {
+    await page.goto('/admin/articles/new');
+
+    // 제품 선택 (AI 호출 활성화 조건)
+    await page.getByLabel('제품 *').selectOption({ index: 1 });
+
+    // 제목 입력 (활성 조건)
+    await page.getByLabel('제목 *').fill('체크인 등록 테스트');
+
+    // AI 자동 트리거 (slug 옆 버튼)
+    await page.getByRole('button', { name: /AI 자동/ }).first().click();
+
+    // mock 응답 → slug 제안 카드 노출
+    await expect(page.getByText(/slug 제안/)).toBeVisible({ timeout: 5000 });
+
+    // 적용 클릭 → slug 필드에 mock 값 채워짐
+    await page.getByRole('button', { name: '적용' }).first().click();
+    await expect(page.getByLabel(/Slug/)).toHaveValue(/.+-howto-.+/);
+  });
+});
+
+test.describe('KB-09b A6 재편집 적용 (mock)', () => {
+  test.skip(!MOCK_ON, 'E2E_MOCK_AI=1 환경변수가 필요합니다');
+  test.use({ storageState: STORAGE_STATE_PATHS.manager });
+
+  test('KB-09b tone 모드 → 미리보기 모달 → 전부 적용 → 본문 변경', async ({ page }) => {
+    await page.goto('/admin/articles/new');
+
+    // 의도 카드(howto) 클릭으로 본문 골격 주입 (50자+ 조건 충족)
+    await page.getByRole('button', { name: '사용방법' }).click();
+
+    // 약간의 본문 추가 (50자+ 보장)
+    await page
+      .locator('[contenteditable]')
+      .first()
+      .fill('## 목표\n프런트에서 호텔리어를 도와 체크인을 5분 안에 완료하세요. 단계는 매뉴얼대로 진행하세요.');
+
+    // tone 모드 (기본) 트리거
+    await page.getByRole('button', { name: /재편집 미리보기/ }).click();
+
+    // 미리보기 모달 열림
+    await expect(page.getByText(/재편집 미리보기/)).toBeVisible({ timeout: 5000 });
+
+    // 전부 적용 클릭
+    await page.getByRole('button', { name: /전부 적용/ }).click();
+
+    // 토스트 노출 + 모달 닫힘
+    await expect(page.getByText(/적용됐어요/)).toBeVisible();
+  });
+});
