@@ -3,7 +3,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { ArrowUpRight, Eye, ImageIcon, Save, Trash2, Upload } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Eye,
+  ImageIcon,
+  Save,
+  Sparkles,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +31,7 @@ import {
   NOTICE_POPUP_SIZE_META,
 } from '@/lib/services/notices-meta';
 import {
+  aiDraftNoticeAction,
   createNoticeAction,
   updateNoticeAction,
 } from '@/app/actions/notice-actions';
@@ -112,8 +121,56 @@ export function NoticeEditor({
   );
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [aiDrafting, setAiDrafting] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  /** AI 초안 작성 — 종류·제품·제목·현재 본문(목차)을 근거로 본문 생성 */
+  async function generateDraft() {
+    const trimmed = title.trim();
+    if (trimmed.length < 2) {
+      toast.error('제목을 먼저 입력해주세요. 제목을 근거로 초안을 작성합니다.');
+      return;
+    }
+
+    // 본문에 실질 내용이 있으면 교체 전 확인 (목차로 활용 후 결과로 교체)
+    if (body.trim().length > 30) {
+      const ok = await confirm({
+        title: 'AI 초안으로 본문을 교체할까요?',
+        description:
+          '현재 본문을 목차·참고로 활용해 AI가 초안을 작성하고, 결과로 본문을 교체합니다. 기존 내용이 필요하면 취소 후 따로 보관해주세요.',
+        confirmText: '초안 작성',
+      });
+      if (!ok) return;
+    }
+
+    const product =
+      categories.find((c) => c.code === productCode)?.label ?? '';
+
+    setAiDrafting(true);
+    try {
+      const result = await aiDraftNoticeAction({
+        kind,
+        product,
+        title: trimmed,
+        outline: body,
+      });
+      if (result.ok) {
+        setBody(result.draftBody);
+        toast.success(
+          result.truncated
+            ? '초안을 작성했어요 (목차가 길어 일부만 참고). 내용을 확인하고 다듬어주세요.'
+            : 'AI 초안을 작성했어요. 내용을 확인하고 다듬어주세요.',
+        );
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error('AI 초안 작성 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setAiDrafting(false);
+    }
+  }
 
   async function submit(publish: boolean) {
     setFieldErrors({});
@@ -486,7 +543,22 @@ export function NoticeEditor({
       {/* 본문 RichEditor */}
       <Card>
         <CardContent className="flex flex-col gap-3 p-5">
-          <Label>본문 *</Label>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label>본문 *</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={generateDraft}
+              disabled={aiDrafting || pending}
+              title="종류·제품·제목·현재 본문(목차)을 근거로 AI가 본문 초안을 작성합니다"
+            >
+              <Sparkles
+                className={cn('h-3.5 w-3.5', aiDrafting && 'animate-pulse')}
+              />
+              {aiDrafting ? 'AI 초안 작성 중…' : 'AI 초안 작성'}
+            </Button>
+          </div>
           <RichEditor
             mode="full"
             value={body}

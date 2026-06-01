@@ -29,6 +29,16 @@ import {
   updateNoticeById,
   type NoticeWriteInput,
 } from '@/lib/services/notices';
+import type { NoticeKind } from '@/db/schema';
+import { runClaudeJson } from '@/lib/ai/anthropic-client';
+import { rateLimitOrThrow, RateLimitExceededError } from '@/lib/ai/rate-limiter';
+import { MOCK_ENABLED } from '@/lib/ai/mock';
+import {
+  buildDrafterSystem,
+  buildDrafterUserMessage,
+  truncateOutline,
+  NoticeDraftOutputSchema,
+} from '@/lib/ai/prompts/notice-drafter';
 
 // ─────────────────────────────────────────────────────────────────────
 // public — 조회수
@@ -304,4 +314,111 @@ export async function restoreNoticeAction(
     revalidatePath('/notices');
   }
   return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AI 초안 작성 (종류·제품·제목·목차 → 본문 초안)
+// ─────────────────────────────────────────────────────────────────────
+
+type AiDraftResult =
+  | { ok: true; draftBody: string; truncated?: boolean }
+  | {
+      ok: false;
+      reason: 'rate-limit' | 'api-error' | 'parse-error' | 'invalid-input';
+      message: string;
+    };
+
+/**
+ * 공지 본문 AI 초안 작성.
+ *
+ * - 입력: kind(종류) · product(제품 라벨) · title(제목) · outline(현재 본문/목차)
+ * - 모델: Sonnet (구조 정확도). Rate limit: 분당 5 / 일 100.
+ * - 목차 4000자 cap. 출력은 zod 검증 후 본문 문자열만 반환.
+ * - graceful: rate-limit / api-error / parse-error / invalid-input
+ */
+export async function aiDraftNoticeAction(input: {
+  kind: NoticeKind;
+  product: string;
+  title: string;
+  outline: string;
+}): Promise<AiDraftResult> {
+  const user = await requireRole(['manager', 'admin']);
+
+  const title = (input.title ?? '').trim();
+  if (title.length < 2) {
+    return {
+      ok: false,
+      reason: 'invalid-input',
+      message: '제목을 먼저 입력해주세요. 제목을 근거로 초안을 작성합니다.',
+    };
+  }
+
+  try {
+    await rateLimitOrThrow(user.id, {
+      perMin: 5,
+      perDay: 100,
+      bucket: 'ai-notice-draft',
+    });
+  } catch (e) {
+    if (e instanceof RateLimitExceededError) {
+      return { ok: false, reason: 'rate-limit', message: e.message };
+    }
+    throw e;
+  }
+
+  const outline = truncateOutline(input.outline ?? '', 4000);
+
+  // E2E_MOCK_AI=1 — 결정적 mock (실 API 미호출)
+  if (MOCK_ENABLED) {
+    const draftBody =
+      `## 안내 개요\n${title} 관련 안내입니다. (개요 입력)\n\n` +
+      `## 주요 내용\n- (내용 입력)\n\n## 참고 사항\n- (참고 입력)`;
+    return { ok: true, draftBody, truncated: outline.truncated };
+  }
+
+  try {
+    const raw = await runClaudeJson({
+      system: buildDrafterSystem(input.kind),
+      user: buildDrafterUserMessage({
+        kind: input.kind,
+        product: input.product ?? '',
+        title,
+        outline: outline.text,
+      }),
+      bucket: 'ai-notice-draft',
+      maxTokens: 2000,
+    });
+
+    const parsed = NoticeDraftOutputSchema.safeParse(raw);
+    if (!parsed.success) {
+      console.warn(
+        '[aiDraftNoticeAction] zod 검증 실패:',
+        parsed.error.flatten(),
+      );
+      return {
+        ok: false,
+        reason: 'parse-error',
+        message: 'AI 출력 형식이 예상과 달라요. 다시 시도하면 보통 정상이에요.',
+      };
+    }
+
+    return {
+      ok: true,
+      draftBody: parsed.data.draftBody,
+      truncated: outline.truncated,
+    };
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error('[aiDraftNoticeAction] Claude 호출 실패:', errMsg);
+    const showDetail =
+      process.env.VERCEL_ENV !== 'production' ||
+      process.env.NODE_ENV !== 'production';
+    return {
+      ok: false,
+      reason: 'api-error',
+      message: showDetail
+        ? `AI 초안 작성 실패: ${errMsg.slice(0, 200)}`
+        : 'AI 초안 작성이 일시적으로 동작하지 않아요. 잠시 후 다시 시도해주세요.',
+    };
+  }
 }
