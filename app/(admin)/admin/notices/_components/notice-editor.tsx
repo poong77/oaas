@@ -650,15 +650,9 @@ const RELATED_SETTINGS = [
 
 function RelatedSettingsPanel() {
   return (
-    <aside className="flex flex-col gap-2 rounded-md border border-slate-200 bg-slate-50/60 p-3 dark:border-slate-700 dark:bg-slate-800/40 lg:w-72 lg:shrink-0">
-      <div className="flex flex-col gap-0.5">
-        <span className="text-sm font-semibold">관련 설정 바로가기</span>
-        <span className="text-xs text-slate-500 dark:text-slate-400">
-          공지와 함께 점검하면 좋은 마스터 설정입니다. 새 탭으로 열려 작성 중인
-          내용은 유지됩니다.
-        </span>
-      </div>
-      <div className="flex flex-col gap-2">
+    <aside className="flex flex-col gap-2 rounded-md border border-slate-200 bg-slate-50/60 p-3 dark:border-slate-700 dark:bg-slate-800/40 lg:w-[420px] lg:shrink-0">
+      <span className="text-sm font-semibold">관련 설정 바로가기</span>
+      <div className="grid grid-cols-2 gap-2">
         {RELATED_SETTINGS.map(
           ({ href, Illustration, title, description, accent }) => (
           <Link
