@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2026-06-01 — KB v1.6 사이클 종료 (Phase 4+5+부채 정리)</title>
+<style>
+  :root {
+    --brand-50: #f5f3ff; --brand-100: #ede9fe;
+    --brand-500: #8b5cf6; --brand-600: #7c3aed; --brand-700: #6d28d9;
+    --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+    --slate-500: #64748b; --slate-700: #334155; --slate-900: #0f172a;
+    --emerald-50: #ecfdf5; --emerald-600: #059669;
+    --amber-50: #fffbeb; --amber-600: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif; background: var(--slate-50); color: var(--slate-900); line-height: 1.6; }
+  .container { max-width: 1080px; margin: 0 auto; }
+  header { padding: 24px 0; border-bottom: 3px solid var(--brand-500); margin-bottom: 24px; }
+  h1 { margin: 0 0 4px; font-size: 24px; color: var(--brand-700); }
+  h2 { font-size: 18px; color: var(--brand-700); margin: 28px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--slate-200); }
+  .meta { color: var(--slate-500); font-size: 13px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .card { background: white; border: 1px solid var(--slate-200); border-radius: 8px; padding: 14px 16px; }
+  .card.brand { border-left: 3px solid var(--brand-500); }
+  .card.success { border-left: 3px solid var(--emerald-600); background: var(--emerald-50); }
+  .stat-num { font-size: 28px; font-weight: 700; color: var(--brand-700); }
+  .stat-label { font-size: 12px; color: var(--slate-500); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--slate-200); padding: 7px 9px; text-align: left; vertical-align: top; }
+  th { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+  td.mono, code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  code { background: var(--slate-100); padding: 2px 5px; border-radius: 3px; }
+  ul.check li::before { content: "✅ "; }
+  ul.next li::before { content: "→ "; color: var(--brand-600); font-weight: 700; }
+  ul.insight li { margin: 6px 0; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge.ok { background: #d1fae5; color: #065f46; }
+  .badge.info { background: var(--brand-100); color: var(--brand-700); }
+  blockquote { margin: 12px 0; padding: 10px 14px; border-left: 3px solid var(--brand-500); background: var(--brand-50); border-radius: 4px; color: var(--slate-700); font-size: 13px; }
+  @media (max-width: 640px) { h1 { font-size: 20px; } .grid { grid-template-columns: 1fr; } th, td { font-size: 12px; padding: 5px 7px; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>knowledge-base-overhaul v1.6 사이클 종료</h1>
+  <p class="meta">📅 2026-06-01 · Phase 4 (A6 재편집) + Phase 5 (Stream D 이미지) + 부채 D1·D3·D4 ·
+    <span class="badge ok">Match 95%+</span> <span class="badge info">8 commits</span> <span class="badge info">+2,600줄</span> <span class="badge info">e2e 3/3</span>
+  </p>
+</header>
+
+<section>
+  <h2>📊 한눈에 보기</h2>
+  <div class="grid">
+    <div class="card brand"><div class="stat-num">8</div><div class="stat-label">사이클 commits</div></div>
+    <div class="card brand"><div class="stat-num">~2,600</div><div class="stat-label">코드 변경 (줄)</div></div>
+    <div class="card brand"><div class="stat-num">3 + 3</div><div class="stat-label">신규 lib / 컴포넌트</div></div>
+    <div class="card success"><div class="stat-num">3/3</div><div class="stat-label">프로덕션 e2e</div></div>
+    <div class="card success"><div class="stat-num">4993</div><div class="stat-label">SYSTEM_PROMPT 글자 (cache+)</div></div>
+    <div class="card success"><div class="stat-num">80%</div><div class="stat-label">Phase 5 단축 폭 (정찰 효과)</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>🎯 4-Perspective 가치</h2>
+  <table>
+    <thead><tr><th>관점</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td><b>Problem</b></td><td>재편집 부재 / 이미지 미최적화 / role 매핑 운영 UX 부족 / drizzle 매번 DROP / SYSTEM 짧아 cache 비활성</td></tr>
+      <tr><td><b>Solution</b></td><td>4모드 재편집 + diff 미리보기 · sharp 자동변환 · Mapper UI · 표현식 인덱스 schema · SYSTEM 4993자</td></tr>
+      <tr><td><b>Function · UX</b></td><td>좌(기존)/우(제안) diff + 섹션 토글 · Haiku 배지 · 절감률 메타 · ↑↓✕ 매핑 + 자동완성 · cache hit</td></tr>
+      <tr><td><b>Core Value</b></td><td>재편집 효율↑ · 이미지 60%↓ · /role 즉시 반영 · 부채 영구 해소 · AI 비용 ~25%↓</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>📋 commit별 진척</h2>
+  <table>
+    <thead><tr><th>단계</th><th>commit</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>D1 부채 정리</td><td><code>f2f7f77</code></td><td>articles.ts 표현식 인덱스 + 0019 멱등 SQL</td></tr>
+      <tr><td>Phase 4 Step 1</td><td><code>f32bde3</code></td><td>diff + anthropic-client 일반화 + rewriter + markdown-diff</td></tr>
+      <tr><td>Phase 4 Step 2</td><td><code>d08912a</code></td><td>aiRewriteArticleAction (5종 graceful)</td></tr>
+      <tr><td>Phase 4 Step 3</td><td><code>2759f7f</code></td><td>RewritePanel + DiffPreviewModal</td></tr>
+      <tr><td>Phase 4 Step 4</td><td><code>6f729e6</code></td><td>shell 통합 + e2e KB-09·09b·09c</td></tr>
+      <tr><td>Phase 5</td><td><code>4272141</code></td><td>sharp 통합 (/api/upload 확장)</td></tr>
+      <tr><td>D3 매핑 UI</td><td><code>2c2ad3c</code></td><td>RoleStarterArticleMapper + action 확장</td></tr>
+      <tr><td>D4 prompt cache</td><td><code>9bf903e</code></td><td>SYSTEM_PROMPT 4993자 (호텔 사전 + 예시)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>💡 인사이트 (다음 사이클로 이월)</h2>
+  <blockquote>
+    <b>정찰의 효과</b>: Phase 5 진입 전 Explore agent로 코드베이스 정찰 결과
+    <code>image-annotator/</code> 패키지 + react-konva + 5종 프레임 + KB-10 e2e가
+    이미 완성되어 있음을 발견. <b>1주 예상 → 1 commit으로 압축 (80% 단축)</b>.
+    DESIGN에 명시된 작업도 실제 코드와 차이가 클 수 있어, 큰 사이클 진입 전 사전 정찰이 결정적.
+  </blockquote>
+  <ul class="insight">
+    <li><b>API 일반화는 위임 패턴으로</b> — anthropic-client에 runClaudeJson 신설 후 callClaudeAssistant를 위임. 외부 시그니처 100% 호환 → 회귀 0.</li>
+    <li><b>모드별 rate-limit bucket 분리</b> — `ai-rewrite-{mode}`. 매니저가 한 모드만 반복해도 다른 모드는 별도 한도 유지. 추후 모니터링도 모드별 가능.</li>
+    <li><b>마이그레이션 멱등 패턴이 안전망</b> — D1·NT-04·0019 모두 IF NOT EXISTS 또는 DO 블록. DB 상태가 schema와 불일치해도 안전 통과.</li>
+    <li><b>기존 인프라 검토 = 최선의 중복 회피</b> — /api/upload 라우트 재사용으로 별도 endpoint 신설 회피. searchArticlesForAutocompleteAction을 D3에서 재사용.</li>
+    <li><b>prompt cache 임계 4000자</b> — system 4000자+에서 cache_control 'ephemeral' 활성. SYSTEM_PROMPT 짧게 두면 cache hit 없음 = 효과 0.</li>
+    <li><b>섹션별 부분 적용 = markdown-diff의 H2 split</b>이 핵심. body-validator 정규식과 정확 동기 필수 (아니면 섹션 잘못 매칭).</li>
+    <li><b>ConfirmDialog 중첩 회피</b> — DiffPreviewModal 자체가 confirm 역할 → 추가 confirm 불필요. 중첩 패턴이 보이면 UX 재설계 신호.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>📂 남은 부채 (다음 사이클 권장)</h2>
+  <table>
+    <thead><tr><th>ID</th><th>부채</th><th>분량</th></tr></thead>
+    <tbody>
+      <tr><td>D2</td><td>KB-01 로컬 e2e (manager 인증)</td><td>15분</td></tr>
+      <tr><td>D5</td><td>KB-04·KB-09 mock Anthropic 인프라 (msw 또는 SDK mock)</td><td>반나절</td></tr>
+      <tr><td>D6</td><td>dnd-kit 도입 → 매핑 UI 드래그 정렬</td><td>반나절</td></tr>
+      <tr><td>D7</td><td>article-rewriter SYSTEM 프롬프트 4000자+ 확장 (재편집도 cache hit)</td><td>반나절</td></tr>
+      <tr><td>D8</td><td>semantic 검색(embedding) UI 통합 (사용자 별도 작업한 vector 컬럼)</td><td>별도 사이클</td></tr>
+      <tr><td>D9</td><td>AI 사용량 + 비용 측정 대시보드 (cost-tracker 누적 view)</td><td>1일</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>🚀 다음 후보</h2>
+  <ul class="next">
+    <li>D5 mock Anthropic 인프라 → Phase 4 회귀 보강</li>
+    <li>매니저 5명 인터뷰 (재편집 사용 만족도)</li>
+    <li>실제 cache hit률 측정 (cost-tracker 로그)</li>
+    <li>이미지 평균 절감률 측정 (응답 메타)</li>
+    <li>D7 article-rewriter SYSTEM 확장 (재편집도 cache hit)</li>
+  </ul>
+</section>
+
+<footer style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--slate-200); color: var(--slate-500); font-size: 12px;">
+  PDCA Report: <code>docs/04-report/knowledge-base-overhaul/REPORT-v1.6.md</code> ·
+  PLAN/DESIGN: <code>docs/02-design/knowledge-base-overhaul/</code> ·
+  마지막 commit: <code>9bf903e</code>
+</footer>
+
+</div>
+</body>
+</html>
