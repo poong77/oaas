@@ -9,7 +9,18 @@
  */
 
 import 'server-only';
-import { and, asc, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  arrayOverlaps,
+  asc,
+  desc,
+  eq,
+  ilike,
+  isNotNull,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 
 import { db } from '@/db';
 import { faqs, type Faq, type NewFaq } from '@/db/schema';
@@ -203,10 +214,31 @@ export async function getFaqCounts(
   }
 }
 
-export async function getFaqById(id: string): Promise<Faq | null> {
+export async function getFaqById(
+  id: string,
+): Promise<Omit<Faq, 'embedding'> | null> {
   if (!db) return null;
   try {
-    const rows = await db.select().from(faqs).where(eq(faqs.id, id)).limit(1);
+    // embedding(1536-float)은 편집/조회에 불필요 — 명시 select로 페이로드 절감.
+    const rows = await db
+      .select({
+        id: faqs.id,
+        productCode: faqs.productCode,
+        issueType: faqs.issueType,
+        question: faqs.question,
+        answerMarkdown: faqs.answerMarkdown,
+        keywords: faqs.keywords,
+        sortOrder: faqs.sortOrder,
+        viewCount: faqs.viewCount,
+        helpfulYes: faqs.helpfulYes,
+        helpfulNo: faqs.helpfulNo,
+        isActive: faqs.isActive,
+        createdAt: faqs.createdAt,
+        updatedAt: faqs.updatedAt,
+      })
+      .from(faqs)
+      .where(eq(faqs.id, id))
+      .limit(1);
     return rows[0] ?? null;
   } catch (err) {
     console.error('[faqs.getFaqById] 실패:', err);
@@ -247,6 +279,8 @@ export type SearchFaqHit = FaqListItem & {
   score: number;
   /** 질문이 검색어(동의어 포함)와 일치하는지 — "질문 일치" 뱃지용. */
   questionMatch: boolean;
+  /** v1.7 — 검색 키워드(랭킹·디버그용). UI 노출은 선택. */
+  keywords: string[];
 };
 
 export async function searchFaqs(
@@ -264,55 +298,111 @@ export async function searchFaqs(
     const expanded = await expandKeywords(query, { maxTokens: 32 });
     const terms = expanded.length > 0 ? expanded : [query];
 
-    const conditions: SQL[] = [eq(faqs.isActive, true)];
+    // 공통 필터 (키워드/벡터 leg 동일).
+    const baseConds: SQL[] = [eq(faqs.isActive, true)];
     if (options.productCode) {
-      conditions.push(eq(faqs.productCode, options.productCode));
+      baseConds.push(eq(faqs.productCode, options.productCode));
     }
-    // 확장 term 각각을 question/answer ILIKE로 OR 결합.
-    const orParts: SQL[] = [];
+
+    const SELECT = {
+      id: faqs.id,
+      productCode: faqs.productCode,
+      issueType: faqs.issueType,
+      question: faqs.question,
+      answerMarkdown: faqs.answerMarkdown,
+      keywords: faqs.keywords,
+      sortOrder: faqs.sortOrder,
+      viewCount: faqs.viewCount,
+      helpfulYes: faqs.helpfulYes,
+      helpfulNo: faqs.helpfulNo,
+      isActive: faqs.isActive,
+      createdAt: faqs.createdAt,
+      updatedAt: faqs.updatedAt,
+    } as const;
+
+    // (1) 키워드 leg — articles.buildArticleSearchCondition와 동일 패턴.
+    //   keywords 배열 GIN 매칭(정확 일치) + 확장 term ILIKE(question/answer).
+    // v1.7 정렬 버그 수정: sort_order로 자른 뒤 점수 매기던 것을 → 후보 전체
+    // (FAQ는 소량) fetch 후 score 정렬→limit으로 변경.
+    const CANDIDATE_CAP = 200;
+    const orParts: SQL[] = [arrayOverlaps(faqs.keywords, terms)];
     for (const term of terms) {
       const p = `%${term}%`;
       const c = or(ilike(faqs.question, p), ilike(faqs.answerMarkdown, p));
       if (c) orParts.push(c);
     }
-    const searchCond =
-      orParts.length === 0
-        ? undefined
-        : orParts.length === 1
-          ? orParts[0]
-          : or(...orParts);
-    if (searchCond) conditions.push(searchCond);
-    const rows = await db
-      .select({
-        id: faqs.id,
-        productCode: faqs.productCode,
-        issueType: faqs.issueType,
-        question: faqs.question,
-        answerMarkdown: faqs.answerMarkdown,
-        sortOrder: faqs.sortOrder,
-        viewCount: faqs.viewCount,
-        helpfulYes: faqs.helpfulYes,
-        helpfulNo: faqs.helpfulNo,
-        isActive: faqs.isActive,
-        createdAt: faqs.createdAt,
-        updatedAt: faqs.updatedAt,
-      })
+    const searchCond = orParts.length === 1 ? orParts[0] : or(...orParts);
+    const keywordConds = searchCond ? [...baseConds, searchCond] : baseConds;
+    const keywordRows = await db
+      .select(SELECT)
       .from(faqs)
-      .where(and(...conditions))
+      .where(and(...keywordConds))
       .orderBy(asc(faqs.sortOrder), desc(faqs.createdAt))
-      .limit(limit);
+      .limit(CANDIDATE_CAP);
 
-    const { matchesAnyTerm } = await import('@/lib/text/search-match');
+    // (2) 벡터 leg — 쿼리 임베딩이 생성되면 코사인 최근접. graceful: 키 없으면 skip.
+    const { embedText, toVectorLiteral } = await import('./embeddings');
+    const qVec = await embedText(query);
+    const vectorRows: Array<(typeof keywordRows)[number] & { sim: number }> = [];
+    if (qVec) {
+      const lit = toVectorLiteral(qVec);
+      const distance = sql<number>`(${faqs.embedding} <=> ${lit}::vector)`;
+      const rows = await db
+        .select({ ...SELECT, sim: sql<number>`1 - ${distance}` })
+        .from(faqs)
+        .where(and(...baseConds, isNotNull(faqs.embedding)))
+        .orderBy(distance)
+        .limit(limit);
+      for (const r of rows) vectorRows.push({ ...r, sim: Number(r.sim) });
+    }
+
+    // (3) 병합 + 점수. 키워드 점수(확장 term 기준) + 벡터 유사도×4 (articles와 동일).
+    const { matchesAnyTerm, keywordsMatchAnyTerm } = await import(
+      '@/lib/text/search-match'
+    );
     const lowered = query.toLowerCase();
-    return rows.map((r) => {
-      let score = 0.5;
+    /** 벡터 유사도 가중치 — sim(0~1)×4 가 질문 일치(2.5)와 견줄 수준. */
+    const VEC_WEIGHT = 4;
+
+    type FaqRow = (typeof keywordRows)[number];
+    function scoreRow(r: FaqRow): { score: number; questionMatch: boolean } {
+      // 관련도 (articles 골격): question + answer + keywords + 원본 직접일치
+      let score = 0;
       const questionMatch = matchesAnyTerm(r.question, terms);
       if (questionMatch) score += 2.5;
       if (matchesAnyTerm(r.answerMarkdown, terms)) score += 1;
-      // 원본 검색어가 질문에 그대로 있으면 가산(직접 일치 우대).
+      if (keywordsMatchAnyTerm(r.keywords, terms)) score += 1;
       if (r.question.toLowerCase().includes(lowered)) score += 1;
-      return { ...r, score, questionMatch };
-    });
+      // 인기·유용도 가중 (관련도보다 작게 — 동점 보정 수준).
+      score += Math.min(0.8, Math.log10(1 + Math.max(0, r.viewCount)) * 0.4);
+      const helpfulTotal = r.helpfulYes + r.helpfulNo;
+      if (helpfulTotal >= 3) score += (r.helpfulYes / helpfulTotal) * 0.6;
+      return { score, questionMatch };
+    }
+
+    const byId = new Map<string, SearchFaqHit>();
+    for (const r of keywordRows) {
+      const { score, questionMatch } = scoreRow(r);
+      byId.set(r.id, { ...r, score: 0.5 + score, questionMatch });
+    }
+    for (const r of vectorRows) {
+      const existing = byId.get(r.id);
+      if (existing) {
+        existing.score += r.sim * VEC_WEIGHT;
+      } else {
+        // 키워드로는 안 잡혔지만 의미적으로 가까운 FAQ (시맨틱 전용 hit).
+        const { score, questionMatch } = scoreRow(r);
+        byId.set(r.id, {
+          ...r,
+          score: 0.5 + score + r.sim * VEC_WEIGHT,
+          questionMatch,
+        });
+      }
+    }
+
+    return Array.from(byId.values())
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
   } catch (err) {
     console.error('[faqs.searchFaqs] 실패:', err);
     return [];
@@ -383,20 +473,60 @@ export type FaqWriteInput = {
   issueType?: string | null;
   question: string;
   answerMarkdown: string;
+  /** v1.7 — 검색 보강 키워드. trim·중복제거·공백제거 후 저장. */
+  keywords?: string[] | null;
   sortOrder?: number;
 };
+
+/**
+ * v1.7 — FAQ 시맨틱 검색 임베딩 생성.
+ * graceful: OPENAI_API_KEY 미설정/오류 시 null → 임베딩 없이 저장.
+ */
+async function generateFaqEmbedding(f: {
+  question: string;
+  keywords?: string[] | null;
+  answerMarkdown?: string | null;
+}): Promise<number[] | null> {
+  const { embedText, buildFaqEmbeddingInput } = await import('./embeddings');
+  return embedText(buildFaqEmbeddingInput(f));
+}
+
+/** keywords 정규화 — trim, 빈값 제거, 중복 제거(최대 30개). */
+function normalizeFaqKeywords(input?: string[] | null): string[] {
+  if (!input || input.length === 0) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of input) {
+    const k = (raw ?? '').trim();
+    if (!k) continue;
+    const key = k.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(k.slice(0, 60));
+    if (out.length >= 30) break;
+  }
+  return out;
+}
 
 export async function createFaq(
   input: FaqWriteInput,
 ): Promise<{ ok: boolean; id?: string; message?: string }> {
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
   try {
+    const keywords = normalizeFaqKeywords(input.keywords);
+    const embedding = await generateFaqEmbedding({
+      question: input.question,
+      keywords,
+      answerMarkdown: input.answerMarkdown,
+    });
     const row: NewFaq = {
       productCode: input.productCode,
       issueType: input.issueType ?? null,
       question: input.question,
       answerMarkdown: input.answerMarkdown,
+      keywords,
       sortOrder: input.sortOrder ?? 0,
+      embedding,
     };
     const [created] = await db
       .insert(faqs)
@@ -418,6 +548,12 @@ export async function updateFaqById(
 ): Promise<{ ok: boolean; message?: string }> {
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
   try {
+    const keywords = normalizeFaqKeywords(input.keywords);
+    const embedding = await generateFaqEmbedding({
+      question: input.question,
+      keywords,
+      answerMarkdown: input.answerMarkdown,
+    });
     await db
       .update(faqs)
       .set({
@@ -425,7 +561,9 @@ export async function updateFaqById(
         issueType: input.issueType ?? null,
         question: input.question,
         answerMarkdown: input.answerMarkdown,
+        keywords,
         sortOrder: input.sortOrder ?? 0,
+        embedding,
       })
       .where(eq(faqs.id, id));
     return { ok: true };

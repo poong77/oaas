@@ -65,7 +65,7 @@
 > - **(A) keywords 태그** — `faqs.keywords text[]` + GIN(`faqs_keywords_gin`). 어드민 FAQ 에디터에 아티클과 동일한 칩 입력 + `AiTriggerBtn`(question+answer→한글 키워드 AI 제안, 선택 필드). 약어·영문·교차언어는 keywords가 아니라 동의어 마스터(`term_groups`/`term_synonyms`) 담당(역할 분리). `searchFaqs`에 `arrayOverlaps(faqs.keywords, expanded)` leg 추가(`buildArticleSearchCondition`와 동일 패턴).
 > - **(B) 인기·유용도 랭킹 + 정렬 버그 수정** — 기존 미사용 컬럼 활용: `viewCount`(로그 스케일 가중), `helpfulYes/(yes+no)`(최소표본 가드). v1.6 `searchFaqs`는 `sortOrder`로 자른 뒤 점수 계산 → 관련도 높은 FAQ 누락 가능. **매칭 전체 fetch 후 score 정렬→limit**으로 수정(FAQ는 소량).
 > - **(C) FAQ 시맨틱 — 하이브리드** — `faqs.embedding vector(1536)` + HNSW 코사인 인덱스(`faqs_embedding_hnsw`). `buildFaqEmbeddingInput`(question+answer 앞부분)→`generateFaqEmbedding`, 발행/수정 시 자동 생성. `searchFaqs`에 벡터 leg(코사인 최근접) 병합, 점수 = 키워드 점수 + `cosine_sim × 4`(아티클과 동일 가중). graceful degrade 동일(키 없으면 키워드 검색 폴백). 백필 `npm run db:backfill-faq-embeddings`. 마이그레이션은 `drizzle-kit generate`+`migrate`(`db:push` 금지).
-> - **(D) 0건 질의 → 보강 원클릭** — `/admin/search-quality/usage`의 0건 top 질의 각 행에 "동의어 추가"(→`/admin/master/synonyms/new`, canonical 프리필)·"FAQ 작성"(→`/admin/faqs/new`, question 프리필) 액션 링크. 운영자가 콘텐츠 갭을 즉시 보강하는 닫힌 루프 완성.
+> - **(D) 0건 질의 → 보강 원클릭** — `/admin/master/search-quality`(통합 페이지)의 `ZeroQueriesCard`에 0건 top 질의(최근 90일·최대 20건)를 빈도순 노출, 각 행에 "동의어 추가"(→`/admin/master/synonyms/new?canonical=`, **admin 전용 노출**)·"FAQ 작성"(→`/admin/faqs/new?question=`) 액션 링크. 운영자가 콘텐츠 갭을 즉시 보강하는 닫힌 루프 완성.
 
 ### 2. 셀프 픽스 (SF) — 스스로 문제 해결
 

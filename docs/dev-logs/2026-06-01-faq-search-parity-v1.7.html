@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FAQ 검색 도움말 동일화 (v1.7) — 2026-06-01</title>
+    <style>
+      :root {
+        --brand: #2563eb; --brand-50: #eff6ff; --brand-700: #1d4ed8;
+        --ok: #16a34a; --warn: #d97706; --bad: #dc2626;
+        --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --bg: #f8fafc;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, "Apple SD Gothic Neo", sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+      header.page { background: linear-gradient(135deg, var(--brand) 0%, var(--brand-700) 100%); color: #fff; border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+      header.page h1 { margin: 0 0 6px; font-size: 23px; }
+      header.page p { margin: 0; opacity: 0.9; font-size: 14px; }
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 22px 0; }
+      .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+      .card .n { font-size: 26px; font-weight: 700; color: var(--brand); }
+      .card .l { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+      h2 { font-size: 18px; margin: 34px 0 12px; padding-bottom: 8px; border-bottom: 2px solid var(--line); }
+      table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+      th, td { text-align: left; padding: 11px 13px; font-size: 13.5px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+      tr:last-child td { border-bottom: 0; }
+      code { background: #f1f5f9; padding: 1.5px 6px; border-radius: 6px; font-size: 12.5px; }
+      .tag { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; }
+      .t-ok { background: #dcfce7; color: var(--ok); } .t-warn { background: #fef3c7; color: var(--warn); } .t-bad { background: #fee2e2; color: var(--bad); }
+      ul.files { list-style: none; padding: 0; margin: 0; }
+      ul.files li { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 13.5px; }
+      ul.files li b { color: var(--brand-700); }
+      .note { background: #fff; border-left: 4px solid var(--brand); border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-size: 13.5px; }
+      .note.warn { border-left-color: var(--bad); }
+      .foot { margin-top: 40px; color: var(--muted); font-size: 12px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="page">
+        <h1>🔍 FAQ 검색 도움말 동일화 (v1.7)</h1>
+        <p>통합 AS 플랫폼 · 2026-06-01 · FAQ 검색을 아티클(도움말) 수준으로 — 키워드 태그 · 인기 랭킹 · 시맨틱 · 0건 보강 루프</p>
+      </header>
+
+      <div class="cards">
+        <div class="card"><div class="n">2</div><div class="l">검색 엔진 동일화<br/>(FAQ ↔ 도움말)</div></div>
+        <div class="card"><div class="n">3</div><div class="l">검색 leg<br/>(keywords · ILIKE · 벡터)</div></div>
+        <div class="card"><div class="n">2</div><div class="l">신규 컬럼<br/>(keywords · embedding)</div></div>
+        <div class="card"><div class="n">95%</div><div class="l">gap 일치율<br/>(설계 A~D)</div></div>
+        <div class="card"><div class="n">0023·0024</div><div class="l">적용 마이그레이션</div></div>
+      </div>
+
+      <h2>1. 문제 — FAQ 검색이 한 세대 뒤처져 있었다</h2>
+      <p>같은 통합검색 화면이지만 FAQ는 도움말과 다른(약한) 엔진을 쓰고 있었다. 동의어 사전은 물려 있었지만, <b>사전에 없는 표현이면 그냥 0건</b>이었다.</p>
+      <table>
+        <thead><tr><th>항목</th><th>도움말(articles)</th><th>FAQ (v1.6까지)</th></tr></thead>
+        <tbody>
+          <tr><td>키워드/태그 배열</td><td><code>keywords text[]</code> + GIN</td><td><span class="tag t-bad">없음</span></td></tr>
+          <tr><td>시맨틱(임베딩)</td><td><code>embedding vector(1536)</code> 하이브리드</td><td><span class="tag t-bad">없음</span></td></tr>
+          <tr><td>인기·유용도 반영</td><td>—</td><td><span class="tag t-bad">컬럼만 있고 랭킹 미사용</span></td></tr>
+          <tr><td>정렬</td><td>관련도</td><td><span class="tag t-warn">sort_order로 자른 뒤 점수 (버그)</span></td></tr>
+        </tbody>
+      </table>
+
+      <h2>2. 무엇을 했나 (설계 A~D)</h2>
+      <table>
+        <thead><tr><th></th><th>항목</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td><b>A</b></td><td>keywords 태그</td><td><code>faqs.keywords text[]</code> + GIN. 어드민 에디터에 칩 입력 + <b>AI 추천</b> 버튼(question+answer→한글 키워드). <code>searchFaqs</code>에 <code>arrayOverlaps(keywords)</code> leg.</td></tr>
+          <tr><td><b>B</b></td><td>인기·유용도 랭킹<br/>+ 정렬 버그 수정</td><td>기존 미사용 <code>viewCount</code>(로그, ≤+0.8)·<code>helpfulYes/(yes+no)</code>(최소표본 가드, ≤+0.6)를 점수에 반영. 후보 전체 fetch → <b>score 정렬 → limit</b>으로 버그 수정.</td></tr>
+          <tr><td><b>C</b></td><td>FAQ 시맨틱 하이브리드</td><td><code>faqs.embedding vector(1536)</code> + HNSW. 생성/수정 시 자동 임베딩. <code>searchFaqs</code> 벡터 leg(코사인) 병합, 점수 = 키워드 + <code>cosine_sim × 4</code> (아티클과 동일). 백필 스크립트.</td></tr>
+          <tr><td><b>D</b></td><td>0건 질의 → 보강 원클릭</td><td>검색품질 페이지에 <b>0건 검색어 카드</b>. 각 행에서 "동의어 추가"(canonical 프리필·admin 전용)·"FAQ 작성"(question 프리필)로 바로 연결 → 닫힌 운영 루프.</td></tr>
+        </tbody>
+      </table>
+      <div class="note">핵심 설계 원칙: <b>아티클의 검증된 패턴을 그대로 이식</b>해 두 검색 엔진을 일치시켰다. 인기·유용도 가중치는 관련도(질문일치 +2.5)보다 작게 잡아 <b>관련도가 항상 우선, 동점만 보정</b>. 약어·영문·교차언어는 keywords가 아니라 동의어 마스터가 담당(역할 분리).</div>
+
+      <h2>3. 동작 방식 — searchFaqs 하이브리드</h2>
+      <table>
+        <thead><tr><th>leg</th><th>매칭</th><th>역할</th></tr></thead>
+        <tbody>
+          <tr><td>① keywords GIN</td><td><code>arrayOverlaps(faqs.keywords, 확장term)</code></td><td>정확 매칭 가속 경로</td></tr>
+          <tr><td>② ILIKE</td><td>question · answer 부분일치 (동의어 확장)</td><td>띄어쓰기·이형어 흡수</td></tr>
+          <tr><td>③ 벡터</td><td><code>embedding &lt;=&gt; query_vec</code> 코사인 최근접</td><td>사전에 없는 자연어 의미 매칭</td></tr>
+        </tbody>
+      </table>
+      <div class="note">세 leg를 id로 병합 → 점수 합산 → 정렬. <b>graceful degrade</b>: <code>OPENAI_API_KEY</code>가 없으면 벡터 leg를 건너뛰고 키워드 검색으로 폴백(서비스 중단 없음, 키 활성 즉시 시맨틱 ON).</div>
+
+      <h2>4. 변경 파일</h2>
+      <ul class="files">
+        <li><b>db/schema/faqs.ts</b> — <code>keywords</code> + <code>embedding</code> 컬럼, <code>faqs_keywords_gin</code> · <code>faqs_embedding_hnsw</code> 인덱스</li>
+        <li><b>lib/services/faqs.ts</b> — <code>searchFaqs</code> 하이브리드, <code>generateFaqEmbedding</code>, <code>normalizeFaqKeywords</code>, create/update 임베딩, <code>getFaqById</code> 페이로드 절감</li>
+        <li><b>lib/services/embeddings.ts</b> — <code>buildFaqEmbeddingInput</code></li>
+        <li><b>lib/services/llm.ts</b> — <code>suggestFaqKeywords</code> (gpt-4o-mini, graceful)</li>
+        <li><b>app/actions/faq-actions.ts</b> — <code>suggestFaqKeywordsAction</code>(rate-limit), 폼 keywords 파싱/스키마</li>
+        <li><b>app/(admin)/admin/faqs/_components/faq-editor.tsx</b> — keywords 칩 + AI 추천 + <code>defaultQuestion</code> 프리필</li>
+        <li><b>app/(admin)/admin/faqs/{new,[id]}/page.tsx</b> — keywords 초기값 · question 프리필</li>
+        <li><b>app/(admin)/admin/master/search-quality/</b> — <b>zero-queries-card.tsx</b> 신규 + page.tsx 연결</li>
+        <li><b>db/backfill-faq-embeddings.ts</b> + <code>npm run db:backfill-faq-embeddings</code></li>
+        <li><b>docs/IMPLEMENTATION_PLAN.md</b> — v1.7 노트(설계 먼저)</li>
+      </ul>
+
+      <h2>5. 검증</h2>
+      <table>
+        <thead><tr><th>항목</th><th>결과</th></tr></thead>
+        <tbody>
+          <tr><td><code>tsc --noEmit</code> (FAQ 작업 파일)</td><td><span class="tag t-ok">통과 (에러 0)</span></td></tr>
+          <tr><td><code>next build</code></td><td><span class="tag t-ok">성공 (Phase C 시점)</span></td></tr>
+          <tr><td>마이그레이션 0023(keywords)·0024(embedding) 적용</td><td><span class="tag t-ok">완료</span></td></tr>
+          <tr><td>마이그레이션 안전성 (<code>articles_search_tsv</code> DROP 없음)</td><td><span class="tag t-ok">확인</span></td></tr>
+          <tr><td>gap-detector 설계-구현 일치</td><td><span class="tag t-ok">95% (A~D 모두 구현)</span></td></tr>
+          <tr><td>발견 갭 3건 (매니저 링크·페이로드·문서경로)</td><td><span class="tag t-ok">수정 완료</span></td></tr>
+        </tbody>
+      </table>
+
+      <h2>6. 남은 작업</h2>
+      <table>
+        <thead><tr><th>항목</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td><b>FAQ 임베딩 백필</b> — 기존 FAQ에 임베딩 채우기 (<code>npm run db:backfill-faq-embeddings</code>)</td><td><span class="tag t-warn">대기 (OpenAI 비용 — 사용자 승인 후 실행)</span></td></tr>
+          <tr><td>골든셋에 FAQ 시맨틱 케이스 추가 → Hit@3 재측정 (효과 정량화)</td><td><span class="tag t-warn">권장</span></td></tr>
+        </tbody>
+      </table>
+      <div class="note warn"><b>주의 — 무관한 동시 작업:</b> <code>app/search/page.tsx</code>에 "전체(통합) 탭"을 추가하는 별도 작업이 진행 중이며 <code>buildMerged</code>·<code>applyMergedSort</code> 등이 아직 미정의 상태로 빌드를 막는다. 이 v1.7 작업과는 무관(해당 통합 탭이 완성되면 본 FAQ 개선의 혜택을 그대로 받음).</div>
+
+      <div class="foot">통합 AS 플랫폼 · FAQ 검색 v1.7 · 생성 2026-06-01</div>
+    </div>
+  </body>
+</html>

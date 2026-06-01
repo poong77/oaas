@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { Save } from 'lucide-react';
+import { Save, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
 import type { ProductCategoryView } from '@/lib/services/categories';
 import {
   createFaqAction,
+  suggestFaqKeywordsAction,
   updateFaqAction,
 } from '@/app/actions/faq-actions';
 
@@ -25,6 +26,7 @@ type InitialValues = {
   issueType: string | null;
   question: string;
   answerMarkdown: string;
+  keywords: string[];
   sortOrder: number;
 };
 
@@ -33,11 +35,14 @@ export function FaqEditor({
   productCategories,
   issueTypeCategories,
   initial,
+  defaultQuestion,
 }: {
   mode: EditorMode;
   productCategories: ProductCategoryView[];
   issueTypeCategories: Array<{ code: string; label: string }>;
   initial?: InitialValues;
+  /** v1.7 — 생성 모드에서 질문 프리필 (0건 검색어 → FAQ 작성 연결). */
+  defaultQuestion?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -46,13 +51,63 @@ export function FaqEditor({
     initial?.productCode ?? productCategories[0]?.code ?? '',
   );
   const [issueType, setIssueType] = useState(initial?.issueType ?? '');
-  const [question, setQuestion] = useState(initial?.question ?? '');
+  const [question, setQuestion] = useState(
+    initial?.question ?? defaultQuestion ?? '',
+  );
   const [answer, setAnswer] = useState(initial?.answerMarkdown ?? '');
+  const [keywords, setKeywords] = useState<string[]>(initial?.keywords ?? []);
+  const [keywordDraft, setKeywordDraft] = useState('');
+  const [aiPending, setAiPending] = useState(false);
   const [sortOrder, setSortOrder] = useState(
     initial?.sortOrder !== undefined ? String(initial.sortOrder) : '0',
   );
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  function addKeyword(raw?: string) {
+    const k = (raw ?? keywordDraft).trim();
+    if (!k) return;
+    setKeywords((prev) => {
+      if (prev.length >= 30) return prev;
+      if (prev.some((x) => x.toLowerCase() === k.toLowerCase())) return prev;
+      return [...prev, k.slice(0, 60)];
+    });
+    setKeywordDraft('');
+  }
+
+  function removeKeyword(k: string) {
+    setKeywords((prev) => prev.filter((x) => x !== k));
+  }
+
+  async function suggestKeywords() {
+    if (question.trim().length < 2) {
+      toast.error('질문을 먼저 입력하세요');
+      return;
+    }
+    setAiPending(true);
+    try {
+      const res = await suggestFaqKeywordsAction({
+        question: question.trim(),
+        answer,
+        existing: keywords,
+      });
+      if (res.ok && res.keywords) {
+        const added = res.keywords.filter(
+          (k) => !keywords.some((x) => x.toLowerCase() === k.toLowerCase()),
+        );
+        if (added.length === 0) {
+          toast.info('추가할 새 키워드가 없어요');
+        } else {
+          setKeywords((prev) => [...prev, ...added].slice(0, 30));
+          toast.success(`AI가 키워드 ${added.length}개를 제안했어요`);
+        }
+      } else {
+        toast.error(res.message ?? 'AI 제안 실패');
+      }
+    } finally {
+      setAiPending(false);
+    }
+  }
 
   function submit() {
     setFieldErrors({});
@@ -61,6 +116,7 @@ export function FaqEditor({
     formData.set('issueType', issueType);
     formData.set('question', question.trim());
     formData.set('answerMarkdown', answer);
+    formData.set('keywords', keywords.join(','));
     formData.set('sortOrder', sortOrder.trim() || '0');
 
     startTransition(async () => {
@@ -170,6 +226,74 @@ export function FaqEditor({
           {fieldErrors.answerMarkdown && (
             <FieldError msg={fieldErrors.answerMarkdown} />
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-5">
+          <div className="flex items-center justify-between gap-2">
+            <Label>검색 키워드 (선택)</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={suggestKeywords}
+              disabled={aiPending}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              {aiPending ? '제안 중...' : 'AI 추천'}
+            </Button>
+          </div>
+
+          {keywords.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {keywords.map((k) => (
+                <span
+                  key={k}
+                  className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  {k}
+                  <button
+                    type="button"
+                    onClick={() => removeKeyword(k)}
+                    className="text-slate-400 hover:text-rose-600"
+                    aria-label={`${k} 삭제`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Input
+              value={keywordDraft}
+              onChange={(e) => setKeywordDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addKeyword();
+                }
+              }}
+              placeholder="키워드 추가 후 Enter (예: 도어락 오류, 키리스)"
+              maxLength={60}
+            />
+            <Button type="button" variant="outline" onClick={() => addKeyword()}>
+              추가
+            </Button>
+          </div>
+          <span className="text-xs text-slate-500">
+            질문에 없는 다른 표현을 보강하면 검색이 더 잘 잡혀요. 영문 약어·외국어는
+            여기 대신{' '}
+            <a
+              href="/admin/master/synonyms"
+              className="underline hover:text-slate-700"
+            >
+              동의어 마스터
+            </a>
+            에 등록하세요.
+          </span>
         </CardContent>
       </Card>
 

@@ -79,6 +79,7 @@ export default async function EditFaqPage({ params }: { params: RouteParams }) {
           issueType: faq.issueType,
           question: faq.question,
           answerMarkdown: faq.answerMarkdown,
+          keywords: faq.keywords ?? [],
           sortOrder: faq.sortOrder,
         }}
       />

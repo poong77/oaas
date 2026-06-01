@@ -15,12 +15,18 @@ import { FaqEditor } from '../_components/faq-editor';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '새 FAQ — OA 통합 AS 어드민' };
 
-export default async function NewFaqPage() {
+export default async function NewFaqPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ question?: string }>;
+}) {
   await requireRole(['manager', 'admin']);
-  const [productCategories, issueTypeCategories] = await Promise.all([
-    getProductCategories(),
-    getCategoriesByType('issue_type'),
-  ]);
+  const [{ question }, productCategories, issueTypeCategories] =
+    await Promise.all([
+      searchParams,
+      getProductCategories(),
+      getCategoriesByType('issue_type'),
+    ]);
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
@@ -43,6 +49,7 @@ export default async function NewFaqPage() {
           code: c.code,
           label: c.label,
         }))}
+        defaultQuestion={question?.trim() || undefined}
       />
     </div>
   );

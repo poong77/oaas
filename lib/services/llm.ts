@@ -75,6 +75,34 @@ export async function generateEvalQueries(
 }
 
 /**
+ * v1.7 — FAQ 검색 키워드 제안 (어드민 에디터 AI 보조).
+ * question+answer를 보고 사용자가 칠 법한 한글 검색 키워드를 추출.
+ * 영문 약어·외국어는 제외(그건 동의어 마스터 담당, 역할 분리).
+ * graceful: 키 미설정/오류 시 빈 배열.
+ */
+export async function suggestFaqKeywords(
+  faq: { question: string; answer?: string | null },
+  existing: string[] = [],
+): Promise<string[]> {
+  const sys =
+    '너는 호텔 솔루션(PMS/키오스크/도어락) 고객지원 FAQ 검색 키워드 큐레이터다. ' +
+    '주어진 FAQ 질문/답변을 보고, 호텔리어가 이 FAQ를 찾을 때 칠 법한 한글 검색 키워드를 추출한다. ' +
+    '규칙: ① 한글 단어/짧은 구 위주(영문 약어·외국어 제외) ② 질문에 그대로 없는 동의어·다른 표현 우선 ' +
+    '③ 명사형 2~10자 ④ 3~8개 ⑤ 이미 등록된 키워드는 중복 금지. ' +
+    'JSON {"keywords": string[]} 형식으로만 답한다.';
+  const usr = `질문: ${faq.question}\n답변: ${(faq.answer ?? '').slice(0, 800)}\n이미 등록된 키워드: ${existing.join(', ') || '(없음)'}\n\n위 FAQ의 검색 키워드를 제안.`;
+  const out = await chatJson<{ keywords?: string[] }>(sys, usr, {
+    temperature: 0.3,
+  });
+  return Array.isArray(out?.keywords)
+    ? out.keywords
+        .filter((k) => typeof k === 'string' && k.trim().length >= 1)
+        .map((k) => k.trim().slice(0, 60))
+        .slice(0, 8)
+    : [];
+}
+
+/**
  * 검색 결과 목록의 질의 적합도 채점 (LLM-as-a-judge).
  * @returns 입력 results 순서에 대응하는 0~3 점수 배열 (3=완벽, 0=무관). null이면 실패.
  */

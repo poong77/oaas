@@ -20,23 +20,31 @@ import {
   listEvalQueries,
   listEvalQueryIds,
 } from '@/lib/services/search-eval';
-import { getFunnelStats, getUsageByQueries } from '@/lib/services/search-logs';
+import {
+  getFunnelStats,
+  getUsageByQueries,
+  topZeroQueries,
+} from '@/lib/services/search-logs';
 import { GoldenBoard, type GoldenRow } from './_components/golden-board';
 import { FunnelSection } from './_components/funnel-section';
+import { ZeroQueriesCard } from './_components/zero-queries-card';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '검색 골든셋·품질 — OA 통합 AS 어드민' };
 
 export default async function MasterSearchQualityPage() {
-  await requireRole(['manager', 'admin']);
+  const user = await requireRole(['manager', 'admin']);
+  const isAdmin = user.role === 'admin';
 
-  const [queries, latest, history, funnel, queryIds] = await Promise.all([
-    listEvalQueries(),
-    getLatestRun(),
-    getRankHistory(4),
-    getFunnelStats(90),
-    listEvalQueryIds(),
-  ]);
+  const [queries, latest, history, funnel, queryIds, zeroQueries] =
+    await Promise.all([
+      listEvalQueries(),
+      getLatestRun(),
+      getRankHistory(4),
+      getFunnelStats(90),
+      listEvalQueryIds(),
+      topZeroQueries(90, 20),
+    ]);
 
   const buckets = computeBuckets(latest);
 
@@ -117,6 +125,9 @@ export default async function MasterSearchQualityPage() {
 
       {/* #6 실사용 퍼널 */}
       <FunnelSection funnel={funnel} />
+
+      {/* #D 0건 검색어 → 동의어/FAQ 보강 닫힌 루프 (v1.7) */}
+      <ZeroQueriesCard rows={zeroQueries} canManageSynonyms={isAdmin} />
     </div>
   );
 }

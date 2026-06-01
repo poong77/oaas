@@ -86,6 +86,27 @@ export function buildArticleEmbeddingInput(a: {
     .trim();
 }
 
+/**
+ * v1.7 — FAQ 임베딩 입력 텍스트 구성.
+ * question + keywords + answer 앞부분. FAQ는 아티클보다 짧으므로 본문 상한을 줄인다.
+ */
+export function buildFaqEmbeddingInput(f: {
+  question: string;
+  keywords?: string[] | null;
+  answerMarkdown?: string | null;
+}): string {
+  const parts = [
+    f.question,
+    (f.keywords ?? []).join(' '),
+    (f.answerMarkdown ?? '').slice(0, 2000),
+  ];
+  return parts
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .join('\n')
+    .trim();
+}
+
 /** number[] → pgvector 리터럴 문자열 `[0.1,0.2,...]`. */
 export function toVectorLiteral(vec: number[]): string {
   return `[${vec.join(',')}]`;
