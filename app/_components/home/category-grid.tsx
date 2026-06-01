@@ -26,7 +26,7 @@ export function CategoryGrid({
             id="category-heading"
             className="text-lg font-bold tracking-tight sm:text-xl"
           >
-            제품별 가이드
+            제품으로 찾기
           </h2>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
             관심 제품을 선택하면 사용 가이드·FAQ·체크리스트가 모여있어요.

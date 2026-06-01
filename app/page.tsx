@@ -4,7 +4,7 @@
  * 구성 (2026-06-01 UX 재구성):
  *   ① Hero (좌: 검색 / 우: 서비스 상태 + 최근 업데이트 박스) — 기존 유지
  *   ② 빠른 행동 2갈래 택1 (답 찾기 /search · 문의하기 /tickets/new) + 내 문의 보조링크
- *   ③ 제품·역할로 찾기 (탭 병합: 제품별 /help · 역할별 /role)
+ *   ③ 제품으로 찾기 (/help) · ④ 역할로 찾기 (/role) — 두 섹션 분리
  *   (푸터 연락 정보/약관은 RoleScope의 ContactPanel + SiteFooter로 통합 — 별도 렌더 없음)
  *
  * 변경 이력:
@@ -24,7 +24,8 @@ import { HomePopupBanner } from '@/components/notices/home-popup-banner';
 import { HomeHero } from './_components/home/home-hero';
 import { HomeStatusUpdatesBox } from './_components/home/home-status-updates-box';
 import { HomeQuickChoice } from './_components/home/home-quick-choice';
-import { HomeFindTabs } from './_components/home/home-find-tabs';
+import { CategoryGrid } from './_components/home/category-grid';
+import { RoleStarters } from './_components/home/role-starters';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,7 +54,8 @@ export default async function HomePage() {
         }
       />
       <HomeQuickChoice />
-      <HomeFindTabs categories={categories} roleStarters={roleStarterRows} />
+      <CategoryGrid categories={categories} />
+      <RoleStarters items={roleStarterRows} />
     </>
   );
 }

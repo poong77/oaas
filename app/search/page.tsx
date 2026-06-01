@@ -16,7 +16,6 @@ import { Suspense } from 'react';
 import { sql, and, desc, gte, ne } from 'drizzle-orm';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
-import { PageHeader } from '@/components/ui/page-header';
 import { SearchResultsSkeleton } from '@/components/ui/skeletons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +43,8 @@ import { formatDateKst } from '@/lib/business-hours/format';
 import { SearchTabs } from './_components/search-tabs';
 import { SearchFilters } from './_components/search-filters';
 import { TrackedLink } from './_components/tracked-link';
+import { SearchBox } from './_components/search-box';
+import { POPULAR_KEYWORDS } from '@/app/_components/home/_constants';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '검색 — OA 통합 AS' };
@@ -92,30 +93,27 @@ export default async function SearchPage({
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <PageHeader
-        title={query ? `검색 결과 — "${query}"` : '검색'}
-        description={
-          query
-            ? '도움말·FAQ·공지·장애를 통합 검색합니다.'
-            : '검색어를 입력하면 도움말·FAQ·공지·장애를 통합 검색합니다.'
-        }
-      />
+      {/* 중앙 검색바 — 페이지 자체에서 바로 검색 (2026-06-01) */}
+      <div className="flex flex-col items-center gap-4 py-2">
+        <h1 className="text-center text-xl font-bold tracking-tight sm:text-2xl">
+          {query ? `검색 결과 — "${query}"` : '통합 검색'}
+        </h1>
+        <SearchBox defaultValue={query} />
+      </div>
 
       {!query ? (
-        <Card>
-          <CardContent className="p-6">
-            <EmptyState
-              icon={<Search className="h-6 w-6" />}
-              title="검색어를 입력하세요"
-              description="상단 검색창에서 키워드(예: 결제 오류, SSL 갱신, 카드키 발급)를 입력하면 결과가 표시됩니다."
-              action={
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/">홈으로 돌아가기</Link>
-                </Button>
-              }
-            />
-          </CardContent>
-        </Card>
+        <ul className="flex flex-wrap items-center justify-center gap-2">
+          {POPULAR_KEYWORDS.map((kw) => (
+            <li key={kw}>
+              <Link
+                href={`/search?q=${encodeURIComponent(kw)}`}
+                className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/50 dark:hover:text-brand-300 sm:text-sm"
+              >
+                # {kw}
+              </Link>
+            </li>
+          ))}
+        </ul>
       ) : (
         // 쿼리/탭/필터가 바뀔 때마다 key 변경 → 결과를 스트리밍하는 동안 즉시 스켈레톤.
         // (loading.tsx는 /search 최초 진입만 커버하므로, 검색어 변경 대기 체감은 여기서 처리)

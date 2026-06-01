@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { label: '홈', href: '/' },
   { label: '도움말 찾기', href: '/search' },
   { label: '문의하기', href: '/tickets/new' },
-  { label: '서비스 현황', href: '/status' },
+  { label: '문의 현황', href: '/tickets' },
 ];
 
 function isActiveNav(pathname: string, href: string) {
@@ -33,11 +33,26 @@ function isActiveNav(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + '/');
 }
 
+/**
+ * 최장 일치 기준 활성 메뉴 1개 결정.
+ * `/tickets/new`(문의하기)와 `/tickets`(문의 현황)처럼 prefix를 공유하는
+ * 메뉴가 동시에 활성화되는 것을 방지한다.
+ */
+function resolveActiveHref(pathname: string): string | null {
+  let best: string | null = null;
+  for (const { href } of NAV_ITEMS) {
+    if (!isActiveNav(pathname, href)) continue;
+    if (best === null || href.length > best.length) best = href;
+  }
+  return best;
+}
+
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, status } = useCurrentUser();
   const confirm = useConfirmDialog();
   const pathname = usePathname();
+  const activeHref = resolveActiveHref(pathname);
 
   async function handleLogout() {
     const ok = await confirm({
@@ -69,7 +84,7 @@ export function Header() {
         {/* 데스크탑 GNB */}
         <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
           {NAV_ITEMS.map((item) => {
-            const active = isActiveNav(pathname, item.href);
+            const active = activeHref === item.href;
             return (
               <Link
                 key={item.href}
@@ -157,7 +172,7 @@ export function Header() {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6">
           <nav className="flex flex-col gap-1">
             {NAV_ITEMS.map((item) => {
-              const active = isActiveNav(pathname, item.href);
+              const active = activeHref === item.href;
               return (
                 <Link
                   key={item.href}
