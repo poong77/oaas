@@ -1,7 +1,9 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
+import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import type { ProductCategoryView } from '@/lib/services/categories';
 
@@ -15,6 +17,7 @@ export function SearchFilters({
   const router = useRouter();
   const sp = useSearchParams();
   const [pending, startTransition] = useTransition();
+  const [q, setQ] = useState(sp.get('q') ?? '');
 
   function update(updates: Record<string, string | undefined>) {
     const next = new URLSearchParams(sp.toString());
@@ -25,8 +28,30 @@ export function SearchFilters({
     startTransition(() => router.push(`/search?${next.toString()}`));
   }
 
+  function submitQuery(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    update({ q: trimmed });
+  }
+
   return (
-    <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30 sm:grid-cols-2 lg:grid-cols-4">
+      <form
+        onSubmit={submitQuery}
+        className="relative sm:col-span-2 lg:col-span-1"
+      >
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="다시 검색…"
+          aria-label="검색어"
+          className="pl-8"
+        />
+      </form>
+
       <Select
         value={initial.product ?? ''}
         onChange={(e) => update({ product: e.target.value || undefined })}
