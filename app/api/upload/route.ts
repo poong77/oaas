@@ -25,6 +25,11 @@ import { put } from '@vercel/blob';
 import { getCurrentUser } from '@/lib/permissions';
 import { env } from '@/lib/env';
 import { checkRateLimit } from '@/lib/rate-limit';
+import {
+  isProcessableImage,
+  processImage,
+  replaceExtension,
+} from '@/lib/images/processor';
 
 export const runtime = 'nodejs';
 
@@ -169,7 +174,56 @@ export async function POST(request: NextRequest) {
   }
 
   const uniq = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const safeName = sanitizePathSegment(file.name || 'file');
+  let safeName = sanitizePathSegment(file.name || 'file');
+
+  // ─── Phase 5 D1·D2: editor + image면 sharp 자동 변환 ─────────────────
+  // - max 폭 1920px, PNG→WebP, JPEG q85, EXIF 자동 회전
+  // - 실패 시 원본 그대로 폴백 (호환성 우선)
+  // - ticket purpose나 비이미지(PDF/zip 등)는 변환 안 함
+  let uploadPayload: Blob | File = file;
+  let uploadContentType: string | undefined = file.type || undefined;
+  let finalSizeBytes = file.size;
+  let imageMeta: {
+    optimized: boolean;
+    width?: number;
+    height?: number;
+    originalSize: number;
+    optimizedSize: number;
+  } = {
+    optimized: false,
+    originalSize: file.size,
+    optimizedSize: file.size,
+  };
+
+  if (purpose === 'editor' && isProcessableImage(file.type, file.name)) {
+    try {
+      const arrayBuf = await file.arrayBuffer();
+      const processed = await processImage(arrayBuf, file.type, file.name);
+      if (processed.modified) {
+        const newBlob = new Blob([new Uint8Array(processed.buffer)], {
+          type: processed.mimeType,
+        });
+        uploadPayload = newBlob;
+        uploadContentType = processed.mimeType;
+        finalSizeBytes = processed.optimizedSize;
+        safeName = replaceExtension(safeName, processed.ext);
+      }
+      imageMeta = {
+        optimized: processed.modified,
+        width: processed.width,
+        height: processed.height,
+        originalSize: processed.originalSize,
+        optimizedSize: processed.optimizedSize,
+      };
+    } catch (err) {
+      // 변환 실패는 fatal 아님 — 원본 그대로 업로드
+      console.warn(
+        '[api/upload] sharp 변환 실패, 원본 폴백:',
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
+
   // purpose별 pathname 분기:
   //   - 'editor' → editor/{userId}/{uniq}-{name}     (본문 임베드 이미지·PDF)
   //   - 'ticket' → tickets/_staging/{purpose}/{userId}/{uniq}-{name}  (티켓 첨부)
@@ -179,18 +233,21 @@ export async function POST(request: NextRequest) {
       : `tickets/_staging/${purpose}/${user.id}/${uniq}-${safeName}`;
 
   try {
-    const result = await put(pathname, file, {
+    const result = await put(pathname, uploadPayload, {
       access: 'public',
       addRandomSuffix: false,
       token: env.BLOB_READ_WRITE_TOKEN,
+      ...(uploadContentType ? { contentType: uploadContentType } : {}),
     });
     return NextResponse.json({
       ok: true,
       blobUrl: result.url,
       pathname: result.pathname,
       originalName: file.name,
-      mimeType: file.type || null,
-      sizeBytes: file.size,
+      mimeType: uploadContentType ?? file.type ?? null,
+      sizeBytes: finalSizeBytes,
+      // Phase 5 메타: 클라이언트가 절감률 표시 가능
+      image: imageMeta.optimized ? imageMeta : undefined,
     });
   } catch (err) {
     console.error('[api/upload] Vercel Blob put 실패:', err);
