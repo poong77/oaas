@@ -24,6 +24,23 @@ import {
   Search,
   X,
 } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Input } from '@/components/ui/input';
 import { searchArticlesForAutocompleteAction } from '@/app/actions/article-actions';
 
@@ -47,6 +64,23 @@ export function RoleStarterArticleMapper({
   const [results, setResults] = useState<MappedArticle[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // D6 — @dnd-kit 드래그 정렬 (마우스 + 키보드 a11y 지원)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    setItems((prev) => {
+      const oldIdx = prev.findIndex((p) => p.id === active.id);
+      const newIdx = prev.findIndex((p) => p.id === over.id);
+      if (oldIdx < 0 || newIdx < 0) return prev;
+      return arrayMove(prev, oldIdx, newIdx);
+    });
+  }
 
   // initial 변경 시 동기 (편집 페이지에서 다른 카드 들어왔을 때 등 — 보수적)
   useEffect(() => {
@@ -117,54 +151,37 @@ export function RoleStarterArticleMapper({
           아직 매핑된 가이드가 없어요. 아래 검색에서 추가하세요.
         </p>
       ) : (
-        <ol className="flex flex-col gap-1.5">
-          {items.map((a, i) => (
-            <li
-              key={a.id}
-              className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900"
-            >
-              <input type="hidden" name="articleIds" value={a.id} />
-              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-[10px] font-semibold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                {i + 1}
-              </span>
-              <GripVertical className="h-3 w-3 shrink-0 text-slate-300" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">
-                  {a.title}
-                </div>
-                <div className="truncate text-[10px] text-slate-500">
-                  {a.productCode} · /{a.slug}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => move(a.id, -1)}
-                disabled={i === 0}
-                aria-label="위로"
-                className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-30 dark:hover:bg-slate-800"
-              >
-                <ArrowUp className="h-3 w-3" />
-              </button>
-              <button
-                type="button"
-                onClick={() => move(a.id, 1)}
-                disabled={i === items.length - 1}
-                aria-label="아래로"
-                className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-30 dark:hover:bg-slate-800"
-              >
-                <ArrowDown className="h-3 w-3" />
-              </button>
-              <button
-                type="button"
-                onClick={() => remove(a.id)}
-                aria-label="제거"
-                className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/30"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </li>
-          ))}
-        </ol>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={items.map((a) => a.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ol className="flex flex-col gap-1.5">
+              {items.map((a, i) => (
+                <SortableRow
+                  key={a.id}
+                  a={a}
+                  index={i}
+                  total={items.length}
+                  onMoveUp={() => move(a.id, -1)}
+                  onMoveDown={() => move(a.id, 1)}
+                  onRemove={() => remove(a.id)}
+                />
+              ))}
+            </ol>
+          </SortableContext>
+        </DndContext>
+      )}
+
+      {/* @dnd-kit 안내 (모바일 + a11y) */}
+      {items.length > 1 && (
+        <p className="text-[10px] text-slate-400">
+          드래그하거나 ↑↓ 버튼 / 키보드 화살표로 순서를 바꿀 수 있어요.
+        </p>
       )}
 
       {/* 검색 + 자동완성 */}
@@ -216,5 +233,97 @@ export function RoleStarterArticleMapper({
         )}
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SortableRow — 단일 매핑 행 (@dnd-kit useSortable)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SortableRow({
+  a,
+  index,
+  total,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+}: {
+  a: MappedArticle;
+  index: number;
+  total: number;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: a.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 'auto',
+  } as const;
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900"
+    >
+      <input type="hidden" name="articleIds" value={a.id} />
+      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-[10px] font-semibold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+        {index + 1}
+      </span>
+      <button
+        type="button"
+        aria-label="드래그 핸들"
+        {...attributes}
+        {...listeners}
+        className="cursor-grab touch-none text-slate-300 hover:text-slate-500 active:cursor-grabbing"
+      >
+        <GripVertical className="h-3 w-3" />
+      </button>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">
+          {a.title}
+        </div>
+        <div className="truncate text-[10px] text-slate-500">
+          {a.productCode} · /{a.slug}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onMoveUp}
+        disabled={index === 0}
+        aria-label="위로"
+        className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-30 dark:hover:bg-slate-800"
+      >
+        <ArrowUp className="h-3 w-3" />
+      </button>
+      <button
+        type="button"
+        onClick={onMoveDown}
+        disabled={index === total - 1}
+        aria-label="아래로"
+        className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-30 dark:hover:bg-slate-800"
+      >
+        <ArrowDown className="h-3 w-3" />
+      </button>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label="제거"
+        className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/30"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </li>
   );
 }
