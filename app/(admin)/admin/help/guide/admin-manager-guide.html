@@ -500,6 +500,30 @@
         <li>삭제는 비활성화로 (물리 삭제 금지)</li>
       </ul>
 
+      <h4>FAQ vs 아티클(문제해결) — 무엇을 어디에 쓰나</h4>
+      <p style="font-size:13px;color:var(--muted)">같은 "문제해결"이라도 <b>FAQ는 빠른 단답</b>, <b>아티클(troubleshoot 유형)은 본격 설명서</b>입니다. 아래 기준으로 나눠 작성하면 검색에서 서로 경쟁하지 않고 역할이 분담됩니다.</p>
+
+      <p style="font-weight:600;margin:16px 0 4px">🏨 호텔리어(고객) 입장</p>
+      <table>
+        <tr><th>구분</th><th>FAQ</th><th>아티클 (troubleshoot)</th></tr>
+        <tr><td>만나는 순간</td><td>"OTA 연동 안 되는데?" — 단답이 궁금할 때</td><td>"예약이 OTA에 안 뜰 때" — 원인부터 알고 싶을 때</td></tr>
+        <tr><td>경험</td><td><code>/faq</code> 아코디언에서 펼쳐 한두 문단. 여러 건 훑어보기 좋음</td><td><code>/help/[제품]/troubleshoot/[slug]</code> 독립 페이지. 목차 탐색·관련문서로 이어 읽기</td></tr>
+        <tr><td>깊이</td><td>얕음 — "이렇게 하세요" 한 방</td><td>깊음 — 증상 → 원인 → 단계별 조치 → 안 되면 다음</td></tr>
+        <tr><td>체감</td><td>빠르다 · 가볍다</td><td>든든하다 · 학습된다</td></tr>
+      </table>
+
+      <p style="font-weight:600;margin:16px 0 4px">🛠 관리자(매니저·어드민) 입장</p>
+      <table>
+        <tr><th>항목</th><th>FAQ</th><th>아티클 (troubleshoot)</th></tr>
+        <tr><td>작성 비용</td><td><b>낮음</b> — 질문+답변+키워드 3필드, 5분</td><td><b>높음</b> — 리치에디터 + 메타 10여 개 + AI 보조</td></tr>
+        <tr><td>편집 위치</td><td><code>/admin/faqs</code> (단순 폼)</td><td><code>/admin/articles</code> (Tiptap · 자동저장 · 검증)</td></tr>
+        <tr><td>유지보수</td><td>가볍게 추가/삭제 · 정렬만</td><td>발행 상태 · 관련문서 링크까지 관리</td></tr>
+        <tr><td>적합한 콘텐츠</td><td>반복 문의, 짧게 끝나는 답, "되냐/안 되냐"</td><td>재사용성 높은 핵심 증상, 단계 많고 캡처·링크 필요</td></tr>
+        <tr><td>검색 강화</td><td>동의어 + 시맨틱 + 키워드 + <b>인기/유용도</b></td><td>동의어 + 시맨틱 + 키워드</td></tr>
+      </table>
+
+      <div class="note"><b>판단 룰</b>답이 3문장 이내·단계 거의 없음 → <b>FAQ</b>. 증상이 분명하고 원인·단계·관련문서가 필요 → <b>아티클(troubleshoot)</b>. 사용자가 "내 경우가 뭔지" 헷갈려 분기 진단이 필요 → <b>체크리스트</b>. 길어지는 FAQ는 답변에서 아티클로 링크해 역할을 나누세요.</div>
+
       <!-- CHECKLIST -->
       <h3 id="checklists">체크리스트 작성 <span class="path">/admin/checklists</span></h3>
       <p>호텔리어가 <b>예/아니오로 단계를 따라가며 스스로 진단·해결</b>하는 도구입니다. 각 단계의 응답에 따라 다음 행동이 갈립니다.</p>
