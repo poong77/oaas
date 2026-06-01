@@ -54,13 +54,18 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // bcryptjs / drizzle 등 server-only 라이브러리 외부 처리
+  // server-only 라이브러리 외부 처리 (bundler가 client chunk로 끌고 가지 못하게)
+  // @anthropic-ai/sdk: 내부 agent-toolset이 node:fs/promises를 require하여
+  //   Turbopack chunking 컨텍스트에서 실패 → 무조건 external 필요
+  // sharp: 네이티브 바인딩 (libvips), server-only
   serverExternalPackages: [
     'bcryptjs',
     '@neondatabase/serverless',
     'solapi',
     '@slack/web-api',
     '@vercel/blob',
+    '@anthropic-ai/sdk',
+    'sharp',
   ],
   async headers() {
     return [

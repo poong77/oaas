@@ -13,7 +13,11 @@
  */
 
 import 'server-only';
-import Anthropic from '@anthropic-ai/sdk';
+// Anthropic SDK는 node:fs/promises 등 Node-only 모듈을 끌고 와서 Turbopack이
+// client bundle 생성 시 에러를 던짐 (next 16 dev/turbopack).
+// 'server-only' 만으로는 막을 수 없고, `import type`조차 module resolution을
+// 트리거하므로 SDK 참조를 module top-level에서 완전히 제거하고 dynamic import +
+// 인라인 구조 타입으로 처리.
 
 import {
   SYSTEM_PROMPT,
@@ -21,6 +25,25 @@ import {
   type AiAssistInput,
 } from './prompts/article-assistant';
 import { trackCost } from './cost-tracker';
+
+// SDK의 외부 인터페이스 일부만 인라인으로 — top-level에서 패키지 참조 X
+type AnthropicLike = {
+  messages: {
+    create: (opts: {
+      model: string;
+      max_tokens: number;
+      system: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }>;
+      messages: Array<{ role: 'user'; content: string }>;
+    }) => Promise<{
+      usage: {
+        input_tokens: number;
+        output_tokens: number;
+        cache_read_input_tokens?: number | null;
+      };
+      content: Array<{ type: string; text?: string }>;
+    }>;
+  };
+};
 
 /**
  * 모델 ID 폴백.
@@ -32,7 +55,7 @@ export const DEFAULT_SONNET =
 export const DEFAULT_HAIKU =
   process.env.ANTHROPIC_MODEL_HAIKU ?? 'claude-haiku-4-5';
 
-function getClient(): Anthropic {
+async function getClient(): Promise<AnthropicLike> {
   // Vercel 환경별 분리:
   //   - Development(`vercel dev` 또는 Vercel 환경=Development): ANTHROPIC_API_KEY_DEV 우선
   //   - Production / Preview / 로컬 npm run dev (.env.local): ANTHROPIC_API_KEY
@@ -44,7 +67,11 @@ function getClient(): Anthropic {
       'ANTHROPIC_API_KEY missing — .env.local 또는 Vercel 환경변수(ANTHROPIC_API_KEY / ANTHROPIC_API_KEY_DEV) 확인',
     );
   }
-  return new Anthropic({ apiKey });
+  // 런타임 dynamic import — Turbopack/webpack이 client chunk로 분리 시도하지 않음
+  const mod = (await import('@anthropic-ai/sdk')) as unknown as {
+    default: new (opts: { apiKey: string }) => AnthropicLike;
+  };
+  return new mod.default({ apiKey });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -75,7 +102,7 @@ export type RunClaudeOptions = {
  */
 export async function runClaudeJson(opts: RunClaudeOptions): Promise<unknown> {
   const model = opts.model ?? DEFAULT_SONNET;
-  const client = getClient();
+  const client = await getClient();
 
   let message;
   try {
@@ -104,8 +131,11 @@ export async function runClaudeJson(opts: RunClaudeOptions): Promise<unknown> {
     bucket: opts.bucket,
   });
 
-  const block = message.content.find((b) => b.type === 'text');
-  if (!block || block.type !== 'text') {
+  const block = message.content.find(
+    (b): b is { type: 'text'; text: string } =>
+      b.type === 'text' && typeof b.text === 'string',
+  );
+  if (!block) {
     throw new Error('AI 응답에 text block이 없습니다.');
   }
 

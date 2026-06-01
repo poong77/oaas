@@ -103,10 +103,11 @@ test.describe('KB-01 article editor shell (manager)', () => {
     ).toBeVisible({ timeout: 5000 });
 
     // 한글 입력 → 추가됨 (칩으로 표시)
+    // chip 삭제 버튼은 aria-label="체크인 삭제" — accessible name 매칭
     await keywordInput.fill('체크인');
     await keywordInput.press('Enter');
     await expect(
-      page.locator('button', { hasText: '체크인 삭제' }).first(),
+      page.getByRole('button', { name: '체크인 삭제' }).first(),
     ).toBeVisible();
   });
 });
@@ -219,11 +220,11 @@ test.describe('KB-09 A6 재편집 패널 UI (manager)', () => {
   test('KB-09b 4모드 라디오 선택 + tone에 Haiku 배지', async ({ page }) => {
     await page.goto('/admin/articles/new');
 
-    // 4모드 라벨 모두 노출
+    // 4모드 라벨 모두 노출 (라벨/설명 둘 다 같은 문자열 → exact: true)
     await expect(page.getByText('골격 재정렬 (의도 변경)')).toBeVisible();
     await expect(page.getByText('빈 섹션 채우기')).toBeVisible();
     await expect(page.getByText('CS 톤 보정')).toBeVisible();
-    await expect(page.getByText('자유 명령')).toBeVisible();
+    await expect(page.getByText('자유 명령', { exact: true })).toBeVisible();
 
     // tone 모드에 Haiku 배지
     await expect(page.getByText('Haiku').first()).toBeVisible();
@@ -238,11 +239,13 @@ test.describe('KB-09 A6 재편집 패널 UI (manager)', () => {
   }) => {
     await page.goto('/admin/articles/new');
 
-    // custom 모드 선택
-    await page.getByRole('radio', { name: '자유 명령' }).check();
+    // custom 모드 선택 — 라디오는 라벨+설명 묶음 accessible name 가짐
+    await page.getByRole('radio', { name: /자유 명령/ }).check();
 
-    // 자유 명령 Input 노출
-    await expect(page.getByLabel(/자유 명령/)).toBeVisible();
+    // 자유 명령 Input 노출 (placeholder 로 정확히 식별 — getByLabel(/자유 명령/)은
+    // 라디오와 input 둘 다 매치되어 strict 위반)
+    const commandInput = page.getByPlaceholder(/더 짧게/);
+    await expect(commandInput).toBeVisible();
 
     // 빠른 프리셋 5개 모두 노출
     for (const preset of ['더 짧게', '단계 자세히', '용어 통일', '초보 눈높이', '약어 풀어쓰기']) {
@@ -251,7 +254,7 @@ test.describe('KB-09 A6 재편집 패널 UI (manager)', () => {
 
     // 프리셋 클릭 → 명령란 채워짐
     await page.getByRole('button', { name: '더 짧게' }).click();
-    await expect(page.getByLabel(/자유 명령/)).toHaveValue(/줄/);
+    await expect(commandInput).toHaveValue(/줄/);
   });
 });
 
@@ -303,25 +306,31 @@ test.describe('KB-09b A6 재편집 적용 (mock)', () => {
   test('KB-09b tone 모드 → 미리보기 모달 → 전부 적용 → 본문 변경', async ({ page }) => {
     await page.goto('/admin/articles/new');
 
-    // 의도 카드(howto) 클릭으로 본문 골격 주입 (50자+ 조건 충족)
+    // 의도 카드(howto) 클릭으로 본문 골격 주입
     await page.getByRole('button', { name: '사용방법' }).click();
 
-    // 약간의 본문 추가 (50자+ 보장)
-    await page
-      .locator('[contenteditable]')
-      .first()
-      .fill('## 목표\n프런트에서 호텔리어를 도와 체크인을 5분 안에 완료하세요. 단계는 매뉴얼대로 진행하세요.');
+    // RewritePanel.bodyTooShort 계산은 H2/H3·placeholder(`> ...`) 제외 후 ≥50자.
+    // Tiptap은 input/textarea가 아니라 contenteditable → .fill() 미지원.
+    // → .ProseMirror에 focus 후 keyboard.type 으로 일반 텍스트 입력.
+    const editor = page.locator('.ProseMirror').first();
+    await editor.click();
+    // Ctrl/Cmd+End 로 문서 끝으로 이동 후 충분히 긴 본문 추가
+    await page.keyboard.press('Meta+End');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type(
+      '프런트에서 호텔리어를 도와 체크인을 5분 안에 완료하세요. 단계는 매뉴얼대로 진행하세요. 빠뜨리지 마세요.',
+    );
 
     // tone 모드 (기본) 트리거
     await page.getByRole('button', { name: /재편집 미리보기/ }).click();
 
-    // 미리보기 모달 열림
-    await expect(page.getByText(/재편집 미리보기/)).toBeVisible({ timeout: 5000 });
+    // 미리보기 모달 열림 (모달 dialog 의 role 로 정확히 식별)
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10_000 });
 
     // 전부 적용 클릭
     await page.getByRole('button', { name: /전부 적용/ }).click();
 
-    // 토스트 노출 + 모달 닫힘
-    await expect(page.getByText(/적용됐어요/)).toBeVisible();
+    // 토스트 노출
+    await expect(page.getByText(/적용됐어요/)).toBeVisible({ timeout: 5000 });
   });
 });

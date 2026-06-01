@@ -227,17 +227,18 @@ test.describe('회귀 — footer 외부 링크 (R-02 대체)', () => {
     viewport: { width: 1440, height: 900 },
   });
 
-  test('R-02: 사이드바 footer 호텔리어 사이트 새 탭 외부링크 노출', async ({ page }) => {
+  test('R-02: 사이드바 footer 호텔리어 영역(바로가기) 새 탭 링크 노출', async ({ page }) => {
     await setCollapsedCookie(page, false);
     await page.goto('/admin/tickets');
     await page.waitForLoadState('networkidle');
 
+    // admin-sidebar.tsx: title="support.oapms.com 바로가기" target="_blank" href="/" 로 변경됨
     const aside = page.locator('aside[aria-label="관리자 내비게이션"]');
-    const outlink = aside.getByRole('link', { name: /호텔리어 사이트/ });
+    const outlink = aside.getByRole('link', { name: /바로가기/ });
     await expect(outlink).toBeVisible();
-    await expect(outlink).toHaveAttribute('href', 'https://support.oapms.com/');
+    await expect(outlink).toHaveAttribute('href', '/');
     await expect(outlink).toHaveAttribute('target', '_blank');
-    await expect(outlink).toHaveAttribute('rel', 'noopener noreferrer');
+    await expect(outlink).toHaveAttribute('rel', 'noopener');
   });
 });
 
@@ -313,9 +314,9 @@ test.describe('모바일 (매니저)', () => {
     // 햄버거 클릭
     await page.getByRole('button', { name: /메뉴 열기/ }).click();
 
-    // Sheet 안에 호텔리어 사이트 외부링크 + 메뉴 그룹 노출
+    // Sheet 안에 호텔리어 영역(바로가기) 외부링크 + 메뉴 그룹 노출
     await expect(
-      page.getByRole('link', { name: /호텔리어 사이트/ }),
+      page.getByRole('link', { name: /바로가기/ }).first(),
     ).toBeVisible();
 
     // 그룹 메뉴 "아티클" 클릭
@@ -345,8 +346,10 @@ test.describe('어드민 회귀', () => {
     await page.goto('/admin/tickets');
     await page.waitForLoadState('networkidle');
 
+    // 어드민 사이드바에 '업무 가이드 (신규 사용자용)' footer link가 추가되어
+    // /사용자/ 정규식이 2개 매치 → exact: true 로 strict 회피
     const aside = page.locator('aside[aria-label="관리자 내비게이션"]');
-    await expect(aside.getByRole('link', { name: /사용자/ })).toBeVisible();
+    await expect(aside.getByRole('link', { name: '사용자', exact: true })).toBeVisible();
     await expect(aside.getByRole('link', { name: /^호텔$/ })).toBeVisible();
   });
 

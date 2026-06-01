@@ -65,7 +65,7 @@ import type { AiAssistOutput } from '@/lib/ai/prompts/article-assistant';
 import {
   REWRITE_MODE_LABEL,
   type RewriteMode,
-} from '@/lib/ai/prompts/article-rewriter';
+} from '@/lib/ai/prompts/article-rewriter-types';
 import {
   aiAssistArticleAction,
   aiRewriteArticleAction,

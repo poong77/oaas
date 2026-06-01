@@ -38,7 +38,9 @@ test.describe('KB-09 article editor preview', () => {
   test('KB-09a 미리보기 버튼이 Draft/발행 사이에 노출된다', async ({ page }) => {
     await page.goto('/admin/articles/new');
 
-    const previewBtn = page.getByRole('button', { name: /미리보기/ });
+    // A6 재편집 패널의 "재편집 미리보기" 버튼이 추가되어 /미리보기/ 정규식이
+    // 2건 매치 → exact: true 로 본문 [미리보기] 버튼만 잡음
+    const previewBtn = page.getByRole('button', { name: '미리보기', exact: true });
     await expect(previewBtn).toBeVisible();
     await expect(previewBtn).toBeEnabled();
   });
@@ -54,7 +56,7 @@ test.describe('KB-09 article editor preview', () => {
       .waitForEvent('page', { timeout: 2000 })
       .catch(() => null);
 
-    await page.getByRole('button', { name: /미리보기/ }).click();
+    await page.getByRole('button', { name: '미리보기', exact: true }).click();
 
     // 토스트: "제목을 입력해야 미리볼 수 있어요" (제품은 기본 선택돼 있음)
     await expect(page.getByText(/제목을 입력해야/)).toBeVisible({

@@ -27,7 +27,7 @@ import {
   REWRITE_MODE_LABEL,
   REWRITE_MODE_DESCRIPTION,
   type RewriteMode,
-} from '@/lib/ai/prompts/article-rewriter';
+} from '@/lib/ai/prompts/article-rewriter-types';
 
 const CUSTOM_QUICK_PRESETS: ReadonlyArray<{ label: string; command: string }> = [
   { label: '더 짧게', command: '본문을 30% 줄여주세요. 핵심 정보는 유지.' },
@@ -58,7 +58,18 @@ export function RewritePanel({
   const [command, setCommand] = useState('');
 
   const onCooldown = Date.now() < cooldownUntil;
-  const bodyTooShort = body.trim().length < 50;
+  // 본문 길이 카운트 시 골격 placeholder(`> ...`)와 H2/H3 헤딩은 제외 —
+  // 신규 페이지의 자동 주입 골격만 있는 상태는 0자로 간주해야
+  // 트리거가 의미 없이 활성화되지 않음 (KB-09 e2e).
+  const meaningfulBodyLength = body
+    .split('\n')
+    .filter((line) => {
+      const trimmed = line.trimStart();
+      return !trimmed.startsWith('>') && !trimmed.startsWith('#');
+    })
+    .join('\n')
+    .trim().length;
+  const bodyTooShort = meaningfulBodyLength < 50;
   const canCall = !loading && !onCooldown && !bodyTooShort;
 
   function handleSubmit() {
