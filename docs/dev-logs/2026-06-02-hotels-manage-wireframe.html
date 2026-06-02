@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>호텔 관리 — UX 최적화 와이어프레임</title>
+<style>
+  :root{
+    --ink:#1f2937; --line:#9aa3af; --line2:#cbd2da; --fill:#eef1f4; --fill2:#e2e6ea;
+    --muted:#9aa3af; --accent:#0d9488; --note:#b45309; --noteb:#fde68a; --notebg:#fffbeb;
+    --del:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f4f5f7;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;}
+  .page{max-width:1180px;margin:0 auto;padding:28px 18px 80px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b7280;font-size:13px;margin:0 0 22px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 18px;background:#fff;border:1px solid var(--line2);
+    border-radius:10px;padding:12px 16px;font-size:12.5px;margin-bottom:24px}
+  .legend b{color:var(--accent)}
+  .tag{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+    border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:0 5px;margin-right:5px}
+  .canvas-label{font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin:30px 0 10px;
+    display:flex;align-items:center;gap:8px}
+  .canvas-label::before{content:'';width:14px;height:14px;border:2px solid var(--line);border-radius:3px}
+  .frame{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:16px;position:relative}
+  .row{display:flex;gap:12px}
+  .box{border:1.5px dashed var(--line);border-radius:8px;background:repeating-linear-gradient(135deg,#fff,#fff 7px,#f6f7f9 7px,#f6f7f9 8px)}
+  .solid{border:1.5px solid var(--line2);border-radius:8px;background:#fff}
+  .bar{height:10px;border-radius:3px;background:var(--fill2)}
+  .bar.s{width:46px}.bar.m{width:88px}.bar.l{width:140px}.bar.xl{width:190px}
+  .bar.dark{background:#c2c8cf}
+  .pill{display:inline-block;border:1.5px solid var(--line2);border-radius:999px;padding:2px 10px;font-size:11px;color:#6b7280;background:#fff}
+  .dot{width:8px;height:8px;border-radius:50%;background:#9aa3af;display:inline-block}
+  .icon{width:30px;height:30px;border-radius:8px;border:1.5px dashed var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;flex:0 0 auto;
+    background:repeating-linear-gradient(135deg,#fff,#fff 5px,#f3f4f6 5px,#f3f4f6 6px)}
+  .ibtn{width:30px;height:30px;border-radius:7px;border:1.5px solid var(--line2);background:#fff;
+    display:inline-flex;align-items:center;justify-content:center;color:#6b7280;font-size:14px}
+  .ibtn.danger{color:var(--del);border-color:#f3c2c2}
+  .anno{position:absolute;background:var(--accent);color:#fff;width:20px;height:20px;border-radius:50%;
+    font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 1px 4px rgba(0,0,0,.25);z-index:5}
+  .muted{color:var(--muted);font-size:12px}
+  .stat{flex:1;border:1.5px solid var(--line2);border-radius:10px;padding:14px;display:flex;gap:12px;align-items:center;position:relative}
+  .stat.active{border:2px solid var(--accent);box-shadow:0 0 0 3px rgba(13,148,136,.12)}
+  .sq{width:36px;height:36px;border-radius:8px;border:1.5px dashed var(--line);flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px}
+  .num{font-size:22px;font-weight:800;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.03em;
+    padding:8px 10px;border-bottom:1.5px solid var(--line2);background:#f8f9fb}
+  td{padding:11px 10px;border-bottom:1px solid #eef0f2;vertical-align:middle}
+  tr.hl{background:#f0fdfa}
+  .cell{display:flex;align-items:center;gap:10px}
+  .stack{display:flex;flex-direction:column;gap:5px}
+  .mini{font-size:11px;color:#4b5563;font-family:ui-monospace,Menlo,monospace}
+  .chev{color:#c2c8cf;font-size:16px}
+  .phone{width:300px;border:1.5px solid var(--line);border-radius:18px;padding:12px;background:#fff;position:relative}
+  .mcard{border:1.5px solid var(--line2);border-radius:12px;padding:12px;margin-bottom:10px}
+  .mrow{display:flex;gap:10px;align-items:center}
+  .notebox{background:var(--notebg);border:1px solid var(--noteb);border-radius:10px;padding:14px 16px;margin-top:26px;font-size:13px;color:var(--note)}
+  .notebox b{color:#92400e}
+  .two{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start}
+  @media(max-width:880px){.two{grid-template-columns:1fr}}
+  .pgbtn{border:1.5px solid var(--line2);border-radius:7px;padding:5px 10px;font-size:12px;color:#6b7280;background:#fff;display:inline-block}
+  .ba{display:flex;gap:18px;margin-bottom:24px}
+  .ba > div{flex:1;border:1.5px solid var(--line2);border-radius:10px;overflow:hidden}
+  .ba h3{margin:0;font-size:12px;padding:8px 12px;background:#f8f9fb;border-bottom:1px solid #eef0f2;color:#6b7280}
+  .ba.before h3{color:var(--del)} .ba .after h3{color:var(--accent)}
+  .ba ul{margin:0;padding:10px 14px 14px 28px;font-size:12.5px;line-height:1.7;color:#4b5563}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>호텔 관리 · UX 최적화 와이어프레임</h1>
+  <p class="sub">/admin/hotels — 데스크탑 + 모바일 · 심플 · 텍스트 최소화 · 아이콘 중심 (2026-06-02)</p>
+
+  <!-- BEFORE / AFTER -->
+  <div class="ba before">
+    <div>
+      <h3>BEFORE — 현재</h3>
+      <ul>
+        <li>설명 문구 · 텍스트 버튼(“수정”·“비활성”) 다수</li>
+        <li>요약 통계 없음 — 활성/비활성/연락처누락 파악 불가</li>
+        <li>작업 컬럼이 텍스트 버튼 2개로 폭 차지</li>
+        <li>상태가 텍스트 뱃지(“활성”/“비활성”)</li>
+      </ul>
+    </div>
+    <div class="after">
+      <h3>AFTER — 최적화</h3>
+      <ul>
+        <li>통계 카드 4종(클릭=필터) · 아이콘 라벨</li>
+        <li>행 전체 클릭 = 편집 · 작업은 아이콘만(✎ ⏻)</li>
+        <li>상태 = 컬러 도트 · 연락처 없음 시각 강조</li>
+        <li>검색 1줄 + 상태 필터 · 군더더기 텍스트 제거</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="tag">1</span><b>통계 카드</b> — 총·활성·비활성·연락처없음, 클릭 시 필터</span>
+    <span><span class="tag">2</span><b>검색·필터</b> — 호텔명(띄어쓰기 무시)·상태</span>
+    <span><span class="tag">3</span><b>결과 바</b> — N개 + 초기화</span>
+    <span><span class="tag">4</span><b>행 클릭</b> — 편집 진입</span>
+    <span><span class="tag">5</span><b>아이콘 작업</b> — ✎ 편집 · ⏻ 활성토글</span>
+    <span><span class="tag">6</span><b>상태 도트</b> — 활성/비활성</span>
+    <span><span class="tag">7</span><b>＋ 추가</b> — 인라인 폼</span>
+  </div>
+
+  <!-- ============ DESKTOP ============ -->
+  <div class="canvas-label">데스크탑 (≥ 768px)</div>
+  <div class="frame">
+    <!-- header -->
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="row" style="align-items:center;gap:10px"><span class="icon" style="border-style:solid">🏨</span><div class="bar l dark"></div></div>
+      <div class="anno" style="right:-10px;top:6px">7</div>
+      <div class="solid" style="padding:7px 14px;color:#374151;font-size:13px;display:flex;gap:6px;align-items:center"><b style="font-size:15px">＋</b> 호텔</div>
+    </div>
+
+    <!-- 1. stat cards -->
+    <div class="anno" style="left:-10px;top:90px">1</div>
+    <div class="row" style="margin-bottom:16px">
+      <div class="stat"><div class="sq">🏨</div><div class="stack"><span class="muted">전체</span><span class="num">366</span></div></div>
+      <div class="stat active"><div class="sq">✓</div><div class="stack"><span class="muted">활성</span><span class="num">361</span></div>
+        <div class="muted" style="position:absolute;right:10px;bottom:8px;font-size:10px">← 선택됨</div></div>
+      <div class="stat"><div class="sq">✕</div><div class="stack"><span class="muted">비활성</span><span class="num">5</span></div></div>
+      <div class="stat"><div class="sq">📵</div><div class="stack"><span class="muted">연락처 없음</span><span class="num">12</span></div></div>
+    </div>
+
+    <!-- 2 + 3 filter -->
+    <div class="anno" style="left:-10px;top:188px">2</div>
+    <div class="solid" style="padding:0;margin-bottom:16px">
+      <div class="row" style="padding:12px;gap:10px">
+        <div class="box" style="flex:5;height:36px;display:flex;align-items:center;padding:0 12px;gap:8px">
+          <span class="muted">🔍</span><span class="muted">호텔명 검색</span>
+          <span class="pill" style="margin-left:auto;font-size:10px">␣ 띄어쓰기 무시</span>
+        </div>
+        <div class="solid" style="flex:2;height:36px;display:flex;align-items:center;padding:0 12px;color:#6b7280">✓ 활성 ▾</div>
+      </div>
+      <div class="row" style="justify-content:space-between;border-top:1px solid #eef0f2;padding:8px 12px;position:relative">
+        <span class="muted"><b style="color:#374151">361</b>개</span>
+        <span class="muted">↺ 초기화</span>
+        <div class="anno" style="right:-10px;top:6px">3</div>
+      </div>
+    </div>
+
+    <!-- table -->
+    <div class="anno" style="left:-10px;top:352px">4</div>
+    <div class="solid" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr>
+          <th>🏨 호텔</th><th>📞 연락처</th><th style="width:60px">상태</th><th style="width:96px;text-align:right">작업</th><th style="width:18px"></th>
+        </tr></thead>
+        <tbody>
+          <tr class="hl">
+            <td><div class="cell"><span class="dot" style="background:#10b981"></span><div class="bar l dark"></div></div></td>
+            <td><span class="mini">010-2985-2610</span></td>
+            <td><span class="dot" style="background:#10b981"></span></td>
+            <td style="text-align:right"><span class="ibtn">✎</span> <span class="ibtn">⏻</span></td>
+            <td><span class="chev">›</span></td>
+          </tr>
+          <tr>
+            <td><div class="cell"><span class="dot" style="background:#10b981"></span><div class="bar xl dark"></div></div></td>
+            <td><span class="mini">02-1234-5678</span></td>
+            <td><span class="dot" style="background:#10b981"></span></td>
+            <td style="text-align:right"><span class="ibtn">✎</span> <span class="ibtn">⏻</span></td>
+            <td><span class="chev">›</span></td>
+          </tr>
+          <tr>
+            <td><div class="cell"><span class="dot" style="background:#10b981"></span><div class="bar l dark"></div></div></td>
+            <td><span class="muted" style="font-style:italic">📵 없음</span></td>
+            <td><span class="dot" style="background:#10b981"></span></td>
+            <td style="text-align:right"><span class="ibtn">✎</span> <span class="ibtn">⏻</span></td>
+            <td><span class="chev">›</span></td>
+          </tr>
+          <tr style="background:#fafbfc">
+            <td><div class="cell"><span class="dot"></span><div class="bar m" style="opacity:.6"></div></div></td>
+            <td><span class="mini" style="opacity:.5">02-2274-1027</span></td>
+            <td><span class="dot"></span></td>
+            <td style="text-align:right"><span class="ibtn">✎</span> <span class="ibtn danger">⏻</span></td>
+            <td><span class="chev">›</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="anno" style="left:34px;top:14px">6</div>
+      <div class="anno" style="right:120px;top:52px">5</div>
+      <!-- pagination -->
+      <div class="row" style="justify-content:space-between;align-items:center;border-top:1.5px solid var(--line2);padding:11px 12px">
+        <span class="muted"><b style="color:#374151">1–20</b> / 361</span>
+        <span class="row" style="gap:6px;align-items:center">
+          <span class="pgbtn">‹</span><span class="muted"><b style="color:#374151">1</b> / 19</span><span class="pgbtn">›</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EDIT FORM (inline) ============ -->
+  <div class="canvas-label">＋ 추가 / ✎ 편집 — 인라인 폼 (아이콘 라벨)</div>
+  <div class="frame" style="border-style:dashed">
+    <div class="row" style="flex-wrap:wrap;gap:14px">
+      <div class="stack" style="flex:1 1 240px;gap:6px"><span class="muted">🏨 호텔명 *</span><div class="box" style="height:34px"></div></div>
+      <div class="stack" style="flex:1 1 240px;gap:6px"><span class="muted">📞 연락처</span><div class="box" style="height:34px"></div></div>
+      <div class="stack" style="flex:1 1 240px;gap:6px"><span class="muted">🏢 사업자번호</span><div class="box" style="height:34px"></div></div>
+      <div class="stack" style="flex:1 1 100%;gap:6px"><span class="muted">📍 주소</span><div class="box" style="height:34px"></div></div>
+      <div class="stack" style="flex:1 1 100%;gap:6px"><span class="muted">📝 내부 메모</span><div class="box" style="height:54px"></div></div>
+    </div>
+    <div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px">
+      <span class="pgbtn">취소</span>
+      <div class="solid" style="padding:6px 16px;background:#0d9488;color:#fff;border-color:#0d9488;border-radius:7px;font-size:13px">저장</div>
+    </div>
+    <p class="muted" style="margin:12px 0 0">＊ OA PMS ID·담당자명 필드 제거됨(직전 작업). 연락처는 저장 시 <b>0XX-XXX-XXXX</b> 자동 통일.</p>
+  </div>
+
+  <!-- ============ MOBILE + SPEC ============ -->
+  <div class="two">
+    <div>
+      <div class="canvas-label">모바일 (&lt; 768px) — 카드뷰</div>
+      <div class="phone">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="row" style="gap:8px;align-items:center"><span class="icon" style="width:26px;height:26px;border-style:solid">🏨</span><div class="bar m dark"></div></div>
+          <div class="solid" style="padding:5px 12px;font-size:13px">＋</div>
+        </div>
+        <!-- mini stats -->
+        <div class="row" style="gap:8px;margin-bottom:12px">
+          <div class="stat" style="padding:8px"><div class="sq" style="width:26px;height:26px;font-size:13px">✓</div><div class="stack" style="gap:2px"><span class="muted" style="font-size:10px">활성</span><span class="num" style="font-size:16px">361</span></div></div>
+          <div class="stat" style="padding:8px"><div class="sq" style="width:26px;height:26px;font-size:13px">📵</div><div class="stack" style="gap:2px"><span class="muted" style="font-size:10px">연락처X</span><span class="num" style="font-size:16px">12</span></div></div>
+        </div>
+        <div class="box" style="height:34px;display:flex;align-items:center;padding:0 10px;gap:8px;margin-bottom:10px"><span class="muted">🔍</span><span class="muted" style="font-size:11px">호텔명</span></div>
+        <!-- card -->
+        <div class="mcard">
+          <div class="mrow">
+            <span class="dot" style="background:#10b981"></span>
+            <div class="bar l dark" style="flex:1"></div>
+            <span class="ibtn" style="width:26px;height:26px">✎</span>
+          </div>
+          <div class="mrow" style="margin-top:8px;color:#4b5563"><span class="muted">📞</span><span class="mini">010-2985-2610</span></div>
+        </div>
+        <div class="mcard">
+          <div class="mrow">
+            <span class="dot" style="background:#10b981"></span>
+            <div class="bar m dark" style="flex:1"></div>
+            <span class="ibtn" style="width:26px;height:26px">✎</span>
+          </div>
+          <div class="mrow" style="margin-top:8px"><span class="muted">📞</span><span class="muted" style="font-style:italic;font-size:11px">📵 없음</span></div>
+        </div>
+        <div class="mcard" style="background:#fafbfc">
+          <div class="mrow">
+            <span class="dot"></span>
+            <div class="bar m" style="flex:1;opacity:.6"></div>
+            <span class="ibtn danger" style="width:26px;height:26px">⏻</span>
+          </div>
+          <div class="mrow" style="margin-top:8px"><span class="muted">📞</span><span class="mini" style="opacity:.5">02-2274-1027</span></div>
+        </div>
+        <div class="row" style="justify-content:space-between;align-items:center;padding-top:4px">
+          <span class="muted" style="font-size:11px">1–20 / 361</span>
+          <span class="row" style="gap:5px"><span class="pgbtn">‹</span><span class="pgbtn">›</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- behavior spec -->
+    <div>
+      <div class="canvas-label">인터랙션 명세</div>
+      <div class="solid" style="padding:16px;font-size:13px;line-height:1.7">
+        <p style="margin:0 0 6px"><span class="tag">1</span><b>통계 카드</b><br/>전역 카운트. 클릭 → <code>?status=</code> / 연락처없음 필터. 현재 상태 테두리 강조.</p>
+        <p style="margin:10px 0 6px"><span class="tag">2</span><b>검색·필터</b><br/>호텔명(띄어쓰기·하이픈 무시) Enter 적용 + 상태 ▾. 변경 시 1페이지로.</p>
+        <p style="margin:10px 0 6px"><span class="tag">3</span><b>결과 바</b><br/>결과 수 + 필터 시 ‘초기화’.</p>
+        <p style="margin:10px 0 6px"><span class="tag">4</span><b>행 클릭</b><br/>행 전체 클릭/Enter → 편집 폼. hover 하이라이트 + chevron.</p>
+        <p style="margin:10px 0 6px"><span class="tag">5</span><b>아이콘 작업</b><br/>✎ 편집 · ⏻ 활성/비활성 토글(비활성 시 빨강). 텍스트 라벨 제거, hover 시 툴팁.</p>
+        <p style="margin:10px 0 6px"><span class="tag">6</span><b>상태 도트</b><br/>녹색=활성 · 회색=비활성. 비활성 행 톤다운.</p>
+        <p style="margin:10px 0 0"><span class="tag">7</span><b>＋ 추가</b><br/>인라인 폼 토글. 아이콘 라벨 입력.</p>
+      </div>
+      <div class="notebox">
+        <b>핵심 변경:</b><br/>
+        ① 작업 텍스트버튼(“수정·비활성”) → <b>아이콘(✎ ⏻)</b><br/>
+        ② 상태 텍스트뱃지 → <b>컬러 도트</b><br/>
+        ③ <b>통계 카드 4종</b> 추가(연락처 없음 가시화)<br/>
+        ④ 설명 문구·잉여 텍스트 제거 · 행 클릭 편집
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -245,10 +245,6 @@ function HotelForm({
         {errors.name && <p className="text-xs text-red-600">{errors.name}</p>}
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="h-oaPmsHotelId">OA PMS ID</Label>
-        <Input id="h-oaPmsHotelId" name="oaPmsHotelId" defaultValue={initial?.oaPmsHotelId ?? ''} placeholder="HOTEL-001" />
-      </div>
-      <div className="flex flex-col gap-1.5">
         <Label htmlFor="h-managerName">담당자명</Label>
         <Input id="h-managerName" name="managerName" defaultValue={initial?.managerName ?? ''} />
       </div>
