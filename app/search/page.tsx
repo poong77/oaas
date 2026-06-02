@@ -13,6 +13,7 @@
  */
 
 import { Suspense } from 'react';
+import { headers } from 'next/headers';
 import { sql, and, desc, gte, ne } from 'drizzle-orm';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
@@ -192,8 +193,13 @@ async function SearchResults({
   };
 
   // Layer B — 검색 실사용 로그 (best-effort). logId로 클릭/접수 전환 추적.
+  //
+  // prefetch 요청에서는 기록하지 않는다: Next 16의 <Link> 기본 prefetch는
+  // 호버/터치 시점에 이 페이지를 한 번 더 렌더하므로, 렌더 부수효과인 logSearch가
+  // "검색 1회 → 로그 2건" 중복을 만든다. prefetch 렌더 결과는 화면에 표시되지
+  // 않으니 logId도 불필요하다. (백스톱으로 logSearch 내부에도 짧은 윈도우 dedup 존재)
   let logId: string | null = null;
-  if (query) {
+  if (query && !(await isPrefetchRequest())) {
     const me = await getCurrentUser();
     logId = await logSearch({
       query,
@@ -472,6 +478,24 @@ async function SearchResults({
           )}
         </>
   );
+}
+
+/**
+ * 현재 요청이 Next 라우터 prefetch인지 여부.
+ * prefetch 요청은 `Next-Router-Prefetch: 1`(또는 `purpose: prefetch`) 헤더를 보낸다.
+ * 검색 로그는 실제 조회(navigation)에서만 남기기 위한 가드.
+ */
+async function isPrefetchRequest(): Promise<boolean> {
+  try {
+    const h = await headers();
+    return (
+      h.get('next-router-prefetch') === '1' ||
+      h.get('purpose') === 'prefetch' ||
+      h.get('x-purpose') === 'prefetch'
+    );
+  } catch {
+    return false;
+  }
 }
 
 async function fetchRecentIncidents(q: string): Promise<IncidentRow[]> {

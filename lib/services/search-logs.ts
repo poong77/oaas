@@ -8,7 +8,7 @@
  */
 
 import 'server-only';
-import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
@@ -20,6 +20,15 @@ import {
   type NewSearchLog,
 } from '@/db/schema';
 import { normalizeTerm } from '@/lib/text/normalize';
+
+/**
+ * 동일 검색 dedup 윈도우(ms).
+ * prefetch 가드(page.tsx)가 1차로 막지만, 탭/필터 재렌더·근접 더블렌더 등
+ * 어떤 경로로도 "검색 1회 → 로그 2건"이 안 생기도록 하는 백스톱.
+ * 이 시간 안에 동일 (normalizedQuery + userId + productCode + sessionKey) 행이 있으면
+ * 새로 INSERT하지 않고 기존 logId를 재사용한다(클릭/전환 추적 그대로 동작).
+ */
+const DEDUP_WINDOW_MS = 5_000;
 
 /** 검색 1회 기록. 성공 시 logId 반환(클릭/전환 추적용), 실패 시 null. */
 export async function logSearch(input: {
@@ -34,6 +43,33 @@ export async function logSearch(input: {
   const query = input.query.trim();
   if (!query) return null;
   try {
+    const normalizedQuery = normalizeTerm(query);
+    const userId = input.userId ?? null;
+    const productCode = input.productCode ?? null;
+    const sessionKey = input.sessionKey ?? null;
+
+    // 백스톱 dedup — 짧은 윈도우 내 동일 검색이면 기존 행 재사용.
+    const since = new Date(Date.now() - DEDUP_WINDOW_MS);
+    const [recent] = await db
+      .select({ id: searchLogs.id })
+      .from(searchLogs)
+      .where(
+        and(
+          gte(searchLogs.createdAt, since),
+          eq(searchLogs.normalizedQuery, normalizedQuery),
+          userId ? eq(searchLogs.userId, userId) : isNull(searchLogs.userId),
+          productCode
+            ? eq(searchLogs.productCode, productCode)
+            : isNull(searchLogs.productCode),
+          sessionKey
+            ? eq(searchLogs.sessionKey, sessionKey)
+            : isNull(searchLogs.sessionKey),
+        ),
+      )
+      .orderBy(desc(searchLogs.createdAt))
+      .limit(1);
+    if (recent?.id) return recent.id;
+
     const total =
       input.counts.help +
       input.counts.faq +
@@ -41,14 +77,14 @@ export async function logSearch(input: {
       input.counts.incident;
     const values: NewSearchLog = {
       query,
-      normalizedQuery: normalizeTerm(query),
+      normalizedQuery,
       resultCounts: input.counts,
       totalResults: total,
       zeroResult: total === 0,
-      productCode: input.productCode ?? null,
-      userId: input.userId ?? null,
+      productCode,
+      userId,
       role: input.role ?? null,
-      sessionKey: input.sessionKey ?? null,
+      sessionKey,
     };
     const [row] = await db
       .insert(searchLogs)
