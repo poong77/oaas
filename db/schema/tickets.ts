@@ -14,6 +14,7 @@
  */
 
 import {
+  boolean,
   index,
   jsonb,
   pgEnum,
@@ -81,6 +82,20 @@ export const tickets = pgTable(
       .notNull()
       .default([])
       .$type<TicketContactMethod[]>(),
+    /**
+     * DI-01: 유입 채널 복수. 같은 건이 이메일+AS 등 2개 이상으로 유입 가능.
+     * `channel`(단일)은 primary로 유지. 비어있으면 [channel]로 간주.
+     * 대시보드 채널 차트는 length>=2면 '여럿'으로 단일 집계(중복 합산 방지).
+     */
+    channels: jsonb('channels')
+      .notNull()
+      .default([])
+      .$type<string[]>(),
+    /**
+     * DI-01: 원콜 해결 여부. 담당자가 완료 처리 시 "원콜 해결" 체크.
+     * 유입 건을 1회 작업으로 해결했는지(원콜완료 지표 모수).
+     */
+    oneCallResolved: boolean('one_call_resolved').notNull().default(false),
     /** Slack #as-new 스레드 ts (양방향 동기화 시 사용 예정 — Phase 5는 발송만). */
     slackThreadTs: text('slack_thread_ts'),
     /** Slack #dev-escalation 스레드 ts. */

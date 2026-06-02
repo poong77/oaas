@@ -85,6 +85,28 @@
 | CB-02 | 핸드북·FAQ 기반 답변 | 색인 기반 AI 답변 + 출처 아티클 링크 | 전체 | P1 |
 | CB-03 | 체크리스트 안내 | 증상 설명 → 관련 체크리스트 단계 제시 | 전체 | P1 |
 | CB-04 | 이슈 접수 연결 | 미해결 시 접수폼으로 전환, 대화 자동 pre-fill | 전체 | P2 |
+| CB-05 | 지식팩 내보내기 (AI 지식 가공) | 발행 아티클·활성 FAQ·동의어를 GPT-4o mini 최적 포맷(**Markdown / JSONL**)으로 가공해 다운로드. 본문 정규화(인라인 HTML 제거·이미지 alt화), 동의어 용어사전 인라인, self-contained 청크, AI 사용 지침 프리앰블. `/admin/master/knowledge-export` | 매니저·어드민 | P1 |
+
+#### CB-05 지식팩 내보내기 상세
+
+> 목적: oachat.ai(또는 자체 GPT-4o mini) 챗봇에 공급할 **AI 최적화 지식 스냅샷**을 생성한다.
+> RAG 실시간 검색(이미 임베딩/하이브리드 검색 인프라 보유)과 별개로, "AI에게 직접 먹일 파일"을 한 곳에서 뽑는 도구.
+
+**포맷 (2종, PDF 미포함 — AI 인식률·토큰효율상 구조화 텍스트가 우월)**
+- `knowledge.md` — 사람도 검수 가능한 단일 지식 문서. ① AI 사용 지침 프리앰블 → ② 용어 사전(구어체→표준어) → ③ 도움말 아티클(제품별) → ④ FAQ(제품별).
+- `knowledge.jsonl` — 1행 1레코드. RAG/Assistants file_search/임베딩 재활용에 최적. `type`: `synonym` | `article` | `faq`.
+
+**가공 규칙 (품질 핵심)**
+1. 범위: `status='published' AND is_active=true` 아티클 + `is_active=true` FAQ + `is_active=true` 동의어 그룹·이형어. (제품 필터 옵션)
+2. 본문 정규화: HTML 주석 제거, `<img>`→`[이미지: alt]`, `<br>`→개행, 스타일 전용 태그(span/div/font) 언랩, 3개 이상 연속 개행 축소.
+3. 동의어를 문서 상단 "용어 사전"으로 인라인 → 모델이 사용자 구어체를 표준어로 매핑.
+4. 각 항목을 self-contained 청크로 — 제품·카테고리·검색어·제목을 항목 헤더에 부착(RAG 분리 시 문맥 보존).
+5. 아티클 출처 URL: `/help/{product}/{content_type}/{slug}` (인용용).
+
+**구현 산출물**
+- `lib/services/knowledge-export.ts` — 지식 로드 + 정규화 + `toMarkdown()`/`toJsonl()` 빌더 + 통계.
+- `app/api/admin/knowledge-export/route.ts` — `GET ?format=md|jsonl&product=...` 다운로드(Content-Disposition attachment).
+- `app/(admin)/admin/master/knowledge-export/page.tsx` — 통계·제품필터·다운로드·미리보기(매니저+어드민).
 
 ### 3. 이슈 클레임 (IC) — 문제 접수
 
@@ -117,13 +139,17 @@
 
 | ID | 기능 | 핵심 동작 | 권한 | 우선순위 |
 |:-:|:-|:-|:-:|:-:|
-| DI-01 | AS 현황 대시보드 | P1긴급/P2대기/오늘완료/AI자동해결 카드. 제품·유형·채널별 추이 차트 | 매니저·어드민 | P2 |
+| DI-01 | 운영 인사이트 대시보드 | 액션카드(긴급·장기지연) + 핵심지표4종(셀프/원콜/원팀/Dev개입) + 행위자 5단계 퍼널 + 유입/처리·완료 차트 | 매니저·어드민 | P1 |
 | DI-02 | 담당자별 처리 현황 | 처리건수·평균해결시간·미처리건수 테이블 | 어드민 | P3 |
 | DI-03 | AI 자동해결률 트래킹 | AI/셀프 해결 비율, 목표치 설정 | 매니저·어드민 | P2 |
 | DI-04 | (AI) 정보칩 기반 인사이트 | 반복 이슈·빈출 키워드·미해결 다발 제품 자동 분석 리포트 | 어드민 | P3 |
 | DI-05 | 월간 리포트 자동 발송 | 월 1회 Slack 자동 발송 | — | P3 |
 | DI-06 | 검색로그 | 어드민>인사이트>검색로그. 호텔리어 실사용 검색 1행=1회 나열(유입 키워드·유입일시·세션 체류시간·도움됨 반응표·유출 페이지 URL). 기간 어제/7일/30일(KST, 오늘 제외). 읽기 전용 | 매니저·어드민 | P1 ✅ |
 
+> **DI-01 운영 인사이트 대시보드 (P1, 2026-06-02 설계)** — `/admin/insights/dashboard` (인사이트 그룹). 권한 매니저+어드민. 기간 필터 **어제/7일/30일**(KST, 오늘 제외) + 제품(productCode) 필터 공통 적용. 구성: ①**액션카드** 긴급 처리건(urgency=P1 AND status≠completed)·장기 지연건(미완료 AND **영업일 3일 초과**, `business_hours_*`/`business_holidays`로 영업일 경과 산출) ②**핵심지표 3종**(**도넛 미사용 — 완료건 대비 비율 카드 3개**, 모수=완료건, 보류·처리중 제외): 원콜완료(`tickets.one_call_resolved=true`, **신규 컬럼**)·원팀완료=자체해결(completed AND `slack_dev_thread_ts IS NULL`, 원콜+다회 포함)·Dev개입(`slack_dev_thread_ts IS NOT NULL`, 슬랙공유건). **원팀완료+Dev개입=100%(에스컬레이션 여부로 양분), 원콜완료는 자체해결의 부분집합이라 합산 대상 아님 — 각 비율은 완료건 대비 독립 지표**. 셀프완료(deflection)는 미사용 ③**행위자 5단계 퍼널**: 검색(호텔리어,`search_logs` 웹/챗봇 진입량)→문의(호텔리어,티켓 생성)→**접수=처리 착수(운영팀, status=in_progress 전환 시점, 미착수와 구분)**→Dev이관(운영팀,slack_dev_thread_ts)→완료(운영팀,completed). **전화=직접접수(검색 무관), 카카오·방문 채널 없음 → deflection 지표 미적용** ④**검색·호텔**: 검색어 워드클라우드 — `search_logs.normalized_query`를 `loadSynonymIndex().termToGroupIds`로 매핑해 **동의어 대표어(`term_groups.canonical_term`) 기준 빈도 집계**(표기 변형·유의어 합산), 사전 미등록어는 원본 유지(동의어 갭 신호), 0건 다발어 강조 / 호텔별 문의 수 Top 15(`tickets` GROUP BY hotel_id) ⑤**유입 분석**: 일자별×채널별 누적막대(**건당 1회 집계 — 채널 2개 이상은 '여럿' 단일 분류로 중복 합산 방지**, `channels.length>=2 ? '여럿' : channels[0]`)·유형별·제품별 ⑥**처리·완료**: 상태분포·평균 첫응답/해결시간(영업일)·담당자별 처리 테이블(DI-02 흡수)·Dev 에스컬레이션 백로그. **신규 스키마**: ⓐ`tickets.one_call_resolved boolean default false`(티켓 상세에서 담당자가 완료 처리 시 "원콜 해결" 체크) ⓑ`tickets.channels jsonb (string[]) default '[]'`(유입 채널 복수 — 같은 건이 이메일+AS 등 2개 이상으로 유입 가능. 기존 `channel` 단일값은 primary로 유지하거나 마이그레이션. 차트 버킷: `channels.length>=2 ? '여럿' : channels[0]`). 그 외 위젯은 기존 테이블 조회. **제외 결정**: 만족도 섹션·호텔리어 로그인 수 위젯은 1차 미포함(로그인 수는 `user.login` 이벤트 계측이 없어 보류). 시각 목업: `docs/dev-logs/2026-06-02-insight-dashboard-mockup.html`.
+>
+> **만족도 수집 (별도 Phase 분리)** — 검색/페이지 단위 만족도는 트리거(체류시간 임계·exit-intent `beforeunload`/`mouseleave`·검색완료 후 경과)로 비침투 팝업을 띄워 신규 테이블 `satisfaction_surveys`(context: search|page|ticket, rating, trigger_type, session_key, page_url)에 수집. 대시보드 1차에는 placeholder만 노출하고 수집 메커니즘은 후속 Phase로 진행한다.
+>
 > **사이드바 그룹**: 본 기능으로 어드민 사이드바에 **인사이트** 그룹(`GROUP_ORDER`: tickets → content → **insight** → org)을 신설했다. `search_logs` + `articles/faqs.helpful_*` 기존 자산을 조회 전용으로 활용(DB 스키마 변경 0건). 집계 대시보드는 `/admin/master/search-quality`(별도), 본 기능은 개별 행 나열에 집중. 상세: `docs/01-plan/features/search-logs.plan.md`, `docs/02-design/features/search-logs.design.md`.
 
 ### 6. 공지/업데이트 (NT)
@@ -340,7 +366,8 @@ status enum('received' | 'in_progress' | 'on_hold' | 'completed'),
 assignee_id (FK users, nullable),
 due_date timestamp,
 channel text,  // ticket_channels.code 참조 (FK 미설정). 마스터에서 어드민이 확장 가능.
-slack_thread_ts varchar, monday_item_id varchar,
+slack_thread_ts varchar, slack_dev_thread_ts varchar,  // #as-new / #dev-escalation 스레드
+one_call_resolved boolean default false,  // DI-01: 1회 작업 해결 여부, 담당자가 완료 처리 시 체크
 created_at, updated_at, is_active
 ```
 

@@ -24,6 +24,7 @@ import { STATUS_LABEL } from '@/lib/services/tickets-meta';
 export function AdminTicketActions({
   ticketId,
   status,
+  oneCallResolved = false,
   assigneeId,
   dueDate,
   managers,
@@ -31,6 +32,7 @@ export function AdminTicketActions({
 }: {
   ticketId: string;
   status: TicketStatus;
+  oneCallResolved?: boolean;
   assigneeId: string | null;
   dueDate: Date | string | null;
   managers: Array<{ id: string; name: string; role: string }>;
@@ -45,6 +47,7 @@ export function AdminTicketActions({
   } | null>(null);
 
   const [localStatus, setLocalStatus] = useState<TicketStatus>(status);
+  const [oneCall, setOneCall] = useState<boolean>(oneCallResolved);
   const [localAssignee, setLocalAssignee] = useState<string>(assigneeId ?? '');
   const [localDue, setLocalDue] = useState<string>(
     dueDate ? new Date(dueDate).toISOString().slice(0, 16) : '',
@@ -58,27 +61,40 @@ export function AdminTicketActions({
     setNotice({ tone: 'error', text: msg });
   }
 
+  const statusChanged = localStatus !== status;
+  const oneCallChanged =
+    localStatus === 'completed' && oneCall !== oneCallResolved;
+
   function applyStatus() {
-    if (localStatus === status) return;
+    if (!statusChanged && !oneCallChanged) return;
     const fd = new FormData();
     fd.append('ticketId', ticketId);
     fd.append('nextStatus', localStatus);
+    if (localStatus === 'completed') {
+      fd.append('oneCallResolved', oneCall ? 'true' : 'false');
+    }
     startTransition(async () => {
-      const ok = await confirm({
-        title: `상태를 "${STATUS_LABEL[localStatus]}"(으)로 변경할까요?`,
-        description:
-          localStatus === 'in_progress' || localStatus === 'completed'
-            ? '선택한 연락수단으로 호텔리어에게 알림이 자동 발송됩니다.'
-            : undefined,
-        confirmText: '변경',
-      });
-      if (!ok) {
-        setLocalStatus(status);
-        return;
+      if (statusChanged) {
+        const ok = await confirm({
+          title: `상태를 "${STATUS_LABEL[localStatus]}"(으)로 변경할까요?`,
+          description:
+            localStatus === 'in_progress' || localStatus === 'completed'
+              ? '선택한 연락수단으로 호텔리어에게 알림이 자동 발송됩니다.'
+              : undefined,
+          confirmText: '변경',
+        });
+        if (!ok) {
+          setLocalStatus(status);
+          return;
+        }
       }
       const result = await changeStatusAction(fd);
       if (result.ok) {
-        notifyOk(`상태가 ${STATUS_LABEL[localStatus]}(으)로 변경되었습니다.`);
+        notifyOk(
+          statusChanged
+            ? `상태가 ${STATUS_LABEL[localStatus]}(으)로 변경되었습니다.`
+            : '원콜 해결 여부가 저장되었습니다.',
+        );
         router.refresh();
       } else {
         notifyErr(result.message ?? '변경에 실패했습니다');
@@ -184,10 +200,29 @@ export function AdminTicketActions({
             <option value="on_hold">보류</option>
             <option value="completed">완료</option>
           </Select>
+          {localStatus === 'completed' && (
+            <label className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50/60 p-2.5 text-sm dark:border-slate-800 dark:bg-slate-900/40">
+              <input
+                type="checkbox"
+                checked={oneCall}
+                onChange={(e) => setOneCall(e.target.checked)}
+                disabled={pending}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+              />
+              <span>
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  원콜 해결
+                </span>
+                <span className="ml-1 text-xs text-slate-500">
+                  1회 작업으로 해결 (대시보드 원콜완료 지표에 집계)
+                </span>
+              </span>
+            </label>
+          )}
           <Button
             type="button"
             onClick={applyStatus}
-            disabled={pending || localStatus === status}
+            disabled={pending || (!statusChanged && !oneCallChanged)}
             size="sm"
           >
             상태 변경

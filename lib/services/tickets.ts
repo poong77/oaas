@@ -832,6 +832,8 @@ export type ChangeStatusInput = {
   ticketId: string;
   actorId: string;
   nextStatus: TicketStatus;
+  /** DI-01: 완료 전환 시 "원콜 해결"(1회 작업 해결) 기록. completed일 때만 반영. */
+  oneCallResolved?: boolean;
 };
 
 export async function changeStatus(
@@ -841,13 +843,22 @@ export async function changeStatus(
   try {
     const current = await getTicketRaw(input.ticketId);
     if (!current) return { ok: false, message: 'NOT_FOUND' };
-    if (current.status === input.nextStatus) {
+    if (
+      current.status === input.nextStatus &&
+      input.oneCallResolved === undefined
+    ) {
       return { ok: true };
     }
-    await db
-      .update(tickets)
-      .set({ status: input.nextStatus })
-      .where(eq(tickets.id, input.ticketId));
+    const patch: Partial<NewTicket> = { status: input.nextStatus };
+    // 완료로 전환할 때만 원콜 여부 기록 (다른 상태로 가면 건드리지 않음).
+    if (input.nextStatus === 'completed' && input.oneCallResolved !== undefined) {
+      patch.oneCallResolved = input.oneCallResolved;
+    }
+    await db.update(tickets).set(patch).where(eq(tickets.id, input.ticketId));
+    if (current.status === input.nextStatus) {
+      // 상태는 그대로(완료 유지)고 원콜 플래그만 갱신한 경우 — 메시지/알림 없이 종료.
+      return { ok: true };
+    }
 
     await db.insert(ticketMessages).values({
       ticketId: input.ticketId,

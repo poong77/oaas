@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ko" class="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>운영 인사이트 — support.oapms.com</title>
+
+<!-- Pretendard -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2.1.0/dist/echarts-wordcloud.min.js"></script>
+
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Pretendard Variable', 'Pretendard', 'system-ui', 'sans-serif'] },
+      colors: {
+        brand: {
+          50:  '#f0f7ff',
+          100: '#daeeff',
+          200: '#b4dcfe',
+          300: '#79c3fd',
+          400: '#37a4f9',
+          500: '#0d87ea',
+          600: '#0168c8',
+          700: '#0153a2',
+          800: '#054785',
+          900: '#0a3b6e',
+        },
+      },
+      boxShadow: {
+        card: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
+        'card-hover': '0 4px 12px 0 rgb(0 0 0 / 0.08)',
+      },
+    },
+  },
+}
+</script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+body { font-family: 'Pretendard Variable', 'Pretendard', system-ui, sans-serif; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: #374151; }
+
+/* period chip */
+.chip { @apply px-3 py-1.5 text-sm rounded-full border border-transparent cursor-pointer transition-all; }
+.chip.active { @apply bg-brand-600 text-white border-brand-600 font-medium; }
+.chip:not(.active) { @apply bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-brand-400; }
+
+/* card base */
+.card { @apply bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl shadow-card; }
+
+/* label */
+.section-label { @apply text-xs font-semibold tracking-widest uppercase text-zinc-400 dark:text-zinc-500 mb-3; }
+
+/* table */
+.tbl th { @apply text-xs font-semibold text-zinc-400 dark:text-zinc-500 pb-2 border-b border-zinc-100 dark:border-zinc-800 text-left; }
+.tbl td { @apply text-sm py-3 border-b border-zinc-50 dark:border-zinc-800/60; }
+.tbl tr:last-child td { border-bottom: none; }
+
+/* badge */
+.badge { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium; }
+
+/* skeleton */
+@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+.skeleton { background: linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
+.dark .skeleton { background: linear-gradient(90deg,#27272a 25%,#3f3f46 50%,#27272a 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; }
+
+/* funnel step connector */
+.funnel-arrow { @apply flex items-center justify-center text-zinc-300 dark:text-zinc-600; }
+</style>
+</head>
+
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 min-h-screen transition-colors duration-200">
+
+<!-- ── NAV ─────────────────────────────────────────────── -->
+<nav class="sticky top-0 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur border-b border-zinc-100 dark:border-zinc-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+    <div class="flex items-center gap-3">
+      <div class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="font-semibold text-sm text-zinc-900 dark:text-zinc-50">support.oapms.com</span>
+      <span class="hidden sm:inline text-zinc-300 dark:text-zinc-600">·</span>
+      <span class="hidden sm:inline text-sm text-zinc-500 dark:text-zinc-400">어드민</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <!-- dark mode toggle -->
+      <button id="darkToggle" onclick="toggleDark()"
+        class="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+        title="다크모드 전환">
+        <svg id="iconMoon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-500 dark:hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="iconSun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-300 hidden dark:block"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <div class="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-xs font-semibold text-brand-700 dark:text-brand-200">이</div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── MAIN ────────────────────────────────────────────── -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+  <!-- ── HEADER + FILTERS ─────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">운영 인사이트</h1>
+      <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">2026년 5월 · OA 통합 AS 플랫폼 운영 현황</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- period chips -->
+      <div class="flex gap-1.5" id="periodChips">
+        <button class="chip" onclick="setChip(this,'어제')">어제</button>
+        <button class="chip" onclick="setChip(this,'7일')">7일</button>
+        <button class="chip active" onclick="setChip(this,'30일')">30일</button>
+      </div>
+      <!-- product filter -->
+      <select class="text-sm px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-400">
+        <option>전체 제품</option>
+        <option>PMS</option>
+        <option>CMS</option>
+        <option>Keyless</option>
+        <option>키오스크</option>
+        <option>웹서비스</option>
+      </select>
+      <button class="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-brand-400 transition-colors">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        날짜 지정
+      </button>
+    </div>
+  </div>
+
+  <!-- ── ① 액션 카드 ──────────────────────────────────── -->
+  <section>
+    <p class="section-label">즉시 대응 필요</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- P1 긴급 -->
+      <div class="card p-5 border-l-4 border-l-red-500 flex items-start gap-4">
+        <div class="w-11 h-11 rounded-xl bg-red-50 dark:bg-red-950 flex items-center justify-center flex-shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">긴급 처리건 (P1 미완료)</p>
+            <span class="badge bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300">🔴 즉시 대응</span>
+          </div>
+          <p class="text-4xl font-bold text-red-600 dark:text-red-400 mt-1">4<span class="text-lg font-normal text-zinc-400 ml-1">건</span></p>
+          <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">키오스크 오버부킹 2건 · PMS 결제오류 2건</p>
+        </div>
+        <button class="text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors whitespace-nowrap">처리 목록 →</button>
+      </div>
+      <!-- 장기 지연 -->
+      <div class="card p-5 border-l-4 border-l-orange-400 flex items-start gap-4">
+        <div class="w-11 h-11 rounded-xl bg-orange-50 dark:bg-orange-950 flex items-center justify-center flex-shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">장기 지연건 (영업일 3일+)</p>
+            <span class="badge bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300">🟠 지연 경고</span>
+          </div>
+          <p class="text-4xl font-bold text-orange-500 dark:text-orange-400 mt-1">7<span class="text-lg font-normal text-zinc-400 ml-1">건</span></p>
+          <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">평균 경과 4.8일 · Dev이관 대기 3건 포함</p>
+        </div>
+        <button class="text-xs font-medium text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 px-3 py-1.5 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-950 transition-colors whitespace-nowrap">처리 목록 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ② 핵심 지표 3종 (완료건 대비 비율) ───────────── -->
+  <section>
+    <p class="section-label">완료 처리 유형 — 모수 = 완료건 441 (보류·처리중 제외) · 각 비율은 완료건 대비</p>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <!-- 원콜완료 -->
+      <div class="card p-5 border-t-4 border-t-brand-500">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-semibold text-zinc-600 dark:text-zinc-300">원콜완료</p>
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-500 inline-block"></span>
+        </div>
+        <div class="flex items-end gap-2">
+          <p class="text-4xl font-bold text-brand-600 dark:text-brand-400">56<span class="text-lg font-normal text-zinc-400">%</span></p>
+          <p class="text-sm text-zinc-400 mb-1.5">247건</p>
+        </div>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">1회 작업으로 해결 · 담당자 기록</p>
+        <div class="mt-3 h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800"><div class="h-1.5 rounded-full bg-brand-500" style="width:56%"></div></div>
+      </div>
+      <!-- 원팀완료 (자체해결) -->
+      <div class="card p-5 border-t-4 border-t-emerald-400">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-semibold text-zinc-600 dark:text-zinc-300">원팀완료 <span class="text-xs font-normal text-zinc-400">자체해결</span></p>
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+        </div>
+        <div class="flex items-end gap-2">
+          <p class="text-4xl font-bold text-emerald-500">88<span class="text-lg font-normal text-zinc-400">%</span></p>
+          <p class="text-sm text-zinc-400 mb-1.5">388건</p>
+        </div>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">운영팀 자체 해결(원콜+다회) · Dev 미개입</p>
+        <div class="mt-3 h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800"><div class="h-1.5 rounded-full bg-emerald-400" style="width:88%"></div></div>
+      </div>
+      <!-- Dev개입 -->
+      <div class="card p-5 border-t-4 border-t-rose-500">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-semibold text-zinc-600 dark:text-zinc-300">Dev개입</p>
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>
+        </div>
+        <div class="flex items-end gap-2">
+          <p class="text-4xl font-bold text-rose-500">12<span class="text-lg font-normal text-zinc-400">%</span></p>
+          <p class="text-sm text-zinc-400 mb-1.5">53건</p>
+        </div>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Slack 공유로 개발팀 이관</p>
+        <div class="mt-3 h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800"><div class="h-1.5 rounded-full bg-rose-500" style="width:12%"></div></div>
+      </div>
+    </div>
+    <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-2">※ <b class="text-zinc-500 dark:text-zinc-300">원팀완료 + Dev개입 = 100%</b> (에스컬레이션 여부로 양분). 원콜완료는 자체해결의 부분집합이라 단순 합산 대상이 아님 — 각 비율은 완료건 대비 독립 지표입니다.</p>
+  </section>
+
+  <!-- ── ③ 퍼널 ────────────────────────────────────────── -->
+  <section>
+    <div class="flex items-center justify-between mb-3">
+      <p class="section-label mb-0">행위자 기준 처리 퍼널</p>
+      <span class="text-xs text-zinc-400 dark:text-zinc-500">전화 문의는 검색 없이 직접 접수 · 검색은 웹/챗봇 셀프서비스 진입량</span>
+    </div>
+    <div class="card p-5 sm:p-6">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+
+        <!-- 검색 -->
+        <div class="flex-1 flex flex-col items-center gap-2">
+          <div class="w-full rounded-xl bg-brand-50 dark:bg-brand-950/50 border border-brand-100 dark:border-brand-900 p-4 text-center">
+            <p class="text-xs font-semibold text-brand-400 uppercase tracking-wide mb-1">검색</p>
+            <p class="text-xs text-zinc-400 mb-2">호텔리어</p>
+            <p class="text-3xl font-bold text-brand-600 dark:text-brand-400">1,240</p>
+            <p class="text-xs text-zinc-400 mt-1">검색 세션</p>
+          </div>
+        </div>
+
+        <!-- arrow + 전환율 -->
+        <div class="funnel-arrow flex-col gap-1 flex-shrink-0 hidden sm:flex">
+          <span class="text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-full">37.9%</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+        <!-- 문의 -->
+        <div class="flex-1 flex flex-col items-center gap-2">
+          <div class="w-full rounded-xl bg-sky-50 dark:bg-sky-950/50 border border-sky-100 dark:border-sky-900 p-4 text-center">
+            <p class="text-xs font-semibold text-sky-400 uppercase tracking-wide mb-1">문의</p>
+            <p class="text-xs text-zinc-400 mb-2">호텔리어</p>
+            <p class="text-3xl font-bold text-sky-600 dark:text-sky-400">470</p>
+            <p class="text-xs text-zinc-400 mt-1">문의 제출</p>
+          </div>
+        </div>
+
+        <!-- arrow + 전환율 -->
+        <div class="funnel-arrow flex-col gap-1 flex-shrink-0 hidden sm:flex">
+          <span class="text-xs font-semibold bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full">96.2%</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+        <!-- 접수 -->
+        <div class="flex-1 flex flex-col items-center gap-2">
+          <div class="w-full rounded-xl bg-violet-50 dark:bg-violet-950/50 border border-violet-100 dark:border-violet-900 p-4 text-center">
+            <p class="text-xs font-semibold text-violet-400 uppercase tracking-wide mb-1">접수</p>
+            <p class="text-xs text-zinc-400 mb-2">운영팀</p>
+            <p class="text-3xl font-bold text-violet-600 dark:text-violet-400">452</p>
+            <p class="text-xs text-zinc-400 mt-1">처리 착수</p>
+          </div>
+        </div>
+
+        <!-- arrow + 전환율 -->
+        <div class="funnel-arrow flex-col gap-1 flex-shrink-0 hidden sm:flex">
+          <span class="text-xs font-semibold bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-full">12.3%</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+        <!-- Dev이관 -->
+        <div class="flex-1 flex flex-col items-center gap-2">
+          <div class="w-full rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-100 dark:border-rose-900 p-4 text-center">
+            <p class="text-xs font-semibold text-rose-400 uppercase tracking-wide mb-1">Dev이관</p>
+            <p class="text-xs text-zinc-400 mb-2">운영팀 →</p>
+            <p class="text-3xl font-bold text-rose-600 dark:text-rose-400">58</p>
+            <p class="text-xs text-zinc-400 mt-1">에스컬레이션</p>
+          </div>
+        </div>
+
+        <!-- arrow + 전환율 -->
+        <div class="funnel-arrow flex-col gap-1 flex-shrink-0 hidden sm:flex">
+          <span class="text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">93.8%</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+        <!-- 완료 -->
+        <div class="flex-1 flex flex-col items-center gap-2">
+          <div class="w-full rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900 p-4 text-center">
+            <p class="text-xs font-semibold text-emerald-500 uppercase tracking-wide mb-1">완료</p>
+            <p class="text-xs text-zinc-400 mb-2">운영팀</p>
+            <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">441</p>
+            <p class="text-xs text-zinc-400 mt-1">해결 완료</p>
+          </div>
+        </div>
+
+      </div>
+      <!-- mobile funnel note -->
+      <p class="sm:hidden text-xs text-zinc-400 text-center mt-3">검색(1,240) → 문의(470, 37.9%) → 접수(452, 96.2%) → Dev이관(58, 12.3%) → 완료(441, 93.8%)</p>
+      <!-- 미완료 주석 -->
+      <div class="mt-4 flex items-start gap-2 bg-orange-50 dark:bg-orange-950/40 border border-orange-100 dark:border-orange-900 rounded-xl p-3">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p class="text-xs text-orange-700 dark:text-orange-300">접수 = 운영팀 처리 착수(처리중 전환) 기준. 문의 470건 중 18건 미착수(접수 대기). 미완료 29건 = 처리중 22건 + 보류 7건. 전화 문의는 검색 없이 직접 접수되며 카카오·방문 채널은 없음 — deflection(자가해결 전환) 지표는 적용하지 않음.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ④ 검색 키워드 · 접속 · 호텔 ──────────────────── -->
+  <section>
+    <p class="section-label">검색 키워드 · 접속 · 호텔</p>
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-1">
+        <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">검색어 워드클라우드</p>
+        <span class="badge bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-300">호텔리어 실사용 검색</span>
+      </div>
+      <p class="text-xs text-zinc-400 dark:text-zinc-500 mb-2">동의어 <b class="text-zinc-500 dark:text-zinc-300">대표어(canonical) 기준</b> 집계 — 표기 변형·유의어 합산(예: 체크 인·checkin·CI → 체크인) · 글자 크기 = 빈도 · <span class="text-rose-500">붉은 단어</span> = 0건 결과 다발</p>
+      <div id="chartWordcloud" style="height:280px;"></div>
+    </div>
+    <!-- 호텔별 문의 수 Top 15 -->
+    <div class="card p-5 mt-4">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">호텔별 문의 수 Top 15</p>
+        <span class="text-xs text-zinc-400 dark:text-zinc-500">상위 숙소 = 집중 케어 · 온보딩 점검 대상</span>
+      </div>
+      <div id="chartHotel" style="height:420px;"></div>
+    </div>
+  </section>
+
+  <!-- ── ⑤ 문의 유입 분석 ───────────────────────────────── -->
+  <section>
+    <p class="section-label">문의 유입 분석</p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- 일자별×채널별 -->
+      <div class="card p-5 lg:col-span-2">
+        <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-0.5">일자별 · 채널별 유입</p>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mb-3">건당 1회 집계 · 채널 2개 이상은 <span class="text-zinc-500 dark:text-zinc-300">'여럿'</span>으로 단일 분류(중복 합산 방지)</p>
+        <div id="chartChannel" style="height:230px;"></div>
+      </div>
+      <!-- 제품별 분포 -->
+      <div class="card p-5">
+        <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-4">제품별 분포</p>
+        <div id="chartProduct" style="height:240px;"></div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 gap-4 mt-4">
+      <!-- 유형별 막대 -->
+      <div class="card p-5">
+        <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-4">유형별 현황 (완료 / 처리중)</p>
+        <div id="chartType" style="height:200px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ⑤ 처리·완료 ──────────────────────────────────── -->
+  <section>
+    <p class="section-label">처리 · 완료 현황</p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <!-- 상태 4종 -->
+      <div class="card p-4 text-center">
+        <p class="text-xs text-zinc-400 mb-1">접수</p>
+        <p class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">29</p>
+        <div class="mt-2 h-1 rounded-full bg-zinc-100 dark:bg-zinc-800"><div class="h-1 rounded-full bg-zinc-400" style="width:6%"></div></div>
+      </div>
+      <div class="card p-4 text-center">
+        <p class="text-xs text-zinc-400 mb-1">처리중</p>
+        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">22</p>
+        <div class="mt-2 h-1 rounded-full bg-zinc-100 dark:bg-zinc-800"><div class="h-1 rounded-full bg-blue-400" style="width:5%"></div></div>
+      </div>
+      <div class="card p-4 text-center">
+        <p class="text-xs text-zinc-400 mb-1">보류</p>
+        <p class="text-2xl font-bold text-orange-500 dark:text-orange-400">7</p>
+        <div class="mt-2 h-1 rounded-full bg-zinc-100 dark:bg-zinc-800"><div class="h-1 rounded-full bg-orange-400" style="width:1.5%"></div></div>
+      </div>
+      <div class="card p-4 text-center">
+        <p class="text-xs text-zinc-400 mb-1">완료</p>
+        <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">441</p>
+        <div class="mt-2 h-1 rounded-full bg-zinc-100 dark:bg-zinc-800"><div class="h-1 rounded-full bg-emerald-400" style="width:94%"></div></div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+      <!-- 응답·해결 추이 -->
+      <div class="card p-5">
+        <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-1">평균 응답·해결 소요 추이</p>
+        <div class="flex gap-4 mb-3">
+          <div class="flex items-center gap-1.5 text-xs text-zinc-500">
+            <span class="inline-block w-3 h-0.5 rounded bg-brand-500"></span>첫 응답 (시간)
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-zinc-500">
+            <span class="inline-block w-3 h-0.5 rounded bg-emerald-500"></span>해결 소요 (영업일)
+          </div>
+        </div>
+        <div id="chartLine" style="height:180px;"></div>
+      </div>
+
+      <!-- Dev 에스컬레이션 백로그 -->
+      <div class="card p-5 border border-rose-100 dark:border-rose-900/50">
+        <div class="flex items-center gap-2 mb-4">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <p class="text-sm font-semibold text-rose-700 dark:text-rose-400">Dev 에스컬레이션 백로그</p>
+          <span class="ml-auto badge bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">미완료 17건</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="tbl w-full">
+            <thead>
+              <tr>
+                <th class="pr-3">티켓</th>
+                <th class="pr-3">제품</th>
+                <th class="pr-3">유형</th>
+                <th class="text-right">경과</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="pr-3 font-medium text-zinc-700 dark:text-zinc-200">#AS-1042</td>
+                <td class="pr-3"><span class="badge bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">PMS</span></td>
+                <td class="pr-3 text-zinc-500 dark:text-zinc-400">결제오류</td>
+                <td class="text-right font-semibold text-rose-600 dark:text-rose-400">9일</td>
+              </tr>
+              <tr>
+                <td class="pr-3 font-medium text-zinc-700 dark:text-zinc-200">#AS-1038</td>
+                <td class="pr-3"><span class="badge bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">Keyless</span></td>
+                <td class="pr-3 text-zinc-500 dark:text-zinc-400">기능개발</td>
+                <td class="text-right font-semibold text-rose-600 dark:text-rose-400">7일</td>
+              </tr>
+              <tr>
+                <td class="pr-3 font-medium text-zinc-700 dark:text-zinc-200">#AS-1031</td>
+                <td class="pr-3"><span class="badge bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">PMS</span></td>
+                <td class="pr-3 text-zinc-500 dark:text-zinc-400">데이터수정</td>
+                <td class="text-right font-semibold text-orange-500">6일</td>
+              </tr>
+              <tr>
+                <td class="pr-3 font-medium text-zinc-700 dark:text-zinc-200">#AS-1027</td>
+                <td class="pr-3"><span class="badge bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">키오스크</span></td>
+                <td class="pr-3 text-zinc-500 dark:text-zinc-400">오버부킹</td>
+                <td class="text-right font-semibold text-orange-500">5일</td>
+              </tr>
+              <tr>
+                <td class="pr-3 font-medium text-zinc-700 dark:text-zinc-200">#AS-1019</td>
+                <td class="pr-3"><span class="badge bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">CMS</span></td>
+                <td class="pr-3 text-zinc-500 dark:text-zinc-400">기능문의</td>
+                <td class="text-right font-semibold text-zinc-500 dark:text-zinc-400">4일</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-3 text-right">+ 12건 더 보기 →</p>
+      </div>
+    </div>
+
+    <!-- 담당자별 처리 현황 -->
+    <div class="card p-5">
+      <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-4">담당자별 처리 현황</p>
+      <div class="overflow-x-auto">
+        <table class="tbl w-full min-w-[520px]">
+          <thead>
+            <tr>
+              <th class="pr-4 w-36">담당자</th>
+              <th class="pr-4 text-right">완료</th>
+              <th class="pr-4 text-right">처리중</th>
+              <th class="pr-4 text-right">보류</th>
+              <th class="pr-4 text-right">평균 해결</th>
+              <th class="text-right">처리율</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="pr-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-xs font-semibold text-brand-700 dark:text-brand-200 flex-shrink-0">김</div>
+                  <span class="font-medium text-zinc-700 dark:text-zinc-200">김지은</span>
+                </div>
+              </td>
+              <td class="pr-4 text-right font-semibold text-emerald-600 dark:text-emerald-400">142</td>
+              <td class="pr-4 text-right text-blue-600 dark:text-blue-400">8</td>
+              <td class="pr-4 text-right text-orange-500">2</td>
+              <td class="pr-4 text-right text-zinc-600 dark:text-zinc-300">1.4일</td>
+              <td class="text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800">
+                    <div class="h-1.5 rounded-full bg-emerald-400" style="width:94%"></div>
+                  </div>
+                  <span class="text-xs text-zinc-500">94%</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="pr-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center text-xs font-semibold text-violet-700 dark:text-violet-200 flex-shrink-0">박</div>
+                  <span class="font-medium text-zinc-700 dark:text-zinc-200">박성민</span>
+                </div>
+              </td>
+              <td class="pr-4 text-right font-semibold text-emerald-600 dark:text-emerald-400">118</td>
+              <td class="pr-4 text-right text-blue-600 dark:text-blue-400">6</td>
+              <td class="pr-4 text-right text-orange-500">3</td>
+              <td class="pr-4 text-right text-zinc-600 dark:text-zinc-300">1.8일</td>
+              <td class="text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800">
+                    <div class="h-1.5 rounded-full bg-emerald-400" style="width:92%"></div>
+                  </div>
+                  <span class="text-xs text-zinc-500">92%</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="pr-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-sky-100 dark:bg-sky-900 flex items-center justify-center text-xs font-semibold text-sky-700 dark:text-sky-200 flex-shrink-0">이</div>
+                  <span class="font-medium text-zinc-700 dark:text-zinc-200">이하준</span>
+                </div>
+              </td>
+              <td class="pr-4 text-right font-semibold text-emerald-600 dark:text-emerald-400">97</td>
+              <td class="pr-4 text-right text-blue-600 dark:text-blue-400">5</td>
+              <td class="pr-4 text-right text-orange-500">1</td>
+              <td class="pr-4 text-right text-zinc-600 dark:text-zinc-300">2.1일</td>
+              <td class="text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800">
+                    <div class="h-1.5 rounded-full bg-brand-400" style="width:94%"></div>
+                  </div>
+                  <span class="text-xs text-zinc-500">94%</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="pr-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center text-xs font-semibold text-amber-700 dark:text-amber-200 flex-shrink-0">최</div>
+                  <span class="font-medium text-zinc-700 dark:text-zinc-200">최다영</span>
+                </div>
+              </td>
+              <td class="pr-4 text-right font-semibold text-emerald-600 dark:text-emerald-400">84</td>
+              <td class="pr-4 text-right text-blue-600 dark:text-blue-400">3</td>
+              <td class="pr-4 text-right text-orange-500">1</td>
+              <td class="pr-4 text-right text-zinc-600 dark:text-zinc-300">1.6일</td>
+              <td class="text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800">
+                    <div class="h-1.5 rounded-full bg-emerald-400" style="width:96%"></div>
+                  </div>
+                  <span class="text-xs text-zinc-500">96%</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- footer -->
+  <footer class="text-center text-xs text-zinc-300 dark:text-zinc-600 pb-6">
+    support.oapms.com · 운영 인사이트 대시보드 · 목업 v0.1 · 2026-06-02
+  </footer>
+
+</main>
+
+<script>
+// ── Dark mode ─────────────────────────────────────────
+function toggleDark() {
+  document.documentElement.classList.toggle('dark');
+  const isDark = document.documentElement.classList.contains('dark');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  setTimeout(initCharts, 100);
+}
+if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  document.documentElement.classList.add('dark');
+}
+
+// ── Period chip ───────────────────────────────────────
+function setChip(el, label) {
+  document.querySelectorAll('#periodChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── ECharts helpers ───────────────────────────────────
+function isDark() { return document.documentElement.classList.contains('dark'); }
+function textColor() { return isDark() ? '#a1a1aa' : '#71717a'; }
+function axisColor() { return isDark() ? '#27272a' : '#f4f4f5'; }
+function labelColor() { return isDark() ? '#d4d4d8' : '#52525b'; }
+
+// ── ② (도넛 제거 — 핵심지표는 HTML 비율 카드로 대체) ──
+function initDonutRemoved() {
+  const c = echarts.init(document.createElement('div'), null, { renderer:'svg' });
+  c.setOption({
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: {c}%',
+      backgroundColor: isDark() ? '#18181b' : '#fff',
+      borderColor: isDark() ? '#3f3f46' : '#e4e4e7',
+      textStyle: { color: isDark() ? '#e4e4e7' : '#18181b', fontSize: 12 }
+    },
+    legend: { show: false },
+    series: [{
+      type: 'pie',
+      radius: ['52%', '78%'],
+      center: ['50%', '50%'],
+      avoidLabelOverlap: false,
+      label: { show: false, position: 'center',
+        formatter: () => '',
+        fontSize: 15, fontWeight: 700,
+        color: isDark() ? '#e4e4e7' : '#18181b',
+        lineHeight: 20
+      },
+      labelLine: { show: false },
+      data: [
+        { value: 56, name: '원콜완료', itemStyle: { color: '#60a5fa' } },
+        { value: 32, name: '원팀완료', itemStyle: { color: '#a78bfa' } },
+        { value: 12, name: 'Dev개입',  itemStyle: { color: '#f43f5e' } },
+      ],
+      emphasis: { itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,.15)' } }
+    }]
+  });
+  return c;
+}
+
+// ── ④ Channel stacked bar ─────────────────────────────
+function initChannel() {
+  const c = echarts.init(document.getElementById('chartChannel'), null, { renderer:'svg' });
+  const days = ['5/5','5/8','5/11','5/14','5/17','5/20','5/23','5/26','5/29','6/1'];
+  c.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger:'axis', axisPointer:{type:'shadow'},
+      backgroundColor: isDark() ? '#18181b' : '#fff',
+      borderColor: isDark() ? '#3f3f46' : '#e4e4e7',
+      textStyle: { color: isDark() ? '#e4e4e7' : '#18181b', fontSize: 12 }
+    },
+    legend: { bottom: 0, textStyle: { color: textColor(), fontSize: 11 }, icon:'circle', itemWidth:8, itemHeight:8 },
+    grid: { left:10, right:10, top:8, bottom:44, containLabel:true },
+    xAxis: { type:'category', data: days, axisLabel: { color: textColor(), fontSize: 11 }, axisLine:{ lineStyle:{ color: axisColor() } }, axisTick:{ show:false } },
+    yAxis: { type:'value', splitLine:{ lineStyle:{ color: axisColor() } }, axisLabel:{ color: textColor(), fontSize: 11 } },
+    series: [
+      { name:'웹', type:'bar', stack:'s', barMaxWidth:28, data:[18,22,19,25,21,30,26,28,24,20], itemStyle:{ color:'#0d87ea' } },
+      { name:'전화', type:'bar', stack:'s', data:[8,10,9,12,10,14,11,13,10,9], itemStyle:{ color:'#60a5fa' } },
+      { name:'챗봇', type:'bar', stack:'s', data:[5,6,5,7,6,8,7,9,6,5], itemStyle:{ color:'#34d399' } },
+      { name:'이메일', type:'bar', stack:'s', data:[2,3,2,3,2,4,3,3,2,2], itemStyle:{ color:'#a78bfa' } },
+      { name:'여럿', type:'bar', stack:'s', data:[2,2,3,2,3,4,3,4,3,2], itemStyle:{ color:'#71717a', borderRadius:[3,3,0,0] } },
+    ]
+  });
+  return c;
+}
+
+// ── ④ Product pie ─────────────────────────────────────
+function initProduct() {
+  const c = echarts.init(document.getElementById('chartProduct'), null, { renderer:'svg' });
+  c.setOption({
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger:'item', formatter:'{b}: {c}건 ({d}%)',
+      backgroundColor: isDark() ? '#18181b' : '#fff',
+      borderColor: isDark() ? '#3f3f46' : '#e4e4e7',
+      textStyle: { color: isDark() ? '#e4e4e7' : '#18181b', fontSize: 12 }
+    },
+    legend: { show: false },
+    series: [{
+      type:'pie', radius:['40%','68%'], center:['50%','46%'],
+      label: { color: labelColor(), fontSize: 11, formatter:'{b}\n{d}%' },
+      labelLine: { length:8, length2:6, lineStyle:{ color: textColor() } },
+      data: [
+        { value:198, name:'PMS',   itemStyle:{ color:'#0d87ea' } },
+        { value:92,  name:'CMS',   itemStyle:{ color:'#60a5fa' } },
+        { value:78,  name:'Keyless',itemStyle:{ color:'#34d399' } },
+        { value:62,  name:'키오스크',itemStyle:{ color:'#fbbf24' } },
+        { value:40,  name:'웹서비스',itemStyle:{ color:'#a78bfa' } },
+      ]
+    }]
+  });
+  return c;
+}
+
+// ── ④ Type stacked bar ────────────────────────────────
+function initType() {
+  const c = echarts.init(document.getElementById('chartType'), null, { renderer:'svg' });
+  const categories = ['오류','기능문의','데이터수정','오버부킹','기능개발','기타'];
+  c.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger:'axis', axisPointer:{type:'shadow'},
+      backgroundColor: isDark() ? '#18181b' : '#fff',
+      borderColor: isDark() ? '#3f3f46' : '#e4e4e7',
+      textStyle: { color: isDark() ? '#e4e4e7' : '#18181b', fontSize: 12 }
+    },
+    legend: { right:0, top:0, textStyle:{ color:textColor(), fontSize:11 }, icon:'circle', itemWidth:8, itemHeight:8 },
+    grid: { left:10, right:10, top:30, bottom:10, containLabel:true },
+    xAxis: { type:'value', splitLine:{ lineStyle:{ color: axisColor() } }, axisLabel:{ color:textColor(), fontSize:11 } },
+    yAxis: { type:'category', data:categories, axisLabel:{ color:textColor(), fontSize:12 }, axisTick:{show:false}, axisLine:{ lineStyle:{ color: axisColor() } } },
+    series: [
+      { name:'완료', type:'bar', stack:'s', barMaxWidth:20, data:[142,98,72,58,36,35], itemStyle:{ color:'#34d399', borderRadius:[0,4,4,0] } },
+      { name:'처리중', type:'bar', stack:'s', data:[14,8,5,3,4,2], itemStyle:{ color:'#60a5fa', borderRadius:[0,4,4,0] } },
+    ]
+  });
+  return c;
+}
+
+// ── ⑤ Line chart ─────────────────────────────────────
+function initLine() {
+  const c = echarts.init(document.getElementById('chartLine'), null, { renderer:'svg' });
+  const weeks = ['1주','2주','3주','4주','5주'];
+  c.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger:'axis',
+      backgroundColor: isDark() ? '#18181b' : '#fff',
+      borderColor: isDark() ? '#3f3f46' : '#e4e4e7',
+      textStyle: { color: isDark() ? '#e4e4e7' : '#18181b', fontSize: 12 }
+    },
+    legend: { show:false },
+    grid: { left:10, right:10, top:8, bottom:8, containLabel:true },
+    xAxis: { type:'category', data:weeks, axisLabel:{ color:textColor(), fontSize:11 }, axisLine:{ lineStyle:{ color: axisColor() } }, axisTick:{show:false} },
+    yAxis: [
+      { type:'value', name:'시간', nameTextStyle:{ color:textColor(), fontSize:10 }, splitLine:{ lineStyle:{ color: axisColor() } }, axisLabel:{ color:textColor(), fontSize:11 } },
+      { type:'value', name:'영업일', nameTextStyle:{ color:textColor(), fontSize:10 }, axisLabel:{ color:textColor(), fontSize:11 }, splitLine:{show:false} },
+    ],
+    series: [
+      { name:'첫 응답(시간)', type:'line', smooth:true, yAxisIndex:0,
+        data:[3.2, 2.8, 2.4, 2.1, 1.9],
+        lineStyle:{ color:'#0d87ea', width:2.5 },
+        itemStyle:{ color:'#0d87ea' },
+        areaStyle:{ color:{ type:'linear', x:0,y:0,x2:0,y2:1, colorStops:[{offset:0,color:'rgba(13,135,234,0.18)'},{offset:1,color:'rgba(13,135,234,0)'}] } },
+        symbol:'circle', symbolSize:5
+      },
+      { name:'해결 소요(영업일)', type:'line', smooth:true, yAxisIndex:1,
+        data:[2.4, 2.1, 1.9, 1.7, 1.6],
+        lineStyle:{ color:'#34d399', width:2.5 },
+        itemStyle:{ color:'#34d399' },
+        areaStyle:{ color:{ type:'linear', x:0,y:0,x2:0,y2:1, colorStops:[{offset:0,color:'rgba(52,211,153,0.12)'},{offset:1,color:'rgba(52,211,153,0)'}] } },
+        symbol:'circle', symbolSize:5
+      },
+    ]
+  });
+  return c;
+}
+
+// ── ④ Wordcloud ───────────────────────────────────────
+function initWordcloud() {
+  const c = echarts.init(document.getElementById('chartWordcloud'), null, { renderer:'svg' });
+  const gap = '#f43f5e', mid = '#f59e0b', base = isDark() ? '#93c5fd' : '#0d87ea', soft = isDark() ? '#71717a' : '#a1a1aa';
+  const data = [
+    { name:'체크인', value:98, textStyle:{color:base} },
+    { name:'객실요금', value:86, textStyle:{color:base} },
+    { name:'카드결제오류', value:74, textStyle:{color:gap} },
+    { name:'예약취소', value:69, textStyle:{color:base} },
+    { name:'정산', value:63, textStyle:{color:base} },
+    { name:'객실배정', value:57, textStyle:{color:soft} },
+    { name:'야간감사', value:52, textStyle:{color:mid} },
+    { name:'도어락', value:48, textStyle:{color:base} },
+    { name:'환불', value:44, textStyle:{color:soft} },
+    { name:'채널연동', value:40, textStyle:{color:gap} },
+    { name:'부가세', value:37, textStyle:{color:mid} },
+    { name:'노쇼', value:33, textStyle:{color:soft} },
+    { name:'비밀번호변경', value:30, textStyle:{color:base} },
+    { name:'객실상태', value:27, textStyle:{color:soft} },
+    { name:'세금계산서', value:24, textStyle:{color:gap} },
+    { name:'예약변경', value:22, textStyle:{color:base} },
+    { name:'청소', value:20, textStyle:{color:soft} },
+    { name:'쿠폰적용', value:18, textStyle:{color:soft} },
+    { name:'재고관리', value:16, textStyle:{color:gap} },
+    { name:'로그인안됨', value:14, textStyle:{color:gap} },
+    { name:'가격설정', value:12, textStyle:{color:mid} },
+    { name:'미니바', value:10, textStyle:{color:soft} },
+  ];
+  c.setOption({
+    backgroundColor:'transparent',
+    tooltip:{ show:true, formatter:p=>`${p.name}: ${p.value}회`,
+      backgroundColor: isDark() ? '#18181b' : '#fff', borderColor: isDark() ? '#3f3f46' : '#e4e4e7',
+      textStyle:{ color: isDark() ? '#e4e4e7' : '#18181b', fontSize:12 } },
+    series:[{
+      type:'wordCloud', shape:'circle', left:'center', top:'center', width:'95%', height:'95%',
+      sizeRange:[13,52], rotationRange:[0,0], gridSize:8,
+      textStyle:{ fontFamily:'Pretendard Variable, Pretendard, sans-serif', fontWeight:700 },
+      emphasis:{ textStyle:{ textShadowBlur:4, textShadowColor: isDark() ? 'rgba(255,255,255,.2)' : 'rgba(0,0,0,.15)' } },
+      data
+    }]
+  });
+  return c;
+}
+
+// ── ④ Hotel Top 15 ────────────────────────────────────
+function initHotel() {
+  const c = echarts.init(document.getElementById('chartHotel'), null, { renderer:'svg' });
+  const rows = [
+    ['그랜드 오아 호텔',64],['메종글래드 제주',58],['파라다이스 부산',51],['신라스테이 해운대',47],
+    ['롯데시티 명동',42],['켄싱턴 설악',38],['라마다 제주',35],['글래드 여의도',31],
+    ['호텔 스카이파크',28],['베스트웨스턴 강남',25],['한화리조트 경주',22],['토요코인 부산',19],
+    ['더 디자이너스',17],['신화월드',14],['라까사 호텔',11],
+  ].reverse(); // 큰 값이 위로
+  const max = 64;
+  c.setOption({
+    backgroundColor:'transparent',
+    tooltip:{ trigger:'axis', axisPointer:{type:'shadow'}, formatter:p=>`${p[0].name}: ${p[0].value}건`,
+      backgroundColor: isDark() ? '#18181b' : '#fff', borderColor: isDark() ? '#3f3f46' : '#e4e4e7',
+      textStyle:{ color: isDark() ? '#e4e4e7' : '#18181b', fontSize:12 } },
+    grid:{ left:4, right:36, top:6, bottom:6, containLabel:true },
+    xAxis:{ type:'value', splitLine:{ lineStyle:{ color: axisColor() } }, axisLabel:{ color:textColor(), fontSize:11 } },
+    yAxis:{ type:'category', data: rows.map(r=>r[0]),
+      axisLabel:{ color:labelColor(), fontSize:12 }, axisTick:{show:false}, axisLine:{ lineStyle:{ color: axisColor() } } },
+    series:[{ type:'bar', barMaxWidth:16, data: rows.map(r=>r[1]),
+      label:{ show:true, position:'right', color:textColor(), fontSize:11, formatter:'{c}' },
+      itemStyle:{ borderRadius:[0,4,4,0],
+        color:new echarts.graphic.LinearGradient(0,0,1,0,[
+          {offset:0,color: isDark()?'#0153a2':'#79c3fd'},{offset:1,color:'#0d87ea'}]) }
+    }]
+  });
+  return c;
+}
+
+// ── Init + resize ─────────────────────────────────────
+let charts = [];
+function initCharts() {
+  charts.forEach(c => c.dispose());
+  charts = [initWordcloud(), initHotel(), initChannel(), initProduct(), initType(), initLine()];
+}
+window.addEventListener('load', initCharts);
+window.addEventListener('resize', () => charts.forEach(c => c.resize()));
+</script>
+</body>
+</html>

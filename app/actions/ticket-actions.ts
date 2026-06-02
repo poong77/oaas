@@ -357,6 +357,8 @@ export async function addInternalMemoAction(
 const StatusSchema = z.object({
   ticketId: z.string().uuid(),
   nextStatus: z.enum(['received', 'in_progress', 'on_hold', 'completed']),
+  /** 'true'면 원콜 해결로 기록 (완료 전환 시에만 의미). */
+  oneCallResolved: z.enum(['true', 'false']).optional(),
 });
 
 export async function changeStatusAction(
@@ -366,12 +368,17 @@ export async function changeStatusAction(
   const parsed = StatusSchema.safeParse({
     ticketId: formData.get('ticketId'),
     nextStatus: formData.get('nextStatus'),
+    oneCallResolved: formData.get('oneCallResolved') ?? undefined,
   });
   if (!parsed.success) return { ok: false, message: '잘못된 요청' };
   const result = await changeStatus({
     ticketId: parsed.data.ticketId,
     actorId: user.id,
     nextStatus: parsed.data.nextStatus as TicketStatus,
+    oneCallResolved:
+      parsed.data.oneCallResolved === undefined
+        ? undefined
+        : parsed.data.oneCallResolved === 'true',
   });
   if (result.ok) {
     logActivity({

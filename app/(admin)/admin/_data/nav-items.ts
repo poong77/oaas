@@ -21,6 +21,7 @@ import {
   FileText,
   HelpCircle,
   Inbox,
+  LayoutDashboard,
   ListChecks,
   Megaphone,
   Search,
@@ -86,6 +87,13 @@ export const NAV_ITEMS: NavItem[] = [
     group: 'content',
   },
   // 인사이트
+  {
+    href: '/admin/insights/dashboard',
+    label: '운영 대시보드',
+    icon: LayoutDashboard,
+    roles: ['manager', 'admin'],
+    group: 'insight',
+  },
   {
     href: '/admin/insights/search-logs',
     label: '검색로그',

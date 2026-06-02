@@ -308,6 +308,7 @@ export default async function AdminTicketDetailPage({
           <AdminTicketActions
             ticketId={ticket.id}
             status={ticket.status}
+            oneCallResolved={ticket.oneCallResolved}
             assigneeId={ticket.assigneeId}
             dueDate={ticket.dueDate}
             managers={managers.map((m) => ({
