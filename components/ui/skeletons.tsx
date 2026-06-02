@@ -82,6 +82,47 @@ export function SearchResultsSkeleton() {
 }
 
 /**
+ * 어드민 상세/편집 진입 스켈레톤 — [id] 라우트 loading.tsx 공통형.
+ *
+ * 리스트(행 클릭) → /admin/.../[id] 라우트 전환 시 즉시 표시되고,
+ * 서버 데이터 로딩이 끝나면 실제 상세 화면으로 교체된다.
+ * 헤더 + 큰 콘텐츠 블록 + 보조 영역의 중립 골격으로 폼·에디터·상세 어디에도 무난.
+ */
+export function AdminDetailSkeleton() {
+  return (
+    <div className="flex flex-col gap-5">
+      {/* 페이지 헤더 (breadcrumb + 제목 + 설명 / 우측 액션) */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-7 w-48 sm:w-64" />
+          <Skeleton className="h-4 w-64 max-w-full sm:w-80" />
+        </div>
+        <Skeleton className="h-9 w-24 flex-shrink-0 rounded-md" />
+      </div>
+
+      {/* 본문 카드 */}
+      <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-4 w-72 max-w-full" />
+        <Skeleton className="mt-2 h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-40 w-full rounded-md" />
+      </div>
+
+      {/* 보조(액션) 카드 */}
+      <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+        <Skeleton className="h-5 w-24" />
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-9 w-full rounded-md sm:w-40" />
+          <Skeleton className="h-9 w-full rounded-md sm:w-40" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * 범용 페이지 스켈레톤 — loading.tsx 기본형.
  * 목록형 페이지 전환 시 헤더 + 카드 리스트 자리를 잡아준다.
  */
