@@ -72,6 +72,7 @@ export async function listUsers(
     const pattern = `%${params.q.trim()}%`;
     const search = or(
       ilike(users.email, pattern),
+      ilike(users.username, pattern),
       ilike(users.name, pattern),
       ilike(users.phone, pattern),
     );

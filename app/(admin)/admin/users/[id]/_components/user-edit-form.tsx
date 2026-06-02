@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { updateUserAdminAction } from '@/app/actions/admin-user-actions';
+import { toLoginId } from '@/lib/text/login-id';
 import type { UserRole } from '@/db/schema';
 
 type Target = {
@@ -24,6 +25,7 @@ type Target = {
   title: string | null;
   phone: string | null;
   email: string;
+  username: string | null;
   role: UserRole;
   hotelId: string | null;
 };
@@ -84,6 +86,19 @@ export function UserEditForm({
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="title">직책</Label>
             <Input id="title" name="title" defaultValue={target.title ?? ''} maxLength={100} />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="usernameReadonly">ID (로그인)</Label>
+            <Input
+              id="usernameReadonly"
+              defaultValue={toLoginId(target.email) || (target.username ?? '')}
+              placeholder="없음"
+              disabled
+            />
+            <p className="text-[11px] text-slate-500">
+              로그인 시 이메일 또는 이 ID를 사용합니다. (변경 불가)
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5">

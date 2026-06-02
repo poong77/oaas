@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AS 사용자 401건 이관 — 2026-06-02</title>
+<style>
+  :root {
+    --brand:#0d9488; --brand-d:#0f766e; --ink:#0f172a; --mut:#64748b;
+    --line:#e2e8f0; --bg:#f8fafc; --ok:#059669; --warn:#d97706; --danger:#dc2626;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    color:var(--ink); background:var(--bg); line-height:1.6; }
+  .wrap { max-width:960px; margin:0 auto; padding:24px 16px 64px; }
+  header { background:linear-gradient(135deg,var(--brand),var(--brand-d)); color:#fff; border-radius:16px; padding:28px 24px; }
+  header h1 { margin:0 0 6px; font-size:22px; }
+  header p { margin:0; opacity:.92; font-size:14px; }
+  .badge { display:inline-block; background:rgba(255,255,255,.2); border-radius:999px; padding:2px 10px; font-size:12px; margin-top:10px; }
+  h2 { font-size:16px; margin:32px 0 12px; padding-bottom:6px; border-bottom:2px solid var(--line); }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .card .label { font-size:12px; color:var(--mut); }
+  .card .value { font-size:26px; font-weight:800; margin-top:4px; }
+  .card .sub { font-size:12px; color:var(--mut); margin-top:2px; }
+  .ok { color:var(--ok); } .warn { color:var(--warn); } .danger { color:var(--danger); }
+  table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden; font-size:13.5px; }
+  th,td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--line); }
+  th { background:#f1f5f9; font-size:12px; color:var(--mut); text-transform:uppercase; letter-spacing:.02em; }
+  tr:last-child td { border-bottom:none; }
+  code { background:#f1f5f9; padding:1px 6px; border-radius:6px; font-size:12.5px; }
+  .chk { list-style:none; padding:0; margin:0; }
+  .chk li { background:#fff; border:1px solid var(--line); border-radius:10px; padding:11px 14px; margin-bottom:8px; display:flex; gap:10px; align-items:flex-start; }
+  .chk li::before { content:"✓"; color:var(--ok); font-weight:800; }
+  .note { background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 16px; font-size:13.5px; color:#92400e; }
+  .note strong { color:#b45309; }
+  .files { font-size:13px; }
+  .files li { margin-bottom:3px; }
+  .muted { color:var(--mut); font-size:12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>AS 사용자 401건 → support.oapms.com 이관</h1>
+    <p>as.oapms.com <code style="color:#fff;background:rgba(255,255,255,.15)">user/list.do</code> 호텔리어 계정을 통합 AS 플랫폼으로 이관</p>
+    <span class="badge">2026-06-02 · 작업 완료 · 빌드/타입체크 통과</span>
+  </header>
+
+  <h2>📊 이관 결과 요약</h2>
+  <div class="cards">
+    <div class="card"><div class="label">원본 사용자</div><div class="value">401</div><div class="sub">목록 + 상세 스크래핑</div></div>
+    <div class="card"><div class="label">이관 완료</div><div class="value ok">400</div><div class="sub">고유 아이디 기준</div></div>
+    <div class="card"><div class="label">호텔 매핑</div><div class="value ok">400</div><div class="sub">100% (compKey)</div></div>
+    <div class="card"><div class="label">활성 / 비활성</div><div class="value">381 <span class="muted" style="font-size:18px">/ 19</span></div><div class="sub">미사용 → 비활성</div></div>
+    <div class="card"><div class="label">전원 직책</div><div class="value" style="font-size:20px">담당자</div><div class="sub">role = 호텔리어</div></div>
+  </div>
+
+  <h2>✅ 요청 사항 이행</h2>
+  <ul class="chk">
+    <li><b>아이디 보존</b> — <code>users.username</code> 신규 컬럼 추가, 원본 ID 그대로 저장 (unique)</li>
+    <li><b>이메일·아이디 둘 다 로그인</b> — credentials 인증을 운영 기본 수단으로 승격, 식별자(이메일/아이디) 통합 입력</li>
+    <li><b>전원 호텔리어 + 직책 ‘담당자’</b> — role=hotelier, title=담당자 일괄 배정</li>
+    <li><b>미사용 비활성화</b> — 사용여부 ‘미사용’ 19건 → <code>is_active=false</code> (소프트, 이력 보존)</li>
+    <li><b>기본 비밀번호 123456</b> — bcrypt cost 12 해시로 저장</li>
+    <li><b>첫 로그인 비번변경 안내(강제 아님)</b> — <code>must_change_password=true</code> → 로그인 직후 안내 토스트 + 프로필 배너 (차단 없음)</li>
+    <li><b>호텔 연결</b> — 상세 페이지 <code>user_comp</code>의 compKey를 hotels의 <code>[AS이관 comp_key=NNN]</code> 마커와 매칭 (이름 매칭 불필요, 100% 정확)</li>
+  </ul>
+
+  <h2>🔢 데이터 분포</h2>
+  <table>
+    <thead><tr><th>항목</th><th>값</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td>등급(원본)</td><td>업체담당자 375 / 담당자 21 / 업체관리자 2 / 미승인 3</td><td>전원 호텔리어로 통일 배정</td></tr>
+      <tr><td>사용여부</td><td>사용 381 / 미사용 19</td><td>미사용 → 비활성</td></tr>
+      <tr><td>이메일 보유</td><td>실제 이메일 3건</td><td>나머지 397건 더미 <code>{아이디}@as.local</code></td></tr>
+      <tr><td>중복 아이디</td><td>1건 (<code>beache</code> / <code> beache</code>)</td><td>공백 차이 — 활성 건 유지, 비활성 건 스킵</td></tr>
+      <tr><td>호텔 미매핑</td><td>0건</td><td>전원 hotel_id 연결</td></tr>
+    </tbody>
+  </table>
+
+  <h2>⚠️ 짚어야 할 점 — 이메일 부재</h2>
+  <div class="note">
+    <strong>“이메일 없으면 호텔 DB에서 가져온다”는 실행 불가했습니다.</strong><br/>
+    <code>hotels</code> 테이블에는 이메일 컬럼 자체가 없습니다(name·phone·managerName·address만 보유).
+    이관된 업체 마스터(oa-as-companies.json)에도 이메일이 없습니다.<br/><br/>
+    또한 원본 사용자 401명 중 <b>이메일 보유는 단 3명</b>이었습니다(레거시 데이터 실태).
+    그래서 첫 질문 답변(“아이디로 로그인”) 방침대로 <b>이메일 없는 397명은 <code>{아이디}@as.local</code> 더미 이메일</b>을 넣고,
+    <b>실제 로그인은 아이디</b>로 하도록 처리했습니다. 더미 이메일로는 메일이 발송되지 않습니다
+    (이관 시 초대 메일도 발송하지 않음).<br/><br/>
+    👉 추후 사용자별 실제 이메일을 수집하면 프로필/어드민에서 갱신 가능합니다.
+  </div>
+
+  <h2>🔐 로그인 검증 (실 DB 테스트)</h2>
+  <table>
+    <thead><tr><th>시나리오</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td>아이디 <code>opus7710</code> / 123456</td><td class="ok">OK (호텔리어, 호텔 연결, 변경안내 ON)</td></tr>
+      <tr><td>이메일 <code>opus7710@gmail.com</code> / 123456</td><td class="ok">OK</td></tr>
+      <tr><td>대문자 이메일 정규화 <code>OPUS7710@GMAIL.COM</code></td><td class="ok">OK</td></tr>
+      <tr><td>더미 이메일 사용자 아이디 <code>vstay</code> / 123456</td><td class="ok">OK</td></tr>
+      <tr><td>틀린 비밀번호</td><td class="danger">차단 (BAD_PW)</td></tr>
+      <tr><td>없는 아이디</td><td class="danger">차단 (NO_USER)</td></tr>
+      <tr><td>비활성 사용자</td><td class="danger">차단 (INACTIVE)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>📁 변경 파일</h2>
+  <ul class="files">
+    <li><code>db/schema/users.ts</code> — username 컬럼 + unique index 추가</li>
+    <li><code>db/migrations/0027_romantic_hiroim.sql</code> — 마이그레이션 (적용 완료)</li>
+    <li><code>db/scrape-as-users.ts</code> — AS 목록·상세 스크래핑 (신규)</li>
+    <li><code>db/migrate-as-users.ts</code> — 이관 스크립트 (신규, 멱등)</li>
+    <li><code>db/data/oa-as-users.json</code> — 스크래핑 산출물 401건 (신규)</li>
+    <li><code>lib/auth.ts</code> — 이메일/아이디 식별자 로그인, credentials 정식 활성화</li>
+    <li><code>app/(auth)/login/login-form.tsx</code>, <code>login/page.tsx</code> — 통합 입력 + 비번변경 안내 토스트</li>
+    <li><code>lib/services/users.ts</code> — 검색에 username 포함</li>
+    <li><code>app/(admin)/admin/users/_components/users-list-client.tsx</code> — 아이디 컬럼/카드 표시</li>
+    <li><code>app/(admin)/admin/users/_components/users-filters.tsx</code> — 검색 placeholder</li>
+    <li><code>app/(admin)/admin/users/[id]/_components/user-edit-form.tsx</code> + <code>page.tsx</code> — 아이디(읽기전용) 표시</li>
+    <li><code>package.json</code> — <code>db:scrape-as-users</code>, <code>db:migrate-as-users</code> 스크립트</li>
+  </ul>
+
+  <h2>🔁 재실행 안내</h2>
+  <table>
+    <tbody>
+      <tr><td>최신 데이터 재수집</td><td><code>AS_USER=… AS_PASS=… npm run db:scrape-as-users</code></td></tr>
+      <tr><td>이관(멱등 — 기존 아이디 스킵)</td><td><code>npm run db:migrate-as-users</code></td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:24px">support.oapms.com · 통합 AS 플랫폼 · 작업자: Claude (Opus 4.8)</p>
+</div>
+</body>
+</html>

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDateKst } from '@/lib/business-hours/format';
+import { toLoginId, isDummyEmail } from '@/lib/text/login-id';
 import type { User, UserRole } from '@/db/schema';
 
 type ListItem = User & { hotelName: string | null };
@@ -40,6 +41,7 @@ export function UsersListClient({
             <tr>
               <th className="px-3 py-2 text-left">호텔</th>
               <th className="px-3 py-2 text-left">이름·직책</th>
+              <th className="px-3 py-2 text-left">ID</th>
               <th className="px-3 py-2 text-left">이메일·연락처</th>
               <th className="px-3 py-2 text-left">권한</th>
               <th className="px-3 py-2 text-left">가입일</th>
@@ -60,8 +62,23 @@ export function UsersListClient({
                     <div className="text-xs text-slate-500">{u.title}</div>
                   )}
                 </td>
+                <td className="px-3 py-2">
+                  {toLoginId(u.email) ? (
+                    <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
+                      {toLoginId(u.email)}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">-</span>
+                  )}
+                </td>
                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
-                  <div>{u.email}</div>
+                  <div>
+                    {isDummyEmail(u.email) ? (
+                      <span className="text-slate-400">-</span>
+                    ) : (
+                      u.email
+                    )}
+                  </div>
                   <div className="text-xs text-slate-500">{u.phone ?? '-'}</div>
                 </td>
                 <td className="px-3 py-2"><RoleBadge role={u.role} /></td>
@@ -116,7 +133,13 @@ export function UsersListClient({
               </div>
             </div>
             <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
-              <div>{u.email}</div>
+              {toLoginId(u.email) && (
+                <div>
+                  <span className="text-slate-400">ID </span>
+                  <span className="font-mono">{toLoginId(u.email)}</span>
+                </div>
+              )}
+              {!isDummyEmail(u.email) && <div>{u.email}</div>}
               <div>{u.phone ?? '-'}</div>
               <div className="mt-1 text-slate-400">
                 가입 {formatDateKst(u.createdAt)} · 최근접속{' '}

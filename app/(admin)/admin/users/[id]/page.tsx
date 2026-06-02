@@ -53,6 +53,7 @@ export default async function AdminUserDetailPage({
           title: target.title,
           phone: target.phone,
           email: target.email,
+          username: target.username,
           role: target.role,
           hotelId: target.hotelId,
         }}

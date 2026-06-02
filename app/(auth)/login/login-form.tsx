@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { LifeBuoy, Lock, Mail } from 'lucide-react';
+import { LifeBuoy, Lock, User as UserIcon } from 'lucide-react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,16 +15,18 @@ import { defaultLandingFor } from '@/lib/auth-landing';
 export function LoginForm({
   callbackUrl,
   error,
+  credentialsEnabled,
   devStubEnabled,
   ssoEnabled,
 }: {
   callbackUrl?: string;
   error?: string;
+  credentialsEnabled: boolean;
   devStubEnabled: boolean;
   ssoEnabled: boolean;
 }) {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [pending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(error ?? null);
@@ -32,20 +34,20 @@ export function LoginForm({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError(null);
-    if (!email || !password) {
-      setFormError('이메일과 비밀번호를 모두 입력해주세요');
+    if (!identifier || !password) {
+      setFormError('이메일/아이디와 비밀번호를 모두 입력해주세요');
       return;
     }
     startTransition(async () => {
       const res = await signIn('credentials', {
-        email,
+        identifier,
         password,
         redirect: false,
       });
       if (!res || res.error) {
         const msg =
           res?.error === 'CredentialsSignin'
-            ? '이메일 또는 비밀번호가 일치하지 않습니다'
+            ? '이메일/아이디 또는 비밀번호가 일치하지 않습니다'
             : '로그인 중 오류가 발생했습니다';
         setFormError(msg);
         toast.error(msg);
@@ -54,6 +56,14 @@ export function LoginForm({
       toast.success('로그인되었습니다');
       // 역할별 기본 도착지 계산 (callbackUrl이 있으면 그 경로 우선)
       const session = await getSession();
+      // 첫 로그인 비밀번호 변경 안내 (강제 아님). 임시/기본 비번 사용 시 노출.
+      if (session?.user?.mustChangePassword) {
+        toast.message('비밀번호를 변경해주세요', {
+          description:
+            '기본 비밀번호로 로그인했습니다. 보안을 위해 내 프로필에서 비밀번호를 변경하는 것을 권장합니다.',
+          duration: 8000,
+        });
+      }
       const destination =
         callbackUrl || defaultLandingFor(session?.user?.role);
       router.push(destination);
@@ -75,7 +85,7 @@ export function LoginForm({
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {!devStubEnabled && !ssoEnabled && (
+        {!credentialsEnabled && !ssoEnabled && (
           <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
             현재 어떤 로그인 방식도 활성화되어 있지 않습니다. 관리자에게
             문의하세요.
@@ -86,20 +96,20 @@ export function LoginForm({
           </div>
         )}
 
-        {devStubEnabled && (
+        {credentialsEnabled && (
           <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">이메일</Label>
+              <Label htmlFor="identifier">이메일 또는 아이디</Label>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <UserIcon className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
-                  id="email"
-                  type="email"
+                  id="identifier"
+                  type="text"
                   required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@oa.local"
+                  autoComplete="username"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="이메일 주소 또는 아이디"
                   className="pl-8"
                 />
               </div>
@@ -129,15 +139,17 @@ export function LoginForm({
               {pending ? '로그인 중...' : '로그인'}
             </Button>
 
-            <div className="mt-2 rounded-md border border-dashed border-slate-300 bg-slate-50 p-2.5 text-[11px] leading-relaxed text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-              <strong>개발 모드 (dev-stub)</strong> 시드 계정:
-              <br />
-              · admin@oa.local / oa1234! &nbsp;(어드민)
-              <br />
-              · manager@oa.local / oa1234! &nbsp;(매니저)
-              <br />
-              · hotelier@oa.local / oa1234! &nbsp;(호텔리어)
-            </div>
+            {devStubEnabled && (
+              <div className="mt-2 rounded-md border border-dashed border-slate-300 bg-slate-50 p-2.5 text-[11px] leading-relaxed text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                <strong>개발 모드 (dev-stub)</strong> 시드 계정:
+                <br />
+                · admin@oa.local / oa1234! &nbsp;(어드민)
+                <br />
+                · manager@oa.local / oa1234! &nbsp;(매니저)
+                <br />
+                · hotelier@oa.local / oa1234! &nbsp;(호텔리어)
+              </div>
+            )}
           </form>
         )}
 

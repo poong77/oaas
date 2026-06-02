@@ -13,7 +13,7 @@
 import NextAuth, { type NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -39,26 +39,30 @@ declare module 'next-auth' {
 }
 
 const CredentialsSchema = z.object({
-  email: z.string().email(),
+  // 이메일 또는 아이디(username) — 둘 다 허용하므로 email() 검증을 걸지 않는다.
+  identifier: z.string().trim().min(1),
   password: z.string().min(1),
 });
 
 function buildProviders() {
   const providers: NextAuthConfig['providers'] = [];
 
-  if ((process.env.AUTH_DEV_STUB ?? '').toLowerCase() === 'true') {
+  // 비밀번호 로그인(credentials)은 운영 기본 로그인 수단.
+  // AS 이관 사용자(아이디/이메일 + 비밀번호)가 로그인하려면 항상 활성화한다.
+  // (AUTH_DEV_STUB 은 로그인 화면의 '시드 계정 안내' 표시 여부에만 사용)
+  {
     providers.push(
       Credentials({
         id: 'credentials',
-        name: '내부 로그인 (dev stub)',
+        name: '아이디/이메일 로그인',
         credentials: {
-          email: { label: '이메일', type: 'email' },
+          identifier: { label: '이메일 또는 아이디', type: 'text' },
           password: { label: '비밀번호', type: 'password' },
         },
         async authorize(rawCredentials) {
           const parsed = CredentialsSchema.safeParse(rawCredentials);
           if (!parsed.success) return null;
-          const { email, password } = parsed.data;
+          const { identifier, password } = parsed.data;
 
           if (!db) {
             console.warn('[auth] DB 미연결 상태에서 로그인 시도.');
@@ -66,12 +70,27 @@ function buildProviders() {
           }
 
           try {
+            // 이메일 또는 아이디(username)로 식별. 이메일은 소문자 정규화하여 매칭.
+            const lowered = identifier.toLowerCase();
             const rows = await db
               .select()
               .from(users)
-              .where(eq(users.email, email))
-              .limit(1);
-            const user = rows[0];
+              .where(
+                or(
+                  eq(users.email, lowered),
+                  eq(users.email, identifier),
+                  eq(users.username, identifier),
+                ),
+              )
+              .limit(2);
+            // 이메일 정확 매칭 우선, 없으면 아이디 매칭.
+            const user =
+              rows.find(
+                (r) =>
+                  r.email === lowered || r.email === identifier,
+              ) ??
+              rows.find((r) => r.username === identifier) ??
+              rows[0];
             if (!user || !user.isActive) return null;
             if (!user.passwordHash) return null;
 

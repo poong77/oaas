@@ -21,12 +21,15 @@ export default async function LoginPage({
 
   const devStubEnabled =
     (process.env.AUTH_DEV_STUB ?? '').toLowerCase() === 'true';
+  // 비밀번호 로그인은 운영 기본 수단으로 항상 활성화 (lib/auth.ts 와 동일 정책).
+  const credentialsEnabled = true;
   const ssoEnabled = !!process.env.OA_SSO_ISSUER;
 
   return (
     <LoginForm
       callbackUrl={params.callbackUrl}
       error={params.error}
+      credentialsEnabled={credentialsEnabled}
       devStubEnabled={devStubEnabled}
       ssoEnabled={ssoEnabled}
     />

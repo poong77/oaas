@@ -27,6 +27,11 @@ export const users = pgTable(
       onDelete: 'set null',
     }),
     email: text('email').notNull(),
+    /**
+     * 로그인 아이디 (이메일과 별개). AS 이관 사용자의 기존 ID 보존.
+     * 로그인 시 이메일 또는 아이디로 식별. SSO/신규 가입자는 null 가능.
+     */
+    username: text('username'),
     name: text('name').notNull(),
     title: text('title'),
     phone: text('phone'),
@@ -50,6 +55,7 @@ export const users = pgTable(
   (table) => [
     uniqueIndex('users_email_uq').on(table.email),
     uniqueIndex('users_sso_subject_uq').on(table.ssoSubject),
+    uniqueIndex('users_username_uq').on(table.username),
   ],
 );
 

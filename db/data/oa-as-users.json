@@ -1,0 +1,4012 @@
+[
+  {
+    "userId": "bryanking@naver.com",
+    "name": "북촌 다미",
+    "company": "북촌 다미",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "bryanking@naver.com",
+    "phone": "010-2985-2610",
+    "compKey": "365"
+  },
+  {
+    "userId": "opus7710",
+    "name": "오푸스 호텔",
+    "company": "오푸스 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "opus7710@gmail.com",
+    "phone": "010-2400-7710",
+    "compKey": "364"
+  },
+  {
+    "userId": "vstay",
+    "name": "브이스테이",
+    "company": "브이스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "363"
+  },
+  {
+    "userId": "travelusmd",
+    "name": "트래블어스",
+    "company": "트래블어스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "359"
+  },
+  {
+    "userId": "kntop",
+    "name": "탑오션 호텔",
+    "company": "탑오션",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "362"
+  },
+  {
+    "userId": "monosj",
+    "name": "호텔 모노새재",
+    "company": "호텔 모노새재",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "sungmk7@naver.com",
+    "phone": "01039976783",
+    "compKey": "361"
+  },
+  {
+    "userId": "rkal072",
+    "name": "저스트 슬립 김포 구래",
+    "company": "저스트 슬립 김포구래",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "360"
+  },
+  {
+    "userId": "travelus",
+    "name": "트래블어스",
+    "company": "트래블어스",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "359"
+  },
+  {
+    "userId": "wetakecmr",
+    "name": "인더시티충무로",
+    "company": "인더시티 충무로",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "347"
+  },
+  {
+    "userId": "ida1588",
+    "name": "룩앤 스테이",
+    "company": "룩앤 스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "358"
+  },
+  {
+    "userId": "sosistay",
+    "name": "소시스테이",
+    "company": "소시스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "357"
+  },
+  {
+    "userId": "foryoustay",
+    "name": "포유 스테이",
+    "company": "포유 스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "356"
+  },
+  {
+    "userId": "jarry",
+    "name": "김준태",
+    "company": "와쏭",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "60"
+  },
+  {
+    "userId": "nibora",
+    "name": "니보라",
+    "company": "니보라",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "352"
+  },
+  {
+    "userId": "myomi",
+    "name": "스테이 묘미",
+    "company": "스테이 묘미",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "351"
+  },
+  {
+    "userId": "belinstay",
+    "name": "벨린스테이",
+    "company": "벨린스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "350"
+  },
+  {
+    "userId": "steveboy8",
+    "name": "언플러그 안국",
+    "company": "언플러그 안국",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "349"
+  },
+  {
+    "userId": "hwangnamguan",
+    "name": "황남관",
+    "company": "황남관",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "348"
+  },
+  {
+    "userId": "wetakecm",
+    "name": "인더시티 충무로",
+    "company": "인더시티 충무로",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "347"
+  },
+  {
+    "userId": "dotori",
+    "name": "호텔 도토리",
+    "company": "호텔 도토리",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "346"
+  },
+  {
+    "userId": "mhjeju",
+    "name": "메리히어 제주",
+    "company": "메리히어 제주",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "345"
+  },
+  {
+    "userId": "4gates",
+    "name": "포게이츠 호스텔",
+    "company": "포게이츠 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "344"
+  },
+  {
+    "userId": "skynseahotel",
+    "name": "하늘과바다",
+    "company": "하늘과 바다",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "343"
+  },
+  {
+    "userId": "sotabs",
+    "name": "쏘타서면업무폰",
+    "company": "쏘타스위트 부산서면",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "340"
+  },
+  {
+    "userId": "sotayy",
+    "name": "쏘타양양업무폰",
+    "company": "쏘타스위트 양양",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "341"
+  },
+  {
+    "userId": "oatechios",
+    "name": "IOS",
+    "company": "오아통합테스트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "oatechAos",
+    "name": "갤럭시탭",
+    "company": "오아통합테스트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "sotapt",
+    "name": "업무폰",
+    "company": "쏘타스위트 평택 고덕",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "338"
+  },
+  {
+    "userId": "sotakc",
+    "name": "김철",
+    "company": "쏘타스위트 평택 고덕",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "338"
+  },
+  {
+    "userId": "sotadwpt",
+    "name": "쏘타평택",
+    "company": "쏘타스위트 평택 고덕",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "338"
+  },
+  {
+    "userId": "haechi",
+    "name": "해치스테이",
+    "company": "해치스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "337"
+  },
+  {
+    "userId": "휴가인",
+    "name": "휴가인",
+    "company": "Huga Inn (휴가 인)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "273"
+  },
+  {
+    "userId": "mzstay",
+    "name": "scr",
+    "company": "엠지스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "336"
+  },
+  {
+    "userId": "aos",
+    "name": "aos 심사용",
+    "company": "오아통합테스트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "ios",
+    "name": "ios 심사용",
+    "company": "오아통합테스트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "mayorcida",
+    "name": "다미스테이 동묘, 북촌",
+    "company": "다미스테이 동묘, 송현 다미",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "335"
+  },
+  {
+    "userId": "mok",
+    "name": "목 호스텔",
+    "company": "목 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "334"
+  },
+  {
+    "userId": "onyou",
+    "name": "호텔 온유",
+    "company": "호텔 온유",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "333"
+  },
+  {
+    "userId": "bibi",
+    "name": "이예림",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "ljytwinsmam",
+    "name": "이주영",
+    "company": "콘스텔로 명동",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "332"
+  },
+  {
+    "userId": "gudo",
+    "name": "구도컬렉티브 강남",
+    "company": "구도컬렉티브 강남",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "331"
+  },
+  {
+    "userId": "5bunju",
+    "name": "하이스테이을지로",
+    "company": "하이스테이을지로",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "329"
+  },
+  {
+    "userId": "ChasonM",
+    "name": "체이슨엠",
+    "company": "체이슨엠",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "328"
+  },
+  {
+    "userId": "goyojae",
+    "name": "고요재",
+    "company": "고요재 호텔 수원화성행궁점",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "327"
+  },
+  {
+    "userId": "gnst",
+    "name": "지에스티",
+    "company": "지에스티",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "326"
+  },
+  {
+    "userId": "qudals9502",
+    "name": "라마다 영종",
+    "company": "라마다영종",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "265"
+  },
+  {
+    "userId": "gkdl09499",
+    "name": "경포대 더 호텔 비즈니스",
+    "company": "경포대 더호텔비즈니스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "107"
+  },
+  {
+    "userId": "hiddphostel",
+    "name": "하이 동대문 호스텔",
+    "company": "하이 동대문 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "325"
+  },
+  {
+    "userId": "kgloria0910",
+    "name": "더편안트리니호텔",
+    "company": "더편안 트리니 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "324"
+  },
+  {
+    "userId": "ljh",
+    "name": "이지현",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "staytoast",
+    "name": "스테이토스트",
+    "company": "스테이토스트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "323"
+  },
+  {
+    "userId": "luckysong2",
+    "name": "Rabbit Hotel",
+    "company": "래빗호텔 (Rabbit Hotel)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "322"
+  },
+  {
+    "userId": "sillalegacy",
+    "name": "신라 레거시&부티크 호텔",
+    "company": "신라 레거시&부티크 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "321"
+  },
+  {
+    "userId": "fdsa2",
+    "name": "화양강 호텔",
+    "company": "화양강 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "319"
+  },
+  {
+    "userId": "icheck",
+    "name": "아이체크현진",
+    "company": "아이체크현진",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "39"
+  },
+  {
+    "userId": "kangdong",
+    "name": "강동리조트",
+    "company": "강동리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "320"
+  },
+  {
+    "userId": "MSstay",
+    "name": "마제스틱 서울스테이",
+    "company": "마제스틱 서울스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "318"
+  },
+  {
+    "userId": "mggr",
+    "name": "문경그랜드리조트",
+    "company": "문경그랜드리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "317"
+  },
+  {
+    "userId": "sieunjae",
+    "name": "경주시은재",
+    "company": "경주시은재",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "316"
+  },
+  {
+    "userId": "ramada_sm",
+    "name": "라마다 영종",
+    "company": "라마다영종",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "265"
+  },
+  {
+    "userId": "Itnationalyj",
+    "name": "인터내셔널호텔 영종",
+    "company": "인터내셔널호텔 영종",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "315"
+  },
+  {
+    "userId": "ccjang114",
+    "name": "장원",
+    "company": "인터내셔널호텔 영종",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "315"
+  },
+  {
+    "userId": "lbh8193",
+    "name": "이병협",
+    "company": "인터내셔널호텔 영종",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "315"
+  },
+  {
+    "userId": "marysol",
+    "name": "마리쏠 호텔",
+    "company": "마리쏠 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "314"
+  },
+  {
+    "userId": "0605space",
+    "name": "스페이스 게스트하우스",
+    "company": "스페이스 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "313"
+  },
+  {
+    "userId": "yko99999",
+    "name": "양경우",
+    "company": "필스테이 명동 메트로",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "90"
+  },
+  {
+    "userId": "dadastay",
+    "name": "다다스테이(신규사업자)",
+    "company": "다다스테이 홍대",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "97"
+  },
+  {
+    "userId": "foxarthall",
+    "name": "이아진",
+    "company": "호텔폭스아트홀",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "312"
+  },
+  {
+    "userId": "forest",
+    "name": "조헌국",
+    "company": "포레스트레지던스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "311"
+  },
+  {
+    "userId": "freenine",
+    "name": "세종 IT 타워",
+    "company": "(주)한국정보기술단",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "310"
+  },
+  {
+    "userId": "staylibera",
+    "name": "강릉스테이리베라",
+    "company": "강릉스테이리베라",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "309"
+  },
+  {
+    "userId": "blueandhotel",
+    "name": "블루앤호텔",
+    "company": "블루앤호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "308"
+  },
+  {
+    "userId": "muju",
+    "name": "무주연수원",
+    "company": "무주연수원",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "307"
+  },
+  {
+    "userId": "scmarina",
+    "name": "속초마리나호텔",
+    "company": "속초마리나호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "306"
+  },
+  {
+    "userId": "oasis",
+    "name": "오아시스 게스트하우스",
+    "company": "오아시스 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "305"
+  },
+  {
+    "userId": "oze",
+    "name": "레전드 호텔",
+    "company": "레전드호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "233"
+  },
+  {
+    "userId": "sy1224",
+    "name": "양지파인리조트",
+    "company": "양지파인리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "304"
+  },
+  {
+    "userId": "nichevv",
+    "name": "사운즈인",
+    "company": "사운즈인",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "303"
+  },
+  {
+    "userId": "ysartland",
+    "name": "여수 예술랜드",
+    "company": "여수 예술랜드",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "302"
+  },
+  {
+    "userId": "tevast",
+    "name": "어니스티 스테이션",
+    "company": "어니스티 스테이션",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "300"
+  },
+  {
+    "userId": "82capsule",
+    "name": "82 캡슐호텔",
+    "company": "82 캡슐호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "299"
+  },
+  {
+    "userId": "shuber1",
+    "name": "라메르 호텔",
+    "company": "라메르 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "298"
+  },
+  {
+    "userId": "ptstay",
+    "name": "평택 스테이 관광 호텔",
+    "company": "평택 스테이 관광 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "297"
+  },
+  {
+    "userId": "yeongildae",
+    "name": "호텔 영일대",
+    "company": "호텔 영일대",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "296"
+  },
+  {
+    "userId": "dwbs",
+    "name": "대우서면",
+    "company": "대우 서면",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "295"
+  },
+  {
+    "userId": "kbm",
+    "name": "김보미",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "ym2222955",
+    "name": "영무 대인동 2차, 3차",
+    "company": "영무 (광주 대인동) 2차",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "238"
+  },
+  {
+    "userId": "wlsl1661",
+    "name": "호텔 옹기",
+    "company": "호텔 옹기",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "294"
+  },
+  {
+    "userId": "wetakeos",
+    "name": "인더시티 죽도",
+    "company": "인더시티 죽도",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "293"
+  },
+  {
+    "userId": "ora",
+    "name": "영등포 갤럭시, 오라 호텔",
+    "company": "영등포 갤럭시, 오라 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "292"
+  },
+  {
+    "userId": "wetakeus",
+    "name": "인더시티 운서",
+    "company": "인더시티 운서",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "291"
+  },
+  {
+    "userId": "crashinyongsaan",
+    "name": "크래쉬 인 용산",
+    "company": "크래쉬 인 용산",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "290"
+  },
+  {
+    "userId": "psa",
+    "name": "박신애",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "lifein",
+    "name": "라이프인(을지로, 인사, 청계)",
+    "company": "라이프인 (을지로, 인사, 청계)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "289"
+  },
+  {
+    "userId": "bayment",
+    "name": "더 베이먼트",
+    "company": "남포 베이먼트 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "288"
+  },
+  {
+    "userId": "cindy",
+    "name": "황주원(퇴사)",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "thcm",
+    "name": "The Hyde City",
+    "company": "The Hyde City",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "287"
+  },
+  {
+    "userId": "yukwan2",
+    "name": "옥화캡슐호스텔 종로",
+    "company": "옥화캡슐호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "286"
+  },
+  {
+    "userId": "ljj",
+    "name": "이재정(퇴사)",
+    "company": "오아통합테스트",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "abc123",
+    "name": "봉래모텔",
+    "company": "봉래모텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "285"
+  },
+  {
+    "userId": "wetakens",
+    "name": "인더시티 남산",
+    "company": "인더시티 남산",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "284"
+  },
+  {
+    "userId": "뉴그랜드",
+    "name": "뉴그랜드 호텔",
+    "company": "뉴그랜드 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "283"
+  },
+  {
+    "userId": "beache",
+    "name": "다산베아채",
+    "company": "다산베아채",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "282"
+  },
+  {
+    "userId": " beache",
+    "name": "다산베아채",
+    "company": "다산베아채",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "282"
+  },
+  {
+    "userId": "alluming",
+    "name": "루체스타",
+    "company": "루체스타",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "281"
+  },
+  {
+    "userId": "tak0",
+    "name": "연희장",
+    "company": "연희장",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "189"
+  },
+  {
+    "userId": "cave",
+    "name": "케이브 명동",
+    "company": "케이브명동 (구: 쓰리게스트하우스)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "280"
+  },
+  {
+    "userId": "thephase",
+    "name": "더 페이즈",
+    "company": "더 페이즈 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "270"
+  },
+  {
+    "userId": "nostalgia",
+    "name": "노스텔지어",
+    "company": "노스텔지어 서울",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "279"
+  },
+  {
+    "userId": "travel.light",
+    "name": "정동훈",
+    "company": "트래블라이트 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "278"
+  },
+  {
+    "userId": "zisol1",
+    "name": "탑 모텔",
+    "company": "탑 모텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "277"
+  },
+  {
+    "userId": "Grobal1",
+    "name": "글로벌 호텔",
+    "company": "글로벌호텔 (구-골든튤립호텔)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "276"
+  },
+  {
+    "userId": "hotelbom",
+    "name": "호텔 봄",
+    "company": "호텔 봄",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "275"
+  },
+  {
+    "userId": "ekoincheon",
+    "name": "이코노미호텔 인천부평",
+    "company": "이코노미호텔 인천부평",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "274"
+  },
+  {
+    "userId": "huga715",
+    "name": "Huga Inn (휴가 인)",
+    "company": "Huga Inn (휴가 인)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "273"
+  },
+  {
+    "userId": "seven",
+    "name": "진주 세븐호텔",
+    "company": "세븐호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "272"
+  },
+  {
+    "userId": "granbay",
+    "name": "그랑베이 낙산",
+    "company": "그랑베이 낙산",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "271"
+  },
+  {
+    "userId": "yhn318",
+    "name": "더 페이즈 호텔",
+    "company": "더 페이즈 호텔",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "269"
+  },
+  {
+    "userId": "elysian",
+    "name": "엘리시안 호텔",
+    "company": "엘리시안 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "268"
+  },
+  {
+    "userId": "redguesthouse",
+    "name": "레드게스트하우스",
+    "company": "레드 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "267"
+  },
+  {
+    "userId": "thebest",
+    "name": "프롬에이치 더베스트호텔 제주성산",
+    "company": "프롬에이치 더베스트호텔 제주성산",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "266"
+  },
+  {
+    "userId": "ramadayj",
+    "name": "라마다 영종",
+    "company": "라마다영종",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "265"
+  },
+  {
+    "userId": "omghouse",
+    "name": "OMG house(오엠지 하우스)",
+    "company": "OMG house(오엠지 하우스)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "264"
+  },
+  {
+    "userId": "wang1092",
+    "name": "서정적인 호텔 부산영도점",
+    "company": "서정적인 호텔 부산영도점",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "263"
+  },
+  {
+    "userId": "wkdgusrn",
+    "name": "제이나인 게스트하우스",
+    "company": "제이나인 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "262"
+  },
+  {
+    "userId": "nagnehouse",
+    "name": "나그네하우스",
+    "company": "나그네하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "261"
+  },
+  {
+    "userId": "hotel1",
+    "name": "호텔1",
+    "company": "호텔1",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "260"
+  },
+  {
+    "userId": "browndot0501",
+    "name": "브라운도트 공항신도시점",
+    "company": "브라운도트 공항신도시점",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "259"
+  },
+  {
+    "userId": "j5hostel",
+    "name": "J5 호스텔",
+    "company": "J5호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "258"
+  },
+  {
+    "userId": "lunax",
+    "name": "블루원 루나엑스",
+    "company": "블루원 루나엑스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "236"
+  },
+  {
+    "userId": "tongtongpetit",
+    "name": "쁘띠호텔 통통",
+    "company": "쁘띠호텔 통통",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "256"
+  },
+  {
+    "userId": "kimmom4010",
+    "name": "휴젠",
+    "company": "휴젠",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "255"
+  },
+  {
+    "userId": "gudoplanning",
+    "name": "구도 레지던스 충무로",
+    "company": "구도 레지던스 충무로",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "254"
+  },
+  {
+    "userId": "newvera",
+    "name": "청주 뉴베라 호텔",
+    "company": "청주 뉴베라 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "253"
+  },
+  {
+    "userId": "hotelairportjune",
+    "name": "호텔 에어포트 준",
+    "company": "호텔 에어포트 준",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "242"
+  },
+  {
+    "userId": "hjw",
+    "name": "하지웅",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "nouvelle23",
+    "name": "누베르서울 호텔 이태원",
+    "company": "누베르서울 호텔 이태원",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "252"
+  },
+  {
+    "userId": "stayseouln",
+    "name": "센트럴뷰스위트",
+    "company": "스테이서울앤 명동",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "251"
+  },
+  {
+    "userId": "sjjinn",
+    "name": "서정적인 호텔",
+    "company": "서정적인 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "250"
+  },
+  {
+    "userId": "hotelicc",
+    "name": "호텔ICC",
+    "company": "호텔 ICC",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "249"
+  },
+  {
+    "userId": "upflohostel",
+    "name": "업플로 서초",
+    "company": "업플로 서초",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "248"
+  },
+  {
+    "userId": "fromh",
+    "name": "프롬에이치 레포잉호텔 부산서면점",
+    "company": "프롬에이치 레포잉호텔 부산서면점",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "247"
+  },
+  {
+    "userId": "hs",
+    "name": "프롬에이치 오션팰리스호텔 서귀포점",
+    "company": "프롬에이치 오션팰리스호텔 서귀포점",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "246"
+  },
+  {
+    "userId": "jmdp1499",
+    "name": "용인 트리니호텔",
+    "company": "용인 트리니호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "245"
+  },
+  {
+    "userId": "seorae",
+    "name": "스테이 서래",
+    "company": "스테이 서래",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "244"
+  },
+  {
+    "userId": "lodge_keyless",
+    "name": "키리스매니저",
+    "company": "로지스테이션",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "82"
+  },
+  {
+    "userId": "yongincoop",
+    "name": "용인센트럴코업",
+    "company": "용인센트럴코업",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "243"
+  },
+  {
+    "userId": "suk0y",
+    "name": "체이슨 엠",
+    "company": "체이슨엠 (기존 사업자, 미사용)",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "241"
+  },
+  {
+    "userId": "ym-indus-3",
+    "name": "매니저",
+    "company": "영무인더스 (광주 대인동) 3차",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "239"
+  },
+  {
+    "userId": "ym-indus-2",
+    "name": "매니저",
+    "company": "영무 (광주 대인동) 2차",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "238"
+  },
+  {
+    "userId": "ym-indus",
+    "name": "111",
+    "company": "영무인더스 (음성)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "237"
+  },
+  {
+    "userId": "blueone_lx",
+    "name": "김완진 매니저",
+    "company": "블루원 루나엑스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "236"
+  },
+  {
+    "userId": "blueone_sj",
+    "name": "블루원 상주",
+    "company": "블루원 상주",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "235"
+  },
+  {
+    "userId": "blueone_kj",
+    "name": "김완진 매니저",
+    "company": "블루원 경주",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "234"
+  },
+  {
+    "userId": "yang0207",
+    "name": "김양운",
+    "company": "레전드호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "233"
+  },
+  {
+    "userId": "yang207",
+    "name": "김양운",
+    "company": "N285 호텔인사동",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "6"
+  },
+  {
+    "userId": "wetakeyy",
+    "name": "인더시티 양양",
+    "company": "인더시티 양양",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "232"
+  },
+  {
+    "userId": "bykim",
+    "name": "서울뷰 게스트하우스",
+    "company": "서울뷰 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "231"
+  },
+  {
+    "userId": "hithere2022",
+    "name": "하이데어",
+    "company": "하이데어",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "230"
+  },
+  {
+    "userId": "wetake",
+    "name": "인더시티 명동",
+    "company": "인더시티 명동",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "229"
+  },
+  {
+    "userId": "omg",
+    "name": "온다 매니지먼트 (OMG)",
+    "company": "온다 매니지먼트 (OMG)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "228"
+  },
+  {
+    "userId": "es-1004",
+    "name": "크리스탈밸리CC 골든빌리지",
+    "company": "크리스탈밸리CC 골든빌리지",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "227"
+  },
+  {
+    "userId": "kangarooland",
+    "name": "공주 캥거루온천랜드",
+    "company": "공주 캥거루온천랜드",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "226"
+  },
+  {
+    "userId": "brownsuitesbusan",
+    "name": "브라운스위트 부산",
+    "company": "브라운스위트 부산",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "225"
+  },
+  {
+    "userId": "jinsim",
+    "name": "진심하우스",
+    "company": "진심하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "224"
+  },
+  {
+    "userId": "balri0509",
+    "name": "호텔 여기어때 영덕점",
+    "company": "호텔 여기어때 영덕점",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "223"
+  },
+  {
+    "userId": "villae",
+    "name": "빌레리조트",
+    "company": "빌레리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "222"
+  },
+  {
+    "userId": "guzelkokal",
+    "name": "다니엘하우스",
+    "company": "다니엘하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "221"
+  },
+  {
+    "userId": "oceanpalade",
+    "name": "오션팔레드",
+    "company": "오션팔레드",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "220"
+  },
+  {
+    "userId": "pilgrim",
+    "name": "필그림하우스",
+    "company": "필그림하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "219"
+  },
+  {
+    "userId": "demonde",
+    "name": "호텔 드몽드",
+    "company": "호텔 드몽드",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "218"
+  },
+  {
+    "userId": "dkair",
+    "name": "디케이 DK 인천에어포트 호텔",
+    "company": "디케이 DK 인천에어포트 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "217"
+  },
+  {
+    "userId": "dkqueen",
+    "name": "인천공항 호텔 퀸",
+    "company": "인천공항 호텔 퀸",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "216"
+  },
+  {
+    "userId": "pk704pk",
+    "name": "원주 시티호텔",
+    "company": "원주 시티호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "215"
+  },
+  {
+    "userId": "newstayinn",
+    "name": "뉴스테이인",
+    "company": "뉴스테이인",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "214"
+  },
+  {
+    "userId": "villamardi",
+    "name": "단양 빌라마르디",
+    "company": "단양 빌라마르디",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "213"
+  },
+  {
+    "userId": "kpop7070",
+    "name": "케이팝레지던스 명동",
+    "company": "케이팝레지던스 명동",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "212"
+  },
+  {
+    "userId": "kpop2500",
+    "name": "케이팝호텔 서울역점",
+    "company": "케이팝호텔 서울역점",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "211"
+  },
+  {
+    "userId": "hdh",
+    "name": "한동현",
+    "company": "쏘타스위트 평택 고덕",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "338"
+  },
+  {
+    "userId": "interview",
+    "name": "호텔스테이인터뷰제주",
+    "company": "호텔스테이인터뷰제주",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "210"
+  },
+  {
+    "userId": "thegrangjm",
+    "name": "호텔 더그랑 중문",
+    "company": "호텔 더그랑 중문",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "209"
+  },
+  {
+    "userId": "scr",
+    "name": "신창렬",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "amx",
+    "name": "아모렉스 리조트",
+    "company": "아모렉스 리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "207"
+  },
+  {
+    "userId": "nijimori",
+    "name": "니지모리료칸",
+    "company": "니지모리료칸",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "206"
+  },
+  {
+    "userId": "rich",
+    "name": "제주리치호텔",
+    "company": "제주리치호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "205"
+  },
+  {
+    "userId": "hotelgite",
+    "name": "호텔 지뜨",
+    "company": "호텔 지뜨",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "204"
+  },
+  {
+    "userId": "simplestay",
+    "name": "심플스테이",
+    "company": "심플스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "203"
+  },
+  {
+    "userId": "ashleykim13",
+    "name": "원투쓰리 호스텔, 쓰리 게스트하우스",
+    "company": "원투쓰리 호스텔, 쓰리 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "202"
+  },
+  {
+    "userId": "allstayinn",
+    "name": "올스테이인",
+    "company": "올스테이인",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "201"
+  },
+  {
+    "userId": "hotelallee",
+    "name": "얼레이 호텔",
+    "company": "얼레이 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "200"
+  },
+  {
+    "userId": "bitgaraminnaju",
+    "name": "빛가람인나주호텔",
+    "company": "빛가람인나주호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "199"
+  },
+  {
+    "userId": "atene",
+    "name": "아테네",
+    "company": "아테네",
+    "level": "업체관리자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "198"
+  },
+  {
+    "userId": "thestar",
+    "name": "더스타 호텔",
+    "company": "더스타 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "197"
+  },
+  {
+    "userId": "guesthouse0610",
+    "name": "더원 게스트하우스",
+    "company": "더원 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "196"
+  },
+  {
+    "userId": "ocean_view_jeju",
+    "name": "오션뷰 제주 게스트하우스",
+    "company": "오션뷰 제주 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "195"
+  },
+  {
+    "userId": "navishotel",
+    "name": "나비스 호스텔",
+    "company": "나비스 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "194"
+  },
+  {
+    "userId": "kks0914",
+    "name": "동아호텔",
+    "company": "동아호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "193"
+  },
+  {
+    "userId": "jirisan3864142",
+    "name": "지리산풍경",
+    "company": "지리산풍경",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "192"
+  },
+  {
+    "userId": "bunk2022",
+    "name": "벙크백패커스 게스트하우스",
+    "company": "벙크백패커스 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "191"
+  },
+  {
+    "userId": "bunk.seoul",
+    "name": "벙크 게스트하우스",
+    "company": "벙크 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "190"
+  },
+  {
+    "userId": "yeonhuijang",
+    "name": "연희장",
+    "company": "연희장",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "189"
+  },
+  {
+    "userId": "oceantree",
+    "name": "오션트리",
+    "company": "오션트리",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "188"
+  },
+  {
+    "userId": "lsy",
+    "name": "이소율",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "thesweet7772",
+    "name": "부티크호텔와이티티남포",
+    "company": "부티크호텔와이티티남포",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "186"
+  },
+  {
+    "userId": "rkjandong",
+    "name": "락고재 안동 하회마을",
+    "company": "락고재 안동 하회마을",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "185"
+  },
+  {
+    "userId": "rkjseoul",
+    "name": "락고재 서울 북촌한옥마을",
+    "company": "락고재 서울 북촌한옥마을",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "184"
+  },
+  {
+    "userId": "iHousechinchin",
+    "name": "아이하우스친친",
+    "company": "아이하우스친친",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "183"
+  },
+  {
+    "userId": "dazayo",
+    "name": "다자요",
+    "company": "다자요",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "182"
+  },
+  {
+    "userId": "espace_hostel",
+    "name": "에스파스 호스텔",
+    "company": "에스파스 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "181"
+  },
+  {
+    "userId": "chuidasun",
+    "name": "취다선 리조트",
+    "company": "취다선 리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "180"
+  },
+  {
+    "userId": "philstayehwa",
+    "name": "필스테이이화부띠끄",
+    "company": "필스테이이화부띠끄",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "179"
+  },
+  {
+    "userId": "marine3133view",
+    "name": "호텔 마린뷰",
+    "company": "호텔 마린뷰",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "178"
+  },
+  {
+    "userId": "paradise1889",
+    "name": "야자호텔 광주상무점",
+    "company": "야자호텔 광주상무점",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "177"
+  },
+  {
+    "userId": "trjc",
+    "name": "태라 펜션앤글램핑",
+    "company": "태라 펜션앤글램핑",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "176"
+  },
+  {
+    "userId": "baguni",
+    "name": "바구니 호스텔",
+    "company": "바구니 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "175"
+  },
+  {
+    "userId": "thy2001",
+    "name": "인사동 미니 호텔",
+    "company": "인사동 미니 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "174"
+  },
+  {
+    "userId": "hostelharu",
+    "name": "호스텔 하루",
+    "company": "호스텔 하루",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "173"
+  },
+  {
+    "userId": "haerian77",
+    "name": "해리안 호텔",
+    "company": "해리안 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "172"
+  },
+  {
+    "userId": "mireuk",
+    "name": "미륵미륵 맥주호스텔",
+    "company": "미륵미륵 맥주호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "171"
+  },
+  {
+    "userId": "jimistay",
+    "name": "지미스테이",
+    "company": "지미스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "170"
+  },
+  {
+    "userId": "lovere",
+    "name": "사랑의수양관",
+    "company": "사랑의수양관",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "169"
+  },
+  {
+    "userId": "goodsle",
+    "name": "올리브 호스텔",
+    "company": "올리브 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "168"
+  },
+  {
+    "userId": "serpent11",
+    "name": "화웬하우스, 시스앤브로하우스, 호텔 JL",
+    "company": "화웬하우스, 호텔 JL, J5, 만소 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "167"
+  },
+  {
+    "userId": "luxguesthouse",
+    "name": "룩스 게스트하우스",
+    "company": "룩스 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "166"
+  },
+  {
+    "userId": "jirisansunlight",
+    "name": "지리산 햇살",
+    "company": "지리산 햇살",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "165"
+  },
+  {
+    "userId": "renoplus",
+    "name": "간드락 게스트하우스",
+    "company": "간드락 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "164"
+  },
+  {
+    "userId": "hyoistay",
+    "name": "효이스테이 센텀호텔, 더광안, 부산송도",
+    "company": "효이스테이 센텀호텔, 더광안, 부산송도",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "163"
+  },
+  {
+    "userId": "santafe",
+    "name": "팜파스 펜션",
+    "company": "팜파스 펜션",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "162"
+  },
+  {
+    "userId": "yeosubackpackers",
+    "name": "백패커스 인 여수 호스텔",
+    "company": "백패커스 인 여수 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "161"
+  },
+  {
+    "userId": "jejuhannah",
+    "name": "해나 게스트하우스",
+    "company": "해나 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "160"
+  },
+  {
+    "userId": "hotelhueloft",
+    "name": "호텔 휴 로프트",
+    "company": "호텔 휴 로프트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "159"
+  },
+  {
+    "userId": "rgeho",
+    "name": "알게스트하우스 서울역, 인사동",
+    "company": "알게스트하우스 서울역, 인사동, 종묘",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "158"
+  },
+  {
+    "userId": "mega",
+    "name": "메가 리조트",
+    "company": "메가 리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "157"
+  },
+  {
+    "userId": "trevihotel",
+    "name": "뜨레비 호텔",
+    "company": "뜨레비 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "156"
+  },
+  {
+    "userId": "24seoulstation",
+    "name": "24게스트하우스 서울역",
+    "company": "24게스트하우스 서울역",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "155"
+  },
+  {
+    "userId": "fillhouse",
+    "name": "필하우스",
+    "company": "필하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "154"
+  },
+  {
+    "userId": "oneminute01",
+    "name": "원미닛 게스트하우스",
+    "company": "원미닛 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "153"
+  },
+  {
+    "userId": "jeejoo723",
+    "name": "나인밸리파크",
+    "company": "나인밸리파크",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "152"
+  },
+  {
+    "userId": "firstlodgment",
+    "name": "여수 웅천 퍼스트 바이 쏘타",
+    "company": "여수 웅천 퍼스트 바이 쏘타",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "151"
+  },
+  {
+    "userId": "Terrace",
+    "name": "정길선",
+    "company": "엘모멘토 광안",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "150"
+  },
+  {
+    "userId": "jeju",
+    "name": "제주의 이유",
+    "company": "제주의 이유",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "149"
+  },
+  {
+    "userId": "simount",
+    "name": "여수 낭만바다",
+    "company": "여수 낭만바다",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "148"
+  },
+  {
+    "userId": "shimwithu",
+    "name": "쉼",
+    "company": "쉼",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "147"
+  },
+  {
+    "userId": "houndig",
+    "name": "하운드 호텔 기장 일광",
+    "company": "하운드 호텔 기장 일광",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "146"
+  },
+  {
+    "userId": "yakorea",
+    "name": "야코리아 게스트하우스",
+    "company": "야코리아 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "145"
+  },
+  {
+    "userId": "nardrum86",
+    "name": "옥연정사",
+    "company": "옥연정사",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "144"
+  },
+  {
+    "userId": "jwpark99",
+    "name": "트래블리 가평",
+    "company": "트래블리 가평",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "143"
+  },
+  {
+    "userId": "bbhongdae",
+    "name": "BB홍대",
+    "company": "BB홍대",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "141"
+  },
+  {
+    "userId": "calistar",
+    "name": "칼리스타 호텔",
+    "company": "칼리스타 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "142"
+  },
+  {
+    "userId": "viewhostel01",
+    "name": "더 뷰 호스텔",
+    "company": "더 뷰 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "140"
+  },
+  {
+    "userId": "ehwahotel",
+    "name": "이화 인 명동",
+    "company": "이화 인 명동",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "139"
+  },
+  {
+    "userId": "nohyunghotel",
+    "name": "노형호텔",
+    "company": "노형호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "138"
+  },
+  {
+    "userId": "gray193",
+    "name": "그레이193 호텔",
+    "company": "그레이193 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "137"
+  },
+  {
+    "userId": "stitcheshouse",
+    "name": "스티치스 게스트하우스",
+    "company": "스티치스 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "136"
+  },
+  {
+    "userId": "china1141",
+    "name": "대구 동성로 스타비앤비 비지니스 레지던스",
+    "company": "대구 동성로 스타비앤비 비지니스 레지던스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "135"
+  },
+  {
+    "userId": "dombe6780",
+    "name": "돔베리조트/제주캐슬",
+    "company": "돔베리조트/제주캐슬",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "134"
+  },
+  {
+    "userId": "ohevday",
+    "name": "오헤브데이 호텔",
+    "company": "오헤브데이 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "133"
+  },
+  {
+    "userId": "ST179",
+    "name": "ST179",
+    "company": "ST179",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "132"
+  },
+  {
+    "userId": "stayqym",
+    "name": "담당자",
+    "company": "스테이큐 용문",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "131"
+  },
+  {
+    "userId": "sunkyu7000",
+    "name": "코너스톤 호텔",
+    "company": "코너스톤 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "130"
+  },
+  {
+    "userId": "thewitt",
+    "name": "더위트 도고",
+    "company": "더위트 도고",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "129"
+  },
+  {
+    "userId": "artravel",
+    "name": "아트래블 명동",
+    "company": "아트래블 명동",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "128"
+  },
+  {
+    "userId": "mihojae",
+    "name": "미호재",
+    "company": "미호재",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "127"
+  },
+  {
+    "userId": "jejuinfinity",
+    "name": "인피니티",
+    "company": "인피니티",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "126"
+  },
+  {
+    "userId": "juny-house",
+    "name": "홍대준게스트하우스",
+    "company": "홍대준게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "125"
+  },
+  {
+    "userId": "wegoinnteam",
+    "name": "위고인호스텔",
+    "company": "위고인호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "124"
+  },
+  {
+    "userId": "whitelinen.house",
+    "name": "화이트 린넨 하우스",
+    "company": "화이트 린넨 하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "123"
+  },
+  {
+    "userId": "spr2020",
+    "name": "한강 레지던스 앤 게스트하우스",
+    "company": "한강 레지던스 앤 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "122"
+  },
+  {
+    "userId": "brownhotel123",
+    "name": "부산서면브라운도트호텔",
+    "company": "부산서면브라운도트호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "121"
+  },
+  {
+    "userId": "slowciti",
+    "name": "슬로시티 게스트하우스",
+    "company": "슬로시티 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "120"
+  },
+  {
+    "userId": "dalbit8877",
+    "name": "서울달빛 게스트하우스 동대문점",
+    "company": "서울달빛 게스트하우스 동대문점",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "119"
+  },
+  {
+    "userId": "pgh3459",
+    "name": "코코아 게스트하우스",
+    "company": "코코아 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "118"
+  },
+  {
+    "userId": "browndotjinju",
+    "name": "브라운도트진주",
+    "company": "브라운도트진주",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "117"
+  },
+  {
+    "userId": "bigoshowghwa",
+    "name": "빅오쇼게스트하우스",
+    "company": "빅오쇼게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "116"
+  },
+  {
+    "userId": "centralparkjeju",
+    "name": "제주 센트럴파크 레지던스",
+    "company": "제주 센트럴파크 레지던스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "115"
+  },
+  {
+    "userId": "midohostel",
+    "name": "미도호스텔",
+    "company": "미도호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "114"
+  },
+  {
+    "userId": "thecapsule",
+    "name": "더캡슐 명동",
+    "company": "더캡슐 명동",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "113"
+  },
+  {
+    "userId": "sunandmoon",
+    "name": "썬앤문리조트",
+    "company": "썬앤문리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "112"
+  },
+  {
+    "userId": "heima0225",
+    "name": "헤이마 게스트하우스",
+    "company": "헤이마 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "110"
+  },
+  {
+    "userId": "haohao012120",
+    "name": "하오 게스트하우스",
+    "company": "하오 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "111"
+  },
+  {
+    "userId": "starriahostel",
+    "name": "스타리아 호스텔",
+    "company": "스타리아 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "109"
+  },
+  {
+    "userId": "kpop",
+    "name": "케이팝 하우스",
+    "company": "케이팝 하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "108"
+  },
+  {
+    "userId": "shuber",
+    "name": "경포대 더호텔비즈니스",
+    "company": "경포대 더호텔비즈니스",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "107"
+  },
+  {
+    "userId": "thegrangsgp",
+    "name": "호텔 더그랑 서귀포",
+    "company": "호텔 더그랑 서귀포",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "106"
+  },
+  {
+    "userId": "busanspahotel",
+    "name": "남포 오션투헤븐 호텔&스파",
+    "company": "남포 오션투헤븐 호텔&스파",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "105"
+  },
+  {
+    "userId": "7stay1",
+    "name": "스테이7 명동",
+    "company": "스테이7 명동",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "104"
+  },
+  {
+    "userId": "yab",
+    "name": "YAB 게스트하우스",
+    "company": "YAB Guest House",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "103"
+  },
+  {
+    "userId": "artsjeju",
+    "name": "아르츠 스파 앤 풀빌라",
+    "company": "아르츠 스파 앤 풀빌라",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "102"
+  },
+  {
+    "userId": "theroad",
+    "name": "더로드 호스텔",
+    "company": "더로드 호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "101"
+  },
+  {
+    "userId": "newjejuhotel",
+    "name": "뉴제주 호텔",
+    "company": "뉴제주 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "100"
+  },
+  {
+    "userId": "jeonghouse",
+    "name": "정하우스",
+    "company": "정하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "99"
+  },
+  {
+    "userId": "hongdaestyle",
+    "name": "홍대스타일 게스트하우스",
+    "company": "홍대스타일 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "98"
+  },
+  {
+    "userId": "dadanorriter",
+    "name": "다다스테이 홍대",
+    "company": "다다스테이 홍대",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "97"
+  },
+  {
+    "userId": "artravelhome",
+    "name": "아트래블홈",
+    "company": "아트래블홈",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "96"
+  },
+  {
+    "userId": "arisu",
+    "name": "아리수 호텔 경주",
+    "company": "아리수 호텔 경주",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "95"
+  },
+  {
+    "userId": "behappyhaeundae",
+    "name": "엘모멘토 해운대",
+    "company": "엘모멘토 해운대",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "94"
+  },
+  {
+    "userId": "foresthealing",
+    "name": "산림힐링재단",
+    "company": "하이힐링원(산림힐링재단)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "93"
+  },
+  {
+    "userId": "mrhomesns",
+    "name": "홈즈스테이 명동",
+    "company": "홈즈스테이 명동",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "92"
+  },
+  {
+    "userId": "hamory3388",
+    "name": "하모리 게스트하우스",
+    "company": "하모리 게스트하우스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "91"
+  },
+  {
+    "userId": "philstaymdmt",
+    "name": "필스테이 명동 메트로",
+    "company": "필스테이 명동 메트로",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "90"
+  },
+  {
+    "userId": "hotelparkside",
+    "name": "파크사이드호텔",
+    "company": "파크사이드호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "89"
+  },
+  {
+    "userId": "philstaylh",
+    "name": "필스테이 명동 부티크",
+    "company": "필스테이 명동 부티크",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "88"
+  },
+  {
+    "userId": "citycore01",
+    "name": "코아루 여수",
+    "company": "코아루 여수",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "87"
+  },
+  {
+    "userId": "jinjudot",
+    "name": "브라운도트호텔 충무공점",
+    "company": "브라운도트호텔 충무공점",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "86"
+  },
+  {
+    "userId": "umi",
+    "name": "우미관",
+    "company": "우미관",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "85"
+  },
+  {
+    "userId": "kdh",
+    "name": "김달현(퇴사)",
+    "company": "오아통합테스트",
+    "level": "미승인",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "ljy",
+    "name": "이재영(퇴사)",
+    "company": "오아통합테스트",
+    "level": "미승인",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "ses",
+    "name": "심은수",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "culinan",
+    "name": "컬리넌 건대",
+    "company": "컬리넌 건대",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "84"
+  },
+  {
+    "userId": "khj",
+    "name": "김호진",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "brown",
+    "name": "브라운스위트 신촌",
+    "company": "브라운스위트 신촌",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "83"
+  },
+  {
+    "userId": "lodge",
+    "name": "로지스테이션",
+    "company": "로지스테이션",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "82"
+  },
+  {
+    "userId": "gjc",
+    "name": "호텔 공지천",
+    "company": "호텔 공지천",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "81"
+  },
+  {
+    "userId": "dada",
+    "name": "다다호텔",
+    "company": "다다호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "80"
+  },
+  {
+    "userId": "massagechair101",
+    "name": "안마의자101",
+    "company": "안마의자101",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "79"
+  },
+  {
+    "userId": "ptx",
+    "name": "PTX휴식서귀포",
+    "company": "PTX휴식서귀포",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "78"
+  },
+  {
+    "userId": "acube",
+    "name": "에이큐브호텔",
+    "company": "에이큐브호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "77"
+  },
+  {
+    "userId": "gaon",
+    "name": "가온레지던스",
+    "company": "가온레지던스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "76"
+  },
+  {
+    "userId": "staynlive",
+    "name": "스테이앤리브(호텔U5)",
+    "company": "호텔U5",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "75"
+  },
+  {
+    "userId": "naju",
+    "name": "나주센텀호텔",
+    "company": "나주시티호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "74"
+  },
+  {
+    "userId": "alwaystravel",
+    "name": "얼웨이즈트레블(더원레지던스)",
+    "company": "얼웨이즈트레블(더원레지던스)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "73"
+  },
+  {
+    "userId": "sc",
+    "name": "산청한방가족호텔",
+    "company": "산청한방가족호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "72"
+  },
+  {
+    "userId": "bitgaram",
+    "name": "나주 빛가람 호텔",
+    "company": "나주 빛가람 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "71"
+  },
+  {
+    "userId": "purple315",
+    "name": "purple315",
+    "company": "퍼플315",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "70"
+  },
+  {
+    "userId": "sns",
+    "name": "SNS(윤상필사장님)",
+    "company": "SNS",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "67"
+  },
+  {
+    "userId": "doinggood",
+    "name": "도안레고센터",
+    "company": "도안러닝센터",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "66"
+  },
+  {
+    "userId": "luo",
+    "name": "루오호텔",
+    "company": "루오호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "65"
+  },
+  {
+    "userId": "sunrise",
+    "name": "(유)다올",
+    "company": "제주썬라이즈호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "64"
+  },
+  {
+    "userId": "htv6710500",
+    "name": "테크노밸리호텔",
+    "company": "테크노밸리호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "63"
+  },
+  {
+    "userId": "bak755",
+    "name": "더호텔영종",
+    "company": "더호텔영종",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "62"
+  },
+  {
+    "userId": "hyundai",
+    "name": "현대레지던스",
+    "company": "현대레지던스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "61"
+  },
+  {
+    "userId": "whatsong",
+    "name": "와쏭",
+    "company": "와쏭",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "60"
+  },
+  {
+    "userId": "sunstay",
+    "name": "썬스테이",
+    "company": "썬스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "59"
+  },
+  {
+    "userId": "cphotelfd",
+    "name": "송도센트럴파크호텔",
+    "company": "송도센트럴파크호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "58"
+  },
+  {
+    "userId": "wlsgk3",
+    "name": "골든시티호텔",
+    "company": "골든시티호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "57"
+  },
+  {
+    "userId": "thecloud",
+    "name": "더클라우드호텔",
+    "company": "더클라우드",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "56"
+  },
+  {
+    "userId": "thefirststay",
+    "name": "더퍼스트스테이호텔",
+    "company": "더퍼스트스테이호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "55"
+  },
+  {
+    "userId": "pleadeblanc",
+    "name": "플레아드블랑",
+    "company": "플레아드블랑",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "54"
+  },
+  {
+    "userId": "mfelice",
+    "name": "엠펠리체",
+    "company": "엠펠리체",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "53"
+  },
+  {
+    "userId": "logenir054",
+    "name": "로제니아",
+    "company": "로제니아",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "52"
+  },
+  {
+    "userId": "hokc",
+    "name": "인문정신연수원",
+    "company": "인문정신연수원",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "51"
+  },
+  {
+    "userId": "bentley",
+    "name": "벤틀리호텔",
+    "company": "벤틀리호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "50"
+  },
+  {
+    "userId": "yeoubi",
+    "name": "여우비호텔",
+    "company": "여우비호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "49"
+  },
+  {
+    "userId": "foryou",
+    "name": "포유리조트",
+    "company": "포유리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "48"
+  },
+  {
+    "userId": "orient",
+    "name": "오리엔트리조트",
+    "company": "오리엔트리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "47"
+  },
+  {
+    "userId": "rivertaingj",
+    "name": "경주리버틴",
+    "company": "경주리버틴",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "46"
+  },
+  {
+    "userId": "rivertain",
+    "name": "대구리버틴",
+    "company": "대구리버틴",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "45"
+  },
+  {
+    "userId": "masterhotel",
+    "name": "대천마스타호텔",
+    "company": "대천마스타호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "44"
+  },
+  {
+    "userId": "front",
+    "name": "머드린호텔",
+    "company": "머드린호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "43"
+  },
+  {
+    "userId": "hweechan",
+    "name": "낙산비치(오소향담당자)",
+    "company": "낙산비치",
+    "level": "업체관리자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "12"
+  },
+  {
+    "userId": "luceville",
+    "name": "루체빌리조트",
+    "company": "루체빌리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "42"
+  },
+  {
+    "userId": "vabien1",
+    "name": "바비엥스위트",
+    "company": "바비엥스위트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "41"
+  },
+  {
+    "userId": "lamia",
+    "name": "라미아호텔",
+    "company": "라미아호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "40"
+  },
+  {
+    "userId": "ljhee",
+    "name": "아이체크현진",
+    "company": "아이체크현진",
+    "level": "업체담당자",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "39"
+  },
+  {
+    "userId": "ritzplaza1",
+    "name": "군산리츠프라자",
+    "company": "군산리츠프라자",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "38"
+  },
+  {
+    "userId": "rexhotel",
+    "name": "렉스호텔",
+    "company": "렉스호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "37"
+  },
+  {
+    "userId": "osaek2",
+    "name": "오색그린야드",
+    "company": "오색그린야드",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "34"
+  },
+  {
+    "userId": "ysbenikea",
+    "name": "베니키아양산호텔",
+    "company": "베니키아양산호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "36"
+  },
+  {
+    "userId": "shinanht",
+    "name": "신안비치호텔",
+    "company": "신안비치호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "35"
+  },
+  {
+    "userId": "dhhjhotel2",
+    "name": "동해현진관광호텔",
+    "company": "동해현진관광호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "33"
+  },
+  {
+    "userId": "bigstar107",
+    "name": "거성호텔",
+    "company": "거성호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "32"
+  },
+  {
+    "userId": "fontana",
+    "name": "폰타나비치호텔",
+    "company": "폰타나비치호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "31"
+  },
+  {
+    "userId": "mg8121",
+    "name": "문경관광호텔",
+    "company": "문경관광호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "30"
+  },
+  {
+    "userId": "sejong",
+    "name": "춘천세종호텔",
+    "company": "춘천세종호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "29"
+  },
+  {
+    "userId": "pvt",
+    "name": "파크뷰테라스(입주자)",
+    "company": "파크뷰테라스(입주자)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "28"
+  },
+  {
+    "userId": "pvterrace",
+    "name": "파크뷰테라스호텔",
+    "company": "파크뷰테라스호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "27"
+  },
+  {
+    "userId": "wegostay",
+    "name": "인터내셔널오션파크나인",
+    "company": "인터내셔널 오션파크 나인 (구: 위코스테이영종)",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "26"
+  },
+  {
+    "userId": "hotelciel",
+    "name": "호텔씨엘",
+    "company": "호텔씨엘",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "25"
+  },
+  {
+    "userId": "shangria",
+    "name": "샹그리아비치호텔",
+    "company": "샹그리아비치호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "24"
+  },
+  {
+    "userId": "savoy",
+    "name": "사보이호텔",
+    "company": "사보이호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "23"
+  },
+  {
+    "userId": "paradehotel",
+    "name": "주식회사 영무파라드호텔1",
+    "company": "해운대영무파라드",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "22"
+  },
+  {
+    "userId": "duckcheon",
+    "name": "덕천연수원",
+    "company": "덕천연수원",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "21"
+  },
+  {
+    "userId": "grand",
+    "name": "부산그랜드모먼트유스호스텔",
+    "company": "부산그랜드모먼트유스호스텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "20"
+  },
+  {
+    "userId": "wooin7745",
+    "name": "호텔우인",
+    "company": "호텔우인",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "19"
+  },
+  {
+    "userId": "vivace",
+    "name": "비바체리조트",
+    "company": "비바체리조트",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "18"
+  },
+  {
+    "userId": "behappy",
+    "name": "엘모멘토 오시리아",
+    "company": "엘모멘토 오시리아",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "17"
+  },
+  {
+    "userId": "sotayeosu",
+    "name": "쏘타컬렉션 더 여수",
+    "company": "쏘타컬렉션 더 여수",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "16"
+  },
+  {
+    "userId": "inr0309",
+    "name": "평택코업스테이",
+    "company": "평택코업스테이",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "15"
+  },
+  {
+    "userId": "residence",
+    "name": "동대문레지던스(류지현)",
+    "company": "동대문레지던스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "14"
+  },
+  {
+    "userId": "thenaksan",
+    "name": "더낙산 호텔",
+    "company": "더낙산 호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "13"
+  },
+  {
+    "userId": "naksan",
+    "name": "낙산비치",
+    "company": "낙산비치",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "12"
+  },
+  {
+    "userId": "base9900",
+    "name": "더베이스호텔",
+    "company": "더베이스호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "11"
+  },
+  {
+    "userId": "themark",
+    "name": "더마크해운대점",
+    "company": "더마크호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "10"
+  },
+  {
+    "userId": "ymcayh",
+    "name": "고양ymca",
+    "company": "고양 YMCA",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "9"
+  },
+  {
+    "userId": "sok",
+    "name": "속리산 레이크힐스",
+    "company": "속리산 레이크힐스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "8"
+  },
+  {
+    "userId": "lsj",
+    "name": "이승준",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "mcr",
+    "name": "민초롱",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "yg",
+    "name": "영종 웨스턴 그레이스",
+    "company": "웨스턴그레이스",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "7"
+  },
+  {
+    "userId": "insa",
+    "name": "N285 호텔인사동",
+    "company": "N285 호텔인사동",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "6"
+  },
+  {
+    "userId": "conno",
+    "name": "더코노셔호텔",
+    "company": "더코노셔호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "5"
+  },
+  {
+    "userId": "istia",
+    "name": "춘천이스티아",
+    "company": "춘천이스티아",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "4"
+  },
+  {
+    "userId": "stayq",
+    "name": "스테이큐",
+    "company": "스테이큐",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "3"
+  },
+  {
+    "userId": "lemong",
+    "name": "르몽호텔",
+    "company": "르몽호텔",
+    "level": "업체담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "2"
+  },
+  {
+    "userId": "onda",
+    "name": "온다",
+    "company": "ONDA",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "187"
+  },
+  {
+    "userId": "pce",
+    "name": "박초은(퇴사)",
+    "company": "오아통합테스트",
+    "level": "미승인",
+    "status": "미사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "mjk",
+    "name": "문정길",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "hjh",
+    "name": "한재희",
+    "company": "(주)오아시스스토리",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "208"
+  },
+  {
+    "userId": "kdy",
+    "name": "권다예",
+    "company": "(주)오아시스스토리",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "208"
+  },
+  {
+    "userId": "pjh",
+    "name": "박지혜",
+    "company": "오아통합테스트",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "1"
+  },
+  {
+    "userId": "sjh",
+    "name": "소재환",
+    "company": "(주)오아시스스토리",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "208"
+  },
+  {
+    "userId": "sdy",
+    "name": "신두영",
+    "company": "(주)오아시스스토리",
+    "level": "담당자",
+    "status": "사용",
+    "email": "",
+    "phone": "",
+    "compKey": "208"
+  }
+]

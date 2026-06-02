@@ -27,6 +27,8 @@
     "db:migrate-faq-help": "tsx db/migrate-faq-help.ts",
     "db:migrate-faq-sheet": "tsx db/migrate-faq-sheet.ts",
     "db:migrate-as-hotels": "tsx db/migrate-as-hotels.ts",
+    "db:scrape-as-users": "tsx db/scrape-as-users.ts",
+    "db:migrate-as-users": "tsx db/migrate-as-users.ts",
     "db:normalize-hotel-phones": "tsx db/normalize-hotel-phones.ts",
     "db:backfill-embeddings": "tsx db/backfill-embeddings.ts",
     "db:backfill-faq-embeddings": "tsx db/backfill-faq-embeddings.ts",
