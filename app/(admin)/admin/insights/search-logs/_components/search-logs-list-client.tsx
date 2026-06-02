@@ -10,7 +10,7 @@ import {
   ThumbsUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { formatDateTimeKst } from '@/lib/business-hours/format';
+import { formatDateTimeSecKst } from '@/lib/business-hours/format';
 import type { HelpfulTally, SearchLogRow } from '@/lib/services/search-logs';
 
 /** 도착 페이지(아티클/FAQ) 하단 도움됐어요/아니예요 반응표. */
@@ -93,7 +93,7 @@ export function SearchLogsListClient({
               <tr key={r.id}>
                 <td className="px-3 py-2 font-medium">{r.query}</td>
                 <td className="px-3 py-2 text-xs text-slate-500">
-                  {formatDateTimeKst(r.createdAt)}
+                  {formatDateTimeSecKst(r.createdAt)}
                 </td>
                 <td className="px-3 py-2">
                   <Helpful tally={r.helpful} />
@@ -119,7 +119,7 @@ export function SearchLogsListClient({
               <Helpful tally={r.helpful} />
             </div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-              <span>{formatDateTimeKst(r.createdAt)}</span>
+              <span>{formatDateTimeSecKst(r.createdAt)}</span>
             </div>
             <div className="text-xs">
               <span className="text-slate-400">유출 · </span>

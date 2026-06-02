@@ -78,3 +78,17 @@ export function formatDateTimeKst(d: Date): string {
     hour12: false,
   });
 }
+
+/** KST 기준 날짜+시각 한국어 포맷 (초 포함, "6월 1일 (월) 10:00:05"). */
+export function formatDateTimeSecKst(d: Date): string {
+  return d.toLocaleString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+}
