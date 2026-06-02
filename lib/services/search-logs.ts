@@ -382,8 +382,6 @@ export type SearchLogRow = {
   id: string;
   query: string;
   createdAt: Date;
-  /** 같은 세션 내 다음 활동까지의 간격(초). 세션키 없거나 단발이면 null. */
-  dwellSeconds: number | null;
   /** 클릭해 도착한 아티클/FAQ 하단 반응표 집계. 반응표 없는 대상/미클릭이면 null. */
   helpful: HelpfulTally | null;
   /** 유출(이동) 페이지의 정식 URL — 클릭/접수 결과. 없으면 null(이탈/삭제). */
@@ -482,8 +480,6 @@ function resolveOutflow(
 
 /**
  * 검색 이력 목록 — 기간 필터 + 페이징.
- * 세션 체류시간은 같은 session_key 내 다음 활동까지의 간격을 LEAD 윈도우로 산출.
- * (윈도우 함수는 WHERE 통과 전체 집합에 대해 LIMIT 이전에 평가되므로 페이지 경계와 무관하게 정확.)
  */
 export async function listSearchLogs(input: {
   period: SearchLogPeriod;
@@ -509,19 +505,6 @@ export async function listSearchLogs(input: {
       eq(searchLogs.isActive, true),
     );
 
-    // 세션 내 다음 활동까지 간격(초). 세션키 없으면 null(단발 취급).
-    const dwellExpr = sql<number | null>`case
-      when ${searchLogs.sessionKey} is null then null
-      else extract(epoch from (
-        coalesce(
-          lead(${searchLogs.createdAt}) over (
-            partition by ${searchLogs.sessionKey} order by ${searchLogs.createdAt}
-          ),
-          ${searchLogs.updatedAt}
-        ) - ${searchLogs.createdAt}
-      ))
-    end`;
-
     const [rows, statRows] = await Promise.all([
       db
         .select({
@@ -534,7 +517,6 @@ export async function listSearchLogs(input: {
           ledToTicket: searchLogs.ledToTicket,
           zeroResult: searchLogs.zeroResult,
           productCode: searchLogs.productCode,
-          dwellSeconds: dwellExpr,
         })
         .from(searchLogs)
         .where(where)
@@ -647,8 +629,6 @@ export async function listSearchLogs(input: {
     const s = statRows[0];
     const items: SearchLogRow[] = rows.map((r) => {
       const outflow = resolveOutflow(r, outflowMaps);
-      const dwell =
-        r.dwellSeconds == null ? null : Math.round(Number(r.dwellSeconds));
       let helpful: HelpfulTally | null = null;
       if (r.clicked && r.clickedRef) {
         if (r.clickedKind === 'help') {
@@ -663,7 +643,6 @@ export async function listSearchLogs(input: {
         id: r.id,
         query: r.query,
         createdAt: r.createdAt,
-        dwellSeconds: dwell != null && dwell >= 0 ? dwell : null,
         helpful,
         outflowUrl: outflow.url,
         outflowLabel: outflow.label,

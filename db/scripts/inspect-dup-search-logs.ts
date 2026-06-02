@@ -1,6 +1,5 @@
 /**
  * 임시 진단 스크립트 — 검색로그 중복 행 점검.
- * 같은 query가 같은 초(second) 안에 2건 이상 들어왔는지 본다.
  */
 import { config } from 'dotenv';
 config({ path: '.env.local' });
@@ -13,40 +12,34 @@ async function main() {
     console.log('DB 미설정');
     return;
   }
-  const dups = await db.execute(sql`
+
+  // 서버(now) 시각
+  const nowRes = await db.execute(sql`select now() as now`);
+  console.log('DB now():', ((nowRes as any).rows ?? nowRes)[0].now);
+
+  // 오늘 도어락/체크인 등 최근 행 raw (ms + session_key)
+  const raw = await db.execute(sql`
     select
-      to_char(date_trunc('second', created_at), 'MM-DD HH24:MI:SS') as sec,
+      to_char(created_at, 'MM-DD HH24:MI:SS.MS') as ts,
       query,
       session_key,
-      count(*) as n,
-      array_agg(extract(milliseconds from created_at)::int order by created_at) as ms
+      product_code,
+      total_results
     from search_logs
-    where created_at > now() - interval '3 days'
-    group by date_trunc('second', created_at), query, session_key
-    having count(*) > 1
-    order by date_trunc('second', created_at) desc
+    where created_at > now() - interval '12 hours'
+    order by created_at desc
     limit 40
   `);
-  const rows = (dups as any).rows ?? dups;
-  console.log('=== 같은 초에 2건 이상 (중복 의심) ===');
+  console.log('=== 최근 12시간 raw ===');
   console.table(
-    rows.map((r: any) => ({
-      sec: r.sec,
+    ((raw as any).rows ?? raw).map((r: any) => ({
+      ts: r.ts,
       query: r.query,
       session: r.session_key ?? '(null)',
-      n: Number(r.n),
-      ms: Array.isArray(r.ms) ? r.ms.join('/') : r.ms,
+      product: r.product_code ?? '-',
+      n: r.total_results,
     })),
   );
-
-  const t = await db.execute(sql`
-    select count(*)::int as total,
-           count(distinct (date_trunc('second', created_at), query))::int as distinct_sec_query
-    from search_logs
-    where created_at > now() - interval '3 days'
-  `);
-  const tr = ((t as any).rows ?? t)[0];
-  console.log('최근 3일 총 로그:', tr.total, '/ (초+query) 유니크:', tr.distinct_sec_query);
 }
 
 main()

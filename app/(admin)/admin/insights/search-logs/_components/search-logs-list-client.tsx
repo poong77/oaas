@@ -13,18 +13,6 @@ import { Button } from '@/components/ui/button';
 import { formatDateTimeKst } from '@/lib/business-hours/format';
 import type { HelpfulTally, SearchLogRow } from '@/lib/services/search-logs';
 
-/** 초 → "1시간 2분" / "3분 12초" / "8초" / "—". */
-function formatDwell(sec: number | null): string {
-  if (sec == null) return '—';
-  if (sec <= 0) return '0초';
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  if (h > 0) return `${h}시간 ${m}분`;
-  if (m > 0) return `${m}분 ${s}초`;
-  return `${s}초`;
-}
-
 /** 도착 페이지(아티클/FAQ) 하단 도움됐어요/아니예요 반응표. */
 function Helpful({ tally }: { tally: HelpfulTally | null }) {
   if (!tally) return <span className="text-xs text-slate-400">—</span>;
@@ -96,7 +84,6 @@ export function SearchLogsListClient({
             <tr>
               <th className="px-3 py-2 text-left">유입 키워드</th>
               <th className="px-3 py-2 text-left">유입일시</th>
-              <th className="px-3 py-2 text-right">세션 체류</th>
               <th className="px-3 py-2 text-left">도움됨 (반응표)</th>
               <th className="px-3 py-2 text-left">유출 채널 (도착 페이지)</th>
             </tr>
@@ -107,9 +94,6 @@ export function SearchLogsListClient({
                 <td className="px-3 py-2 font-medium">{r.query}</td>
                 <td className="px-3 py-2 text-xs text-slate-500">
                   {formatDateTimeKst(r.createdAt)}
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums text-slate-600 dark:text-slate-300">
-                  {formatDwell(r.dwellSeconds)}
                 </td>
                 <td className="px-3 py-2">
                   <Helpful tally={r.helpful} />
@@ -136,7 +120,6 @@ export function SearchLogsListClient({
             </div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
               <span>{formatDateTimeKst(r.createdAt)}</span>
-              <span>체류 {formatDwell(r.dwellSeconds)}</span>
             </div>
             <div className="text-xs">
               <span className="text-slate-400">유출 · </span>
