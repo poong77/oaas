@@ -1,6 +1,7 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Plus, Users as UsersIcon } from 'lucide-react';
-import { listUsers } from '@/lib/services/users';
+import { Plus, Users as UsersIcon, UserCheck, UserX } from 'lucide-react';
+import { listUsers, getUserCounts } from '@/lib/services/users';
 import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,21 +38,26 @@ export default async function AdminUsersPage({
         ? false
         : true;
 
-  const { items, total, pageSize } = await listUsers({
-    q: params.q,
-    role: params.role,
-    isActive,
-    sortBy: params.sortBy ?? 'created_at',
-    sortOrder: params.sortOrder ?? 'desc',
-    page,
-  });
+  const [{ items, total, pageSize }, counts] = await Promise.all([
+    listUsers({
+      q: params.q,
+      role: params.role,
+      isActive,
+      sortBy: params.sortBy ?? 'created_at',
+      sortOrder: params.sortOrder ?? 'desc',
+      page,
+    }),
+    getUserCounts(),
+  ]);
+
+  const currentStatus = params.status ?? 'active';
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
         title="사용자 관리"
         guideAnchor="accounts"
-        description={`전체 ${total}명 (${pageSize}명/페이지). 호텔리어·매니저·어드민 계정을 통합 관리합니다.`}
+        description="호텔리어·매니저·어드민 계정을 통합 관리합니다."
         actions={
           <Button asChild>
             <Link href="/admin/users/new">
@@ -61,16 +67,37 @@ export default async function AdminUsersPage({
         }
       />
 
-      <UsersFilters initial={params} />
-
-      {/* 요약 통계 */}
+      {/* 요약 통계 — 전역 카운트(필터 무관). 클릭 시 상태 필터 적용 */}
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="총 사용자" value={total} />
-        <StatCard label="활성" value={items.filter((u) => u.isActive).length} tone="success" />
-        <StatCard label="비활성" value={items.filter((u) => !u.isActive).length} tone="slate" />
+        <StatCard
+          label="총 사용자"
+          value={counts.total}
+          icon={<UsersIcon className="h-5 w-5" />}
+          tone="slate"
+          href="/admin/users?status=all"
+          active={currentStatus === 'all'}
+        />
+        <StatCard
+          label="활성"
+          value={counts.active}
+          icon={<UserCheck className="h-5 w-5" />}
+          tone="success"
+          href="/admin/users?status=active"
+          active={currentStatus === 'active'}
+        />
+        <StatCard
+          label="비활성"
+          value={counts.inactive}
+          icon={<UserX className="h-5 w-5" />}
+          tone="muted"
+          href="/admin/users?status=inactive"
+          active={currentStatus === 'inactive'}
+        />
       </div>
 
-      <Card>
+      <UsersFilters initial={params} resultCount={total} />
+
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           {items.length === 0 ? (
             <div className="p-6">
@@ -102,22 +129,59 @@ export default async function AdminUsersPage({
 function StatCard({
   label,
   value,
-  tone = 'slate',
+  icon,
+  tone,
+  href,
+  active,
 }: {
   label: string;
   value: number;
-  tone?: 'slate' | 'success';
+  icon: ReactNode;
+  tone: 'slate' | 'success' | 'muted';
+  href: string;
+  active: boolean;
 }) {
-  const valueClass =
-    tone === 'success'
-      ? 'text-emerald-600 dark:text-emerald-400'
-      : 'text-slate-900 dark:text-slate-100';
+  const toneMap = {
+    slate: {
+      icon: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+      value: 'text-slate-900 dark:text-slate-100',
+      ring: 'ring-slate-300 dark:ring-slate-600',
+    },
+    success: {
+      icon: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300',
+      value: 'text-emerald-600 dark:text-emerald-400',
+      ring: 'ring-emerald-400 dark:ring-emerald-600',
+    },
+    muted: {
+      icon: 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500',
+      value: 'text-slate-500 dark:text-slate-400',
+      ring: 'ring-slate-300 dark:ring-slate-600',
+    },
+  }[tone];
+
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-1 p-4">
-        <span className="text-xs font-medium text-slate-500">{label}</span>
-        <span className={`text-2xl font-bold ${valueClass}`}>{value}</span>
-      </CardContent>
-    </Card>
+    <Link
+      href={href}
+      aria-label={`${label} ${value}명 보기`}
+      className={`group flex items-center gap-3 rounded-lg border bg-white p-4 transition-all hover:shadow-sm dark:bg-slate-900 ${
+        active
+          ? `border-transparent ring-2 ${toneMap.ring}`
+          : 'border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700'
+      }`}
+    >
+      <span
+        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${toneMap.icon}`}
+      >
+        {icon}
+      </span>
+      <span className="flex flex-col">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          {label}
+        </span>
+        <span className={`text-2xl font-bold leading-tight ${toneMap.value}`}>
+          {value.toLocaleString()}
+        </span>
+      </span>
+    </Link>
   );
 }

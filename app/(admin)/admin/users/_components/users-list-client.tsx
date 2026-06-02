@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, ChevronRight as RowChevron } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDateKst } from '@/lib/business-hours/format';
@@ -48,7 +48,7 @@ export function UsersListClient({
               <th className="px-4 py-2.5 text-left font-medium">연락처</th>
               <th className="px-4 py-2.5 text-left font-medium">활동</th>
               <th className="px-4 py-2.5 text-left font-medium">상태</th>
-              <th className="w-8 px-2 py-2.5" aria-hidden />
+              <th className="w-10 px-2 py-2.5" aria-hidden />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -142,9 +142,12 @@ export function UsersListClient({
                     <StatusDot active={u.isActive} />
                   </td>
 
-                  {/* 행 이동 표시 */}
-                  <td className="w-8 px-2 py-2.5 text-right">
-                    <RowChevron className="ml-auto h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-500 dark:text-slate-600" />
+                  {/* 수정 */}
+                  <td className="w-10 px-2 py-2.5 text-right">
+                    <Pencil
+                      aria-hidden
+                      className="ml-auto h-3.5 w-3.5 text-slate-300 transition-colors group-hover:text-brand-600 dark:text-slate-600 dark:group-hover:text-brand-400"
+                    />
                   </td>
                 </tr>
               );

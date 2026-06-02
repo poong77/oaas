@@ -130,6 +130,37 @@ export async function listUsers(
   }
 }
 
+/**
+ * 전역 사용자 카운트 (필터 무관). 상단 요약 카드용.
+ * - total/active/inactive 를 단일 group-by 쿼리로 집계.
+ */
+export async function getUserCounts(): Promise<{
+  total: number;
+  active: number;
+  inactive: number;
+}> {
+  if (!db) return { total: 0, active: 0, inactive: 0 };
+  try {
+    const rows = await db
+      .select({
+        isActive: users.isActive,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(users)
+      .groupBy(users.isActive);
+    let active = 0;
+    let inactive = 0;
+    for (const r of rows) {
+      if (r.isActive) active = Number(r.count);
+      else inactive = Number(r.count);
+    }
+    return { total: active + inactive, active, inactive };
+  } catch (err) {
+    console.error('[users.getUserCounts] 실패:', err);
+    return { total: 0, active: 0, inactive: 0 };
+  }
+}
+
 export async function getUserById(
   id: string,
 ): Promise<(User & { hotelName: string | null }) | null> {
