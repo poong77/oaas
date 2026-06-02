@@ -10,6 +10,7 @@
 import {
   type AnyPgColumn,
   boolean,
+  index,
   pgTable,
   text,
   timestamp,
@@ -53,7 +54,9 @@ export const users = pgTable(
     }),
   },
   (table) => [
-    uniqueIndex('users_email_uq').on(table.email),
+    // 이메일 중복 허용 (AS 이관: 한 운영자가 여러 호텔/계정에서 동일 대표이메일 사용).
+    // 로그인 식별은 username 우선 + 이메일 보조(첫 매칭). 비유니크 인덱스로 조회 성능만 유지.
+    index('users_email_idx').on(table.email),
     uniqueIndex('users_sso_subject_uq').on(table.ssoSubject),
     uniqueIndex('users_username_uq').on(table.username),
   ],
