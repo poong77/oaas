@@ -20,7 +20,6 @@ import { withAuthorizedAction } from '@/lib/permissions';
 import { logActivity } from '@/lib/audit';
 import { normalizeKoreanPhone } from '@/lib/text/phone';
 import {
-  emailExists,
   generateTempPassword,
   hashPassword,
 } from '@/lib/services/users';
@@ -39,9 +38,27 @@ type ActionResult<T = unknown> =
 const phoneRegex = /^[0-9\-+\s()]{7,20}$/;
 const RoleEnum = z.enum(['hotelier', 'manager', 'admin']);
 
+/** 아이디 허용 문자: 영문/숫자/. _ - @ + (이메일형 아이디 허용) */
+const usernameRegex = /^[A-Za-z0-9._@+-]{2,100}$/;
+
 const CreateUserSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요').max(100),
-  email: z.string().email('올바른 이메일이 아닙니다').max(200),
+  username: z
+    .string()
+    .trim()
+    .min(2, '아이디는 2자 이상이어야 합니다')
+    .max(100)
+    .regex(usernameRegex, '영문·숫자와 . _ - @ 만 사용 가능합니다'),
+  // 이메일은 선택값. 미입력 시 아이디 기반으로 자동 생성(@as.local).
+  email: z
+    .string()
+    .max(200)
+    .optional()
+    .or(z.literal(''))
+    .refine(
+      (v) => !v || z.string().email().safeParse(v).success,
+      '올바른 이메일이 아닙니다',
+    ),
   title: z.string().max(100).optional().or(z.literal('')),
   phone: z
     .string()
@@ -62,7 +79,8 @@ export const createUserAdminAction = withAuthorizedAction<
 
   const parsed = CreateUserSchema.safeParse({
     name: formData.get('name'),
-    email: formData.get('email'),
+    username: formData.get('username'),
+    email: formData.get('email') ?? '',
     title: formData.get('title') ?? '',
     phone: formData.get('phone') ?? '',
     role: formData.get('role'),
@@ -88,13 +106,30 @@ export const createUserAdminAction = withAuthorizedAction<
     };
   }
 
-  if (await emailExists(parsed.data.email)) {
+  const username = parsed.data.username.trim();
+
+  // 아이디 중복 확인 (username 은 유니크)
+  const dupe = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.username, username))
+    .limit(1);
+  if (dupe.length > 0) {
     return {
       ok: false,
-      error: '이미 사용 중인 이메일입니다',
-      fields: { email: '이미 사용 중인 이메일입니다' },
+      error: '이미 사용 중인 아이디입니다',
+      fields: { username: '이미 사용 중인 아이디입니다' },
     };
   }
+
+  // 이메일 결정: 입력값(실이메일) 우선 → 없으면 아이디 기반.
+  const rawEmail = (parsed.data.email ?? '').trim().toLowerCase();
+  const hasRealEmail = !!rawEmail;
+  const email = hasRealEmail
+    ? rawEmail
+    : username.includes('@')
+      ? username.toLowerCase()
+      : `${username.toLowerCase()}@as.local`;
 
   try {
     const tempPassword = generateTempPassword();
@@ -104,7 +139,8 @@ export const createUserAdminAction = withAuthorizedAction<
       .insert(users)
       .values({
         name: parsed.data.name,
-        email: parsed.data.email,
+        username,
+        email,
         title: parsed.data.title || null,
         phone: parsed.data.phone || null,
         passwordHash,
@@ -123,20 +159,25 @@ export const createUserAdminAction = withAuthorizedAction<
       payload: { role: parsed.data.role, hotelId: parsed.data.hotelId || null },
     });
 
+    // 실이메일이 있을 때만 초대 메일 발송 (더미 @as.local 은 발송 안 함)
     const loginUrl = (env.NEXTAUTH_URL || 'http://localhost:3000') + '/login';
     const tpl = buildAccountInvite({
       name: parsed.data.name,
-      email: parsed.data.email,
+      email,
       tempPassword,
       loginUrl,
       invitedByName: ctx.user.name ?? undefined,
     });
-    const emailResult = await sendEmail({
-      to: parsed.data.email,
-      subject: tpl.subject,
-      html: tpl.html,
-      text: tpl.text,
-    });
+    let emailSent = false;
+    if (hasRealEmail) {
+      const r = await sendEmail({
+        to: email,
+        subject: tpl.subject,
+        html: tpl.html,
+        text: tpl.text,
+      });
+      emailSent = r.ok;
+    }
     const smsResult = parsed.data.phone
       ? await sendSms({ to: parsed.data.phone, text: tpl.sms })
       : { ok: false as const, error: 'no phone' };
@@ -146,7 +187,7 @@ export const createUserAdminAction = withAuthorizedAction<
       ok: true,
       data: {
         tempPassword,
-        emailSent: emailResult.ok,
+        emailSent,
         smsSent: smsResult.ok,
       },
     };
@@ -447,6 +488,77 @@ export const upsertHotelAdminAction = withAuthorizedAction<
   } catch (err) {
     console.error('[upsertHotelAdminAction] 실패:', err);
     return { ok: false, error: '호텔 저장 중 오류가 발생했습니다' };
+  }
+});
+
+// 사용자 생성 화면의 '신규 호텔' 팝업 — 호텔명(필수) + 기타 정보로 즉시 생성하고 id 반환.
+const QuickHotelSchema = z.object({
+  name: z.string().min(1, '호텔명을 입력해주세요').max(200),
+  phone: z
+    .string()
+    .max(30)
+    .optional()
+    .or(z.literal(''))
+    .refine((v) => !v || phoneRegex.test(v), '올바른 연락처 형식이 아닙니다'),
+  address: z.string().max(500).optional().or(z.literal('')),
+  businessNo: z.string().max(30).optional().or(z.literal('')),
+  managerName: z.string().max(100).optional().or(z.literal('')),
+  oaPmsHotelId: z.string().max(100).optional().or(z.literal('')),
+});
+
+export const quickCreateHotelAction = withAuthorizedAction<
+  FormData,
+  ActionResult<{ id: string; name: string }>
+>(['admin'], async (ctx, formData) => {
+  if (!db) return { ok: false, error: 'DB 미연결' };
+
+  const parsed = QuickHotelSchema.safeParse({
+    name: formData.get('name'),
+    phone: formData.get('phone') ?? '',
+    address: formData.get('address') ?? '',
+    businessNo: formData.get('businessNo') ?? '',
+    managerName: formData.get('managerName') ?? '',
+    oaPmsHotelId: formData.get('oaPmsHotelId') ?? '',
+  });
+  if (!parsed.success) {
+    const flat = parsed.error.flatten();
+    return {
+      ok: false,
+      error: '입력값을 확인해주세요',
+      fields: Object.fromEntries(
+        Object.entries(flat.fieldErrors).map(([k, v]) => [k, v?.[0] ?? '']),
+      ),
+    };
+  }
+
+  const normalizedPhone =
+    normalizeKoreanPhone(parsed.data.phone) ?? (parsed.data.phone || null);
+
+  try {
+    const [inserted] = await db
+      .insert(hotels)
+      .values({
+        name: parsed.data.name.trim(),
+        phone: normalizedPhone,
+        address: parsed.data.address || null,
+        businessNo: parsed.data.businessNo || null,
+        managerName: parsed.data.managerName || null,
+        oaPmsHotelId: parsed.data.oaPmsHotelId || null,
+      })
+      .returning({ id: hotels.id, name: hotels.name });
+
+    logActivity({
+      userId: ctx.user.id,
+      action: 'hotel.create',
+      targetType: 'hotel',
+      targetId: inserted?.id,
+    });
+    revalidatePath('/admin/users');
+    revalidatePath('/admin/hotels');
+    return { ok: true, data: { id: inserted!.id, name: inserted!.name } };
+  } catch (err) {
+    console.error('[quickCreateHotelAction] 실패:', err);
+    return { ok: false, error: '호텔 생성 중 오류가 발생했습니다' };
   }
 });
 
