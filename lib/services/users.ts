@@ -247,19 +247,13 @@ export async function listHotels(params: ListHotelsParams = {}): Promise<{
   }
   if (params.q && params.q.trim()) {
     const raw = params.q.trim();
-    const pattern = `%${raw}%`;
-    // 업체명은 띄어쓰기·하이픈·점을 무시하고 매칭 ("더페이즈" → "더 페이즈 호텔")
+    // 호텔명 검색 — 띄어쓰기·하이픈·점을 무시하고 매칭 ("더페이즈" → "더 페이즈 호텔")
     const collapsed = collapseSpacing(raw);
     const nameMatch =
       collapsed.length > 0
         ? sql`translate(lower(${hotels.name}), ' -_.·', '') LIKE ${`%${collapsed}%`}`
-        : ilike(hotels.name, pattern);
-    const search = or(
-      nameMatch,
-      ilike(hotels.oaPmsHotelId, pattern),
-      ilike(hotels.managerName, pattern),
-    );
-    if (search) conditions.push(search);
+        : ilike(hotels.name, `%${raw}%`);
+    conditions.push(nameMatch);
   }
 
   const whereExpr =

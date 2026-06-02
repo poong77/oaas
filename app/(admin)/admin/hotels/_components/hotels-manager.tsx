@@ -116,7 +116,7 @@ export function HotelsManager({
             className="relative sm:col-span-2"
           >
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="호텔명·OA PMS ID·담당자 검색" className="pl-8 pr-8" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="호텔명 검색 (띄어쓰기 무시)" className="pl-8 pr-8" />
             {q && (
               <button type="button" onClick={() => { setQ(''); applyFilters({ q: undefined }); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" aria-label="지우기">
                 <X className="h-4 w-4" />
@@ -146,8 +146,6 @@ export function HotelsManager({
             <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
               <tr>
                 <th className="px-3 py-2 text-left">호텔명</th>
-                <th className="px-3 py-2 text-left">OA PMS ID</th>
-                <th className="px-3 py-2 text-left">담당자</th>
                 <th className="px-3 py-2 text-left">연락처</th>
                 <th className="px-3 py-2 text-left">상태</th>
                 <th className="px-3 py-2 text-right">작업</th>
@@ -157,10 +155,6 @@ export function HotelsManager({
               {initialHotels.map((h) => (
                 <tr key={h.id} className={h.isActive ? '' : 'opacity-60'}>
                   <td className="px-3 py-2 font-medium">{h.name}</td>
-                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
-                    {h.oaPmsHotelId ?? <span className="text-slate-400">미매핑</span>}
-                  </td>
-                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{h.managerName ?? '-'}</td>
                   <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{h.phone ?? '-'}</td>
                   <td className="px-3 py-2">
                     {h.isActive ? <Badge tone="success">활성</Badge> : <Badge tone="slate">비활성</Badge>}
@@ -187,14 +181,10 @@ export function HotelsManager({
           {initialHotels.map((h) => (
             <div key={h.id} className={`rounded-md border border-slate-200 p-3 dark:border-slate-800 ${h.isActive ? '' : 'opacity-60'}`}>
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="text-sm font-semibold">{h.name}</div>
-                  <div className="text-xs text-slate-500">{h.oaPmsHotelId ?? '미매핑'}</div>
-                </div>
+                <div className="text-sm font-semibold">{h.name}</div>
                 {h.isActive ? <Badge tone="success">활성</Badge> : <Badge tone="slate">비활성</Badge>}
               </div>
               <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
-                <div>담당: {h.managerName ?? '-'}</div>
                 <div>전화: {h.phone ?? '-'}</div>
               </div>
               <div className="mt-2 flex gap-1">
