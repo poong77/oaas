@@ -10,6 +10,7 @@ import { and, asc, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
 import { db } from '@/db';
+import { collapseSpacing } from '@/lib/text/normalize';
 import {
   hotels,
   hotelSolutionLinks,
@@ -244,9 +245,16 @@ export async function listHotels(params: ListHotelsParams = {}): Promise<{
     conditions.push(eq(hotels.isActive, params.isActive ?? true));
   }
   if (params.q && params.q.trim()) {
-    const pattern = `%${params.q.trim()}%`;
+    const raw = params.q.trim();
+    const pattern = `%${raw}%`;
+    // 업체명은 띄어쓰기·하이픈·점을 무시하고 매칭 ("더페이즈" → "더 페이즈 호텔")
+    const collapsed = collapseSpacing(raw);
+    const nameMatch =
+      collapsed.length > 0
+        ? sql`translate(lower(${hotels.name}), ' -_.·', '') LIKE ${`%${collapsed}%`}`
+        : ilike(hotels.name, pattern);
     const search = or(
-      ilike(hotels.name, pattern),
+      nameMatch,
       ilike(hotels.oaPmsHotelId, pattern),
       ilike(hotels.managerName, pattern),
     );

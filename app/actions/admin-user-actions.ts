@@ -18,6 +18,7 @@ import { db } from '@/db';
 import { hotels, users, type UserRole } from '@/db/schema';
 import { withAuthorizedAction } from '@/lib/permissions';
 import { logActivity } from '@/lib/audit';
+import { normalizeKoreanPhone } from '@/lib/text/phone';
 import {
   emailExists,
   generateTempPassword,
@@ -397,6 +398,10 @@ export const upsertHotelAdminAction = withAuthorizedAction<
     };
   }
 
+  // 연락처는 한국 번호 표기로 통일. 전화번호가 아니면(빈값/이메일 등) 원본 유지.
+  const normalizedPhone =
+    normalizeKoreanPhone(parsed.data.phone) ?? (parsed.data.phone || null);
+
   try {
     if (parsed.data.id) {
       await db
@@ -406,7 +411,7 @@ export const upsertHotelAdminAction = withAuthorizedAction<
           oaPmsHotelId: parsed.data.oaPmsHotelId || null,
           businessNo: parsed.data.businessNo || null,
           address: parsed.data.address || null,
-          phone: parsed.data.phone || null,
+          phone: normalizedPhone,
           managerName: parsed.data.managerName || null,
           note: parsed.data.note || null,
         })
@@ -425,7 +430,7 @@ export const upsertHotelAdminAction = withAuthorizedAction<
           oaPmsHotelId: parsed.data.oaPmsHotelId || null,
           businessNo: parsed.data.businessNo || null,
           address: parsed.data.address || null,
-          phone: parsed.data.phone || null,
+          phone: normalizedPhone,
           managerName: parsed.data.managerName || null,
           note: parsed.data.note || null,
         })
