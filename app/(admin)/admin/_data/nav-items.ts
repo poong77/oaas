@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import type { UserRole } from '@/db/schema';
 
-export type TabGroup = 'tickets' | 'content' | 'insight' | 'org';
+export type TabGroup = 'overview' | 'tickets' | 'content' | 'insight' | 'org';
 
 export interface NavItem {
   href: string;
@@ -42,6 +42,14 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
+  // 개요 (최상단)
+  {
+    href: '/admin/insights/dashboard',
+    label: '운영 대시보드',
+    icon: LayoutDashboard,
+    roles: ['manager', 'admin'],
+    group: 'overview',
+  },
   // 티켓 운영
   {
     href: '/admin/tickets',
@@ -88,13 +96,6 @@ export const NAV_ITEMS: NavItem[] = [
   },
   // 인사이트
   {
-    href: '/admin/insights/dashboard',
-    label: '운영 대시보드',
-    icon: LayoutDashboard,
-    roles: ['manager', 'admin'],
-    group: 'insight',
-  },
-  {
     href: '/admin/insights/search-logs',
     label: '검색로그',
     icon: Search,
@@ -125,9 +126,16 @@ export const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export const GROUP_ORDER: TabGroup[] = ['tickets', 'content', 'insight', 'org'];
+export const GROUP_ORDER: TabGroup[] = [
+  'overview',
+  'tickets',
+  'content',
+  'insight',
+  'org',
+];
 
 export const GROUP_LABEL: Record<TabGroup, string> = {
+  overview: '개요',
   tickets: '티켓 운영',
   content: '콘텐츠',
   insight: '인사이트',
