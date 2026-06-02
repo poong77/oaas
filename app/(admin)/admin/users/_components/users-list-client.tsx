@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronRight as RowChevron } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDateKst } from '@/lib/business-hours/format';
@@ -32,130 +32,193 @@ export function UsersListClient({
     router.push(`/admin/users?${next.toString()}`);
   }
 
+  function open(id: string) {
+    router.push(`/admin/users/${id}`);
+  }
+
   return (
     <>
-      {/* 데스크탑 테이블 */}
+      {/* ───────── 데스크탑 테이블 ───────── */}
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
+          <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400">
             <tr>
-              <th className="px-3 py-2 text-left">호텔</th>
-              <th className="px-3 py-2 text-left">이름·직책</th>
-              <th className="px-3 py-2 text-left">ID</th>
-              <th className="px-3 py-2 text-left">이메일·연락처</th>
-              <th className="px-3 py-2 text-left">권한</th>
-              <th className="px-3 py-2 text-left">가입일</th>
-              <th className="px-3 py-2 text-left">최근 로그인</th>
-              <th className="px-3 py-2 text-left">상태</th>
-              <th className="px-3 py-2 text-right">작업</th>
+              <th className="px-4 py-2.5 text-left font-medium">사용자</th>
+              <th className="px-4 py-2.5 text-left font-medium">호텔</th>
+              <th className="px-4 py-2.5 text-left font-medium">연락처</th>
+              <th className="px-4 py-2.5 text-left font-medium">활동</th>
+              <th className="px-4 py-2.5 text-left font-medium">상태</th>
+              <th className="w-8 px-2 py-2.5" aria-hidden />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {items.map((u) => (
-              <tr key={u.id} className={u.isActive ? '' : 'opacity-60'}>
-                <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
-                  {u.hotelName ?? <span className="text-slate-400">-</span>}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="font-medium">{u.name}</div>
-                  {u.title && (
-                    <div className="text-xs text-slate-500">{u.title}</div>
-                  )}
-                </td>
-                <td className="px-3 py-2">
-                  {toLoginId(u.email) ? (
-                    <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
-                      {toLoginId(u.email)}
-                    </span>
-                  ) : (
-                    <span className="text-slate-400">-</span>
-                  )}
-                </td>
-                <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
-                  <div>
-                    {isDummyEmail(u.email) ? (
-                      <span className="text-slate-400">-</span>
+            {items.map((u) => {
+              const loginId = u.username ?? toLoginId(u.email);
+              return (
+                <tr
+                  key={u.id}
+                  onClick={() => open(u.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') open(u.id);
+                  }}
+                  tabIndex={0}
+                  role="link"
+                  aria-label={`${u.name} 편집`}
+                  className={`group cursor-pointer outline-none transition-colors hover:bg-slate-50 focus-visible:bg-slate-50 dark:hover:bg-slate-800/40 dark:focus-visible:bg-slate-800/40 ${
+                    u.isActive ? '' : 'bg-slate-50/40 dark:bg-slate-900/30'
+                  }`}
+                >
+                  {/* 사용자: 아바타 + 이름 + 권한 + 아이디 */}
+                  <td className="px-4 py-2.5">
+                    <div className="flex items-center gap-3">
+                      <Avatar name={u.name} seed={u.id} dim={!u.isActive} />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`truncate font-medium ${u.isActive ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500'}`}
+                          >
+                            {u.name}
+                          </span>
+                          <RoleBadge role={u.role} />
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
+                          {loginId ? (
+                            <span className="truncate font-mono">{loginId}</span>
+                          ) : (
+                            <span className="text-slate-400">아이디 없음</span>
+                          )}
+                          {u.title && (
+                            <>
+                              <span className="text-slate-300 dark:text-slate-600">·</span>
+                              <span className="truncate">{u.title}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* 호텔 */}
+                  <td className="px-4 py-2.5">
+                    {u.hotelName ? (
+                      <span className="text-slate-700 dark:text-slate-300">{u.hotelName}</span>
                     ) : (
-                      u.email
+                      <span className="text-slate-400">소속 없음</span>
                     )}
-                  </div>
-                  <div className="text-xs text-slate-500">{u.phone ?? '-'}</div>
-                </td>
-                <td className="px-3 py-2"><RoleBadge role={u.role} /></td>
-                <td className="px-3 py-2 text-xs text-slate-500">
-                  {formatDateKst(u.createdAt)}
-                </td>
-                <td className="px-3 py-2 text-xs text-slate-500">
-                  {u.lastLoginAt ? formatDateKst(u.lastLoginAt) : '미접속'}
-                </td>
-                <td className="px-3 py-2">
-                  {u.isActive ? (
-                    <Badge tone="success">활성</Badge>
-                  ) : (
-                    <Badge tone="slate">비활성</Badge>
-                  )}
-                </td>
-                <td className="px-3 py-2 text-right">
-                  <Button asChild size="sm" variant="ghost">
-                    <Link href={`/admin/users/${u.id}`}>
-                      <Pencil className="h-3.5 w-3.5" />편집
-                    </Link>
-                  </Button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+
+                  {/* 연락처: 이메일 + 전화 */}
+                  <td className="px-4 py-2.5">
+                    <div className="text-slate-600 dark:text-slate-300">
+                      {isDummyEmail(u.email) ? (
+                        <span className="text-slate-400">이메일 미등록</span>
+                      ) : (
+                        <span className="truncate">{u.email}</span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 text-xs text-slate-500">
+                      {u.phone ? formatPhone(u.phone) : <span className="text-slate-400">—</span>}
+                    </div>
+                  </td>
+
+                  {/* 활동: 최근 로그인 + 가입 */}
+                  <td className="px-4 py-2.5">
+                    <div className="text-xs">
+                      {u.lastLoginAt ? (
+                        <span className="text-slate-600 dark:text-slate-300">
+                          {formatDateKst(u.lastLoginAt)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">미접속</span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-slate-400">
+                      가입 {formatDateKst(u.createdAt)}
+                    </div>
+                  </td>
+
+                  {/* 상태 */}
+                  <td className="px-4 py-2.5">
+                    <StatusDot active={u.isActive} />
+                  </td>
+
+                  {/* 행 이동 표시 */}
+                  <td className="w-8 px-2 py-2.5 text-right">
+                    <RowChevron className="ml-auto h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-500 dark:text-slate-600" />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* 모바일 카드뷰 */}
-      <div className="flex flex-col gap-2 p-3 md:hidden">
-        {items.map((u) => (
-          <Link
-            key={u.id}
-            href={`/admin/users/${u.id}`}
-            className={`rounded-md border border-slate-200 p-3 transition-colors hover:border-brand-400 dark:border-slate-800 ${u.isActive ? '' : 'opacity-60'}`}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="font-semibold">{u.name}</div>
-                <div className="text-xs text-slate-500">
-                  {u.hotelName ?? '소속 없음'} · {u.title ?? '직책 없음'}
+      {/* ───────── 모바일 카드뷰 ───────── */}
+      <div className="flex flex-col gap-2.5 p-3 md:hidden">
+        {items.map((u) => {
+          const loginId = u.username ?? toLoginId(u.email);
+          return (
+            <Link
+              key={u.id}
+              href={`/admin/users/${u.id}`}
+              className={`rounded-xl border p-3.5 transition-colors active:bg-slate-50 dark:active:bg-slate-800/40 ${
+                u.isActive
+                  ? 'border-slate-200 dark:border-slate-800'
+                  : 'border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/30'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <Avatar name={u.name} seed={u.id} dim={!u.isActive} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`truncate font-semibold ${u.isActive ? '' : 'text-slate-500'}`}
+                    >
+                      {u.name}
+                    </span>
+                    <RoleBadge role={u.role} />
+                  </div>
+                  <div className="mt-0.5 truncate text-xs text-slate-500">
+                    {u.hotelName ?? '소속 없음'}
+                    {u.title && ` · ${u.title}`}
+                  </div>
                 </div>
+                <StatusDot active={u.isActive} />
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <RoleBadge role={u.role} />
-                {u.isActive ? (
-                  <Badge tone="success">활성</Badge>
-                ) : (
-                  <Badge tone="slate">비활성</Badge>
-                )}
-              </div>
-            </div>
-            <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
-              {toLoginId(u.email) && (
-                <div>
-                  <span className="text-slate-400">ID </span>
-                  <span className="font-mono">{toLoginId(u.email)}</span>
-                </div>
-              )}
-              {!isDummyEmail(u.email) && <div>{u.email}</div>}
-              <div>{u.phone ?? '-'}</div>
-              <div className="mt-1 text-slate-400">
-                가입 {formatDateKst(u.createdAt)} · 최근접속{' '}
-                {u.lastLoginAt ? formatDateKst(u.lastLoginAt) : '미접속'}
-              </div>
-            </div>
-          </Link>
-        ))}
+
+              <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                <dt className="text-slate-400">아이디</dt>
+                <dd className="truncate font-mono text-slate-700 dark:text-slate-300">
+                  {loginId || '—'}
+                </dd>
+                <dt className="text-slate-400">이메일</dt>
+                <dd className="truncate text-slate-600 dark:text-slate-300">
+                  {isDummyEmail(u.email) ? '미등록' : u.email}
+                </dd>
+                <dt className="text-slate-400">연락처</dt>
+                <dd className="text-slate-600 dark:text-slate-300">
+                  {u.phone ? formatPhone(u.phone) : '—'}
+                </dd>
+                <dt className="text-slate-400">최근 접속</dt>
+                <dd className="text-slate-600 dark:text-slate-300">
+                  {u.lastLoginAt ? formatDateKst(u.lastLoginAt) : '미접속'}
+                </dd>
+              </dl>
+            </Link>
+          );
+        })}
       </div>
 
-      {/* 페이지네이션 */}
-      {lastPage > 1 && (
-        <div className="flex items-center justify-between border-t border-slate-200 px-3 py-3 text-sm dark:border-slate-800">
-          <div className="text-xs text-slate-500">
-            {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} / {total}
-          </div>
+      {/* ───────── 페이지네이션 ───────── */}
+      <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm dark:border-slate-800 sm:flex-row">
+        <div className="text-xs text-slate-500">
+          <span className="font-medium text-slate-700 dark:text-slate-300">
+            {total === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)}
+          </span>
+          {' / '}
+          {total.toLocaleString()}명
+        </div>
+        {lastPage > 1 && (
           <div className="flex items-center gap-1">
             <Button
               type="button"
@@ -166,8 +229,10 @@ export function UsersListClient({
             >
               <ChevronLeft className="h-4 w-4" />이전
             </Button>
-            <span className="px-2 text-sm font-medium">
-              {page} / {lastPage}
+            <span className="px-2 text-xs tabular-nums text-slate-500">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{page}</span>
+              {' / '}
+              {lastPage}
             </span>
             <Button
               type="button"
@@ -179,9 +244,52 @@ export function UsersListClient({
               다음<ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
+  );
+}
+
+// ───────── 보조 컴포넌트 ─────────
+
+const AVATAR_TONES = [
+  'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300',
+  'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
+  'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+  'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+];
+
+function Avatar({ name, seed, dim }: { name: string; seed: string; dim?: boolean }) {
+  const initial = (name.trim()[0] ?? '?').toUpperCase();
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  const tone = AVATAR_TONES[hash % AVATAR_TONES.length];
+  return (
+    <span
+      aria-hidden
+      className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold ${tone} ${dim ? 'opacity-60 grayscale' : ''}`}
+    >
+      {initial}
+    </span>
+  );
+}
+
+function StatusDot({ active }: { active: boolean }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+      <span
+        className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${
+          active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+        }`}
+      />
+      <span
+        className={`text-xs ${active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400'}`}
+      >
+        {active ? '활성' : '비활성'}
+      </span>
+    </span>
   );
 }
 
@@ -191,3 +299,13 @@ function RoleBadge({ role }: { role: UserRole }) {
   return <Badge tone={tone}>{label}</Badge>;
 }
 
+/** 010-1234-5678 형태로 가볍게 정리 (이미 하이픈이면 그대로). */
+function formatPhone(raw: string): string {
+  const d = raw.replace(/[^0-9]/g, '');
+  if (d.length === 11) return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+  if (d.length === 10)
+    return d.startsWith('02')
+      ? `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6)}`
+      : `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+  return raw;
+}

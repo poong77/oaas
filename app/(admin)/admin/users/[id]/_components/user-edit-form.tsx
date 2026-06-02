@@ -92,7 +92,7 @@ export function UserEditForm({
             <Label htmlFor="usernameReadonly">ID (로그인)</Label>
             <Input
               id="usernameReadonly"
-              defaultValue={toLoginId(target.email) || (target.username ?? '')}
+              defaultValue={target.username ?? toLoginId(target.email)}
               placeholder="없음"
               disabled
             />
