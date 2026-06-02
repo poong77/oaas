@@ -28,9 +28,6 @@ export function CategoryGrid({
           >
             제품으로 찾기
           </h2>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-            관심 제품을 선택하면 사용 가이드·FAQ·체크리스트가 모여있어요.
-          </p>
         </div>
         <Link
           href="/help"

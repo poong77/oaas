@@ -27,9 +27,6 @@ export function HomeQuickChoice() {
           >
             무엇을 하시겠어요?
           </h2>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-            답을 찾거나, 바로 문의를 접수하세요.
-          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

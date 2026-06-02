@@ -63,9 +63,6 @@ export function RoleStarters({ items }: { items?: RoleStarter[] }) {
         >
           역할로 찾기
         </h2>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-          내 역할에 맞는 핵심 가이드부터 빠르게 익혀보세요.
-        </p>
       </div>
 
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
