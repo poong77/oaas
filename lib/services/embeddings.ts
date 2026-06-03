@@ -107,6 +107,21 @@ export function buildFaqEmbeddingInput(f: {
     .trim();
 }
 
+/**
+ * ai-reply-assist — 티켓 임베딩 입력 텍스트 구성.
+ * title + content. 추천/유사티켓 검색용. db/backfill-ticket-embeddings.ts와 동일 규칙.
+ */
+export function buildTicketEmbeddingInput(t: {
+  title: string;
+  content?: string | null;
+}): string {
+  return [t.title, t.content ?? '']
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .join('\n\n')
+    .trim();
+}
+
 /** number[] → pgvector 리터럴 문자열 `[0.1,0.2,...]`. */
 export function toVectorLiteral(vec: number[]): string {
   return `[${vec.join(',')}]`;

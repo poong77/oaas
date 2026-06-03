@@ -68,3 +68,5 @@ export * from './article-templates';
 export * from './search-eval';
 // 검색 실사용 로그 (v1.6 Layer B) — 0건율·CTR·전환율
 export * from './search-logs';
+// ai-reply-assist — AI 답변 초안 모델 마스터 (어드민 편집)
+export * from './ai-models';

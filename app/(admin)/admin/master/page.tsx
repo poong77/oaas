@@ -160,6 +160,15 @@ const ITEMS: MasterItem[] = [
     badge: 'AI 지식',
   },
   {
+    href: '/admin/master/ai-models',
+    label: 'AI 모델',
+    description:
+      '티켓 답변 초안 생성에 쓸 AI 모델(Claude·GPT) 목록·기본값·ON/OFF·단가 라벨을 관리. 활성 모델만 매니저 답변 화면 모달에 노출.',
+    icon: Bot,
+    adminOnly: true,
+    badge: 'AI',
+  },
+  {
     href: '/admin/master/search-quality',
     label: '검색 골든셋·품질',
     description:

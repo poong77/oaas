@@ -23,6 +23,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  vector,
 } from 'drizzle-orm/pg-core';
 import { commonColumns } from './_shared';
 import { hotels } from './hotels';
@@ -100,6 +101,13 @@ export const tickets = pgTable(
     slackThreadTs: text('slack_thread_ts'),
     /** Slack #dev-escalation 스레드 ts. */
     slackDevThreadTs: text('slack_dev_thread_ts'),
+    /**
+     * ai-reply-assist — 시맨틱 추천/유사 티켓용 임베딩
+     * (OpenAI text-embedding-3-small, 1536차원, articles/faqs와 동일 벡터공간).
+     * title+content로 생성. null = 미생성(추천 생략, graceful degrade).
+     * 생성/본문 수정 시 fire-and-forget 갱신, 누락분은 db:backfill-ticket-embeddings로 보정.
+     */
+    embedding: vector('embedding', { dimensions: 1536 }),
   },
   (table) => [
     uniqueIndex('tickets_ticket_no_uq').on(table.ticketNo),
@@ -111,6 +119,11 @@ export const tickets = pgTable(
     index('tickets_hotel_created_idx').on(table.hotelId, table.createdAt),
     index('tickets_assignee_status_idx').on(table.assigneeId, table.status),
     index('tickets_urgency_status_idx').on(table.urgency, table.status),
+    // ai-reply-assist — 시맨틱 검색 HNSW 코사인 인덱스 (pgvector, articles 패턴 동일).
+    index('tickets_embedding_hnsw').using(
+      'hnsw',
+      table.embedding.op('vector_cosine_ops'),
+    ),
   ],
 );
 

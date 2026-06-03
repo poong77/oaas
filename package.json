@@ -32,6 +32,8 @@
     "db:normalize-hotel-phones": "tsx db/normalize-hotel-phones.ts",
     "db:backfill-embeddings": "tsx db/backfill-embeddings.ts",
     "db:backfill-faq-embeddings": "tsx db/backfill-faq-embeddings.ts",
+    "db:backfill-ticket-embeddings": "tsx db/backfill-ticket-embeddings.ts",
+    "db:seed:ai-models": "tsx db/seed-ai-models.ts",
     "export:knowledge": "tsx db/export-knowledge.ts",
     "test:e2e": "playwright test --config=e2e/playwright.config.ts",
     "test:e2e:headed": "playwright test --config=e2e/playwright.config.ts --headed",

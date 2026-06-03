@@ -21,9 +21,24 @@ import {
   addAdminPublicMessageAction,
   addInternalMemoAction,
 } from '@/app/actions/ticket-actions';
+import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { cn } from '@/lib/utils';
+import { AiAssistPanel, type DraftPayload } from './ai-assist/ai-assist-panel';
+import { AiDraftOverlay } from './ai-assist/ai-draft-overlay';
+import type {
+  AssistModel,
+  Citation,
+  TicketAssist,
+} from '@/lib/services/ticket-assist-types';
 
 type Kind = 'public' | 'internal_memo';
+
+type DraftMeta = {
+  modelLabel: string;
+  citations: Citation[];
+  /** 생성 직후 원본 — 발송 시 수정 여부 판단(검수 게이트). */
+  originalDraft: string;
+};
 
 interface AdminReplyFormProps {
   ticketId: string;
@@ -34,15 +49,43 @@ interface AdminReplyFormProps {
     ticketNo?: string;
     managerName?: string;
   };
+  /** ai-reply-assist — 서버 SSR 추천 + 활성 모델 (옵션). */
+  assist?: TicketAssist;
+  models?: AssistModel[];
+  defaultModelId?: string | null;
 }
 
-export function AdminReplyForm({ ticketId, vars }: AdminReplyFormProps) {
+export function AdminReplyForm({
+  ticketId,
+  vars,
+  assist,
+  models,
+  defaultModelId,
+}: AdminReplyFormProps) {
   const router = useRouter();
+  const confirm = useConfirmDialog();
   const [kind, setKind] = useState<Kind>('public');
   const [content, setContent] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [quickReplyOpen, setQuickReplyOpen] = useState(false);
+  const [draftMeta, setDraftMeta] = useState<DraftMeta | null>(null);
+
+  // AI 초안 배지는 내용을 전부 비우면 해제 (검수 강제 — 시각)
+  useEffect(() => {
+    if (draftMeta && content.trim() === '') setDraftMeta(null);
+  }, [content, draftMeta]);
+
+  // AI 초안 주입 — 에디터 교체(기존 작성분 있으면 부모 호출 전에 확인)
+  const handleDraft = useCallback((payload: DraftPayload) => {
+    setKind('public');
+    setContent(payload.draft);
+    setDraftMeta({
+      modelLabel: payload.modelLabel,
+      citations: payload.citations,
+      originalDraft: payload.draft,
+    });
+  }, []);
 
   // Cmd+/ — 빠른답변 패널 토글 (입력 필드 focus 시에만 작동, 폼 영역 한정)
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -68,12 +111,23 @@ export function AdminReplyForm({ ticketId, vars }: AdminReplyFormProps) {
     [],
   );
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     if (content.trim().length === 0) {
       setError('내용을 입력해주세요');
       return;
+    }
+    // 검수 게이트(기술) — AI 초안을 수정 없이 발송하려는 경우 한 번 더 확인
+    if (kind === 'public' && draftMeta && content === draftMeta.originalDraft) {
+      const ok = await confirm({
+        title: 'AI 초안 검수 확인',
+        description:
+          'AI가 생성한 초안을 수정 없이 발송합니다. 내용을 검토·검수하셨나요?',
+        confirmText: '검수 완료 · 발송',
+        cancelText: '다시 보기',
+      });
+      if (!ok) return;
     }
     const fd = new FormData();
     fd.append('ticketId', ticketId);
@@ -89,6 +143,7 @@ export function AdminReplyForm({ ticketId, vars }: AdminReplyFormProps) {
       }
       await deleteDraftAfterPublish('ticket-message', ticketId);
       setContent('');
+      setDraftMeta(null);
       router.refresh();
     });
   }
@@ -124,6 +179,12 @@ export function AdminReplyForm({ ticketId, vars }: AdminReplyFormProps) {
           </kbd>
         </button>
       </div>
+      {kind === 'public' && draftMeta && (
+        <AiDraftOverlay
+          modelLabel={draftMeta.modelLabel}
+          citations={draftMeta.citations}
+        />
+      )}
       <RichEditor
         mode="full"
         value={content}
@@ -162,6 +223,18 @@ export function AdminReplyForm({ ticketId, vars }: AdminReplyFormProps) {
           <Send className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* ai-reply-assist — 추천 패널 + 초안 생성 (assist 데이터가 있을 때만) */}
+      {assist && (
+        <AiAssistPanel
+          ticketId={ticketId}
+          assist={assist}
+          models={models ?? []}
+          defaultModelId={defaultModelId ?? null}
+          onInsertCitation={handleInsertTemplate}
+          onDraft={handleDraft}
+        />
+      )}
 
       <QuickReplyPanel
         open={quickReplyOpen}

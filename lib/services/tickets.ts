@@ -63,6 +63,32 @@ import {
   buildTicketUrgentBlocks,
   type TicketSummaryForSlack,
 } from '@/lib/notifications/slack';
+import {
+  embedText,
+  buildTicketEmbeddingInput,
+} from './embeddings';
+
+/**
+ * ai-reply-assist — 티켓 임베딩 생성/갱신 (fire-and-forget 권장).
+ * OPENAI_API_KEY 미설정/오류 시 embedText가 null → 갱신 생략(graceful degrade).
+ * 추천 검색은 embedding이 채워진 뒤부터 동작하며, 누락분은 db:backfill-ticket-embeddings로 보정.
+ */
+export async function updateTicketEmbedding(
+  ticketId: string,
+  input: { title: string; content: string },
+): Promise<void> {
+  if (!db) return;
+  try {
+    const vec = await embedText(buildTicketEmbeddingInput(input));
+    if (!vec) return;
+    await db.update(tickets).set({ embedding: vec }).where(eq(tickets.id, ticketId));
+  } catch (err) {
+    console.warn(
+      `[tickets.updateTicketEmbedding] ${ticketId} 실패(무시):`,
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
 
 // AuthorizedUser는 lib/permissions.ts에서 사용 — schema에는 없어 별도 import.
 // 순환 import 회피 위해 inline 타입 사용.
@@ -286,6 +312,12 @@ export async function createTicket(
 
     // 알림 fire-and-forget
     void dispatchTicketReceivedNotifications(created.id, created.ticketNo);
+
+    // ai-reply-assist — 시맨틱 추천용 임베딩 생성 (fire-and-forget, 실패해도 접수 정상)
+    void updateTicketEmbedding(created.id, {
+      title: input.title,
+      content: input.content,
+    });
 
     return { ok: true, ticketId: created.id, ticketNo: created.ticketNo };
   } catch (err) {

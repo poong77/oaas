@@ -32,6 +32,8 @@ import {
   loadCategoryLabelMaps,
 } from '@/lib/services/tickets';
 import { getAllTicketChannelsMap } from '@/lib/services/master-ticket-channels';
+import { getTicketAssist } from '@/lib/services/ticket-assist';
+import { listActiveModels, getDefaultModel } from '@/lib/services/ai-models';
 import { getChannelDisplay } from '@/lib/ticket-channel-label';
 import { RATING_LABEL, RATING_TONE } from '@/lib/services/tickets-meta';
 import type { TicketStatus } from '@/db/schema';
@@ -92,7 +94,16 @@ export default async function AdminTicketDetailPage({
   const { id } = await params;
   const user = await requireRole(['manager', 'admin']);
 
-  const [ticket, labels, managers, feedback, channelMap] = await Promise.all([
+  const [
+    ticket,
+    labels,
+    managers,
+    feedback,
+    channelMap,
+    assist,
+    aiModels,
+    defaultModel,
+  ] = await Promise.all([
     getTicketDetail(id, {
       id: user.id,
       role: user.role,
@@ -102,11 +113,25 @@ export default async function AdminTicketDetailPage({
     listAssignableManagers(),
     getFeedback(id),
     getAllTicketChannelsMap(),
+    getTicketAssist(id),
+    listActiveModels(),
+    getDefaultModel(),
   ]);
 
   if (!ticket) {
     notFound();
   }
+
+  // 직렬화 안전 형태로 매핑(Date 제외) — 클라이언트 폼에 전달
+  const assistModels = aiModels.map((m) => ({
+    id: m.id,
+    provider: m.provider,
+    code: m.code,
+    label: m.label,
+    description: m.description,
+    tier: m.tier,
+    isDefault: m.isDefault,
+  }));
 
   const productLabel = labels.product[ticket.productCode] ?? ticket.productCode;
   const issueTypeLabel =
@@ -229,7 +254,12 @@ export default async function AdminTicketDetailPage({
               <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 답변 / 메모 작성
               </div>
-              <AdminReplyForm ticketId={ticket.id} />
+              <AdminReplyForm
+                ticketId={ticket.id}
+                assist={assist}
+                models={assistModels}
+                defaultModelId={defaultModel?.id ?? null}
+              />
             </CardContent>
           </Card>
         </div>

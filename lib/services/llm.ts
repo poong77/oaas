@@ -56,6 +56,56 @@ async function chatJson<T>(
 }
 
 /**
+ * ai-reply-assist — OpenAI 챗 텍스트 호출 (JSON 모드 아님).
+ * draft-provider에서 provider='openai' 라우팅 시 사용. 모델은 ai_models.code(예: gpt-4.1-mini).
+ * @throws 키 미설정/오류/빈 응답 시 Error (Anthropic의 runClaudeText와 동작 일치 — 호출부 try/catch).
+ */
+export async function runOpenAIText(opts: {
+  system: string;
+  user: string;
+  model: string;
+  maxTokens?: number;
+  temperature?: number;
+}): Promise<string> {
+  if (!isOpenAIConfigured()) {
+    throw new Error('OPENAI_API_KEY missing — .env 확인');
+  }
+  let res: Response;
+  try {
+    res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: opts.model,
+        temperature: opts.temperature ?? 0.3,
+        max_tokens: opts.maxTokens ?? 1500,
+        messages: [
+          { role: 'system', content: opts.system },
+          { role: 'user', content: opts.user },
+        ],
+      }),
+    });
+  } catch (err) {
+    throw new Error(
+      `OpenAI 호출 실패 (model=${opts.model}): ${err instanceof Error ? err.message : err}`,
+    );
+  }
+  if (!res.ok) {
+    const body = (await res.text()).slice(0, 200);
+    throw new Error(`OpenAI ${res.status} (model=${opts.model}): ${body}`);
+  }
+  const json = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  const content = json.choices?.[0]?.message?.content?.trim();
+  if (!content) throw new Error('OpenAI 응답이 비었습니다.');
+  return content;
+}
+
+/**
  * 아티클 1건에서 현실적 사용자 질문 N개 생성.
  * 호텔리어가 실제로 칠 법한 구어체·증상형 질의 (오타/동의어 포함).
  */
