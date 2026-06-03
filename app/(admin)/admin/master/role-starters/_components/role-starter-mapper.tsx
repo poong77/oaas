@@ -1,16 +1,16 @@
 'use client';
 
 /**
- * RoleStarterArticleMapper — articleIds 매핑 UI (D3).
+ * RoleStarterMapper — 역할별 시작 매핑 UI (제네릭: 아티클·FAQ 공용, D3).
  *
  * 흐름:
- *   - 매핑된 아티클 카드 리스트 (순서 = articleIds 배열 순서)
- *   - 각 카드: ↑ ↓ ✕ 버튼
+ *   - 매핑된 엔티티 카드 리스트 (순서 = 배열 순서)
+ *   - 각 카드: 드래그 핸들 + ↑ ↓ ✕
  *   - 검색 input → 자동완성 드롭다운 → 클릭으로 추가
  *
  * Form 직렬화:
- *   - 각 articleId를 hidden `<input name="articleIds" />` 로 렌더
- *   - 부모 form의 FormData.getAll('articleIds') 로 순서 보존된 배열 받음
+ *   - 각 id를 hidden `<input name={fieldName} />` 로 렌더 (예: articleIds / faqIds)
+ *   - 부모 form의 FormData.getAll(fieldName) 로 순서 보존된 배열 받음
  *
  * @see docs/02-design/knowledge-base-overhaul/DESIGN.md §15-2-4
  */
@@ -42,30 +42,41 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Input } from '@/components/ui/input';
-import { searchArticlesForAutocompleteAction } from '@/app/actions/article-actions';
 
-export interface MappedArticle {
+/** 매핑 대상 엔티티의 공통 표시 모델. */
+export interface MappedEntity {
   id: string;
-  slug: string;
+  /** 카드 제목 (아티클 title / FAQ question). */
   title: string;
-  productCode: string;
+  /** 보조 메타 (예: "pms · /slug" 또는 "pms · error"). */
+  meta: string;
 }
 
-export interface RoleStarterArticleMapperProps {
-  /** 초기 매핑 (page.tsx에서 articleIds 순서대로 fetch). */
-  initial: MappedArticle[];
+export interface RoleStarterMapperProps {
+  /** 초기 매핑 (page.tsx에서 배열 순서대로 fetch). */
+  initial: MappedEntity[];
+  /** hidden input name — FormData 직렬화 키 (articleIds / faqIds). */
+  fieldName: string;
+  /** 자동완성 검색 (2자 이상 시 호출). */
+  search: (q: string) => Promise<MappedEntity[]>;
+  placeholder?: string;
+  emptyText?: string;
 }
 
-export function RoleStarterArticleMapper({
+export function RoleStarterMapper({
   initial,
-}: RoleStarterArticleMapperProps) {
-  const [items, setItems] = useState<MappedArticle[]>(initial);
-  const [search, setSearch] = useState('');
-  const [results, setResults] = useState<MappedArticle[]>([]);
+  fieldName,
+  search,
+  placeholder = '검색 (2자 이상)',
+  emptyText = '아직 매핑된 항목이 없어요. 아래 검색에서 추가하세요.',
+}: RoleStarterMapperProps) {
+  const [items, setItems] = useState<MappedEntity[]>(initial);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<MappedEntity[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // D6 — @dnd-kit 드래그 정렬 (마우스 + 키보드 a11y 지원)
+  // @dnd-kit 드래그 정렬 (마우스 + 키보드 a11y 지원)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -82,21 +93,21 @@ export function RoleStarterArticleMapper({
     });
   }
 
-  // initial 변경 시 동기 (편집 페이지에서 다른 카드 들어왔을 때 등 — 보수적)
+  // initial 변경 시 동기 (보수적)
   useEffect(() => {
     setItems(initial);
   }, [initial.map((a) => a.id).join(',')]);
 
   // 검색 debounce
   useEffect(() => {
-    if (search.trim().length < 2) {
+    if (query.trim().length < 2) {
       setResults([]);
       return;
     }
     let cancelled = false;
     setLoading(true);
     const id = setTimeout(() => {
-      searchArticlesForAutocompleteAction(search.trim())
+      search(query.trim())
         .then((rows) => {
           if (cancelled) return;
           setResults(rows);
@@ -114,14 +125,14 @@ export function RoleStarterArticleMapper({
       cancelled = true;
       clearTimeout(id);
     };
-  }, [search]);
+  }, [query]);
 
   const currentIds = new Set(items.map((i) => i.id));
 
-  function add(a: MappedArticle) {
+  function add(a: MappedEntity) {
     if (currentIds.has(a.id)) return;
     setItems((prev) => [...prev, a]);
-    setSearch('');
+    setQuery('');
     setResults([]);
     setSearchOpen(false);
   }
@@ -145,10 +156,9 @@ export function RoleStarterArticleMapper({
 
   return (
     <div className="flex flex-col gap-2">
-      {/* 매핑된 아티클 카드 */}
       {items.length === 0 ? (
         <p className="rounded-md border border-dashed border-slate-300 bg-slate-50/40 px-3 py-4 text-center text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900/30">
-          아직 매핑된 가이드가 없어요. 아래 검색에서 추가하세요.
+          {emptyText}
         </p>
       ) : (
         <DndContext
@@ -167,6 +177,7 @@ export function RoleStarterArticleMapper({
                   a={a}
                   index={i}
                   total={items.length}
+                  fieldName={fieldName}
                   onMoveUp={() => move(a.id, -1)}
                   onMoveDown={() => move(a.id, 1)}
                   onRemove={() => remove(a.id)}
@@ -177,7 +188,6 @@ export function RoleStarterArticleMapper({
         </DndContext>
       )}
 
-      {/* @dnd-kit 안내 (모바일 + a11y) */}
       {items.length > 1 && (
         <p className="text-[10px] text-slate-400">
           드래그하거나 ↑↓ 버튼 / 키보드 화살표로 순서를 바꿀 수 있어요.
@@ -188,14 +198,14 @@ export function RoleStarterArticleMapper({
       <div className="relative">
         <Search className="pointer-events-none absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400" />
         <Input
-          value={search}
+          value={query}
           onChange={(e) => {
-            setSearch(e.target.value);
+            setQuery(e.target.value);
             setSearchOpen(true);
           }}
           onFocus={() => setSearchOpen(true)}
           onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
-          placeholder="아티클 검색 (제목 또는 slug, 2자 이상)"
+          placeholder={placeholder}
           className="pl-7"
         />
         {loading && (
@@ -223,7 +233,7 @@ export function RoleStarterArticleMapper({
                       {r.title}
                     </span>
                     <span className="text-[10px] text-slate-500">
-                      {r.productCode} · /{r.slug} {has && '· 이미 추가됨'}
+                      {r.meta} {has && '· 이미 추가됨'}
                     </span>
                   </button>
                 </li>
@@ -244,13 +254,15 @@ function SortableRow({
   a,
   index,
   total,
+  fieldName,
   onMoveUp,
   onMoveDown,
   onRemove,
 }: {
-  a: MappedArticle;
+  a: MappedEntity;
   index: number;
   total: number;
+  fieldName: string;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
@@ -277,7 +289,7 @@ function SortableRow({
       style={style}
       className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900"
     >
-      <input type="hidden" name="articleIds" value={a.id} />
+      <input type="hidden" name={fieldName} value={a.id} />
       <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-[10px] font-semibold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300">
         {index + 1}
       </span>
@@ -294,9 +306,7 @@ function SortableRow({
         <div className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">
           {a.title}
         </div>
-        <div className="truncate text-[10px] text-slate-500">
-          {a.productCode} · /{a.slug}
-        </div>
+        <div className="truncate text-[10px] text-slate-500">{a.meta}</div>
       </div>
       <button
         type="button"

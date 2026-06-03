@@ -1,0 +1,1 @@
+ALTER TABLE "role_starters" ADD COLUMN "faq_ids" uuid[] DEFAULT '{}' NOT NULL;

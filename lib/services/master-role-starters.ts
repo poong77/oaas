@@ -11,6 +11,7 @@ import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
 import {
   articles,
+  faqs,
   roleStarters,
   type NewRoleStarter,
   type RoleStarter,
@@ -84,53 +85,88 @@ export async function getRoleStarterByKey(
   }
 }
 
+export type RoleStarterArticleCard = {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string | null;
+  productCode: string;
+  contentType: string;
+};
+
+export type RoleStarterFaqCard = {
+  id: string;
+  question: string;
+  productCode: string;
+  issueType: string | null;
+};
+
 /**
- * /role/[key] 페이지용 — role + 매핑된 발행 아티클 카드 (articleIds 순서 보존).
+ * /role/[key] 페이지용 — role + 매핑된 발행 아티클 + 활성 FAQ
+ * (articleIds·faqIds 순서 보존).
  *
  * @returns null이면 폴백(정적 ROLE_STARTERS) 사용.
  */
 export async function getRoleStarterWithArticles(roleKey: string): Promise<{
   starter: RoleStarter;
-  articles: Array<{
-    id: string;
-    slug: string;
-    title: string;
-    summary: string | null;
-    productCode: string;
-    contentType: string;
-  }>;
+  articles: RoleStarterArticleCard[];
+  faqs: RoleStarterFaqCard[];
 } | null> {
   const starter = await getRoleStarterByKey(roleKey);
   if (!starter || !db) return null;
-  const ids = starter.articleIds ?? [];
-  if (ids.length === 0) return { starter, articles: [] };
+  const articleIds = starter.articleIds ?? [];
+  const faqIds = starter.faqIds ?? [];
+
+  let orderedArticles: RoleStarterArticleCard[] = [];
+  let orderedFaqs: RoleStarterFaqCard[] = [];
+
   try {
-    const rows = await db
-      .select({
-        id: articles.id,
-        slug: articles.slug,
-        title: articles.title,
-        summary: articles.summary,
-        productCode: articles.productCode,
-        contentType: articles.contentType,
-      })
-      .from(articles)
-      .where(
-        and(
-          inArray(articles.id, ids),
-          eq(articles.status, 'published'),
-          eq(articles.isActive, true),
-        ),
-      );
-    // 순서 보존 — articleIds 배열 순서대로
-    const byId = new Map(rows.map((r) => [r.id, r] as const));
-    const ordered = ids
-      .map((id) => byId.get(id))
-      .filter((r): r is NonNullable<typeof r> => !!r);
-    return { starter, articles: ordered };
+    if (articleIds.length > 0) {
+      const rows = await db
+        .select({
+          id: articles.id,
+          slug: articles.slug,
+          title: articles.title,
+          summary: articles.summary,
+          productCode: articles.productCode,
+          contentType: articles.contentType,
+        })
+        .from(articles)
+        .where(
+          and(
+            inArray(articles.id, articleIds),
+            eq(articles.status, 'published'),
+            eq(articles.isActive, true),
+          ),
+        );
+      // 순서 보존 — articleIds 배열 순서대로
+      const byId = new Map(rows.map((r) => [r.id, r] as const));
+      orderedArticles = articleIds
+        .map((id) => byId.get(id))
+        .filter((r): r is NonNullable<typeof r> => !!r);
+    }
+
+    if (faqIds.length > 0) {
+      const rows = await db
+        .select({
+          id: faqs.id,
+          question: faqs.question,
+          productCode: faqs.productCode,
+          issueType: faqs.issueType,
+        })
+        .from(faqs)
+        .where(and(inArray(faqs.id, faqIds), eq(faqs.isActive, true)));
+      // 순서 보존 — faqIds 배열 순서대로
+      const byId = new Map(rows.map((r) => [r.id, r] as const));
+      orderedFaqs = faqIds
+        .map((id) => byId.get(id))
+        .filter((r): r is NonNullable<typeof r> => !!r);
+    }
+
+    return { starter, articles: orderedArticles, faqs: orderedFaqs };
   } catch (err) {
     console.error('[master-role-starters.getRoleStarterWithArticles] 실패:', err);
-    return { starter, articles: [] };
+    return { starter, articles: orderedArticles, faqs: orderedFaqs };
   }
 }
 
@@ -157,6 +193,7 @@ export type RoleStarterWriteInput = {
   description?: string | null;
   icon?: string | null;
   articleIds?: string[];
+  faqIds?: string[];
   sortOrder?: number;
 };
 
@@ -171,6 +208,7 @@ export async function upsertRoleStarter(
       description: input.description ?? null,
       icon: input.icon ?? null,
       articleIds: input.articleIds ?? [],
+      faqIds: input.faqIds ?? [],
       sortOrder: input.sortOrder ?? 0,
     };
     const [created] = await db
@@ -183,6 +221,7 @@ export async function upsertRoleStarter(
           description: row.description,
           icon: row.icon,
           articleIds: row.articleIds,
+          faqIds: row.faqIds,
           sortOrder: row.sortOrder,
           isActive: true,
         },
@@ -212,6 +251,7 @@ export async function updateRoleStarterById(
         ...(input.articleIds !== undefined
           ? { articleIds: input.articleIds }
           : {}),
+        ...(input.faqIds !== undefined ? { faqIds: input.faqIds } : {}),
         ...(input.sortOrder !== undefined
           ? { sortOrder: input.sortOrder }
           : {}),

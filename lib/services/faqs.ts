@@ -680,3 +680,48 @@ export async function moveFaqOrder(
     return { ok: false, message: 'INTERNAL_ERROR' };
   }
 }
+
+/**
+ * 역할별 시작 매퍼용 — 활성 FAQ 자동완성 (질문 부분일치).
+ * articles.searchArticlesForAutocomplete와 동일 정책.
+ */
+export async function searchFaqsForAutocomplete(
+  q: string,
+  productCode?: string,
+  limit = 10,
+): Promise<
+  Array<{
+    id: string;
+    question: string;
+    productCode: string;
+    issueType: string | null;
+  }>
+> {
+  if (!db) return [];
+  const term = q.trim();
+  if (term.length < 2) return [];
+  try {
+    const conds: SQL[] = [
+      eq(faqs.isActive, true),
+      ilike(faqs.question, `%${term}%`),
+    ];
+    if (productCode?.trim()) {
+      conds.push(eq(faqs.productCode, productCode.trim()));
+    }
+    const rows = await db
+      .select({
+        id: faqs.id,
+        question: faqs.question,
+        productCode: faqs.productCode,
+        issueType: faqs.issueType,
+      })
+      .from(faqs)
+      .where(and(...conds))
+      .orderBy(desc(faqs.viewCount))
+      .limit(limit);
+    return rows;
+  } catch (err) {
+    console.error('[faqs.searchFaqsForAutocomplete] 실패:', err);
+    return [];
+  }
+}

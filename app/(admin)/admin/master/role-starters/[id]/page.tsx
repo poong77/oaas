@@ -7,9 +7,9 @@ import { getRoleStarterById } from '@/lib/services/master-role-starters';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { RoleStarterUpsert } from '../_components/role-starter-upsert';
-import type { MappedArticle } from '../_components/role-starter-article-mapper';
+import type { MappedEntity } from '../_components/role-starter-mapper';
 import { db } from '@/db';
-import { articles } from '@/db/schema';
+import { articles, faqs } from '@/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +28,7 @@ export default async function RoleStarterEditPage({
   if (!item) notFound();
 
   // D3 — articleIds 순서대로 article 정보 fetch (활성/비활성 모두, 매니저가 발행 전 매핑 가능)
-  let initialArticles: MappedArticle[] = [];
+  let initialArticles: MappedEntity[] = [];
   if (db && item.articleIds && item.articleIds.length > 0) {
     try {
       const rows = await db
@@ -48,9 +48,41 @@ export default async function RoleStarterEditPage({
       const byId = new Map(rows.map((r) => [r.id, r] as const));
       initialArticles = item.articleIds
         .map((aid) => byId.get(aid))
-        .filter((r): r is NonNullable<typeof r> => !!r);
+        .filter((r): r is NonNullable<typeof r> => !!r)
+        .map((r) => ({
+          id: r.id,
+          title: r.title,
+          meta: `${r.productCode} · /${r.slug}`,
+        }));
     } catch (err) {
       console.error('[role-starters/[id]] articles fetch 실패:', err);
+    }
+  }
+
+  // faqIds 순서대로 FAQ 정보 fetch
+  let initialFaqs: MappedEntity[] = [];
+  if (db && item.faqIds && item.faqIds.length > 0) {
+    try {
+      const rows = await db
+        .select({
+          id: faqs.id,
+          question: faqs.question,
+          productCode: faqs.productCode,
+          issueType: faqs.issueType,
+        })
+        .from(faqs)
+        .where(and(inArray(faqs.id, item.faqIds), eq(faqs.isActive, true)));
+      const byId = new Map(rows.map((r) => [r.id, r] as const));
+      initialFaqs = item.faqIds
+        .map((fid) => byId.get(fid))
+        .filter((r): r is NonNullable<typeof r> => !!r)
+        .map((r) => ({
+          id: r.id,
+          title: r.question,
+          meta: `${r.productCode}${r.issueType ? ` · ${r.issueType}` : ''}`,
+        }));
+    } catch (err) {
+      console.error('[role-starters/[id]] faqs fetch 실패:', err);
     }
   }
 
@@ -69,7 +101,11 @@ export default async function RoleStarterEditPage({
       />
       <Card>
         <CardContent className="p-4">
-          <RoleStarterUpsert item={item} initialArticles={initialArticles} />
+          <RoleStarterUpsert
+            item={item}
+            initialArticles={initialArticles}
+            initialFaqs={initialFaqs}
+          />
         </CardContent>
       </Card>
     </div>

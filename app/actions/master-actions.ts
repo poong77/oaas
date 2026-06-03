@@ -402,6 +402,11 @@ const RoleStarterSchema = z.object({
     .array(z.string().regex(UUID_RE))
     .max(30)
     .default([]),
+  /** 매핑된 faqIds (순서 보존). FormData.getAll('faqIds')에서 수신. */
+  faqIds: z
+    .array(z.string().regex(UUID_RE))
+    .max(30)
+    .default([]),
 });
 
 export async function upsertRoleStarterAction(
@@ -409,9 +414,13 @@ export async function upsertRoleStarterAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const user = await requireRole(['manager', 'admin']);
-  // articleIds는 hidden input 여러 개로 직렬화돼서 옴 (순서 보존)
+  // articleIds·faqIds는 hidden input 여러 개로 직렬화돼서 옴 (순서 보존)
   const rawArticleIds = formData
     .getAll('articleIds')
+    .map((v) => v.toString().trim())
+    .filter(Boolean);
+  const rawFaqIds = formData
+    .getAll('faqIds')
     .map((v) => v.toString().trim())
     .filter(Boolean);
   const raw = {
@@ -421,6 +430,7 @@ export async function upsertRoleStarterAction(
     icon: getOptStr(formData, 'icon'),
     sortOrder: getInt(formData, 'sortOrder', 0),
     articleIds: rawArticleIds,
+    faqIds: rawFaqIds,
   };
   const parsed = RoleStarterSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, message: '입력값 확인' };
@@ -434,6 +444,7 @@ export async function upsertRoleStarterAction(
     payload: {
       roleKey: parsed.data.roleKey,
       articleCount: parsed.data.articleIds.length,
+      faqCount: parsed.data.faqIds.length,
     },
   });
   revalidateAdminMaster('/admin/master/role-starters', '/');
