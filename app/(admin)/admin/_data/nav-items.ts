@@ -5,7 +5,7 @@
  * 동일한 NavItem 컴포넌트를 공유하도록 데이터를 단일 소스로 둔다.
  *
  * 그룹화 (역할 + 운영 우선순위):
- *   - tickets: 티켓 큐, 서비스 상태 (매니저 최우선 작업 영역)
+ *   - tickets: 티켓 큐 (매니저 최우선 작업 영역). 서비스 상태는 마스터로 이동
  *   - content: 아티클, 공지, FAQ, 체크리스트 (응대 근거 콘텐츠)
  *   - org:     사용자(admin), 호텔(admin), 마스터 데이터 (조직 마스터)
  *
@@ -15,7 +15,6 @@
  */
 
 import {
-  Activity,
   Building2,
   Database,
   FileText,
@@ -55,13 +54,6 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/admin/tickets',
     label: '티켓 큐',
     icon: Inbox,
-    roles: ['manager', 'admin'],
-    group: 'tickets',
-  },
-  {
-    href: '/admin/service-status',
-    label: '서비스 상태',
-    icon: Activity,
     roles: ['manager', 'admin'],
     group: 'tickets',
   },

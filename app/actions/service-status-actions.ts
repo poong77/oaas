@@ -55,7 +55,7 @@ export const updateServiceStatusAction = withAuthorizedAction(
       // 홈, 상태페이지, 어드민 페이지 모두 RSC라 재검증
       revalidatePath('/');
       revalidatePath('/status');
-      revalidatePath('/admin/service-status');
+      revalidatePath('/admin/master/service-status');
     }
 
     return result;

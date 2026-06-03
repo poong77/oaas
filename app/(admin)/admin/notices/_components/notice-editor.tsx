@@ -769,7 +769,7 @@ const RELATED_SETTINGS = [
     accent: 'text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40',
   },
   {
-    href: '/admin/service-status',
+    href: '/admin/master/service-status',
     Illustration: ServiceStatusIllustration,
     title: '서비스 상태 변경',
     description: '장애·점검 공지라면 상단 서비스 상태도 함께 전환하세요.',

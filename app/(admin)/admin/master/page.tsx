@@ -6,6 +6,7 @@
 
 import Link from 'next/link';
 import {
+  Activity,
   ArrowRight,
   Bell,
   BookA,
@@ -13,6 +14,7 @@ import {
   Database,
   FolderTree,
   Gauge,
+  Bot,
   HelpCircle,
   Layers,
   Link as LinkIcon,
@@ -43,6 +45,14 @@ type MasterItem = {
 };
 
 const ITEMS: MasterItem[] = [
+  {
+    href: '/admin/master/service-status',
+    label: '서비스 상태',
+    description:
+      '홈/긴급 배너에 노출되는 서비스 상태를 관리합니다. 변경 시 모든 사용자에게 즉시 반영됩니다.',
+    icon: Activity,
+    badge: '실시간 반영',
+  },
   {
     href: '/admin/master/categories',
     label: '카테고리',
@@ -129,6 +139,14 @@ const ITEMS: MasterItem[] = [
       '도움말 아티클의 menu_path 정본. 제품별 대/중/소 메뉴 트리 (최대 3단). 아티클 작성 시 cascading select 옵션 소스.',
     icon: FolderTree,
     adminOnly: true,
+  },
+  {
+    href: '/admin/master/knowledge-export',
+    label: '지식팩 내보내기',
+    description:
+      '발행 아티클·FAQ·동의어를 챗봇(GPT-4o mini) 최적 포맷(Markdown/JSONL)으로 가공해 다운로드. 본문 정규화 + 용어 사전 인라인 + AI 사용 지침.',
+    icon: Bot,
+    badge: 'AI 지식',
   },
   {
     href: '/admin/master/search-quality',

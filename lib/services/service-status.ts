@@ -5,7 +5,7 @@
  *   - 상태 변경 = 새 row INSERT + 직전 active row를 is_active=false + ended_at=now()
  *   - 공개 조회 = where is_active=true order by started_at desc limit 1
  *
- * Phase 2 — LP-03, NT-03, /status, /admin/service-status.
+ * Phase 2 — LP-03, NT-03, /status, /admin/master/service-status.
  *
  * DB 미연결 (DATABASE_URL placeholder) 상태에서도 빌드/UI가 깨지지 않도록 graceful.
  */
