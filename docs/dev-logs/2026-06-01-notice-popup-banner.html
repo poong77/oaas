@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>개발일지 — 공지 홈 팝업 배너 (NT-04) · 2026-06-01</title>
+<style>
+  :root {
+    --brand-50:#eef2ff; --brand-100:#e0e7ff; --brand-500:#6366f1;
+    --brand-600:#4f46e5; --brand-700:#4338ca;
+    --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
+    --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.65; }
+  .wrap { max-width:920px; margin:0 auto; padding:24px 16px 64px; }
+  header.hero { background:linear-gradient(135deg,var(--brand-600),var(--brand-700)); color:#fff;
+    border-radius:16px; padding:28px 24px; box-shadow:0 8px 24px rgba(79,70,229,.25); }
+  header.hero .tag { display:inline-block; background:rgba(255,255,255,.2); padding:3px 10px;
+    border-radius:999px; font-size:12px; font-weight:600; letter-spacing:.02em; }
+  header.hero h1 { margin:12px 0 6px; font-size:24px; }
+  header.hero p { margin:0; opacity:.92; font-size:14px; }
+  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin:20px 0; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .card .k { font-size:12px; color:var(--muted); font-weight:600; }
+  .card .v { font-size:22px; font-weight:700; margin-top:4px; }
+  .card .v small { font-size:13px; font-weight:500; color:var(--muted); }
+  h2 { font-size:18px; margin:32px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--brand-100); }
+  table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line);
+    border-radius:12px; overflow:hidden; font-size:14px; }
+  th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:var(--brand-50); color:var(--brand-700); font-size:12px; }
+  tr:last-child td { border-bottom:none; }
+  code { background:var(--brand-50); color:var(--brand-700); padding:1px 6px; border-radius:5px;
+    font-size:12.5px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+  .b-new { background:#dcfce7; color:var(--ok); }
+  .b-mod { background:#fef9c3; color:var(--warn); }
+  .b-doc { background:#e0e7ff; color:var(--brand-700); }
+  ul.check { list-style:none; padding:0; margin:0; }
+  ul.check li { background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:11px 14px; margin-bottom:8px; padding-left:38px; position:relative; font-size:14px; }
+  ul.check li::before { content:"✓"; position:absolute; left:13px; top:11px; color:var(--ok); font-weight:800; }
+  .note { background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:14px 16px;
+    font-size:14px; }
+  .note strong { color:var(--warn); }
+  .flow { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px;
+    font-size:13.5px; color:var(--muted); }
+  .flow b { color:var(--ink); }
+  footer { margin-top:40px; text-align:center; color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="tag">NT-04 · Phase 7 확장</span>
+    <h1>공지 홈 팝업 배너</h1>
+    <p>이미지 · 크기 프리셋(소/중/대) · 노출 종료일자(3·7일) · 편집 미리보기 · 오늘 하루 안 보기</p>
+  </header>
+
+  <div class="grid">
+    <div class="card"><div class="k">변경 파일</div><div class="v">10<small> 개</small></div></div>
+    <div class="card"><div class="k">신규 컴포넌트</div><div class="v">2<small> 개</small></div></div>
+    <div class="card"><div class="k">DB 컬럼 추가</div><div class="v">4<small> + idx·enum</small></div></div>
+    <div class="card"><div class="k">검증</div><div class="v" style="color:var(--ok)">PASS<small> type·build</small></div></div>
+    <div class="card"><div class="k">커밋</div><div class="v" style="font-size:16px">62a642a</div></div>
+  </div>
+
+  <h2>무엇을 만들었나</h2>
+  <div class="flow">
+    공지 편집 페이지의 <b>노출 옵션</b>에 "홈 팝업 배너"를 추가했습니다. 켜면 →
+    <b>이미지 업로드 → 크기(소·중·대) → 종료일자(3일/7일/무기한) → 미리보기</b>.
+    발행하면 <b>홈 진입 시 이미지 팝업 모달</b>로 노출되고, 클릭 시 공지 상세로 이동합니다.
+    기존 텍스트 띠 배너(<code>banner</code>)와는 <b>독립</b>이라 동시 사용 가능합니다.
+  </div>
+
+  <h2>변경 파일</h2>
+  <table>
+    <thead><tr><th>구분</th><th>파일</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge b-mod">MOD</span></td><td><code>db/schema/notices.ts</code></td>
+        <td><code>popup_enabled</code>/<code>popup_image_url</code>/<code>popup_size</code>(enum)/<code>popup_until</code> + <code>notices_popup_active_idx</code></td></tr>
+      <tr><td><span class="badge b-mod">MOD</span></td><td><code>lib/services/notices.ts</code></td>
+        <td><code>listActivePopupNotices()</code> 추가, <code>NoticeWriteInput</code>·create·update 확장</td></tr>
+      <tr><td><span class="badge b-mod">MOD</span></td><td><code>lib/services/notices-meta.ts</code></td>
+        <td>크기 프리셋 → max-width 매핑 (client/server 공용)</td></tr>
+      <tr><td><span class="badge b-mod">MOD</span></td><td><code>app/actions/notice-actions.ts</code></td>
+        <td>zod 검증 · 파싱 · <code>popup_enabled=false</code> 시 부속필드 초기화 · 감사로그</td></tr>
+      <tr><td><span class="badge b-new">NEW</span></td><td><code>components/notices/popup-banner-modal.tsx</code></td>
+        <td>모달 프레젠테이션 — 편집 미리보기·실제 노출 <b>공용</b></td></tr>
+      <tr><td><span class="badge b-new">NEW</span></td><td><code>components/notices/home-popup-banner.tsx</code></td>
+        <td>홈 노출 + "오늘 하루 보지 않기"(localStorage)</td></tr>
+      <tr><td><span class="badge b-mod">MOD</span></td><td><code>…/notices/_components/notice-editor.tsx</code></td>
+        <td>팝업 옵션 UI · 이미지 업로드 · 크기 세그먼트 · 3·7일 버튼 · 미리보기</td></tr>
+      <tr><td><span class="badge b-mod">MOD</span></td><td><code>app/page.tsx</code> · <code>…/notices/[id]/page.tsx</code></td>
+        <td>홈 렌더 연결 · 편집 초기값 · 팝업 배지</td></tr>
+      <tr><td><span class="badge b-doc">DOC</span></td><td><code>docs/IMPLEMENTATION_PLAN.md</code></td>
+        <td>NT-04 스펙 + notices 스키마 갱신</td></tr>
+    </tbody>
+  </table>
+
+  <h2>동작 규칙</h2>
+  <ul class="check">
+    <li><b>노출 조건</b> — 활성 + 발행됨 + 이미지 보유 + <code>popup_until</code> 미경과 (별도 cron 없이 조회 시점 lazy 체크)</li>
+    <li><b>이미지</b> — 기존 <code>ImageUploadDialog</code> + <code>/api/upload</code>(Vercel Blob) 재사용, 새 인프라 없음</li>
+    <li><b>크기 프리셋</b> — 소 <code>max-w-sm</code> · 중 <code>max-w-md</code> · 대 <code>max-w-2xl</code></li>
+    <li><b>3·7일 버튼</b> — 클릭 시 종료일자를 현재 시각 + N일로 자동 입력</li>
+    <li><b>오늘 하루 보지 않기</b> — 서버 데이터 아닌 브라우저 <code>localStorage(oa-popup-dismiss:{id})</code></li>
+    <li><b>안전장치</b> — 팝업 켰는데 이미지 없음 / 종료시각 과거 → 저장 전 <code>ConfirmDialog</code> 경고</li>
+  </ul>
+
+  <h2>마이그레이션 정리</h2>
+  <div class="note">
+    <strong>⚠️ db:push 금지 함정 확인.</strong>
+    <code>npm run db:push</code>는 <code>articles_search_tsv</code>(풀텍스트 GIN 표현식 인덱스, 0015에서 raw SQL 수동 생성)를
+    <b>DROP하려 한다</b> — 스키마 미정의로 매번 추적 대상 밖. push의 "Yes"를 누르면 검색 인덱스가 삭제됨.<br/><br/>
+    이번엔 push를 <b>중단</b>하고 popup 컬럼만 멱등 ALTER로 dev DB에 직접 적용했다.
+    확인 결과 프로덕션용 마이그레이션 <code>0018_gray_blue_marvel.sql</code>이 이전 세션에서 이미 생성·커밋돼
+    동일한 popup 컬럼을 idempotent하게 담고 있어 <b>배포 시 누락 위험 없음</b>.
+    <br/><br/>
+    <b>결론:</b> 이 프로젝트는 dev에서도 <code>db:push</code> 대신 <code>db:generate</code> + <code>db:migrate</code> 흐름을 사용한다.
+  </div>
+
+  <h2>수동 확인 권장 (실제 데이터)</h2>
+  <ul class="check">
+    <li>공지 편집 → 팝업 켜고 이미지 업로드 → <b>미리보기</b>로 크기·이미지 확인</li>
+    <li>3일 / 7일 버튼이 종료일자를 정확히 채우는지</li>
+    <li>발행 후 홈에서 팝업 모달 노출 + 이미지 클릭 시 공지 상세 이동</li>
+    <li>"오늘 하루 보지 않기" 후 새로고침 시 당일 미노출 / 다음날 재노출</li>
+  </ul>
+
+  <footer>
+    통합 AS 플랫폼 · support.oapms.com — 2026-06-01 · NT-04 공지 홈 팝업 배너
+  </footer>
+
+</div>
+</body>
+</html>

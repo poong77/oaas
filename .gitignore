@@ -70,3 +70,6 @@ Thumbs.db
 # CB-05 지식팩 생성 산출물 (로컬)
 oa-knowledge-*.md
 oa-knowledge-*.jsonl
+
+# 내부 데이터 덤프 (코드 미참조 · 로컬 작업 산출물)
+docs/hotel-names-*.txt

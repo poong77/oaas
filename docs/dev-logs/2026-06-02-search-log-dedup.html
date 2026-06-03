@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>개발일지 — 검색로그 중복 기록 수정 · 2026-06-02</title>
+<style>
+  :root {
+    --brand-50:#eef2ff; --brand-100:#e0e7ff; --brand-500:#6366f1;
+    --brand-600:#4f46e5; --brand-700:#4338ca;
+    --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
+    --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.65; }
+  .wrap { max-width:920px; margin:0 auto; padding:24px 16px 64px; }
+  header.hero { background:linear-gradient(135deg,var(--brand-600),var(--brand-700)); color:#fff;
+    border-radius:16px; padding:28px 24px; box-shadow:0 8px 24px rgba(79,70,229,.25); }
+  header.hero .tag { display:inline-block; background:rgba(255,255,255,.2); padding:3px 10px;
+    border-radius:999px; font-size:12px; font-weight:600; letter-spacing:.02em; }
+  header.hero h1 { margin:12px 0 6px; font-size:24px; }
+  header.hero p { margin:0; opacity:.92; font-size:14px; }
+  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin:20px 0; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .card .k { font-size:12px; color:var(--muted); font-weight:600; }
+  .card .v { font-size:22px; font-weight:700; margin-top:4px; }
+  .card .v small { font-size:13px; font-weight:500; color:var(--muted); }
+  h2 { font-size:18px; margin:32px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--brand-100); }
+  h3 { font-size:15px; margin:20px 0 8px; color:var(--brand-700); }
+  p.lead { color:var(--muted); font-size:14px; margin:6px 0 0; }
+  table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line);
+    border-radius:12px; overflow:hidden; font-size:14px; }
+  th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:var(--brand-50); color:var(--brand-700); font-size:12px; }
+  tr:last-child td { border-bottom:none; }
+  td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  code { background:var(--brand-50); color:var(--brand-700); padding:1px 6px; border-radius:5px;
+    font-size:12.5px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  pre { background:#0f172a; color:#e2e8f0; border-radius:12px; padding:14px 16px; overflow-x:auto;
+    font-size:12.5px; line-height:1.55; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  pre .c { color:#64748b; }
+  pre .g { color:#86efac; }
+  pre .r { color:#fca5a5; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+  .b-fix { background:#fee2e2; color:var(--danger); }
+  .b-ref { background:#fef9c3; color:var(--warn); }
+  .b-new { background:#dcfce7; color:var(--ok); }
+  ul.check { list-style:none; padding:0; margin:0; }
+  ul.check li { background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:11px 14px; margin-bottom:8px; padding-left:38px; position:relative; font-size:14px; }
+  ul.check li::before { content:"✓"; position:absolute; left:13px; top:11px; color:var(--ok); font-weight:800; }
+  .note { background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:14px 16px; font-size:14px; }
+  .note strong { color:var(--warn); }
+  .ok-note { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:14px 16px; font-size:14px; }
+  .ok-note strong { color:var(--ok); }
+  .flow { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; font-size:13.5px; color:var(--muted); }
+  .flow b { color:var(--ink); }
+  footer { margin-top:40px; text-align:center; color:var(--muted); font-size:12px; }
+  .commit { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="tag">인사이트 · 검색로그(SS-Insight)</span>
+    <h1>검색로그 중복 기록 수정 &amp; 리스트 정리</h1>
+    <p>한 번의 검색이 로그 2건으로 찍히던 prefetch 더블로깅 제거 · 측정 불가 컬럼 정리 · 유입일시 초 단위 표시</p>
+  </header>
+
+  <div class="grid">
+    <div class="card"><div class="k">작업일</div><div class="v">2026-06-02 <small>(화)</small></div></div>
+    <div class="card"><div class="k">커밋</div><div class="v">3 <small>건</small></div></div>
+    <div class="card"><div class="k">변경 파일</div><div class="v">4 <small>개</small></div></div>
+    <div class="card"><div class="k">상태</div><div class="v" style="color:var(--ok)">배포 완료</div></div>
+  </div>
+
+  <h2>요약</h2>
+  <p class="lead">
+    어드민 &gt; 인사이트 &gt; 검색로그에서 <b>같은 검색어가 같은 초에 2~3건씩</b> 찍히는 현상을 제보받아 원인을 추적했습니다.
+    DB를 직접 점검한 결과, 검색 로깅(<code>logSearch</code>)이 <code>/search</code> 서버 컴포넌트의 <b>렌더 부수효과</b>로 실행되는데,
+    Next 16의 <code>&lt;Link&gt;</code> 기본 prefetch가 호버/터치 시점에 페이지를 한 번 더 렌더하면서 <b>검색 1회 → 로그 2건</b>이 생기고 있었습니다.
+    prefetch 스킵과 윈도우 dedup 2겹으로 막고, 부수적으로 측정 불가한 "세션 체류" 컬럼을 제거하고 유입일시에 초를 추가했습니다.
+  </p>
+
+  <h2>1. 원인 분석 — DB 실증</h2>
+  <p class="lead">진단 스크립트(<code>db/scripts/inspect-dup-search-logs.ts</code>)로 중복 행을 ms 단위까지 확인.</p>
+  <table>
+    <thead><tr><th>검색어</th><th>같은 초 내 간격</th><th>세션키</th><th>해석</th></tr></thead>
+    <tbody>
+      <tr><td>키 발급 안됨</td><td class="num">58130ms → 58927ms (797ms)</td><td>null</td><td>prefetch + 클릭</td></tr>
+      <tr><td>카드키 발급 실패</td><td class="num">49720 → 49840 (120ms)</td><td>null</td><td>prefetch + 클릭</td></tr>
+      <tr><td>도어락</td><td class="num">24206 → 24905 (699ms)</td><td>null</td><td>prefetch + 클릭</td></tr>
+    </tbody>
+  </table>
+  <p class="lead">최근 3일 106건 중 10건이 중복. 모두 <b>session_key=null + 같은 초 + 100~800ms 간격</b> → 사람의 재검색이 아니라 한 번의 검색에 서버 렌더가 2번 실행된 흔적.</p>
+
+  <div class="note">
+    <strong>근본 원인.</strong>
+    <code>app/search/page.tsx</code>의 <code>SearchResults</code>(RSC, <code>force-dynamic</code>) 안에서 <code>await logSearch(...)</code>를
+    호출 — 즉 <b>렌더할 때마다 INSERT</b>. 인기 키워드 칩이 기본 prefetch <code>&lt;Link&gt;</code>(<code>home-hero.tsx</code>,
+    <code>search/page.tsx</code>)라, 호버/터치 시 prefetch 렌더(로그 1) → 클릭 후 실제 렌더(로그 2). 검색 수 과대 → CTR 분모 부풀림 등 지표 왜곡.
+  </div>
+
+  <h2>2. 수정 — 2겹 방어</h2>
+
+  <h3><span class="badge b-fix">FIX</span> ① prefetch 요청에서는 로깅 스킵 (근본 원인 제거)</h3>
+  <p class="lead">prefetch 요청은 <code>Next-Router-Prefetch: 1</code> / <code>purpose: prefetch</code> 헤더를 보냄. 서버 컴포넌트에서 감지해 스킵.</p>
+  <pre><span class="c">// app/search/page.tsx</span>
+let logId: string | null = null;
+if (query && !(<span class="g">await isPrefetchRequest()</span>)) {
+  const me = await getCurrentUser();
+  logId = await logSearch({ query, counts, ... });
+}
+
+async function isPrefetchRequest(): Promise&lt;boolean&gt; {
+  const h = await headers();
+  return h.get('next-router-prefetch') === '1'
+    || h.get('purpose') === 'prefetch'
+    || h.get('x-purpose') === 'prefetch';
+}</pre>
+
+  <h3><span class="badge b-fix">FIX</span> ② 5초 윈도우 dedup (백스톱)</h3>
+  <p class="lead">탭/필터 재렌더·근접 더블렌더 등 어떤 경로로도 중복이 안 생기도록. 기존 행 <code>logId</code>를 재사용해 클릭/전환 추적도 그대로 동작. <code>SELECT → INSERT</code>라 제약 충돌·예외 없음.</p>
+  <pre><span class="c">// lib/services/search-logs.ts — logSearch()</span>
+const since = new Date(Date.now() - <span class="g">5_000</span>);
+const [recent] = await db.select({ id: searchLogs.id })
+  .from(searchLogs)
+  .where(and(
+    gte(searchLogs.createdAt, since),
+    eq(searchLogs.normalizedQuery, normalizedQuery),
+    userId ? eq(...userId) : isNull(...),
+    productCode ? eq(...) : isNull(...),
+    sessionKey ? eq(...) : isNull(...),
+  ))
+  .orderBy(desc(searchLogs.createdAt)).limit(1);
+if (recent?.id) <span class="g">return recent.id;</span>  <span class="c">// 중복 INSERT 대신 재사용</span></pre>
+
+  <div class="ok-note">
+    <strong>배포 후 검증.</strong>
+    같은 진단 스크립트로 재확인 결과, <b>100~800ms 간격의 같은 초 쌍이 전부 사라짐</b>(가장 가까운 게 6초).
+    특히 인기 칩 <code>체크인 오류</code>가 이전엔 같은 초 2건이었으나 이제 1건만 기록 → prefetch 스킵 정상 동작 확인.
+    "도어락 오작동" 3건(<code>04:06:28 / 04:07:00 / 04:07:06</code>)은 6초·32초 간격의 <b>실제 반복 검색</b>으로, dedup 윈도우(5초)를 넘어 정상적으로 별개 기록된 것.
+  </div>
+
+  <h2>3. 부수 정리</h2>
+
+  <h3><span class="badge b-ref">REFACTOR</span> 세션 체류 컬럼 제거</h3>
+  <p class="lead">
+    <code>logSearch</code>가 <code>sessionKey</code> 없이 기록 → <code>dwellSeconds</code>는 항상 null → 화면에 영원히 "—".
+    측정 불가 지표라 컬럼·관련 dead code를 정리.
+  </p>
+  <ul class="check">
+    <li>list-client: 데스크탑 "세션 체류" 컬럼 + 모바일 "체류" 라인 + <code>formatDwell</code> 헬퍼 제거</li>
+    <li>search-logs.ts: <code>SearchLogRow.dwellSeconds</code>, LEAD 윈도우 <code>dwellExpr</code>, 매핑 제거</li>
+  </ul>
+
+  <h3><span class="badge b-new">FEAT</span> 유입일시 초(ss) 표시</h3>
+  <p class="lead">같은 분 안 여러 검색의 순서·간격을 구분할 수 있도록 초까지 표시. 기존 <code>formatDateTimeKst</code>(티켓 등 공용)는 유지하고 신규 포맷터만 추가.</p>
+  <pre><span class="c">// lib/business-hours/format.ts</span>
+export function formatDateTimeSecKst(d: Date): string {
+  return d.toLocaleString('ko-KR', {
+    timeZone: 'Asia/Seoul', month:'long', day:'numeric', weekday:'short',
+    hour:'2-digit', minute:'2-digit', <span class="g">second:'2-digit'</span>, hour12:false,
+  });  <span class="c">// "6월 2일 (화) 13:07:06"</span>
+}</pre>
+
+  <h2>커밋 이력</h2>
+  <table>
+    <thead><tr><th>해시</th><th>유형</th><th>내용</th><th>변경</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="commit">fd0f837</td><td><span class="badge b-fix">fix</span></td>
+        <td>검색 1회당 로그 중복 기록 방지 (prefetch 스킵 + 윈도우 dedup)</td>
+        <td class="num">+123 / −6</td>
+      </tr>
+      <tr>
+        <td class="commit">d2d5887</td><td><span class="badge b-ref">refactor</span></td>
+        <td>세션 체류 컬럼 제거 (집계 불가 — sessionKey 미사용)</td>
+        <td class="num">+17 / −62</td>
+      </tr>
+      <tr>
+        <td class="commit">a9f9314</td><td><span class="badge b-new">feat</span></td>
+        <td>유입일시에 초(ss) 표시</td>
+        <td class="num">+17 / −3</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>변경 파일</h2>
+  <table>
+    <thead><tr><th>파일</th><th>역할</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/search/page.tsx</code></td><td>prefetch 감지 → 로깅 스킵</td></tr>
+      <tr><td><code>lib/services/search-logs.ts</code></td><td>윈도우 dedup · dwell 계산 제거</td></tr>
+      <tr><td><code>lib/business-hours/format.ts</code></td><td><code>formatDateTimeSecKst</code> 추가</td></tr>
+      <tr><td><code>app/(admin)/admin/insights/search-logs/_components/search-logs-list-client.tsx</code></td><td>컬럼 정리 · 초 표시 적용</td></tr>
+      <tr><td><code>db/scripts/inspect-dup-search-logs.ts</code></td><td>중복 진단/재검증 스크립트 (신규)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>검증</h2>
+  <ul class="check">
+    <li><code>npm run typecheck</code> 통과 (오류 0)</li>
+    <li><code>npm run build</code> — ✓ Compiled successfully</li>
+    <li>배포 후 DB 재점검 — 같은 초 중복 쌍 0건 확인</li>
+    <li>인기 칩(체크인 오류) 단일 기록 확인 → prefetch 스킵 동작 검증</li>
+  </ul>
+
+  <h2>남은 작업 / 주의</h2>
+  <div class="note">
+    <strong>과거 중복 데이터.</strong>
+    이번 수정은 앞으로의 중복만 막습니다. 배포 전 쌓인 중복 행(어제 기준 약 10건, 09시대 일부)은 그대로 남아 있습니다.
+    필요 시 <code>is_active=false</code> 소프트 삭제로 정리하는 1회성 스크립트를 별도 작성 예정(물리 DELETE 금지 원칙).
+  </div>
+
+  <footer>
+    OA 통합 AS 플랫폼 · support.oapms.com · 개발일지 2026-06-02
+  </footer>
+
+</div>
+</body>
+</html>
