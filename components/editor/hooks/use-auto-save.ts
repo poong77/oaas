@@ -124,6 +124,63 @@ export function useAutoSave(
     };
   }, [config, draftKey, value]);
 
+  // 페이지 이탈/탭 숨김 시 즉시 flush (디바운스 대기 없이 보존).
+  // - localStorage 즉시 + 서버 keepalive PUT(언로드 중에도 전송 보장).
+  // - 모바일에서 탭 전환/홈 이동이 잦으므로 visibilitychange='hidden'도 트리거.
+  useEffect(() => {
+    if (!config || !draftKey) return;
+    const scope = config.scope;
+    const targetId = config.targetId;
+    const metadata = config.metadata ?? null;
+
+    const flush = () => {
+      const content = latestValueRef.current;
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(
+            `${LOCAL_STORAGE_PREFIX}${draftKey}`,
+            JSON.stringify({ content, metadata, updatedAt: Date.now() }),
+          );
+        } catch {
+          /* 쿼터 초과 등 무시 */
+        }
+      }
+      // 빈 본문은 서버에 굳이 보내지 않음(발행 후 삭제와 충돌 방지)
+      if (!content.trim()) return;
+      try {
+        fetch('/api/drafts', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scope,
+            targetId,
+            draftKey,
+            contentMarkdown: content,
+            metadata: metadata ?? undefined,
+          }),
+          keepalive: true, // 언로드 중에도 요청 완료 보장
+        }).catch(() => {});
+      } catch {
+        /* noop */
+      }
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVisibility);
+      // 언마운트 시에도 1회 flush (폼 닫힘·다른 티켓 이동 등)
+      flush();
+    };
+    // config 객체는 매 렌더 새로 생성되므로 안정 문자열(scope/targetId/draftKey)만 의존.
+    // → cleanup의 flush()가 매 렌더가 아닌 실제 언마운트/키 변경 시에만 실행됨.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey, config?.scope, config?.targetId]);
+
   const restoreFromLocal = (): string | null => {
     if (!draftKey || typeof window === 'undefined') return null;
     try {

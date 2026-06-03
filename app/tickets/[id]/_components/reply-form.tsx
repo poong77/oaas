@@ -8,11 +8,15 @@
  * - Phase 3: RichEditor lite 통합 + 자동 저장
  */
 
-import { useState, useTransition, type FormEvent } from 'react';
+import { useCallback, useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RichEditor } from '@/components/editor/rich-editor';
+import {
+  SaveIndicator,
+  type SaveStatus,
+} from '@/components/editor/panels/save-indicator';
 import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
 import { addPublicMessageAction } from '@/app/actions/ticket-actions';
 
@@ -29,6 +33,16 @@ export function ReplyForm({
   const [content, setContent] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+
+  const handleAutosaveStatus = useCallback(
+    (status: SaveStatus, lastSavedAt: number | null) => {
+      setSaveStatus(status);
+      setSavedAt(lastSavedAt);
+    },
+    [],
+  );
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -72,10 +86,13 @@ export function ReplyForm({
         autoSave={{
           scope: 'ticket-message',
           targetId: ticketId,
+          serverDebounceMs: 8000,
         }}
+        onAutosaveStatusChange={handleAutosaveStatus}
       />
       {error && <p className="text-xs text-red-500">{error}</p>}
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between gap-2">
+        <SaveIndicator status={saveStatus} lastSavedAt={savedAt} />
         <Button type="submit" disabled={pending}>
           {pending ? '저장 중...' : '답변 등록'}
           <Send className="h-4 w-4" />

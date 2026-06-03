@@ -22,6 +22,10 @@ import {
   addInternalMemoAction,
 } from '@/app/actions/ticket-actions';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import {
+  SaveIndicator,
+  type SaveStatus,
+} from '@/components/editor/panels/save-indicator';
 import { cn } from '@/lib/utils';
 import { AiAssistPanel, type DraftPayload } from './ai-assist/ai-assist-panel';
 import { AiDraftOverlay } from './ai-assist/ai-draft-overlay';
@@ -70,6 +74,16 @@ export function AdminReplyForm({
   const [pending, startTransition] = useTransition();
   const [quickReplyOpen, setQuickReplyOpen] = useState(false);
   const [draftMeta, setDraftMeta] = useState<DraftMeta | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+
+  const handleAutosaveStatus = useCallback(
+    (status: SaveStatus, lastSavedAt: number | null) => {
+      setSaveStatus(status);
+      setSavedAt(lastSavedAt);
+    },
+    [],
+  );
 
   // AI 초안 배지는 내용을 전부 비우면 해제 (검수 강제 — 시각)
   useEffect(() => {
@@ -199,7 +213,9 @@ export function AdminReplyForm({
         autoSave={{
           scope: 'ticket-message',
           targetId: ticketId,
+          serverDebounceMs: 8000,
         }}
+        onAutosaveStatusChange={handleAutosaveStatus}
         className={
           kind === 'internal_memo'
             ? 'border-amber-300 dark:border-amber-700'
@@ -217,7 +233,8 @@ export function AdminReplyForm({
           {error}
         </div>
       )}
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between gap-2">
+        <SaveIndicator status={saveStatus} lastSavedAt={savedAt} />
         <Button type="submit" size="sm" disabled={pending}>
           {pending ? '저장 중...' : kind === 'public' ? '공개 답변 등록' : '내부 메모 등록'}
           <Send className="h-4 w-4" />
