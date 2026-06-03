@@ -15,6 +15,7 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { STORAGE_STATE_PATHS } from './fixtures/users';
+import { expectNotFound } from './helpers/assert';
 
 // ──────────────────────────────────────────────────────────────────
 // 헬퍼
@@ -216,8 +217,8 @@ test.describe('회귀 — 호텔리어 (R-01)', () => {
     // aside[aria-label="관리자 내비게이션"] 미존재
     await expect(page.locator('aside[aria-label="관리자 내비게이션"]')).toHaveCount(0);
 
-    // 호텔리어 Header GNB는 정상 (role-mode-ui 회귀 검사)
-    await expect(page.getByRole('link', { name: '빠른 해결' }).first()).toBeVisible();
+    // 호텔리어 Header GNB는 정상 (구 '빠른 해결' → '도움말 찾기'로 라벨 변경)
+    await expect(page.getByRole('link', { name: '도움말 찾기' }).first()).toBeVisible();
   });
 });
 
@@ -246,8 +247,9 @@ test.describe('회귀 — 권한 차단 (R-03 / R-04)', () => {
   test.use({ storageState: STORAGE_STATE_PATHS.manager });
 
   test('R-03: 매니저 /admin/users 직접 입력 → 404', async ({ page }) => {
-    const res = await page.goto('/admin/users');
-    expect(res?.status()).toBe(404);
+    await page.goto('/admin/users');
+    // Next16 스트리밍 SSR은 notFound()도 HTTP 200을 반환 → not-found UI로 차단 검증
+    await expectNotFound(page);
   });
 
   test('R-04: /profile → "매니저 영역으로" 클릭 → /admin/tickets', async ({ page }) => {

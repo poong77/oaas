@@ -42,10 +42,12 @@ export async function loginViaUI(page: Page, user: TestUser): Promise<void> {
     await overlayClose.click().catch(() => undefined);
   }
 
-  // /login 페이지의 폼 필드 — 라벨/플레이스홀더 기반으로 안정적 선택
-  // (data-testid가 없는 경우 input[name] 또는 type 기반)
+  // /login 페이지의 폼 필드 — "이메일/아이디 로그인" 도입으로 식별자 필드는
+  // id="identifier"(type=text). 구버전 email 셀렉터도 폴백으로 유지.
   const emailInput = page
-    .locator('input[type="email"], input[name="email"], input[id*="email" i]')
+    .locator(
+      'input#identifier, input[name="identifier"], input[type="email"], input[name="email"], input[id*="email" i]',
+    )
     .first();
   const passwordInput = page
     .locator('input[type="password"], input[name="password"]')

@@ -28,6 +28,7 @@
 
 import { test, expect } from '@playwright/test';
 import { STORAGE_STATE_PATHS } from './fixtures/users';
+import { expectNotFound } from './helpers/assert';
 
 // ──────────────────────────────────────────────────────────────────
 // KB-01 — 새 에디터 셸 진입 smoke (manager)
@@ -183,9 +184,9 @@ test.describe('KB-08 /role/[key] DB 연동 (public)', () => {
   });
 
   test('KB-08b 존재하지 않는 role key는 404', async ({ page }) => {
-    const res = await page.goto('/role/__nonexistent__');
-    // notFound() → 404
-    expect(res?.status()).toBe(404);
+    await page.goto('/role/__nonexistent__');
+    // Next16 스트리밍 SSR은 notFound()도 HTTP 200을 반환 → not-found UI로 검증
+    await expectNotFound(page);
   });
 });
 

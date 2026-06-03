@@ -16,6 +16,7 @@
 
 import { test, expect } from '@playwright/test';
 import { STORAGE_STATE_PATHS } from './fixtures/users';
+import { expectNotFound } from './helpers/assert';
 
 // ──────────────────────────────────────────────────────────────────
 // AUTH-회귀: 비로그인 / 진입 시 호텔리어 톤 + 200 OK
@@ -65,9 +66,9 @@ test.describe('매니저 시나리오', () => {
   test('T-06: /admin/users 직접 접근 → 404 (매니저 권한 부족)', async ({
     page,
   }) => {
-    const res = await page.goto('/admin/users');
-    // Next.js의 notFound()는 404 상태 코드를 반환
-    expect(res?.status()).toBe(404);
+    await page.goto('/admin/users');
+    // Next16 스트리밍 SSR은 notFound()도 HTTP 200을 반환 → not-found UI로 차단 검증
+    await expectNotFound(page);
   });
 
   test('T-07: /profile → "매니저 영역으로 →" 클릭 → /admin/tickets (404 버그 수정 검증)', async ({
@@ -108,9 +109,9 @@ test.describe('호텔리어 회귀', () => {
     const rootScope = page.locator('[data-role]').first();
     await expect(rootScope).toHaveAttribute('data-role', 'hotelier');
 
-    // 호텔리어 GNB 정상 노출
+    // 호텔리어 GNB 정상 노출 (구 '빠른 해결' → '도움말 찾기'로 라벨 변경)
     await expect(
-      page.getByRole('link', { name: '빠른 해결' }).first(),
+      page.getByRole('link', { name: '도움말 찾기' }).first(),
     ).toBeVisible();
   });
 });

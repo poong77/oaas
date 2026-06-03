@@ -21,6 +21,7 @@
 
 import { test, expect } from '@playwright/test';
 import { STORAGE_STATE_PATHS } from './fixtures/users';
+import { expectNotFound } from './helpers/assert';
 
 // 1x1 투명 PNG (test 픽스처 — 디스크 파일 없이 setInputFiles 가능)
 const TINY_PNG_BUFFER = Buffer.from(
@@ -206,24 +207,19 @@ test.describe('KB-09f preview auth — hotelier blocked', () => {
   test('KB-09f 호텔리어는 /articles-preview 진입 시 권한 차단 (로그인 redirect 또는 403)', async ({
     page,
   }) => {
-    const res = await page.goto('/articles-preview?key=fake');
-    // requireRole 이 throw → /login 으로 redirect 또는 NextAuth 401
-    // 둘 중 어느 경로든 미리보기 안내 화면은 보이지 않아야 함
+    await page.goto('/articles-preview?key=fake');
+    // requireRole 미충족 → notFound(). 미리보기 안내 화면은 보이지 않아야 함.
     await expect(
       page.getByRole('heading', {
         name: /미리보기 데이터를 찾을 수 없어요/,
       }),
     ).not.toBeVisible();
 
-    // 추가로 URL 또는 status로 검증
-    const status = res?.status() ?? 0;
-    const url = page.url();
-    const blocked =
-      status === 401 ||
-      status === 403 ||
-      status === 404 ||
-      /\/login/.test(url);
-    expect(blocked).toBeTruthy();
+    // Next16 스트리밍 SSR은 notFound()도 HTTP 200을 반환 → not-found UI로 차단 검증
+    // (단, /login 으로 redirect 되는 경우는 not-found UI가 없으므로 분기)
+    if (!/\/login/.test(page.url())) {
+      await expectNotFound(page);
+    }
   });
 });
 

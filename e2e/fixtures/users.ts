@@ -18,8 +18,10 @@ export const TEST_USERS = {
     label: '매니저',
   },
   hotelier: {
+    // 초기 비밀번호 123456 정책으로 hotelier 시드 계정 비번이 재설정됨(2026-06).
+    // admin/manager는 oa1234! 유지, hotelier만 123456.
     email: 'hotelier@oa.local',
-    password: 'oa1234!',
+    password: '123456',
     role: 'hotelier' as const,
     label: '호텔리어',
   },

@@ -14,6 +14,7 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { STORAGE_STATE_PATHS } from './fixtures/users';
+import { expectNotFound } from './helpers/assert';
 
 const PATH = '/admin/insights/search-logs';
 
@@ -174,8 +175,9 @@ test.describe('검색로그 권한 — 호텔리어 회귀', () => {
   test.use({ storageState: STORAGE_STATE_PATHS.hotelier });
 
   test('SL-08: 호텔리어 직접 진입 → 404', async ({ page }) => {
-    const res = await page.goto(PATH);
-    expect(res?.status()).toBe(404);
+    await page.goto(PATH);
+    // Next16 스트리밍 SSR은 notFound()도 HTTP 200을 반환 → not-found UI로 차단 검증
+    await expectNotFound(page);
   });
 });
 
