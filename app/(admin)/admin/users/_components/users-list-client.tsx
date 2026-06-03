@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDateKst } from '@/lib/business-hours/format';
@@ -10,6 +11,38 @@ import { toLoginId, isDummyEmail } from '@/lib/text/login-id';
 import type { User, UserRole } from '@/db/schema';
 
 type ListItem = User & { hotelName: string | null };
+
+/** 초기 비밀번호 (lib/actions 정책과 동일). */
+const INITIAL_PASSWORD = '123456';
+
+/** 계정 안내문 생성 — 접속주소 · 아이디 · 초기 비밀번호 포함. */
+function buildAccountGuide(u: ListItem): string {
+  const origin =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : 'https://support.oapms.com';
+  const loginId = u.username ?? toLoginId(u.email);
+  const hotel = u.hotelName ?? u.name;
+  return [
+    `[OA 통합 포털] ${hotel} 계정 안내`,
+    '',
+    `▷ 접속 주소: ${origin}`,
+    `▷ 아이디: ${loginId}`,
+    `▷ 초기 비밀번호: ${INITIAL_PASSWORD}`,
+    '',
+    'OA 솔루션 사용에 필요한 매뉴얼, 문의접수, 연락처 등 여러 유용한 정보를 확인할 수 있습니다.',
+    '첫 로그인 후 프로필에서 연락처·이메일 주소 등 정보를 확인해주세요.',
+  ].join('\n');
+}
+
+async function copyAccountGuide(u: ListItem) {
+  try {
+    await navigator.clipboard.writeText(buildAccountGuide(u));
+    toast.success(`${u.name}님 계정 안내문이 복사되었습니다`);
+  } catch {
+    toast.error('복사에 실패했습니다. 다시 시도해주세요.');
+  }
+}
 
 export function UsersListClient({
   items,
@@ -48,7 +81,7 @@ export function UsersListClient({
               <th className="px-4 py-2.5 text-left font-medium">연락처</th>
               <th className="px-4 py-2.5 text-left font-medium">활동</th>
               <th className="px-4 py-2.5 text-left font-medium">상태</th>
-              <th className="w-10 px-2 py-2.5" aria-hidden />
+              <th className="w-20 px-2 py-2.5 text-right font-medium">관리</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -142,12 +175,28 @@ export function UsersListClient({
                     <StatusDot active={u.isActive} />
                   </td>
 
-                  {/* 수정 */}
-                  <td className="w-10 px-2 py-2.5 text-right">
-                    <Pencil
-                      aria-hidden
-                      className="ml-auto h-3.5 w-3.5 text-slate-300 transition-colors group-hover:text-brand-600 dark:text-slate-600 dark:group-hover:text-brand-400"
-                    />
+                  {/* 관리: 안내문 복사 + 수정 */}
+                  <td className="w-20 px-2 py-2.5">
+                    <div className="flex items-center justify-end gap-0.5">
+                      <button
+                        type="button"
+                        title="계정 안내문 복사 (주소·아이디·비밀번호)"
+                        aria-label={`${u.name} 계정 안내문 복사`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyAccountGuide(u);
+                        }}
+                        className="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800 dark:hover:text-brand-400"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                      <span
+                        aria-hidden
+                        className="rounded p-1.5 text-slate-300 transition-colors group-hover:text-brand-600 dark:text-slate-600 dark:group-hover:text-brand-400"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
                   </td>
                 </tr>
               );
@@ -207,6 +256,19 @@ export function UsersListClient({
                   {u.lastLoginAt ? formatDateKst(u.lastLoginAt) : '미접속'}
                 </dd>
               </dl>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  copyAccountGuide(u);
+                }}
+                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 py-2 text-xs font-medium text-slate-600 active:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:active:bg-slate-800"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                계정 안내문 복사
+              </button>
             </Link>
           );
         })}

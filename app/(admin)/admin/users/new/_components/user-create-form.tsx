@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Plus, X, Building2 } from 'lucide-react';
+import { Plus, X, Building2, KeyRound } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -77,6 +77,19 @@ export function UserCreateForm({ hotels }: { hotels: HotelOption[] }) {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="grid gap-4 sm:grid-cols-2">
+          {/* 비밀번호·첫 로그인 정책 요약 */}
+          <div className="flex items-start gap-2.5 rounded-md border border-brand-200 bg-brand-50 p-3 text-sm text-brand-800 dark:border-brand-800 dark:bg-brand-900/20 dark:text-brand-200 sm:col-span-2">
+            <KeyRound className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            <div className="flex flex-col gap-0.5">
+              <strong>초기 비밀번호는 123456으로 고정 발급됩니다.</strong>
+              <span className="text-[13px] leading-relaxed">
+                사용자에게 <strong>아이디 + 비밀번호 123456</strong>을 안내해주세요.
+                첫 로그인 시 <strong>비밀번호 변경</strong>과 <strong>연락처·이메일
+                주소 등 정보 입력</strong>을 권고하는 안내가 표시됩니다.
+              </span>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="name">이름 *</Label>
             <Input id="name" name="name" required maxLength={100} aria-invalid={!!errors.name} />
@@ -177,7 +190,7 @@ export function UserCreateForm({ hotels }: { hotels: HotelOption[] }) {
         </CardContent>
         <CardFooter className="justify-between">
           <p className="text-xs text-slate-500">
-            추가 시 임시 비밀번호가 자동 발급됩니다. 이메일이 있으면 초대 메일도 발송됩니다.
+            초기 비밀번호는 <strong>123456</strong>으로 발급됩니다. 이메일이 있으면 초대 메일도 발송됩니다.
           </p>
           <Button type="submit" disabled={pending}>
             {pending ? '추가 중...' : '사용자 추가'}

@@ -38,6 +38,9 @@ type ActionResult<T = unknown> =
 const phoneRegex = /^[0-9\-+\s()]{7,20}$/;
 const RoleEnum = z.enum(['hotelier', 'manager', 'admin']);
 
+/** 신규 계정 초기 비밀번호 (고정). 첫 로그인 시 변경 권고. */
+const DEFAULT_INITIAL_PASSWORD = '123456';
+
 /** 아이디 허용 문자: 영문/숫자/. _ - @ + (이메일형 아이디 허용) */
 const usernameRegex = /^[A-Za-z0-9._@+-]{2,100}$/;
 
@@ -132,7 +135,7 @@ export const createUserAdminAction = withAuthorizedAction<
       : `${username.toLowerCase()}@as.local`;
 
   try {
-    const tempPassword = generateTempPassword();
+    const tempPassword = DEFAULT_INITIAL_PASSWORD;
     const passwordHash = await hashPassword(tempPassword);
 
     const [created] = await db

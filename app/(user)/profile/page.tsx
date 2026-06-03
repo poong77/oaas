@@ -31,9 +31,13 @@ export default async function ProfilePage() {
       {user.mustChangePassword && (
         <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
           <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-          <div>
-            <strong>임시 비밀번호 사용 중</strong> — 보안을 위해 아래
-            &lsquo;비밀번호 변경&rsquo; 섹션에서 즉시 비밀번호를 변경해주세요.
+          <div className="flex flex-col gap-1">
+            <strong>기본 비밀번호(123456) 사용 중 — 정보 업데이트가 필요합니다</strong>
+            <span>
+              보안을 위해 아래 <strong>‘비밀번호 변경’</strong>에서 비밀번호를 꼭
+              변경하고, <strong>연락처·이메일 주소</strong>와 기타 정보를 정확히
+              입력해주세요. 비밀번호 분실·중요 안내 수신을 위해 꼭 필요합니다.
+            </span>
           </div>
         </div>
       )}

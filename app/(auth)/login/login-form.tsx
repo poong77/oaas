@@ -56,12 +56,12 @@ export function LoginForm({
       toast.success('로그인되었습니다');
       // 역할별 기본 도착지 계산 (callbackUrl이 있으면 그 경로 우선)
       const session = await getSession();
-      // 첫 로그인 비밀번호 변경 안내 (강제 아님). 임시/기본 비번 사용 시 노출.
+      // 첫 로그인 비밀번호 변경 + 정보 입력 안내 (강제 아님). 기본 비번 사용 시 노출.
       if (session?.user?.mustChangePassword) {
-        toast.message('비밀번호를 변경해주세요', {
+        toast.message('보안을 위해 정보를 업데이트해주세요', {
           description:
-            '기본 비밀번호로 로그인했습니다. 보안을 위해 내 프로필에서 비밀번호를 변경하는 것을 권장합니다.',
-          duration: 8000,
+            '기본 비밀번호(123456)로 로그인했습니다. 내 프로필에서 비밀번호를 꼭 변경하고, 연락처·이메일 주소 등 정보를 입력해주세요.',
+          duration: 10000,
         });
       }
       const destination =
