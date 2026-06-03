@@ -12,9 +12,10 @@
  *   - notices (Phase 7)
  *   - notification_templates, quick_reply_templates, quick_actions,
  *     role_starters, system_settings (Phase 9 — 어드민 마스터 데이터)
+ *   - popular_keywords (SS-04 — 인기검색어 하이브리드 큐레이션)
  *
  * 다음 Phase에서 추가될 예정:
- *   - popular_keywords, chatbot_sessions (P2 이후)
+ *   - chatbot_sessions (P2 이후)
  *
  * 공통 컬럼 헬퍼: `./_shared.ts`
  */
@@ -44,6 +45,7 @@ export * from './quick-reply-templates';
 export * from './quick-actions';
 export * from './role-starters';
 export * from './system-settings';
+export * from './popular-keywords';
 // 공통 인프라 — 리치 에디터 자동 저장
 export * from './editor-drafts';
 // 동의어 사전 마스터 (검색 보강)

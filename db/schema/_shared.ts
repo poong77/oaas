@@ -78,7 +78,19 @@ export const termGroupCategoryEnum = pgEnum('term_group_category', [
   'misc', // 기타
 ]);
 
+/**
+ * popular keyword kind enum — popular_keywords.kind.
+ * pin   — 어드민이 항상 상단 고정한 인기검색어
+ * block — 자동집계(search_logs)에서 제외할 노이즈/금칙 검색어
+ */
+export const popularKeywordKindEnum = pgEnum('popular_keyword_kind', [
+  'pin',
+  'block',
+]);
+
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
 export type CategoryType = (typeof categoryTypeEnum.enumValues)[number];
 export type ServiceStatusValue = (typeof serviceStatusEnum.enumValues)[number];
 export type TermGroupCategory = (typeof termGroupCategoryEnum.enumValues)[number];
+export type PopularKeywordKind =
+  (typeof popularKeywordKindEnum.enumValues)[number];

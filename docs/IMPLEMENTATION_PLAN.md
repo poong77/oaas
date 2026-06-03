@@ -480,11 +480,16 @@ label, description, article_ids uuid[], sort_order,
 created_at, updated_at, is_active
 ```
 
-#### `popular_keywords`
+#### `popular_keywords` (하이브리드: 수동 큐레이션 + 검색로그 실시간 집계)
 ```ts
-id, keyword, source enum('auto' | 'manual'), hit_count,
-sort_order, visible, created_at, updated_at, is_active
+id, keyword, normalized_keyword,
+kind enum('pin' | 'block'),   -- pin: 항상 상단 고정, block: 자동집계에서 제외
+sort_order, created_at, updated_at, is_active
 ```
+- **auto 행은 저장하지 않는다.** 홈/검색 노출 시 `search_logs.topQueries(30일)` 를 실시간 집계.
+- 노출 = `pin`(sort_order) → auto top-N(`block` 제외 + 이미 pin된 것 제외) 순서로 병합, 최대 N개.
+- DB row 0건이거나 auto 0건이면 `_constants.ts`의 하드코딩 fallback 사용.
+- 캐시: `unstable_cache` 1h + `revalidateTag` (어드민 pin/block 편집 시 무효화).
 
 #### `solution_link_presets` (AC-02 기본값)
 ```ts

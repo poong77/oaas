@@ -21,6 +21,7 @@ import * as MT from '@/lib/services/master-templates';
 import * as MQR from '@/lib/services/master-quick-replies';
 import * as MQA from '@/lib/services/master-quick-actions';
 import * as MRS from '@/lib/services/master-role-starters';
+import * as MPK from '@/lib/services/master-popular-keywords';
 import * as MSL from '@/lib/services/master-solution-links';
 import * as MSS from '@/lib/services/master-system-settings';
 import * as MFF from '@/lib/services/master-form-fields';
@@ -62,6 +63,8 @@ function revalidateAdminMaster(...subPaths: string[]) {
       revalidateTag(MQA.QUICK_ACTIONS_CACHE_TAG, 'default');
     } else if (p === '/admin/master/role-starters') {
       revalidateTag(MRS.ROLE_STARTERS_CACHE_TAG, 'default');
+    } else if (p === '/admin/master/popular-keywords') {
+      revalidateTag(MPK.POPULAR_KEYWORDS_CACHE_TAG, 'default');
     }
   }
 }
@@ -701,6 +704,73 @@ export async function setFormFieldActiveAction(
       targetId: id,
     });
     revalidateAdminMaster('/admin/master/form-fields');
+  }
+  return r;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 9. popular_keywords (인기검색어 하이브리드 — pin/block)
+// ─────────────────────────────────────────────────────────────────────
+
+const PopularKeywordSchema = z.object({
+  keyword: z.string().min(1).max(50),
+  kind: z.enum(['pin', 'block']),
+  sortOrder: z.number().int().default(0),
+});
+
+export async function upsertPopularKeywordAction(
+  id: string | null,
+  _prev: ActionResult | undefined,
+  formData: FormData,
+): Promise<ActionResult> {
+  const user = await requireRole(['manager', 'admin']);
+  const raw = {
+    keyword: getStr(formData, 'keyword'),
+    kind: getStr(formData, 'kind'),
+    sortOrder: getInt(formData, 'sortOrder', 0),
+  };
+  const parsed = PopularKeywordSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, message: '입력값 확인' };
+  if (id) {
+    const r = await MPK.updatePopularKeyword(id, parsed.data);
+    if (!r.ok) return { ok: false, message: r.message };
+    logActivity({
+      userId: user.id,
+      action: 'master.popular_keyword.update',
+      targetType: 'popular_keyword',
+      targetId: id,
+    });
+    revalidateAdminMaster('/admin/master/popular-keywords', '/', '/search');
+    return { ok: true, id };
+  }
+  const r = await MPK.createPopularKeyword(parsed.data);
+  if (!r.ok || !r.id) return { ok: false, message: r.message };
+  logActivity({
+    userId: user.id,
+    action: 'master.popular_keyword.create',
+    targetType: 'popular_keyword',
+    targetId: r.id,
+  });
+  revalidateAdminMaster('/admin/master/popular-keywords', '/', '/search');
+  return { ok: true, id: r.id };
+}
+
+export async function setPopularKeywordActiveAction(
+  id: string,
+  isActive: boolean,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const r = await MPK.setPopularKeywordActive(id, isActive);
+  if (r.ok) {
+    logActivity({
+      userId: user.id,
+      action: isActive
+        ? 'master.popular_keyword.restore'
+        : 'master.popular_keyword.archive',
+      targetType: 'popular_keyword',
+      targetId: id,
+    });
+    revalidateAdminMaster('/admin/master/popular-keywords', '/', '/search');
   }
   return r;
 }

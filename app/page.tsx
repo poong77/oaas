@@ -19,6 +19,8 @@
 import { getProductCategories } from '@/lib/services/categories';
 import { getLatestServiceStatus } from '@/lib/services/service-status';
 import { listActiveRoleStarters } from '@/lib/services/master-role-starters';
+import { resolvePopularKeywords } from '@/lib/services/master-popular-keywords';
+import { getCurrentUser, isManagerOrAdmin } from '@/lib/permissions';
 import { listActivePopupNotices } from '@/lib/services/notices';
 import { HomePopupBanner } from '@/components/notices/home-popup-banner';
 import { HomeHero } from './_components/home/home-hero';
@@ -36,18 +38,29 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  const [categories, latestStatus, roleStarterRows, popupNotices] =
-    await Promise.all([
-      getProductCategories(),
-      getLatestServiceStatus(),
-      listActiveRoleStarters(),
-      listActivePopupNotices(),
-    ]);
+  const [
+    categories,
+    latestStatus,
+    roleStarterRows,
+    popupNotices,
+    keywords,
+    currentUser,
+  ] = await Promise.all([
+    getProductCategories(),
+    getLatestServiceStatus(),
+    listActiveRoleStarters(),
+    listActivePopupNotices(),
+    resolvePopularKeywords(),
+    getCurrentUser(),
+  ]);
+  const canManageKeywords = !!currentUser && isManagerOrAdmin(currentUser.role);
 
   return (
     <>
       <HomePopupBanner notices={popupNotices} />
       <HomeHero
+        keywords={keywords}
+        canManage={canManageKeywords}
         sidebar={
           /* HomeStatusUpdatesBox는 async 서버 컴포넌트 — JSX로 직접 전달 */
           <HomeStatusUpdatesBox latest={latestStatus} />

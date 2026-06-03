@@ -1,12 +1,13 @@
 /**
  * 홈(LP-01) 임시 상수.
  *
- * TODO(phase-2-temp):
- *   - POPULAR_KEYWORDS → popular_keywords 테이블 (Phase 5 이후)
- *   - QUICK_ACTIONS → quick_actions 테이블 (Phase 9)
- *   - ROLE_STARTERS → role_starters 테이블 (Phase 9)
+ * 이관 현황:
+ *   - POPULAR_KEYWORDS → popular_keywords 테이블 (SS-04, 완료) — 이제 fallback 전용.
+ *       (어드민: /admin/master/popular-keywords · 서비스: master-popular-keywords.ts)
+ *   - QUICK_ACTIONS → quick_actions 테이블 (Phase 9, 완료)
+ *   - ROLE_STARTERS → role_starters 테이블 (Phase 9, 완료)
  *
- * 모두 어드민 마스터 메뉴에서 편집 가능한 형태로 추후 이관.
+ * 모두 어드민 마스터 메뉴에서 편집 가능. DB row 0건일 때만 아래 상수가 노출됨.
  */
 
 import type { LucideIcon } from 'lucide-react';

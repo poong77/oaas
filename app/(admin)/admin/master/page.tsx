@@ -15,6 +15,7 @@ import {
   FolderTree,
   Gauge,
   Bot,
+  Hash,
   HelpCircle,
   Layers,
   Link as LinkIcon,
@@ -85,6 +86,14 @@ const ITEMS: MasterItem[] = [
     label: '역할별 시작',
     description: '홈 ⑤ 카드. 프론트/예약/하우스키핑/관리자/신규오픈 5종.',
     icon: ListChecks,
+    badge: '홈 노출',
+  },
+  {
+    href: '/admin/master/popular-keywords',
+    label: '인기검색어',
+    description:
+      '홈·검색 화면의 # 키워드 칩. 검색로그 자동집계 + 고정(pin)/제외(block) 큐레이션.',
+    icon: Hash,
     badge: '홈 노출',
   },
   {

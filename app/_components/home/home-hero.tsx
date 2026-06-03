@@ -15,12 +15,24 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { Search, Sparkles } from 'lucide-react';
+import { Plus, Search, Sparkles } from 'lucide-react';
 import { POPULAR_KEYWORDS } from './_constants';
 
-export function HomeHero({ sidebar }: { sidebar?: ReactNode }) {
+export function HomeHero({
+  sidebar,
+  keywords,
+  canManage,
+}: {
+  sidebar?: ReactNode;
+  /** 인기검색어 칩. 미전달 시 하드코딩 fallback. */
+  keywords?: string[];
+  /** 매니저·어드민이면 칩 끝에 인기검색어 관리(+) 버튼 노출. */
+  canManage?: boolean;
+}) {
   const router = useRouter();
   const [q, setQ] = useState('');
+  const popular =
+    keywords && keywords.length > 0 ? keywords : POPULAR_KEYWORDS;
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -64,7 +76,7 @@ export function HomeHero({ sidebar }: { sidebar?: ReactNode }) {
           </form>
 
           <ul className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-            {POPULAR_KEYWORDS.map((kw) => (
+            {popular.map((kw) => (
               <li key={kw}>
                 <Link
                   href={`/search?q=${encodeURIComponent(kw)}`}
@@ -74,6 +86,18 @@ export function HomeHero({ sidebar }: { sidebar?: ReactNode }) {
                 </Link>
               </li>
             ))}
+            {canManage && (
+              <li>
+                <Link
+                  href="/admin/master/popular-keywords"
+                  title="인기검색어 관리"
+                  aria-label="인기검색어 관리"
+                  className="inline-flex items-center justify-center rounded-full border border-dashed border-brand-300 bg-brand-50 p-1.5 text-brand-600 hover:border-brand-500 hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-950/40 dark:text-brand-300 dark:hover:bg-brand-900/50"
+                >
+                  <Plus className="h-4 w-4" />
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
 

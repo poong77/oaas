@@ -16,7 +16,7 @@ import { Suspense } from 'react';
 import { headers } from 'next/headers';
 import { sql, and, desc, gte, ne } from 'drizzle-orm';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { SearchResultsSkeleton } from '@/components/ui/skeletons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -39,13 +39,13 @@ import { getProductCategories } from '@/lib/services/categories';
 import { expandKeywords } from '@/lib/services/synonym-expander';
 import { buildHighlightRegex } from '@/lib/text/search-match';
 import { logSearch } from '@/lib/services/search-logs';
-import { getCurrentUser } from '@/lib/permissions';
+import { getCurrentUser, isManagerOrAdmin } from '@/lib/permissions';
 import { formatDateKst } from '@/lib/business-hours/format';
 import { SearchTabs } from './_components/search-tabs';
 import { SearchFilters } from './_components/search-filters';
 import { TrackedLink } from './_components/tracked-link';
 import { SearchBox } from './_components/search-box';
-import { POPULAR_KEYWORDS } from '@/app/_components/home/_constants';
+import { resolvePopularKeywords } from '@/lib/services/master-popular-keywords';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '검색 — OA 통합 AS' };
@@ -92,6 +92,13 @@ export default async function SearchPage({
   const product = sp.product || undefined;
   const contentType = sp.contentType || undefined;
 
+  // 빈 검색 화면에서만 인기검색어 칩 노출 (자동집계 + pin/block).
+  const [popularKeywords, currentUser] = query
+    ? ([[], null] as const)
+    : await Promise.all([resolvePopularKeywords(), getCurrentUser()]);
+  const canManageKeywords =
+    !!currentUser && isManagerOrAdmin(currentUser.role);
+
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       {/* 중앙 검색바 — 페이지 자체에서 바로 검색 (2026-06-01) */}
@@ -104,7 +111,7 @@ export default async function SearchPage({
 
       {!query ? (
         <ul className="flex flex-wrap items-center justify-center gap-2">
-          {POPULAR_KEYWORDS.map((kw) => (
+          {popularKeywords.map((kw) => (
             <li key={kw}>
               <Link
                 href={`/search?q=${encodeURIComponent(kw)}`}
@@ -114,6 +121,18 @@ export default async function SearchPage({
               </Link>
             </li>
           ))}
+          {canManageKeywords && (
+            <li>
+              <Link
+                href="/admin/master/popular-keywords"
+                title="인기검색어 관리"
+                aria-label="인기검색어 관리"
+                className="inline-flex items-center justify-center rounded-full border border-dashed border-brand-300 bg-brand-50 p-1.5 text-brand-600 hover:border-brand-500 hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-950/40 dark:text-brand-300 dark:hover:bg-brand-900/50"
+              >
+                <Plus className="h-4 w-4" />
+              </Link>
+            </li>
+          )}
         </ul>
       ) : (
         // 쿼리/탭/필터가 바뀔 때마다 key 변경 → 결과를 스트리밍하는 동안 즉시 스켈레톤.

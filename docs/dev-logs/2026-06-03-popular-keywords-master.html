@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>인기검색어 하이브리드 큐레이션 — 개발 일지 (2026-06-03)</title>
+<style>
+  :root{
+    --brand:#16a34a; --brand-50:#f0fdf4; --ink:#0f172a; --muted:#64748b;
+    --line:#e2e8f0; --ok:#059669; --warn:#d97706; --danger:#e11d48; --bg:#f8fafc;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+  .wrap{max-width:920px;margin:0 auto;padding:0 18px 60px}
+  header{background:linear-gradient(135deg,#15803d,#22c55e);color:#fff;padding:34px 18px;margin-bottom:26px}
+  header .inner{max-width:920px;margin:0 auto}
+  header h1{margin:0 0 6px;font-size:22px}
+  header p{margin:0;opacity:.92;font-size:14px}
+  .badge{display:inline-block;font-size:12px;background:rgba(255,255,255,.18);padding:3px 10px;border-radius:999px;margin-top:10px}
+  h2{font-size:16px;margin:30px 0 12px;padding-left:10px;border-left:3px solid var(--brand)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .card .k{font-size:12px;color:var(--muted)}
+  .card .v{font-size:20px;font-weight:700;margin-top:4px}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--brand-50);font-size:12px;color:#15803d}
+  tr:last-child td{border-bottom:none}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12.5px}
+  .chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:12.5px;margin:2px 3px;background:#fff}
+  .chip.pin{border-color:#86efac;background:#f0fdf4;color:#15803d}
+  .chip.block{border-color:#fecdd3;background:#fff1f2;color:#be123c}
+  .pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px}
+  .pill.new{background:#dcfce7;color:#15803d}
+  .pill.edit{background:#e0e7ff;color:#3730a3}
+  .note{background:#fff;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:12px 14px;font-size:13.5px;color:#475569}
+  ul.flow{margin:8px 0;padding-left:18px}
+  ul.flow li{margin:3px 0;font-size:14px}
+  .ok{color:var(--ok);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <h1># 인기검색어 하이브리드 큐레이션 (SS-04)</h1>
+    <p>홈·검색 화면 "# 키워드" 칩을 어드민 › 마스터에서 관리 — 검색로그 자동집계 + 고정/제외</p>
+    <span class="badge">2026-06-03 · feat/insight-dashboard</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <h2>한눈에</h2>
+  <div class="grid">
+    <div class="card"><div class="k">방식</div><div class="v">하이브리드</div></div>
+    <div class="card"><div class="k">신규 테이블</div><div class="v">1개</div></div>
+    <div class="card"><div class="k">신규 파일</div><div class="v">6개</div></div>
+    <div class="card"><div class="k">수정 파일</div><div class="v">8개</div></div>
+    <div class="card"><div class="k">빌드 / 타입</div><div class="v ok">통과</div></div>
+  </div>
+
+  <h2>무엇을 바꿨나</h2>
+  <p style="font-size:14px;margin:0 0 6px">
+    기존에는 키워드 5개가 <code>app/_components/home/_constants.ts</code>에
+    <b>하드코딩</b>되어 있었습니다(홈 Hero + /search 빈 화면 2곳). 이제 어드민이
+    <b>/admin/master/인기검색어</b>에서 관리하고, 평상시엔 실사용 검색로그에서
+    자동 집계됩니다.
+  </p>
+  <ul class="flow">
+    <li><b>auto</b> — 최근 30일 <code>search_logs.topQueries()</code> 실시간 집계 (DB 저장 안 함, 항상 최신)</li>
+    <li><b>pin</b> — 어드민이 항상 상단 고정 <span class="chip pin"># 체크인 오류</span></li>
+    <li><b>block</b> — 자동집계에서 제외할 노이즈/금칙어 <span class="chip block">⊘ test</span></li>
+    <li>노출 = <b>pin → auto(block·중복 제외)</b> 병합, 최대 6개 · 1시간 캐시 + 편집 시 즉시 무효화</li>
+    <li>DB 0건 또는 검색기록 0건이면 <code>_constants.ts</code> fallback</li>
+  </ul>
+
+  <h2>DB — popular_keywords</h2>
+  <table>
+    <tr><th>컬럼</th><th>타입</th><th>설명</th></tr>
+    <tr><td>keyword</td><td>text</td><td>표시용 원본 (pin은 그대로 노출)</td></tr>
+    <tr><td>normalized_keyword</td><td>text</td><td>normalizeTerm 적용 — block ↔ auto 매칭</td></tr>
+    <tr><td>kind</td><td>enum(pin·block)</td><td>고정 / 제외</td></tr>
+    <tr><td>sort_order</td><td>int</td><td>pin 정렬 (작을수록 앞)</td></tr>
+    <tr><td>+공통</td><td>—</td><td>id · created_at · updated_at · is_active</td></tr>
+  </table>
+  <p class="note">마이그레이션 <code>0029_lush_longshot.sql</code> — 신규 enum·테이블·인덱스 2개만 생성.
+  파괴적 변경 없음. <code>db:generate</code> → <code>db:migrate</code>로 적용 완료
+  (<code>db:push</code>는 search tsv 인덱스를 드롭하므로 금지).</p>
+
+  <h2>어드민 화면 (/admin/master/인기검색어)</h2>
+  <ul class="flow">
+    <li><b>현재 노출 미리보기</b> — 사용자가 보는 칩 그대로</li>
+    <li><b>고정(pin)</b> 목록 + 정렬/비활성 표시</li>
+    <li><b>제외(block)</b> 목록</li>
+    <li><b>자동집계 top 15</b> — 각 검색어에서 한 번에 <span class="pill new">고정</span> / <span class="pill edit">제외</span> 추가 (검색어 prefill)</li>
+  </ul>
+
+  <h2>변경 파일</h2>
+  <table>
+    <tr><th>파일</th><th>구분</th><th>내용</th></tr>
+    <tr><td>db/schema/popular-keywords.ts</td><td><span class="pill new">신규</span></td><td>테이블 정의</td></tr>
+    <tr><td>lib/services/master-popular-keywords.ts</td><td><span class="pill new">신규</span></td><td>CRUD + resolve 병합 로직(캐시)</td></tr>
+    <tr><td>app/(admin)/admin/master/popular-keywords/*</td><td><span class="pill new">신규</span></td><td>목록·신규·편집·editor·loading (5)</td></tr>
+    <tr><td>db/schema/_shared.ts</td><td><span class="pill edit">수정</span></td><td>popular_keyword_kind enum</td></tr>
+    <tr><td>db/schema/index.ts</td><td><span class="pill edit">수정</span></td><td>export 추가</td></tr>
+    <tr><td>app/actions/master-actions.ts</td><td><span class="pill edit">수정</span></td><td>upsert·setActive 액션 + 캐시 태그 무효화</td></tr>
+    <tr><td>app/(admin)/admin/master/page.tsx</td><td><span class="pill edit">수정</span></td><td>마스터 인덱스 카드 추가</td></tr>
+    <tr><td>app/page.tsx · home-hero.tsx</td><td><span class="pill edit">수정</span></td><td>resolvePopularKeywords → keywords prop</td></tr>
+    <tr><td>app/search/page.tsx</td><td><span class="pill edit">수정</span></td><td>빈 화면 칩을 resolve로 교체</td></tr>
+    <tr><td>app/_components/home/_constants.ts</td><td><span class="pill edit">수정</span></td><td>fallback 전용으로 격하(주석)</td></tr>
+    <tr><td>docs/IMPLEMENTATION_PLAN.md</td><td><span class="pill edit">수정</span></td><td>popular_keywords 스펙 갱신</td></tr>
+  </table>
+
+  <h2>남은 확인 (수동)</h2>
+  <ul class="flow">
+    <li>어드민 로그인 → 마스터 → 인기검색어 진입, pin 추가 후 홈/검색 칩 반영 확인</li>
+    <li>block 추가 시 자동집계 목록에서 "제외됨" 뱃지 + 노출 미리보기에서 사라지는지</li>
+    <li>검색로그가 쌓이면 auto top이 실제로 칩에 들어오는지 (현재 데이터 의존)</li>
+  </ul>
+
+</div>
+</body>
+</html>
