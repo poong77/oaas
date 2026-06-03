@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight, Pencil, Plus, Power, Search, X } from 'lucide-react';
@@ -17,8 +17,12 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PageSizeSelect } from '@/components/admin/page-size-select';
+import { BulkActionBar } from '@/components/admin/bulk-action-bar';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import {
+  bulkSetHotelsActiveAction,
   toggleHotelActiveAdminAction,
   upsertHotelAdminAction,
 } from '@/app/actions/admin-user-actions';
@@ -45,13 +49,69 @@ export function HotelsManager({
   const [editing, setEditing] = useState<Hotel | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [q, setQ] = useState(initial.q ?? '');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const lastPage = Math.max(1, Math.ceil(total / pageSize));
+
+  const pageIds = useMemo(() => initialHotels.map((h) => h.id), [initialHotels]);
+  const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+  const someSelected = pageIds.some((id) => selected.has(id));
 
   function go(p: number) {
     const next = new URLSearchParams(sp.toString());
     next.set('page', String(p));
     router.push(`/admin/hotels?${next.toString()}`);
+  }
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function toggleAll() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  async function bulkSetActive(active: boolean) {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    const ok = await confirm({
+      title: active
+        ? `${ids.length}개 호텔을 활성화하시겠습니까?`
+        : `${ids.length}개 호텔을 비활성화하시겠습니까?`,
+      description: active
+        ? undefined
+        : '비활성화해도 소속 계정과 이력은 보존되며, 언제든 다시 활성화할 수 있습니다.',
+      confirmText: active ? '활성화' : '비활성화',
+      tone: active ? 'default' : 'danger',
+    });
+    if (!ok) return;
+    const fd = new FormData();
+    fd.set('ids', ids.join(','));
+    fd.set('active', active ? '1' : '0');
+    startTransition(async () => {
+      const res = await bulkSetHotelsActiveAction(fd);
+      if (res.ok) {
+        toast.success(
+          `${res.data?.affected ?? 0}개 호텔이 ${active ? '활성화' : '비활성화'}되었습니다`,
+        );
+        clearSelection();
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
   }
   function applyFilters(updates: Record<string, string | undefined>) {
     const next = new URLSearchParams(sp.toString());
@@ -140,11 +200,38 @@ export function HotelsManager({
           />
         )}
 
+        {/* 일괄 작업 바 */}
+        <div className="overflow-hidden rounded-md">
+          <BulkActionBar count={selected.size} onClear={clearSelection}>
+            <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => bulkSetActive(true)}>
+              <Power className="h-3.5 w-3.5" />활성화
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              onClick={() => bulkSetActive(false)}
+              className="text-red-600 hover:text-red-700 dark:text-red-400"
+            >
+              <Power className="h-3.5 w-3.5" />비활성화
+            </Button>
+          </BulkActionBar>
+        </div>
+
         {/* 테이블 */}
         <div className="hidden overflow-x-auto rounded-md border border-slate-200 dark:border-slate-800 md:block">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
               <tr>
+                <th className="w-10 px-3 py-2 text-left">
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={!allSelected && someSelected}
+                    onChange={toggleAll}
+                    aria-label="이 페이지 전체 선택"
+                  />
+                </th>
                 <th className="px-3 py-2 text-left">호텔명</th>
                 <th className="px-3 py-2 text-left">연락처</th>
                 <th className="px-3 py-2 text-left">상태</th>
@@ -152,26 +239,35 @@ export function HotelsManager({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {initialHotels.map((h) => (
-                <tr key={h.id} className={h.isActive ? '' : 'opacity-60'}>
-                  <td className="px-3 py-2 font-medium">{h.name}</td>
-                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{h.phone ?? '-'}</td>
-                  <td className="px-3 py-2">
-                    {h.isActive ? <Badge tone="success">활성</Badge> : <Badge tone="slate">비활성</Badge>}
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <div className="inline-flex gap-1">
-                      <Button type="button" size="sm" variant="ghost" onClick={() => { setEditing(h); setShowCreate(false); }}>
-                        <Pencil className="h-3.5 w-3.5" />수정
-                      </Button>
-                      <Button type="button" size="sm" variant="ghost" onClick={() => handleToggle(h)}>
-                        <Power className="h-3.5 w-3.5" />
-                        {h.isActive ? '비활성' : '활성'}
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {initialHotels.map((h) => {
+                const checked = selected.has(h.id);
+                return (
+                  <tr
+                    key={h.id}
+                    className={`${checked ? 'bg-brand-50/50 dark:bg-brand-950/20' : ''} ${h.isActive ? '' : 'opacity-60'}`}
+                  >
+                    <td className="w-10 px-3 py-2">
+                      <Checkbox checked={checked} onChange={() => toggle(h.id)} aria-label={`${h.name} 선택`} />
+                    </td>
+                    <td className="px-3 py-2 font-medium">{h.name}</td>
+                    <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{h.phone ?? '-'}</td>
+                    <td className="px-3 py-2">
+                      {h.isActive ? <Badge tone="success">활성</Badge> : <Badge tone="slate">비활성</Badge>}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <div className="inline-flex gap-1">
+                        <Button type="button" size="sm" variant="ghost" onClick={() => { setEditing(h); setShowCreate(false); }}>
+                          <Pencil className="h-3.5 w-3.5" />수정
+                        </Button>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => handleToggle(h)}>
+                          <Power className="h-3.5 w-3.5" />
+                          {h.isActive ? '비활성' : '활성'}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -179,9 +275,22 @@ export function HotelsManager({
         {/* 모바일 카드 */}
         <div className="flex flex-col gap-2 md:hidden">
           {initialHotels.map((h) => (
-            <div key={h.id} className={`rounded-md border border-slate-200 p-3 dark:border-slate-800 ${h.isActive ? '' : 'opacity-60'}`}>
-              <div className="flex items-start justify-between">
-                <div className="text-sm font-semibold">{h.name}</div>
+            <div
+              key={h.id}
+              className={`rounded-md border p-3 ${
+                selected.has(h.id)
+                  ? 'border-brand-300 bg-brand-50/40 dark:border-brand-800 dark:bg-brand-950/20'
+                  : 'border-slate-200 dark:border-slate-800'
+              } ${h.isActive ? '' : 'opacity-60'}`}
+            >
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  checked={selected.has(h.id)}
+                  onChange={() => toggle(h.id)}
+                  aria-label={`${h.name} 선택`}
+                  className="mt-0.5"
+                />
+                <div className="min-w-0 flex-1 text-sm font-semibold">{h.name}</div>
                 {h.isActive ? <Badge tone="success">활성</Badge> : <Badge tone="slate">비활성</Badge>}
               </div>
               <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
@@ -200,11 +309,14 @@ export function HotelsManager({
           ))}
         </div>
 
-        {lastPage > 1 && (
-          <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-sm dark:border-slate-800">
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-3 text-sm dark:border-slate-800 sm:flex-row">
+          <div className="flex items-center gap-3">
             <div className="text-xs text-slate-500">
-              {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} / {total}
+              {total === 0 ? 0 : (page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} / {total}개
             </div>
+            <PageSizeSelect pageSize={pageSize} />
+          </div>
+          {lastPage > 1 && (
             <div className="flex items-center gap-1">
               <Button type="button" variant="outline" size="sm" disabled={page <= 1} onClick={() => go(page - 1)}>
                 <ChevronLeft className="h-4 w-4" />이전
@@ -214,8 +326,8 @@ export function HotelsManager({
                 다음<ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );

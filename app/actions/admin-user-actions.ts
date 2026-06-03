@@ -11,7 +11,7 @@
  */
 
 import { revalidatePath } from 'next/cache';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -329,6 +329,63 @@ export const toggleUserActiveAdminAction = withAuthorizedAction<
   }
 });
 
+// AC-10b: 사용자 일괄 활성/비활성 (소프트 삭제 = 비활성화)
+const BulkActiveSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(500),
+  active: z.boolean(),
+});
+
+export const bulkSetUsersActiveAction = withAuthorizedAction<
+  FormData,
+  ActionResult<{ affected: number; skippedSelf: boolean }>
+>(['admin'], async (ctx, formData) => {
+  if (!db) return { ok: false, error: 'DB 미연결' };
+
+  const rawIds = String(formData.get('ids') ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const active = String(formData.get('active') ?? '') === '1';
+
+  const parsed = BulkActiveSchema.safeParse({ ids: rawIds, active });
+  if (!parsed.success) return { ok: false, error: '잘못된 요청입니다' };
+
+  // 비활성화 시 본인 계정은 제외(자기 잠금 방지).
+  let ids = parsed.data.ids;
+  let skippedSelf = false;
+  if (!active) {
+    const before = ids.length;
+    ids = ids.filter((id) => id !== ctx.user.id);
+    skippedSelf = ids.length !== before;
+  }
+  if (ids.length === 0)
+    return { ok: false, error: '본인 계정은 비활성화할 수 없습니다' };
+
+  try {
+    const updated = await db
+      .update(users)
+      .set({ isActive: active, updatedAt: new Date() })
+      .where(inArray(users.id, ids))
+      .returning({ id: users.id });
+
+    logActivity({
+      userId: ctx.user.id,
+      action: active ? 'user.activate' : 'user.deactivate',
+      targetType: 'user',
+      payload: { bulk: true, count: updated.length, ids },
+    });
+
+    revalidatePath('/admin/users');
+    return {
+      ok: true,
+      data: { affected: updated.length, skippedSelf },
+    };
+  } catch (err) {
+    console.error('[bulkSetUsersActiveAction] 실패:', err);
+    return { ok: false, error: '일괄 변경 중 오류가 발생했습니다' };
+  }
+});
+
 // AC-09: 비밀번호 초기화
 export const resetUserPasswordAdminAction = withAuthorizedAction<
   FormData,
@@ -593,5 +650,43 @@ export const toggleHotelActiveAdminAction = withAuthorizedAction<
   } catch (err) {
     console.error('[toggleHotelActiveAdminAction] 실패:', err);
     return { ok: false, error: '변경 중 오류가 발생했습니다' };
+  }
+});
+
+// 호텔 일괄 활성/비활성 (소프트 삭제 = 비활성화)
+export const bulkSetHotelsActiveAction = withAuthorizedAction<
+  FormData,
+  ActionResult<{ affected: number }>
+>(['admin'], async (ctx, formData) => {
+  if (!db) return { ok: false, error: 'DB 미연결' };
+
+  const rawIds = String(formData.get('ids') ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const active = String(formData.get('active') ?? '') === '1';
+
+  const parsed = BulkActiveSchema.safeParse({ ids: rawIds, active });
+  if (!parsed.success) return { ok: false, error: '잘못된 요청입니다' };
+
+  try {
+    const updated = await db
+      .update(hotels)
+      .set({ isActive: active, updatedAt: new Date() })
+      .where(inArray(hotels.id, parsed.data.ids))
+      .returning({ id: hotels.id });
+
+    logActivity({
+      userId: ctx.user.id,
+      action: active ? 'hotel.activate' : 'hotel.deactivate',
+      targetType: 'hotel',
+      payload: { bulk: true, count: updated.length, ids: parsed.data.ids },
+    });
+
+    revalidatePath('/admin/hotels');
+    return { ok: true, data: { affected: updated.length } };
+  } catch (err) {
+    console.error('[bulkSetHotelsActiveAction] 실패:', err);
+    return { ok: false, error: '일괄 변경 중 오류가 발생했습니다' };
   }
 });

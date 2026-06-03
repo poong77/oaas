@@ -1,5 +1,6 @@
 import { Building2 } from 'lucide-react';
 import { listHotels } from '@/lib/services/users';
+import { parsePageSize } from '@/lib/list-params';
 import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +14,7 @@ type SearchParams = Promise<{
   q?: string;
   status?: 'active' | 'inactive' | 'all';
   page?: string;
+  pageSize?: string;
 }>;
 
 export default async function AdminHotelsPage({
@@ -24,6 +26,7 @@ export default async function AdminHotelsPage({
   await requireRole(['admin']);
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
+  const requestedPageSize = parsePageSize(params.pageSize);
   const isActive =
     params.status === 'all'
       ? 'all'
@@ -35,7 +38,7 @@ export default async function AdminHotelsPage({
     q: params.q,
     isActive,
     page,
-    pageSize: 20,
+    pageSize: requestedPageSize,
     sortBy: 'created_at',
     sortOrder: 'desc',
   });

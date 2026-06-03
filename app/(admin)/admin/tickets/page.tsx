@@ -6,7 +6,7 @@
  */
 
 import Link from 'next/link';
-import { FilePlus2, Headset } from 'lucide-react';
+import { Headset } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { requireRole } from '@/lib/permissions';
@@ -16,6 +16,8 @@ import {
   listTickets,
 } from '@/lib/services/tickets';
 import { getCategoriesByType } from '@/lib/services/categories';
+import { parsePageSize } from '@/lib/list-params';
+import { PageSizeSelect } from '@/components/admin/page-size-select';
 import type { TicketStatus } from '@/db/schema';
 import { TicketsFilters } from './_components/tickets-filters';
 import { TicketsListClient } from './_components/tickets-list-client';
@@ -35,6 +37,7 @@ type SearchParams = Promise<{
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   page?: string;
+  pageSize?: string;
 }>;
 
 export default async function AdminTicketsQueuePage({
@@ -58,6 +61,7 @@ export default async function AdminTicketsQueuePage({
   const sortOrder: 'asc' | 'desc' =
     params.sortOrder === 'asc' ? 'asc' : 'desc';
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
+  const pageSize = parsePageSize(params.pageSize);
 
   const [
     productCategories,
@@ -83,7 +87,7 @@ export default async function AdminTicketsQueuePage({
         sortBy: 'created_at',
         sortOrder,
         page,
-        pageSize: 25,
+        pageSize,
       },
       { id: user.id, role: user.role, hotelId: user.hotelId },
     ),
@@ -117,16 +121,10 @@ export default async function AdminTicketsQueuePage({
         guideAnchor="tickets"
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline" size="sm">
+            <Button asChild size="sm">
               <Link href="/admin/tickets/new-by-phone">
                 <Headset className="h-4 w-4" />
                 대리 접수
-              </Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/tickets/new">
-                <FilePlus2 className="h-4 w-4" />
-                직접 접수
               </Link>
             </Button>
           </div>
@@ -169,38 +167,42 @@ export default async function AdminTicketsQueuePage({
         urgencyMap={urgencyMap}
       />
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 text-sm">
-          {Array.from({ length: totalPages }, (_, i) => i + 1)
-            .slice(0, 20)
-            .map((p) => {
-              const sp = new URLSearchParams();
-              if (status !== 'received') sp.set('status', status);
-              if (params.productCode) sp.set('productCode', params.productCode);
-              if (params.issueType) sp.set('issueType', params.issueType);
-              if (params.urgency) sp.set('urgency', params.urgency);
-              if (params.assigneeId) sp.set('assigneeId', params.assigneeId);
-              if (params.q) sp.set('q', params.q);
-              if (sortOrder !== 'desc') sp.set('sortOrder', sortOrder);
-              sp.set('page', String(p));
-              const href = `/admin/tickets?${sp.toString()}`;
-              const active = p === page;
-              return (
-                <Link
-                  key={p}
-                  href={href}
-                  className={
-                    active
-                      ? 'inline-flex h-8 w-8 items-center justify-center rounded-md bg-brand-600 text-white'
-                      : 'inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
-                  }
-                >
-                  {p}
-                </Link>
-              );
-            })}
-        </div>
-      )}
+      <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+        <PageSizeSelect pageSize={pageSize} />
+        {totalPages > 1 && (
+          <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .slice(0, 20)
+              .map((p) => {
+                const sp = new URLSearchParams();
+                if (status !== 'received') sp.set('status', status);
+                if (params.productCode) sp.set('productCode', params.productCode);
+                if (params.issueType) sp.set('issueType', params.issueType);
+                if (params.urgency) sp.set('urgency', params.urgency);
+                if (params.assigneeId) sp.set('assigneeId', params.assigneeId);
+                if (params.q) sp.set('q', params.q);
+                if (sortOrder !== 'desc') sp.set('sortOrder', sortOrder);
+                if (pageSize !== 20) sp.set('pageSize', String(pageSize));
+                sp.set('page', String(p));
+                const href = `/admin/tickets?${sp.toString()}`;
+                const active = p === page;
+                return (
+                  <Link
+                    key={p}
+                    href={href}
+                    className={
+                      active
+                        ? 'inline-flex h-8 w-8 items-center justify-center rounded-md bg-brand-600 text-white'
+                        : 'inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
+                    }
+                  >
+                    {p}
+                  </Link>
+                );
+              })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

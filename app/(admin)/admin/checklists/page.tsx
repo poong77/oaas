@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { ListChecks, Plus } from 'lucide-react';
 import { listChecklists, getChecklistCounts } from '@/lib/services/checklists';
 import { getProductCategories } from '@/lib/services/categories';
+import { parsePageSize } from '@/lib/list-params';
 import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,6 +28,7 @@ type SearchParams = Promise<{
   sortBy?: 'sort_order' | 'view_count' | 'resolved' | 'updated_at';
   sortOrder?: 'asc' | 'desc';
   page?: string;
+  pageSize?: string;
 }>;
 
 export default async function AdminChecklistsPage({
@@ -37,6 +39,7 @@ export default async function AdminChecklistsPage({
   await requireRole(['manager', 'admin']);
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1);
+  const requestedPageSize = parsePageSize(sp.pageSize);
 
   const isActive =
     sp.active === 'all'
@@ -58,7 +61,7 @@ export default async function AdminChecklistsPage({
         sortBy: sp.sortBy ?? 'sort_order',
         sortOrder: sp.sortOrder ?? 'asc',
         page,
-        pageSize: 20,
+        pageSize: requestedPageSize,
       }),
       getChecklistCounts(countFilter),
       getProductCategories(),

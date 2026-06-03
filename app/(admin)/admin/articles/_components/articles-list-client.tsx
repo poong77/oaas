@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PageSizeSelect } from '@/components/admin/page-size-select';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { formatDateKst } from '@/lib/business-hours/format';
 import type { ArticleListItem } from '@/lib/services/articles';
@@ -343,12 +344,15 @@ export function ArticlesListClient({
       </div>
 
       {/* 페이지네이션 */}
-      {lastPage > 1 && (
-        <div className="flex items-center justify-between border-t border-slate-200 px-3 py-3 text-sm dark:border-slate-800">
+      <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-3 py-3 text-sm dark:border-slate-800 sm:flex-row">
+        <div className="flex items-center gap-3">
           <div className="text-xs text-slate-500">
-            {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} /{' '}
-            {total}
+            {total === 0 ? 0 : (page - 1) * pageSize + 1}-
+            {Math.min(page * pageSize, total)} / {total}
           </div>
+          <PageSizeSelect pageSize={pageSize} />
+        </div>
+        {lastPage > 1 && (
           <div className="flex items-center gap-1">
             <Button
               type="button"
@@ -374,8 +378,8 @@ export function ArticlesListClient({
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }

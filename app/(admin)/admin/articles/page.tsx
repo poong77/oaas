@@ -9,6 +9,7 @@ import { FileText, Plus } from 'lucide-react';
 import { listArticles } from '@/lib/services/articles';
 import { getProductCategories } from '@/lib/services/categories';
 import { listMenuTaxonomyFlat } from '@/lib/services/master-menu-taxonomies';
+import { parsePageSize } from '@/lib/list-params';
 import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +31,7 @@ type SearchParams = Promise<{
   sortBy?: 'published_at' | 'view_count' | 'helpful' | 'updated_at';
   sortOrder?: 'asc' | 'desc';
   page?: string;
+  pageSize?: string;
 }>;
 
 export default async function AdminArticlesPage({
@@ -40,6 +42,7 @@ export default async function AdminArticlesPage({
   await requireRole(['manager', 'admin']);
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1);
+  const requestedPageSize = parsePageSize(sp.pageSize);
 
   const publishedOnly =
     sp.status === 'published'
@@ -75,7 +78,7 @@ export default async function AdminArticlesPage({
         sortBy: sp.sortBy ?? 'updated_at',
         sortOrder: sp.sortOrder ?? 'desc',
         page,
-        pageSize: 20,
+        pageSize: requestedPageSize,
       }),
       getProductCategories(),
       // 제품 선택 시 그 제품의 메뉴 트리(평탄화)만 로드 — 연동 드롭다운용.

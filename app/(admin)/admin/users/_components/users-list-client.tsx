@@ -2,10 +2,23 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Pencil, Copy } from 'lucide-react';
+import { useMemo, useState, useTransition } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Copy,
+  UserCheck,
+  UserX,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PageSizeSelect } from '@/components/admin/page-size-select';
+import { BulkActionBar } from '@/components/admin/bulk-action-bar';
+import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { bulkSetUsersActiveAction } from '@/app/actions/admin-user-actions';
 import { formatDateKst } from '@/lib/business-hours/format';
 import { toLoginId, isDummyEmail } from '@/lib/text/login-id';
 import type { User, UserRole } from '@/db/schema';
@@ -57,7 +70,14 @@ export function UsersListClient({
 }) {
   const router = useRouter();
   const sp = useSearchParams();
+  const confirm = useConfirmDialog();
+  const [pending, startTransition] = useTransition();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const lastPage = Math.max(1, Math.ceil(total / pageSize));
+
+  const pageIds = useMemo(() => items.map((u) => u.id), [items]);
+  const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+  const someSelected = pageIds.some((id) => selected.has(id));
 
   function go(p: number) {
     const next = new URLSearchParams(sp.toString());
@@ -69,13 +89,100 @@ export function UsersListClient({
     router.push(`/admin/users/${id}`);
   }
 
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  async function bulkSetActive(active: boolean) {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    const ok = await confirm({
+      title: active
+        ? `${ids.length}명을 활성화하시겠습니까?`
+        : `${ids.length}명을 비활성화하시겠습니까?`,
+      description: active
+        ? '선택한 계정이 로그인 가능 상태로 전환됩니다.'
+        : '선택한 계정의 로그인이 차단됩니다. 접수 이력은 보존되며 언제든 다시 활성화할 수 있습니다.',
+      confirmText: active ? '활성화' : '비활성화',
+      tone: active ? 'default' : 'danger',
+    });
+    if (!ok) return;
+
+    const fd = new FormData();
+    fd.set('ids', ids.join(','));
+    fd.set('active', active ? '1' : '0');
+    startTransition(async () => {
+      const res = await bulkSetUsersActiveAction(fd);
+      if (res.ok) {
+        const { affected, skippedSelf } = res.data ?? { affected: 0, skippedSelf: false };
+        toast.success(
+          `${affected}명이 ${active ? '활성화' : '비활성화'}되었습니다` +
+            (skippedSelf ? ' (본인 계정 제외)' : ''),
+        );
+        clearSelection();
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
   return (
     <>
+      {/* ───────── 일괄 작업 바 ───────── */}
+      <BulkActionBar count={selected.size} onClear={clearSelection}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={pending}
+          onClick={() => bulkSetActive(true)}
+        >
+          <UserCheck className="h-3.5 w-3.5" />활성화
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={pending}
+          onClick={() => bulkSetActive(false)}
+          className="text-red-600 hover:text-red-700 dark:text-red-400"
+        >
+          <UserX className="h-3.5 w-3.5" />비활성화
+        </Button>
+      </BulkActionBar>
+
       {/* ───────── 데스크탑 테이블 ───────── */}
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
           <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400">
             <tr>
+              <th className="w-10 px-3 py-2.5 text-left">
+                <Checkbox
+                  checked={allSelected}
+                  indeterminate={!allSelected && someSelected}
+                  onChange={toggleAll}
+                  aria-label="이 페이지 전체 선택"
+                />
+              </th>
               <th className="px-4 py-2.5 text-left font-medium">사용자</th>
               <th className="px-4 py-2.5 text-left font-medium">호텔</th>
               <th className="px-4 py-2.5 text-left font-medium">연락처</th>
@@ -87,6 +194,7 @@ export function UsersListClient({
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {items.map((u) => {
               const loginId = u.username ?? toLoginId(u.email);
+              const checked = selected.has(u.id);
               return (
                 <tr
                   key={u.id}
@@ -98,9 +206,21 @@ export function UsersListClient({
                   role="link"
                   aria-label={`${u.name} 편집`}
                   className={`group cursor-pointer outline-none transition-colors hover:bg-slate-50 focus-visible:bg-slate-50 dark:hover:bg-slate-800/40 dark:focus-visible:bg-slate-800/40 ${
-                    u.isActive ? '' : 'bg-slate-50/40 dark:bg-slate-900/30'
-                  }`}
+                    checked ? 'bg-brand-50/50 dark:bg-brand-950/20' : ''
+                  } ${u.isActive ? '' : 'bg-slate-50/40 dark:bg-slate-900/30'}`}
                 >
+                  {/* 선택 체크박스 */}
+                  <td
+                    className="w-10 px-3 py-2.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onChange={() => toggle(u.id)}
+                      aria-label={`${u.name} 선택`}
+                    />
+                  </td>
+
                   {/* 사용자: 아바타 + 이름 + 권한 + 아이디 */}
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
@@ -209,17 +329,35 @@ export function UsersListClient({
       <div className="flex flex-col gap-2.5 p-3 md:hidden">
         {items.map((u) => {
           const loginId = u.username ?? toLoginId(u.email);
+          const checked = selected.has(u.id);
           return (
             <Link
               key={u.id}
               href={`/admin/users/${u.id}`}
               className={`rounded-xl border p-3.5 transition-colors active:bg-slate-50 dark:active:bg-slate-800/40 ${
-                u.isActive
-                  ? 'border-slate-200 dark:border-slate-800'
-                  : 'border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/30'
+                checked
+                  ? 'border-brand-300 bg-brand-50/40 dark:border-brand-800 dark:bg-brand-950/20'
+                  : u.isActive
+                    ? 'border-slate-200 dark:border-slate-800'
+                    : 'border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/30'
               }`}
             >
               <div className="flex items-start gap-3">
+                <span
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggle(u.id);
+                  }}
+                  className="flex h-9 items-center"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onChange={() => {}}
+                    aria-label={`${u.name} 선택`}
+                    tabIndex={-1}
+                  />
+                </span>
                 <Avatar name={u.name} seed={u.id} dim={!u.isActive} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
@@ -276,12 +414,15 @@ export function UsersListClient({
 
       {/* ───────── 페이지네이션 ───────── */}
       <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm dark:border-slate-800 sm:flex-row">
-        <div className="text-xs text-slate-500">
-          <span className="font-medium text-slate-700 dark:text-slate-300">
-            {total === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)}
-          </span>
-          {' / '}
-          {total.toLocaleString()}명
+        <div className="flex items-center gap-3">
+          <div className="text-xs text-slate-500">
+            <span className="font-medium text-slate-700 dark:text-slate-300">
+              {total === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)}
+            </span>
+            {' / '}
+            {total.toLocaleString()}명
+          </div>
+          <PageSizeSelect pageSize={pageSize} />
         </div>
         {lastPage > 1 && (
           <div className="flex items-center gap-1">

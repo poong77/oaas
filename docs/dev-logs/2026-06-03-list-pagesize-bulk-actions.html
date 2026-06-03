@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>리스트 페이지당 개수 + 일괄작업 — 개발 일지 (2026-06-03)</title>
+<style>
+  :root{
+    --brand:#16a34a; --brand-50:#f0fdf4; --ink:#0f172a; --muted:#64748b;
+    --line:#e2e8f0; --ok:#059669; --warn:#d97706; --danger:#e11d48; --bg:#f8fafc;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+  .wrap{max-width:920px;margin:0 auto;padding:0 18px 60px}
+  header{background:linear-gradient(135deg,#15803d,#22c55e);color:#fff;padding:34px 18px;margin-bottom:26px}
+  header .inner{max-width:920px;margin:0 auto}
+  header h1{margin:0 0 6px;font-size:22px}
+  header p{margin:0;opacity:.92;font-size:14px}
+  .badge{display:inline-block;font-size:12px;background:rgba(255,255,255,.18);padding:3px 10px;border-radius:999px;margin-top:10px}
+  h2{font-size:16px;margin:30px 0 12px;padding-left:10px;border-left:3px solid var(--brand)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .card .k{font-size:12px;color:var(--muted)}
+  .card .v{font-size:20px;font-weight:700;margin-top:4px}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--brand-50);font-size:12px;color:#15803d}
+  tr:last-child td{border-bottom:none}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12.5px}
+  .pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px}
+  .pill.new{background:#dcfce7;color:#15803d}
+  .pill.edit{background:#e0e7ff;color:#3730a3}
+  .note{background:#fff;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:12px 14px;font-size:13.5px;color:#475569}
+  ul.flow{margin:8px 0;padding-left:18px}
+  ul.flow li{margin:4px 0;font-size:14px}
+  .ok{color:var(--ok);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <h1>리스트 페이지당 표시 개수 + 사용자·호텔 일괄작업</h1>
+    <p>모든 어드민 리스트에 20/50/100 선택 추가 · 사용자/호텔 일괄 선택 → 활성/비활성(소프트 삭제)</p>
+    <span class="badge">2026-06-03 · feat/insight-dashboard</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <h2>한눈에</h2>
+  <div class="grid">
+    <div class="card"><div class="k">페이지당 개수 적용</div><div class="v">7개 리스트</div></div>
+    <div class="card"><div class="k">일괄작업 적용</div><div class="v">사용자·호텔</div></div>
+    <div class="card"><div class="k">신규 파일</div><div class="v">4개</div></div>
+    <div class="card"><div class="k">수정 파일</div><div class="v">14개</div></div>
+    <div class="card"><div class="k">빌드 / 타입</div><div class="v ok">통과</div></div>
+  </div>
+
+  <h2>1. 페이지당 표시 개수 (20 / 50 / 100)</h2>
+  <p>URL 쿼리 <code>?pageSize=</code> 로 제어. 허용값 화이트리스트(20/50/100)로 임의 주입 차단.
+  모든 서비스(<code>listUsers/listHotels/listTickets/listNotices/listArticles/listFaqs/listChecklists</code>)는
+  이미 <code>pageSize</code>(clamp 5–100)를 받고 있어 페이지에서 파싱·전달만 배선.</p>
+  <table>
+    <thead><tr><th>리스트</th><th>이전</th><th>현재</th><th>셀렉트 위치</th></tr></thead>
+    <tbody>
+      <tr><td>사용자 <code>/admin/users</code></td><td>고정 20</td><td>20/50/100</td><td>하단 페이지네이션 바</td></tr>
+      <tr><td>호텔 <code>/admin/hotels</code></td><td>고정 20</td><td>20/50/100</td><td>하단 페이지네이션 바</td></tr>
+      <tr><td>티켓 <code>/admin/tickets</code></td><td>고정 25</td><td>20/50/100</td><td>하단(서버 렌더 영역)</td></tr>
+      <tr><td>공지 <code>/admin/notices</code></td><td>고정 20</td><td>20/50/100</td><td>하단 페이지네이션 바</td></tr>
+      <tr><td>아티클 <code>/admin/articles</code></td><td>고정 20</td><td>20/50/100</td><td>하단 페이지네이션 바</td></tr>
+      <tr><td>FAQ <code>/admin/faqs</code></td><td>고정 20</td><td>20/50/100</td><td>하단 페이지네이션 바</td></tr>
+      <tr><td>체크리스트 <code>/admin/checklists</code></td><td>고정 20</td><td>20/50/100</td><td>하단 페이지네이션 바</td></tr>
+    </tbody>
+  </table>
+  <p class="note">셀렉트는 페이지가 1쪽이어도 항상 노출되도록 푸터 바를 상시 렌더로 변경(기존엔 <code>lastPage&gt;1</code>일 때만 노출). pageSize 변경 시 <code>page=1</code>로 초기화.</p>
+
+  <h2>2. 사용자·호텔 일괄작업 (소프트 삭제 원칙)</h2>
+  <p>체크박스로 현재 페이지 항목을 선택 → 상단 <b>일괄 작업 바</b>에서 <b>활성화 / 비활성화</b> 일괄 적용.
+  프로젝트 규칙(<code>물리 DELETE 금지 → is_active=false</code>)에 따라 "삭제"는 <b>비활성화(소프트 삭제)</b>로 구현. 이력·접수기록 보존, 언제든 재활성화 가능.</p>
+  <ul class="flow">
+    <li>전체선택 체크박스: indeterminate(부분 선택) 표시 지원, "이 페이지 전체 선택"</li>
+    <li>데스크탑 테이블 + 모바일 카드뷰 양쪽에 체크박스</li>
+    <li>실행 전 <code>ConfirmDialog</code> 확인(window.confirm 미사용)</li>
+    <li>사용자 비활성화 시 <b>본인 계정 자동 제외</b>(자기 잠금 방지) → 토스트에 "(본인 계정 제외)" 안내</li>
+    <li>감사 로그 <code>activity_logs</code> 기록: <code>user.activate/deactivate</code>, <code>hotel.activate/deactivate</code> (payload.bulk=true, count, ids)</li>
+  </ul>
+
+  <h2>3. 신규 파일</h2>
+  <table>
+    <thead><tr><th>파일</th><th>역할</th></tr></thead>
+    <tbody>
+      <tr><td><code>lib/list-params.ts</code> <span class="pill new">NEW</span></td><td>PAGE_SIZE_OPTIONS + parsePageSize (화이트리스트 파싱)</td></tr>
+      <tr><td><code>components/ui/checkbox.tsx</code> <span class="pill new">NEW</span></td><td>네이티브 체크박스 + indeterminate 지원</td></tr>
+      <tr><td><code>components/admin/page-size-select.tsx</code> <span class="pill new">NEW</span></td><td>라우트 비종속 페이지당 개수 셀렉트(usePathname)</td></tr>
+      <tr><td><code>components/admin/bulk-action-bar.tsx</code> <span class="pill new">NEW</span></td><td>선택 시 노출되는 일괄 작업 바(sticky)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. 주요 수정 파일</h2>
+  <table>
+    <thead><tr><th>파일</th><th>변경</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/actions/admin-user-actions.ts</code> <span class="pill edit">EDIT</span></td><td><code>bulkSetUsersActiveAction</code>, <code>bulkSetHotelsActiveAction</code> 추가(inArray 사용, 본인 제외, 감사로그)</td></tr>
+      <tr><td><code>.../users/_components/users-list-client.tsx</code> <span class="pill edit">EDIT</span></td><td>선택 상태·체크박스·일괄바·PageSizeSelect</td></tr>
+      <tr><td><code>.../hotels/_components/hotels-manager.tsx</code> <span class="pill edit">EDIT</span></td><td>선택 상태·체크박스·일괄바·PageSizeSelect</td></tr>
+      <tr><td>7개 <code>page.tsx</code> <span class="pill edit">EDIT</span></td><td>SearchParams에 pageSize 추가 + parsePageSize 배선</td></tr>
+      <tr><td>4개 <code>*-list-client.tsx</code> <span class="pill edit">EDIT</span></td><td>공지/아티클/FAQ/체크리스트 푸터에 PageSizeSelect</td></tr>
+    </tbody>
+  </table>
+
+  <h2>참고 / 주의</h2>
+  <ul class="flow">
+    <li>선택 상태는 <b>페이지 단위</b>(페이지 이동·필터 변경 시 초기화). 교차 페이지 선택은 미지원.</li>
+    <li>물리 삭제는 의도적으로 미구현(프로젝트 규칙). 추후 필요 시 FK(티켓·이력) 영향 검토 후 별도 설계.</li>
+    <li><code>drizzle</code> 배열 연산은 <code>inArray</code> 사용(메모리 규칙 준수).</li>
+  </ul>
+
+</div>
+</body>
+</html>

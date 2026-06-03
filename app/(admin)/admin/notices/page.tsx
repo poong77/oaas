@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Megaphone, Plus } from 'lucide-react';
 import { listNotices, getNoticeCounts } from '@/lib/services/notices';
 import { getProductCategories } from '@/lib/services/categories';
+import { parsePageSize } from '@/lib/list-params';
 import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +31,7 @@ type SearchParams = Promise<{
   sortBy?: 'published_at' | 'view_count' | 'updated_at' | 'created_at';
   sortOrder?: 'asc' | 'desc';
   page?: string;
+  pageSize?: string;
 }>;
 
 export default async function AdminNoticesPage({
@@ -40,6 +42,7 @@ export default async function AdminNoticesPage({
   await requireRole(['manager', 'admin']);
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1);
+  const requestedPageSize = parsePageSize(sp.pageSize);
 
   const publishedOnly =
     sp.status === 'published'
@@ -65,7 +68,7 @@ export default async function AdminNoticesPage({
       sortBy: sp.sortBy ?? 'published_at',
       sortOrder: sp.sortOrder ?? 'desc',
       page,
-      pageSize: 20,
+      pageSize: requestedPageSize,
     }),
     getNoticeCounts(countFilter),
     getProductCategories(),
