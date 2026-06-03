@@ -152,6 +152,23 @@ export async function setPopularKeywordActive(
   }
 }
 
+/**
+ * 물리 삭제 — pin/block은 큐레이션 설정값이라 이력 보존 대상 아님.
+ * (어드민 확인 다이얼로그 후에만 호출)
+ */
+export async function deletePopularKeyword(
+  id: string,
+): Promise<{ ok: boolean; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    await db.delete(popularKeywords).where(eq(popularKeywords.id, id));
+    return { ok: true };
+  } catch (err) {
+    console.error('[master-popular-keywords.deletePopularKeyword] 실패:', err);
+    return { ok: false, message: 'INTERNAL_ERROR' };
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // 노출 해석 (홈/검색) — pin + auto(block 제외) 병합, 1h 캐시
 // ─────────────────────────────────────────────────────────────────────

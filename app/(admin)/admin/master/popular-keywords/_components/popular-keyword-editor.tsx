@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import {
   upsertPopularKeywordAction,
-  setPopularKeywordActiveAction,
+  deletePopularKeywordAction,
 } from '@/app/actions/master-actions';
 import type { PopularKeyword, PopularKeywordKind } from '@/db/schema';
 
@@ -49,22 +49,23 @@ export function PopularKeywordEditor({
     });
   }
 
-  async function toggleActive() {
+  async function onDelete() {
     if (!item) return;
-    const target = !item.isActive;
     const ok = await confirm({
-      title: target ? '항목을 복구합니다' : '항목을 비활성화합니다',
-      confirmText: target ? '복구' : '비활성화',
-      tone: target ? 'default' : 'danger',
+      title: '인기검색어를 삭제합니다',
+      description: `"${item.keyword}" 항목을 완전히 삭제합니다. 이 작업은 되돌릴 수 없습니다.`,
+      confirmText: '삭제',
+      tone: 'danger',
     });
     if (!ok) return;
     startTransition(async () => {
-      const res = await setPopularKeywordActiveAction(item.id, target);
+      const res = await deletePopularKeywordAction(item.id);
       if (res.ok) {
-        toast.success(target ? '복구되었습니다' : '비활성화되었습니다');
+        toast.success('삭제되었습니다');
+        router.push('/admin/master/popular-keywords');
         router.refresh();
       } else {
-        toast.error(res.message ?? '실패');
+        toast.error(res.message ?? '삭제 실패');
       }
     });
   }
@@ -158,11 +159,12 @@ export function PopularKeywordEditor({
         {isEdit && (
           <Button
             type="button"
-            variant={item!.isActive ? 'ghost' : 'outline'}
-            onClick={toggleActive}
+            variant="ghost"
+            onClick={onDelete}
             disabled={pending}
+            className="text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40"
           >
-            {item!.isActive ? '비활성화' : '복구'}
+            삭제
           </Button>
         )}
       </div>

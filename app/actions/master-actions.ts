@@ -775,3 +775,20 @@ export async function setPopularKeywordActiveAction(
   return r;
 }
 
+export async function deletePopularKeywordAction(
+  id: string,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const r = await MPK.deletePopularKeyword(id);
+  if (r.ok) {
+    logActivity({
+      userId: user.id,
+      action: 'master.popular_keyword.delete',
+      targetType: 'popular_keyword',
+      targetId: id,
+    });
+    revalidateAdminMaster('/admin/master/popular-keywords', '/', '/search');
+  }
+  return r;
+}
+
