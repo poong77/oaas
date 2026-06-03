@@ -41,11 +41,8 @@ export function PopularKeywordEditor({
       const res = await upsertPopularKeywordAction(item?.id ?? null, undefined, fd);
       if (res.ok) {
         toast.success('저장되었습니다');
-        if (!isEdit && res.id) {
-          router.push(`/admin/master/popular-keywords/${res.id}`);
-        } else {
-          router.refresh();
-        }
+        router.push('/admin/master/popular-keywords');
+        router.refresh();
       } else {
         toast.error(res.message ?? '저장 실패');
       }
