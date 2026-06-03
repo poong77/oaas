@@ -5,8 +5,16 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition, type FormEvent } from 'react';
-import { AlertCircle, CheckCircle2, Send, ShieldAlert, UserPen } from 'lucide-react';
+import { Fragment, useState, useTransition, type FormEvent } from 'react';
+import {
+  AlertCircle,
+  CalendarClock,
+  CheckCircle2,
+  ChevronRight,
+  Send,
+  ShieldAlert,
+  UserPen,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -20,6 +28,15 @@ import {
 } from '@/app/actions/ticket-actions';
 import type { TicketStatus } from '@/db/schema';
 import { STATUS_LABEL } from '@/lib/services/tickets-meta';
+import { cn } from '@/lib/utils';
+
+/** 상태 흐름(좌→우). 4단계 모두 노출, 어느 단계든 즉시 선택 가능. */
+const STATUS_FLOW: TicketStatus[] = [
+  'received',
+  'in_progress',
+  'on_hold',
+  'completed',
+];
 
 export function AdminTicketActions({
   ticketId,
@@ -119,6 +136,32 @@ export function AdminTicketActions({
     });
   }
 
+  /** datetime-local 입력 포맷(YYYY-MM-DDTHH:mm)의 '현재 로컬 시각'. */
+  function nowLocalInputValue(): string {
+    const d = new Date();
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+  }
+
+  /** 빠른 액션 — 마감일을 '지금'으로 설정하고 즉시 저장. */
+  function setDueNow() {
+    const now = nowLocalInputValue();
+    setLocalDue(now);
+    const fd = new FormData();
+    fd.append('ticketId', ticketId);
+    if (localAssignee) fd.append('assigneeId', localAssignee);
+    fd.append('dueDate', new Date(now).toISOString());
+    startTransition(async () => {
+      const result = await assignTicketAction(fd);
+      if (result.ok) {
+        notifyOk('마감일이 지금으로 설정되었습니다.');
+        router.refresh();
+      } else {
+        notifyErr(result.message ?? '저장 실패');
+      }
+    });
+  }
+
   function takeOver() {
     setLocalAssignee(currentUserId);
     const fd = new FormData();
@@ -187,19 +230,48 @@ export function AdminTicketActions({
       {/* 상태 변경 */}
       <Card>
         <CardContent className="flex flex-col gap-3 p-4">
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            상태
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              상태
+            </div>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">
+              현재: {STATUS_LABEL[status]}
+            </span>
           </div>
-          <Select
-            value={localStatus}
-            onChange={(e) => setLocalStatus(e.target.value as TicketStatus)}
-            disabled={pending}
-          >
-            <option value="received">접수</option>
-            <option value="in_progress">처리중</option>
-            <option value="on_hold">보류</option>
-            <option value="completed">완료</option>
-          </Select>
+          {/* 4단계 플로우 — 모두 노출, 어느 단계든 클릭하여 선택 */}
+          <div className="flex items-stretch">
+            {STATUS_FLOW.map((s, i) => {
+              const selected = localStatus === s;
+              const isCurrent = status === s;
+              return (
+                <Fragment key={s}>
+                  <button
+                    type="button"
+                    onClick={() => setLocalStatus(s)}
+                    disabled={pending}
+                    aria-pressed={selected}
+                    title={isCurrent ? '현재 상태' : `${STATUS_LABEL[s]}(으)로 변경`}
+                    className={cn(
+                      'flex-1 rounded-md border px-1.5 py-2 text-center text-xs font-semibold transition disabled:opacity-60',
+                      selected
+                        ? 'border-brand-600 bg-brand-600 text-white shadow-sm'
+                        : isCurrent
+                          ? 'border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-800 dark:bg-brand-950/40 dark:text-brand-300'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-brand-700',
+                    )}
+                  >
+                    {STATUS_LABEL[s]}
+                  </button>
+                  {i < STATUS_FLOW.length - 1 && (
+                    <ChevronRight
+                      className="h-4 w-4 shrink-0 self-center text-slate-300 dark:text-slate-600"
+                      aria-hidden
+                    />
+                  )}
+                </Fragment>
+              );
+            })}
+          </div>
           {localStatus === 'completed' && (
             <label className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50/60 p-2.5 text-sm dark:border-slate-800 dark:bg-slate-900/40">
               <input
@@ -255,6 +327,15 @@ export function AdminTicketActions({
             onChange={(e) => setLocalDue(e.target.value)}
             disabled={pending}
           />
+          <button
+            type="button"
+            onClick={setDueNow}
+            disabled={pending}
+            className="inline-flex w-fit items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-60 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/70"
+          >
+            <CalendarClock className="h-3.5 w-3.5" />
+            지금 마감
+          </button>
           <div className="flex gap-2">
             <Button
               type="button"

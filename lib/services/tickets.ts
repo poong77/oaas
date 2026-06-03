@@ -15,6 +15,7 @@
  */
 
 import 'server-only';
+import { after } from 'next/server';
 import {
   and,
   asc,
@@ -310,14 +311,19 @@ export async function createTicket(
       metadata: { eventKey: 'ticket.received' },
     });
 
-    // 알림 fire-and-forget
-    void dispatchTicketReceivedNotifications(created.id, created.ticketNo);
+    // 알림 — 응답 반환 후 실행(after). Vercel 서버리스에서 void 던지면 함수가 동결되어
+    // 대기 중이던 Slack/SMS/Email fetch가 유실됨 → after()로 응답 후까지 살려둔다.
+    const createdId = created.id;
+    const createdNo = created.ticketNo;
+    after(() => dispatchTicketReceivedNotifications(createdId, createdNo));
 
-    // ai-reply-assist — 시맨틱 추천용 임베딩 생성 (fire-and-forget, 실패해도 접수 정상)
-    void updateTicketEmbedding(created.id, {
-      title: input.title,
-      content: input.content,
-    });
+    // ai-reply-assist — 시맨틱 추천용 임베딩 생성 (실패해도 접수 정상)
+    after(() =>
+      updateTicketEmbedding(createdId, {
+        title: input.title,
+        content: input.content,
+      }),
+    );
 
     return { ok: true, ticketId: created.id, ticketNo: created.ticketNo };
   } catch (err) {
@@ -900,11 +906,12 @@ export async function changeStatus(
       metadata: { from: current.status, to: input.nextStatus },
     });
 
-    // 호텔리어 알림 (in_progress / completed)
-    void dispatchStatusChangeNotifications(
-      input.ticketId,
-      current.status,
-      input.nextStatus,
+    // 호텔리어 알림 (in_progress / completed) — after()로 응답 후 발송(Vercel 동결 방지)
+    const statusTicketId = input.ticketId;
+    const statusFrom = current.status;
+    const statusTo = input.nextStatus;
+    after(() =>
+      dispatchStatusChangeNotifications(statusTicketId, statusFrom, statusTo),
     );
 
     return { ok: true };
