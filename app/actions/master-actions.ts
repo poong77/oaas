@@ -25,6 +25,7 @@ import * as MPK from '@/lib/services/master-popular-keywords';
 import * as MSL from '@/lib/services/master-solution-links';
 import * as MSS from '@/lib/services/master-system-settings';
 import * as MFF from '@/lib/services/master-form-fields';
+import { setManagerMenuAccess } from '@/lib/services/master-menu-access';
 
 export type ActionResult = {
   ok: boolean;
@@ -788,6 +789,35 @@ export async function deletePopularKeywordAction(
       targetId: id,
     });
     revalidateAdminMaster('/admin/master/popular-keywords', '/', '/search');
+  }
+  return r;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 10. master menu access (어드민 only) — 개별 메뉴의 매니저 접근 토글
+// ─────────────────────────────────────────────────────────────────────
+
+export async function setMasterMenuAccessAction(
+  menuKey: string,
+  allow: boolean,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireRole(['admin']);
+  const r = await setManagerMenuAccess(menuKey, allow, user.id);
+  if (r.ok) {
+    logActivity({
+      userId: user.id,
+      action: allow
+        ? 'master.menu_access.manager_allow'
+        : 'master.menu_access.manager_block',
+      targetType: 'master_menu',
+      targetId: menuKey,
+      payload: { menuKey, allow },
+    });
+    // 접근 맵 변경 → 마스터 인덱스(카드 노출) + 해당 메뉴 트리(layout 가드) 무효화
+    revalidateAdminMaster(
+      '/admin/master/menu-access',
+      `/admin/master/${menuKey}`,
+    );
   }
   return r;
 }

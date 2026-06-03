@@ -23,12 +23,14 @@ import {
   MessageSquare,
   Radio,
   Settings,
+  ShieldCheck,
   Sparkles,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
 
 import { requireRole } from '@/lib/permissions';
+import { getManagerAccessMap } from '@/lib/services/master-menu-access';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -165,11 +167,31 @@ const ITEMS: MasterItem[] = [
     icon: Gauge,
     badge: '품질 측정',
   },
+  {
+    href: '/admin/master/menu-access',
+    label: '메뉴 접근 제어',
+    description:
+      '마스터 내 개별 메뉴의 매니저 접근 허용/차단을 ON/OFF 스위치로 결정. 어드민은 항상 전체 접근.',
+    icon: ShieldCheck,
+    adminOnly: true,
+  },
 ];
+
+/** href 마지막 세그먼트(= 접근 맵 키) */
+function menuKeyOf(href: string): string {
+  return href.split('/').pop() ?? '';
+}
 
 export default async function AdminMasterIndexPage() {
   const user = await requireRole(['manager', 'admin']);
-  const items = ITEMS.filter((it) => !it.adminOnly || user.role === 'admin');
+  // 매니저는 어드민 전용 카드 + 접근 차단된 메뉴를 숨긴다. 어드민은 전체 노출.
+  const accessMap =
+    user.role === 'admin' ? null : await getManagerAccessMap();
+  const items = ITEMS.filter((it) => {
+    if (user.role === 'admin') return true;
+    if (it.adminOnly) return false;
+    return accessMap?.[menuKeyOf(it.href)] === true;
+  });
 
   return (
     <div className="flex flex-col gap-5">
