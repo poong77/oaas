@@ -6,7 +6,7 @@
  */
 
 import Link from 'next/link';
-import { Headset } from 'lucide-react';
+import { FilePlus2, Headset } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { requireRole } from '@/lib/permissions';
@@ -121,10 +121,16 @@ export default async function AdminTicketsQueuePage({
         guideAnchor="tickets"
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button asChild size="sm">
+            <Button asChild variant="outline" size="sm">
               <Link href="/admin/tickets/new-by-phone">
                 <Headset className="h-4 w-4" />
                 대리 접수
+              </Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/tickets/new">
+                <FilePlus2 className="h-4 w-4" />
+                직접 접수
               </Link>
             </Button>
           </div>
