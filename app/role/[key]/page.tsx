@@ -10,7 +10,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, BookOpen, ExternalLink } from 'lucide-react';
+import { ArrowLeft, BookOpen, ExternalLink, HelpCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -52,6 +52,7 @@ export default async function RoleStarterPage({
   const Icon = iconName ? resolveIcon(iconName) : staticRole!.icon;
 
   const articles = fromDb?.articles ?? [];
+  const faqs = fromDb?.faqs ?? [];
 
   const others = ROLE_STARTERS.filter((r) => r.key !== key);
 
@@ -84,7 +85,7 @@ export default async function RoleStarterPage({
         </CardContent>
       </Card>
 
-      {articles.length === 0 ? (
+      {articles.length === 0 && faqs.length === 0 ? (
         <Card>
           <CardContent className="p-6">
             <EmptyState
@@ -99,7 +100,9 @@ export default async function RoleStarterPage({
             />
           </CardContent>
         </Card>
-      ) : (
+      ) : null}
+
+      {articles.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             추천 가이드 ({articles.length}건)
@@ -138,6 +141,42 @@ export default async function RoleStarterPage({
               </li>
             ))}
           </ol>
+        </section>
+      )}
+
+      {faqs.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+            <HelpCircle className="h-4 w-4 text-brand-500" />
+            자주 묻는 질문 ({faqs.length}건)
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {faqs.map((f) => (
+              <li key={f.id} data-testid="role-faq-card">
+                <Card className="transition hover:border-brand-300 dark:hover:border-brand-700">
+                  <CardContent className="flex items-center gap-3 p-3 sm:p-4">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300">
+                      <HelpCircle className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-0.5 text-[10px] uppercase tracking-wider text-slate-400">
+                        {f.productCode}
+                      </div>
+                      <h3 className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+                        <Link
+                          href={`/faq#faq-${f.id}`}
+                          className="hover:underline"
+                        >
+                          {f.question}
+                        </Link>
+                      </h3>
+                    </div>
+                    <ExternalLink className="hidden h-4 w-4 text-slate-300 sm:block" />
+                  </CardContent>
+                </Card>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

@@ -12,19 +12,43 @@ import {
   upsertRoleStarterAction,
   setRoleStarterActiveAction,
 } from '@/app/actions/master-actions';
+import { searchArticlesForAutocompleteAction } from '@/app/actions/article-actions';
+import { searchFaqsForAutocompleteAction } from '@/app/actions/faq-actions';
 import { KNOWN_ROLE_KEYS } from '@/lib/services/master-meta';
 import type { RoleStarter } from '@/db/schema';
 import {
-  RoleStarterArticleMapper,
-  type MappedArticle,
-} from './role-starter-article-mapper';
+  RoleStarterMapper,
+  type MappedEntity,
+} from './role-starter-mapper';
+
+/** 아티클 자동완성 → 매퍼 표시 모델. */
+async function searchArticles(q: string): Promise<MappedEntity[]> {
+  const rows = await searchArticlesForAutocompleteAction(q);
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    meta: `${r.productCode} · /${r.slug}`,
+  }));
+}
+
+/** FAQ 자동완성 → 매퍼 표시 모델. */
+async function searchFaqs(q: string): Promise<MappedEntity[]> {
+  const rows = await searchFaqsForAutocompleteAction(q);
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.question,
+    meta: `${r.productCode}${r.issueType ? ` · ${r.issueType}` : ''}`,
+  }));
+}
 
 export function RoleStarterUpsert({
   item,
   initialArticles = [],
+  initialFaqs = [],
 }: {
   item?: RoleStarter;
-  initialArticles?: MappedArticle[];
+  initialArticles?: MappedEntity[];
+  initialFaqs?: MappedEntity[];
 }) {
   const router = useRouter();
   const confirm = useConfirmDialog();
@@ -132,16 +156,40 @@ export function RoleStarterUpsert({
         </div>
       </div>
 
-      {/* D3 — articleIds 매핑 (편집 모드에서만; 신규는 먼저 업서트 후 편집으로) */}
+      {/* D3 — 매핑 (편집 모드에서만; 신규는 먼저 업서트 후 편집으로) */}
       {isEdit && (
-        <div className="flex flex-col gap-1.5 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30">
-          <Label className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-            매핑된 가이드 (articleIds · 순서대로 노출)
-          </Label>
-          <RoleStarterArticleMapper initial={initialArticles} />
-          <p className="text-[10px] text-slate-500">
-            /role/{item!.roleKey} 페이지에 이 순서대로 카드 노출됩니다.
-          </p>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30">
+            <Label className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+              매핑된 가이드 (articleIds · 순서대로 노출)
+            </Label>
+            <RoleStarterMapper
+              initial={initialArticles}
+              fieldName="articleIds"
+              search={searchArticles}
+              placeholder="아티클 검색 (제목 또는 slug, 2자 이상)"
+              emptyText="아직 매핑된 가이드가 없어요. 아래 검색에서 추가하세요."
+            />
+            <p className="text-[10px] text-slate-500">
+              /role/{item!.roleKey} 페이지에 이 순서대로 카드 노출됩니다.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30">
+            <Label className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+              매핑된 FAQ (faqIds · 순서대로 노출)
+            </Label>
+            <RoleStarterMapper
+              initial={initialFaqs}
+              fieldName="faqIds"
+              search={searchFaqs}
+              placeholder="FAQ 검색 (질문, 2자 이상)"
+              emptyText="아직 매핑된 FAQ가 없어요. 아래 검색에서 추가하세요."
+            />
+            <p className="text-[10px] text-slate-500">
+              /role/{item!.roleKey} 페이지 “자주 묻는 질문” 영역에 노출됩니다.
+            </p>
+          </div>
         </div>
       )}
 

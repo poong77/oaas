@@ -28,6 +28,7 @@ import {
   moveFaqOrder,
   recordFaqHelpful,
   restoreFaqById,
+  searchFaqsForAutocomplete,
   updateFaqById,
   type FaqWriteInput,
 } from '@/lib/services/faqs';
@@ -263,4 +264,22 @@ export async function moveFaqOrderAction(
     revalidatePath('/faq');
   }
   return result;
+}
+
+/**
+ * 역할별 시작 매퍼용 — 활성 FAQ 자동완성 (질문 부분일치).
+ */
+export async function searchFaqsForAutocompleteAction(
+  q: string,
+  productCode?: string,
+): Promise<
+  Array<{
+    id: string;
+    question: string;
+    productCode: string;
+    issueType: string | null;
+  }>
+> {
+  await requireRole(['manager', 'admin']);
+  return searchFaqsForAutocomplete(q, productCode);
 }
