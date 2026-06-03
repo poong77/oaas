@@ -66,3 +66,7 @@ Thumbs.db
 /e2e/test-results/
 /e2e/playwright-report/
 /playwright/.cache/
+
+# CB-05 지식팩 생성 산출물 (로컬)
+oa-knowledge-*.md
+oa-knowledge-*.jsonl
