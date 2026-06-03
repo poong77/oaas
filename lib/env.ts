@@ -31,10 +31,12 @@ export const env = {
   // Vercel Blob (Phase 5 — 첨부 파일 업로드)
   BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN ?? '',
 
-  // Slack (Phase 5)
-  SLACK_WEBHOOK_NEW: process.env.SLACK_WEBHOOK_NEW ?? '',
-  SLACK_WEBHOOK_URGENT: process.env.SLACK_WEBHOOK_URGENT ?? '',
-  SLACK_WEBHOOK_DEV: process.env.SLACK_WEBHOOK_DEV ?? '',
+  // Slack (Phase 5) — Bot Token + chat.postMessage 방식.
+  // 운영 환경(Vercel)에 SLACK_BOT_TOKEN + SLACK_CHANNEL_* (채널 ID `C...`) 등록.
+  SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN ?? '',
+  SLACK_CHANNEL_NEW: process.env.SLACK_CHANNEL_NEW ?? '',
+  SLACK_CHANNEL_URGENT: process.env.SLACK_CHANNEL_URGENT ?? '',
+  SLACK_CHANNEL_DEV: process.env.SLACK_CHANNEL_DEV ?? '',
   /** support.oapms.com URL — 알림 본문의 티켓 링크 생성에 사용. */
   PUBLIC_BASE_URL:
     process.env.PUBLIC_BASE_URL ?? process.env.NEXTAUTH_URL ?? '',
