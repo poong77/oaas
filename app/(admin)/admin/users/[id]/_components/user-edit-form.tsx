@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { HotelCombobox } from '@/components/ui/hotel-combobox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
@@ -28,6 +29,7 @@ type Target = {
   username: string | null;
   role: UserRole;
   hotelId: string | null;
+  hotelName: string | null;
 };
 
 type HotelOption = { id: string; name: string; oaPmsId: string | null };
@@ -126,14 +128,30 @@ export function UserEditForm({
             <Label htmlFor="hotelId">
               호텔 매핑 {role === 'hotelier' && <span className="text-red-500">*</span>}
             </Label>
-            <Select id="hotelId" name="hotelId" defaultValue={target.hotelId ?? ''} aria-invalid={!!errors.hotelId}>
-              <option value="">{role === 'hotelier' ? '호텔을 선택해주세요' : '미지정'}</option>
-              {hotels.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.name} {h.oaPmsId && `(${h.oaPmsId})`}
-                </option>
-              ))}
-            </Select>
+            <HotelCombobox
+              id="hotelId"
+              name="hotelId"
+              defaultValue={target.hotelId ?? ''}
+              initialSelected={
+                target.hotelId
+                  ? { id: target.hotelId, name: target.hotelName ?? '(이름 없음)', oaPmsHotelId: null }
+                  : null
+              }
+              initialHotels={hotels.map((h) => ({
+                id: h.id,
+                name: h.name,
+                oaPmsHotelId: h.oaPmsId,
+              }))}
+              allowEmpty={role !== 'hotelier'}
+              emptyLabel="미지정"
+              placeholder={
+                role === 'hotelier'
+                  ? '호텔명을 검색하세요 (국문·영문·띄어쓰기 무관)'
+                  : '미지정 — 호텔명을 검색하세요'
+              }
+              required={role === 'hotelier'}
+              invalid={!!errors.hotelId}
+            />
             {errors.hotelId && <p className="text-xs text-red-600">{errors.hotelId}</p>}
           </div>
         </CardContent>

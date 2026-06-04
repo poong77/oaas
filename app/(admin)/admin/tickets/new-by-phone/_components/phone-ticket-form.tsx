@@ -14,6 +14,7 @@ import { AlertCircle, Headset, Send } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { HotelCombobox } from '@/components/ui/hotel-combobox';
 import { Button } from '@/components/ui/button';
 import { RichEditor } from '@/components/editor/rich-editor';
 import { createTicketByPhoneAction } from '@/app/actions/ticket-actions';
@@ -154,19 +155,13 @@ export function PhoneTicketForm({
 
           <div>
             <Label required title="호텔" />
-            <Select
+            <HotelCombobox
               value={hotelId}
-              onChange={(e) => onHotelChange(e.target.value)}
+              onChange={(id) => onHotelChange(id)}
+              initialHotels={hotels}
+              placeholder="호텔명을 검색하세요 (국문·영문·띄어쓰기 무관)"
               disabled={pending}
-            >
-              <option value="">호텔을 선택하세요</option>
-              {hotels.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.name}
-                  {h.oaPmsHotelId ? ` (${h.oaPmsHotelId})` : ''}
-                </option>
-              ))}
-            </Select>
+            />
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               호텔이 매핑되지 않으면 호텔리어 알림이 발송되지 않을 수 있습니다.
             </p>

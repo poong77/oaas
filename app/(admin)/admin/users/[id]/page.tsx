@@ -56,6 +56,7 @@ export default async function AdminUserDetailPage({
           username: target.username,
           role: target.role,
           hotelId: target.hotelId,
+          hotelName: target.hotelName,
         }}
         hotels={hotels.map((h) => ({ id: h.id, name: h.name, oaPmsId: h.oaPmsHotelId }))}
       />
