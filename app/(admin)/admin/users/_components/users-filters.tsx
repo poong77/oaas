@@ -61,7 +61,7 @@ export function UsersFilters({
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="이름·아이디·이메일·연락처 검색"
+            placeholder="이름·아이디·이메일·연락처·호텔명 검색"
             className="pl-8 pr-8"
             aria-label="사용자 검색"
           />

@@ -69,12 +69,20 @@ export async function listUsers(
     conditions.push(eq(users.hotelId, params.hotelId));
   }
   if (params.q && params.q.trim()) {
-    const pattern = `%${params.q.trim()}%`;
+    const raw = params.q.trim();
+    const pattern = `%${raw}%`;
+    // 호텔명은 띄어쓰기·하이픈·점을 무시하고 매칭 ("더페이즈" → "더 페이즈 호텔")
+    const collapsed = collapseSpacing(raw);
+    const hotelMatch =
+      collapsed.length > 0
+        ? sql`translate(lower(${hotels.name}), ' -_.·', '') LIKE ${`%${collapsed}%`}`
+        : ilike(hotels.name, pattern);
     const search = or(
       ilike(users.email, pattern),
       ilike(users.username, pattern),
       ilike(users.name, pattern),
       ilike(users.phone, pattern),
+      hotelMatch,
     );
     if (search) conditions.push(search);
   }
@@ -115,6 +123,7 @@ export async function listUsers(
     const totalRows = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(users)
+      .leftJoin(hotels, eq(users.hotelId, hotels.id))
       .where(whereExpr);
     const total = Number(totalRows[0]?.count ?? 0);
 
