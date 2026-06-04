@@ -37,14 +37,12 @@ export default async function NewTicketPage({
     productCategories,
     issueTypeCategories,
     urgencyCategories,
-    impactCategories,
     hotel,
     fullUser,
   ] = await Promise.all([
     getCategoriesByType('product'),
     getCategoriesByType('issue_type'),
     getCategoriesByType('urgency'),
-    getCategoriesByType('impact'),
     user.hotelId ? getHotelById(user.hotelId) : Promise.resolve(null),
     getUserById(user.id),
   ]);
@@ -87,11 +85,6 @@ export default async function NewTicketPage({
             icon: c.icon,
           }))}
           urgencyCategories={urgencyCategories.map((c) => ({
-            code: c.code,
-            label: c.label,
-            icon: c.icon,
-          }))}
-          impactCategories={impactCategories.map((c) => ({
             code: c.code,
             label: c.label,
             icon: c.icon,

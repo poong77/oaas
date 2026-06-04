@@ -3,7 +3,7 @@
 /**
  * 3단계 이슈 접수 폼 — IC-01.
  *
- * Step 1: 무엇이 문제인가요?    — 제품·유형·영향범위·긴급도
+ * Step 1: 무엇이 문제인가요?    — 제품·유형·긴급도
  * Step 2: 자세히 알려주세요     — 제목·내용·첨부
  * Step 3: 어떻게 연락드릴까요?  — SMS/Email + 본인정보 확인
  *
@@ -36,7 +36,6 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { RichEditor } from '@/components/editor/rich-editor';
 import { HotelierGuideButton } from '@/components/editor/placeholders/hotelier-guide';
@@ -66,7 +65,6 @@ export type TicketCreateFormProps = {
   productCategories: CategoryItem[];
   issueTypeCategories: CategoryItem[];
   urgencyCategories: CategoryItem[];
-  impactCategories: CategoryItem[];
   prefill?: {
     product?: string | null;
     type?: string | null;
@@ -99,7 +97,6 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
       : (props.prefill?.type ?? ''),
   );
   const [urgency, setUrgency] = useState<string>('p2');
-  const [impactScope, setImpactScope] = useState<string>('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<UploadedAttachment[]>([]);
@@ -196,7 +193,6 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
     fd.append('productCode', productCode);
     fd.append('issueType', issueType);
     fd.append('urgency', urgency);
-    if (impactScope) fd.append('impactScope', impactScope);
     fd.append('title', title.trim());
     fd.append('content', content.trim());
     for (const m of contactMethods) fd.append('contactMethods', m);
@@ -347,21 +343,6 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
               </p>
             </div>
 
-            <div>
-              <SectionLabel title="영향범위 (선택)" />
-              <Select
-                value={impactScope}
-                onChange={(e) => setImpactScope(e.target.value)}
-              >
-                <option value="">— 선택 안 함 —</option>
-                {props.impactCategories.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
             <StepNav
               canGoBack={false}
               onNext={goNext}
@@ -505,12 +486,6 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
                       : { tone: 'slate', text: 'P3' }
                 }
               />
-              {impactScope && (
-                <SummaryRow
-                  label="영향범위"
-                  value={labelOf(props.impactCategories, impactScope)}
-                />
-              )}
               <SummaryRow label="제목" value={title} />
               <SummaryRow
                 label="첨부"
