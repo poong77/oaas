@@ -29,7 +29,7 @@ import {
   buildAccountInvite,
   buildPasswordReset,
 } from '@/lib/notifications/templates';
-import { env } from '@/lib/env';
+import { getPublicBaseUrl } from '@/lib/env';
 
 type ActionResult<T = unknown> =
   | { ok: true; data?: T }
@@ -163,7 +163,7 @@ export const createUserAdminAction = withAuthorizedAction<
     });
 
     // 실이메일이 있을 때만 초대 메일 발송 (더미 @as.local 은 발송 안 함)
-    const loginUrl = (env.NEXTAUTH_URL || 'http://localhost:3000') + '/login';
+    const loginUrl = getPublicBaseUrl() + '/login';
     const tpl = buildAccountInvite({
       name: parsed.data.name,
       email,
@@ -422,7 +422,7 @@ export const resetUserPasswordAdminAction = withAuthorizedAction<
       targetId: id,
     });
 
-    const loginUrl = (env.NEXTAUTH_URL || 'http://localhost:3000') + '/login';
+    const loginUrl = getPublicBaseUrl() + '/login';
     const tpl = buildPasswordReset({
       name: rows[0].name,
       tempPassword,

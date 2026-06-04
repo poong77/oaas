@@ -20,7 +20,7 @@ import {
 import { sendEmail } from '@/lib/notifications/ses';
 import { sendSms } from '@/lib/notifications/solapi';
 import { buildPasswordReset } from '@/lib/notifications/templates';
-import { env } from '@/lib/env';
+import { getPublicBaseUrl } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -90,7 +90,7 @@ export async function POST(req: Request, ctx: Ctx) {
       userAgent: req.headers.get('user-agent') ?? null,
     });
 
-    const loginUrl = (env.NEXTAUTH_URL || 'http://localhost:3000') + '/login';
+    const loginUrl = getPublicBaseUrl() + '/login';
     const tpl = buildPasswordReset({
       name: rows[0].name,
       tempPassword,

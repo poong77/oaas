@@ -40,6 +40,8 @@ export const env = {
   /** support.oapms.com URL — 알림 본문의 티켓 링크 생성에 사용. */
   PUBLIC_BASE_URL:
     process.env.PUBLIC_BASE_URL ?? process.env.NEXTAUTH_URL ?? '',
+  /** Vercel이 프로덕션/프리뷰 빌드에 자동 주입하는 프로덕션 도메인 (프로토콜 없음). */
+  VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL ?? '',
 
   // Chatbot (Phase 8)
   OACHAT_EMBED_URL: process.env.OACHAT_EMBED_URL ?? '',
@@ -60,4 +62,19 @@ export function isDbConfigured(): boolean {
 /** 시맨틱 검색용 OpenAI 키 설정 여부. 미설정 시 키워드 검색으로 graceful degrade. */
 export function isOpenAIConfigured(): boolean {
   return env.OPENAI_API_KEY.length > 0;
+}
+
+/**
+ * 알림/이메일 본문의 절대 링크 생성을 위한 공개 베이스 URL.
+ * 우선순위: PUBLIC_BASE_URL → NEXTAUTH_URL → Vercel 자동 주입 도메인 → localhost.
+ * Vercel에 env 미설정 시에도 프로덕션 도메인으로 떨어지도록 VERCEL_PROJECT_PRODUCTION_URL을 fallback에 포함.
+ * 반환값은 항상 프로토콜 포함, 끝의 슬래시 제거.
+ */
+export function getPublicBaseUrl(): string {
+  const explicit = env.PUBLIC_BASE_URL || env.NEXTAUTH_URL;
+  const vercel = env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : '';
+  const raw = explicit || vercel || 'http://localhost:3000';
+  return raw.replace(/\/$/, '');
 }

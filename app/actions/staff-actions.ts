@@ -25,7 +25,7 @@ import {
 import { sendEmail } from '@/lib/notifications/ses';
 import { sendSms } from '@/lib/notifications/solapi';
 import { buildAccountInvite } from '@/lib/notifications/templates';
-import { env } from '@/lib/env';
+import { getPublicBaseUrl } from '@/lib/env';
 
 type ActionResult<T = unknown> =
   | { ok: true; data?: T }
@@ -106,7 +106,7 @@ export async function createStaffAction(
     });
 
     // 초대 SMS/이메일 (실패해도 계정 생성은 성공으로 처리)
-    const loginUrl = (env.NEXTAUTH_URL || 'http://localhost:3000') + '/login';
+    const loginUrl = getPublicBaseUrl() + '/login';
     const tpl = buildAccountInvite({
       name: parsed.data.name,
       email: parsed.data.email,

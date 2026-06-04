@@ -51,7 +51,7 @@ import {
   type NewTicketAttachment,
   type NewTicketFeedback,
 } from '@/db/schema';
-import { env } from '@/lib/env';
+import { getPublicBaseUrl } from '@/lib/env';
 import { notifyEmail, notifySlack, notifySms } from '@/lib/notifications';
 import {
   buildTicketCompleted,
@@ -391,7 +391,7 @@ async function dispatchTicketReceivedNotifications(
       .where(eq(ticketAttachments.ticketId, ticketId));
     const attachmentCount = attachmentRows.length;
 
-    const baseUrl = env.PUBLIC_BASE_URL || env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = getPublicBaseUrl();
     const ticketUrl = `${baseUrl.replace(/\/$/, '')}/tickets/${ticketId}`;
     const adminTicketUrl = `${baseUrl.replace(/\/$/, '')}/admin/tickets/${ticketId}`;
 
@@ -948,7 +948,7 @@ async function dispatchStatusChangeNotifications(
     if (!r) return;
 
     const contactMethods = Array.isArray(t.contactMethods) ? t.contactMethods : [];
-    const baseUrl = env.PUBLIC_BASE_URL || env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = getPublicBaseUrl();
     const ticketUrl = `${baseUrl.replace(/\/$/, '')}/tickets/${ticketId}`;
 
     let assigneeName: string | null = null;
@@ -1111,7 +1111,7 @@ export async function escalateToDev(
       .limit(1);
     escalatorName = ec[0]?.name ?? null;
 
-    const baseUrl = env.PUBLIC_BASE_URL || env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = getPublicBaseUrl();
     const adminTicketUrl = `${baseUrl.replace(/\/$/, '')}/admin/tickets/${input.ticketId}`;
 
     // Slack 발송
