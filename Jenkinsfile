@@ -256,11 +256,15 @@ if [ ! -L ${DEPLOY_PATH}/.env ]; then
     ln -sfn ${DEPLOY_PATH}/standalone/.env ${DEPLOY_PATH}/.env
 fi
 
-echo ">>> Apply DB schema (drizzle-kit push)..."
+echo ">>> Apply DB schema (drizzle-kit push --force)..."
 # 현재 db/migrations/meta/ 가 gitignore라 drizzle-kit migrate가 동작 불가.
 # push로 schema 비교·자동 적용. strict:true (drizzle.config.ts)라 destructive 변경은 에러.
 # 팀이 meta/ 워크플로우 정비하면 migrate로 전환 가능.
-(cd ${DEPLOY_PATH} && ./migrator/node_modules/.bin/drizzle-kit push) || {
+#
+# --force: 비-TTY(CI) 환경에서 drizzle-kit이 "apply changes? Y/N" 프롬프트를
+# 띄우고 기본 "No, abort"를 자동 선택해 schema가 0개 만들어진 사고 회피.
+# strict:true가 여전히 destructive(컬럼/테이블 drop)를 차단하므로 --force는 안전.
+(cd ${DEPLOY_PATH} && ./migrator/node_modules/.bin/drizzle-kit push --force) || {
     echo "❌ schema 적용 실패 — 배포 중단"
     exit 1
 }
