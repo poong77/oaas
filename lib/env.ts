@@ -49,6 +49,10 @@ export const env = {
   // Cron 인증 (rich-editor 후속 — editor_drafts 30일 정리)
   CRON_SECRET: process.env.CRON_SECRET ?? '',
 
+  // 대칭키 암호화 (호텔 솔루션 비밀번호 등). 미설정 시 NEXTAUTH_SECRET 파생.
+  // 운영 권장: 32바이트 키를 hex 64자로. `openssl rand -hex 32`
+  ENCRYPTION_KEY: process.env.ENCRYPTION_KEY ?? '',
+
   // OpenAI (Phase 2 — 시맨틱 검색 임베딩)
   OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? '',
   OPENAI_EMBEDDING_MODEL:

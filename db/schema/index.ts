@@ -25,6 +25,7 @@ export * from './hotels';
 export * from './users';
 export * from './categories';
 export * from './solution-links';
+export * from './hotel-managed-links';
 export * from './activity-logs';
 export * from './service-status';
 export * from './articles';

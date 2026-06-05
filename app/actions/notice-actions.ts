@@ -20,6 +20,7 @@ import { z } from 'zod';
 
 import { requireRole } from '@/lib/permissions';
 import { logActivity } from '@/lib/audit';
+import { parseKstDateTimeLocal } from '@/lib/date/kst';
 import {
   archiveNoticeById,
   createNotice,
@@ -132,20 +133,14 @@ function shapeFieldErrors(err: z.ZodError<unknown>): Record<string, string> {
 function buildWriteInput(
   parsed: z.infer<typeof NoticeWriteSchema>,
 ): NoticeWriteInput {
-  let bannerUntil: Date | null = null;
-  if (parsed.bannerUntilIso) {
-    const d = new Date(parsed.bannerUntilIso);
-    if (!isNaN(d.getTime())) bannerUntil = d;
-  }
+  // datetime-local 입력값은 오프셋이 없으므로 KST 벽시각으로 못박아 파싱한다.
+  // (서버 TZ가 UTC라 new Date()로 파싱하면 9시간 어긋남)
+  let bannerUntil: Date | null = parseKstDateTimeLocal(parsed.bannerUntilIso);
   // banner=false 면 banner_until 강제 null
   if (!parsed.banner) bannerUntil = null;
 
   // NT-04 팝업 배너
-  let popupUntil: Date | null = null;
-  if (parsed.popupUntilIso) {
-    const d = new Date(parsed.popupUntilIso);
-    if (!isNaN(d.getTime())) popupUntil = d;
-  }
+  let popupUntil: Date | null = parseKstDateTimeLocal(parsed.popupUntilIso);
   const popupEnabled = parsed.popupEnabled ?? false;
   // popup_enabled=false 면 부속 필드 강제 초기화
   const popupImageUrl = popupEnabled ? (parsed.popupImageUrl ?? null) : null;

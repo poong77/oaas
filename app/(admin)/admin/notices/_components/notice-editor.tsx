@@ -27,6 +27,7 @@ import { RichEditor } from '@/components/editor/rich-editor';
 import { ImageUploadDialog } from '@/components/editor/dialogs/image-upload-dialog';
 import { PopupBannerModal } from '@/components/notices/popup-banner-modal';
 import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
+import { parseKstDateTimeLocal, kstDateTimeLocal } from '@/lib/date/kst';
 import type { ProductCategoryView } from '@/lib/services/categories';
 import type { NoticeKind, NoticePopupSize } from '@/db/schema';
 import {
@@ -65,15 +66,11 @@ type InitialValues = {
 const KIND_OPTIONS: NoticeKind[] = ['notice', 'release', 'incident'];
 const POPUP_SIZE_OPTIONS: NoticePopupSize[] = ['small', 'medium', 'large'];
 
-/** 'YYYY-MM-DDTHH:mm' (local) — N일 뒤 또는 빈 문자열 */
+/** 'YYYY-MM-DDTHH:mm' (KST) — N일 뒤 */
 function daysFromNowInput(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return (
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
-    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
-  );
+  return kstDateTimeLocal(d);
 }
 
 export function NoticeEditor({
@@ -207,10 +204,10 @@ export function NoticeEditor({
       if (!proceed) return;
     }
 
-    // 팝업 종료 시각이 이미 과거이면 경고
+    // 팝업 종료 시각이 이미 과거이면 경고 (입력값은 KST 벽시각 기준)
     if (popupEnabled && popupUntil) {
-      const until = new Date(popupUntil);
-      if (!isNaN(until.getTime()) && until.getTime() < Date.now()) {
+      const until = parseKstDateTimeLocal(popupUntil);
+      if (until && until.getTime() < Date.now()) {
         const proceed = await confirm({
           title: '팝업 노출 종료 시각이 이미 과거입니다',
           description:

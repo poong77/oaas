@@ -39,6 +39,20 @@ export const userRoleEnum = pgEnum('user_role', [
   'admin',
 ]);
 
+/**
+ * hotel type enum — hotels.hotel_type (사업자 구분).
+ * direct      — 직영
+ * operator    — 운영사
+ * chain       — 체인
+ * distributor — 총판
+ */
+export const hotelTypeEnum = pgEnum('hotel_type', [
+  'direct',
+  'operator',
+  'chain',
+  'distributor',
+]);
+
 /** category type enum */
 export const categoryTypeEnum = pgEnum('category_type', [
   'product',
@@ -89,6 +103,7 @@ export const popularKeywordKindEnum = pgEnum('popular_keyword_kind', [
 ]);
 
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
+export type HotelType = (typeof hotelTypeEnum.enumValues)[number];
 export type CategoryType = (typeof categoryTypeEnum.enumValues)[number];
 export type ServiceStatusValue = (typeof serviceStatusEnum.enumValues)[number];
 export type TermGroupCategory = (typeof termGroupCategoryEnum.enumValues)[number];

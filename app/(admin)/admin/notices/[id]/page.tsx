@@ -8,6 +8,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { requireRole } from '@/lib/permissions';
 import { getNoticeById } from '@/lib/services/notices';
 import { getProductCategories } from '@/lib/services/categories';
+import { kstDateTimeLocal } from '@/lib/date/kst';
 import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,12 +44,12 @@ export default async function EditNoticePage({
   ]);
   if (!notice) notFound();
 
-  // datetime-local 형식으로 변환: YYYY-MM-DDTHH:mm (UTC offset 제거)
+  // datetime-local 형식(YYYY-MM-DDTHH:mm)으로 변환 — 항상 KST 벽시각으로 표시
   const bannerUntilIso = notice.bannerUntil
-    ? toLocalInputValue(new Date(notice.bannerUntil))
+    ? kstDateTimeLocal(new Date(notice.bannerUntil))
     : null;
   const popupUntilIso = notice.popupUntil
-    ? toLocalInputValue(new Date(notice.popupUntil))
+    ? kstDateTimeLocal(new Date(notice.popupUntil))
     : null;
 
   return (
@@ -110,14 +111,5 @@ export default async function EditNoticePage({
         }}
       />
     </div>
-  );
-}
-
-/** Date → 'YYYY-MM-DDTHH:mm' (local) for datetime-local input */
-function toLocalInputValue(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return (
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
-    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
   );
 }

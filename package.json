@@ -39,7 +39,9 @@
     "test:e2e:headed": "playwright test --config=e2e/playwright.config.ts --headed",
     "test:e2e:ui": "playwright test --config=e2e/playwright.config.ts --ui",
     "test:e2e:report": "playwright show-report e2e/playwright-report",
-    "db:backfill-user-phones": "tsx db/backfill-user-phones.ts"
+    "db:backfill-user-phones": "tsx db/backfill-user-phones.ts",
+    "db:add-oa-hotelier-users": "tsx db/add-oa-hotelier-users.ts",
+    "db:seed:solution-presets": "tsx db/seed-solution-presets.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

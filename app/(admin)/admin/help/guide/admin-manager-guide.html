@@ -172,7 +172,12 @@
       <a href="#tickets">0. 티켓 관리</a>
       <a class="sub" href="#tickets-queue">└ 티켓 큐·칸반</a>
       <a class="sub" href="#tickets-actions">└ 티켓 처리 액션</a>
+      <a class="sub" href="#tickets-ai">└ 🆕 AI 답변 어시스트</a>
       <a class="sub" href="#tickets-phone">└ 대리(전화) 접수</a>
+      <div class="grp">데이터 · 인사이트</div>
+      <a href="#insights">🆕 운영 인사이트 대시보드</a>
+      <a class="sub" href="#insights-dashboard">└ 인사이트 대시보드</a>
+      <a class="sub" href="#insights-search">└ 검색로그</a>
       <div class="grp">콘텐츠</div>
       <a href="#notices">1. 공지 관리</a>
       <a href="#content">2. 콘텐츠 관리</a>
@@ -200,7 +205,8 @@
       <div class="meta">
         <span>대상: 매니저 · 어드민</span>
         <span>도메인: support.oapms.com</span>
-        <span>최종 갱신: 2026-06-01</span>
+        <span>최종 갱신: 2026-06-04</span>
+        <span>🆕 2026-06 업데이트 반영</span>
       </div>
     </div>
 
@@ -235,6 +241,10 @@
       <div class="note">
         <b>로그인 &amp; 접근</b>
         어드민/매니저 화면은 <span class="path">/admin</span> 경로입니다. OA SSO로 로그인하며(개발환경은 이메일+비밀번호), 권한이 <code>manager</code> 또는 <code>admin</code>인 계정만 진입할 수 있습니다.
+      </div>
+      <div class="note ok">
+        <b>🆕 2026-06 업데이트 — 이메일/아이디 로그인</b>
+        as.oapms.com에서 넘어온 사용자(업체 365건·계정 401건 이관) 때문에, 로그인 입력란이 <b>"이메일 또는 아이디"</b>로 통일됐습니다. 이메일이 없는 이관 계정은 <b>아이디(username)</b>로 로그인합니다. 입력값을 이메일로 정확히 맞추면 이메일 계정이, 아니면 아이디로 매칭됩니다.
       </div>
     </section>
 
@@ -289,10 +299,14 @@
         <tr><td>내부 메모</td><td>어드민만 보는 메모</td></tr>
       </table>
       <ul class="clean">
-        <li>검색: 호텔명·OA PMS ID·담당자 / 필터: 활성·비활성·전체</li>
+        <li>검색: 호텔명(<b>띄어쓰기 무시</b>)·담당자 / 필터: 활성·비활성·전체</li>
         <li><b>활성/비활성 토글</b>로 거래 종료 호텔을 비활성 처리(이력 유지)</li>
         <li>1개 호텔 ↔ 다수 호텔리어 (1:N)</li>
       </ul>
+      <div class="note ok">
+        <b>🆕 2026-06 업데이트 — 호텔 폼 간소화</b>
+        AS 업체 365건 이관에 맞춰 <b>호텔 추가/편집 폼과 목록에서 OA PMS ID·담당자 컬럼이 빠졌습니다.</b> 호텔명 위주로 단순하게 관리합니다(OA PMS ID는 <span class="path">/admin/users</span>의 <b>"신규 호텔" 즉시 생성 팝업</b>에서 선택 입력 가능 — SSO 연동이 필요한 경우에만). 목록은 <b>페이지당 20/50/100</b>개 + <b>일괄 활성화/비활성화</b>를 지원합니다.
+      </div>
 
       <h3 id="acc-user">사용자(계정) 관리 <span class="path">/admin/users</span></h3>
       <p>매니저·어드민 계정을 만들고, 호텔리어 대표 계정을 발급합니다.</p>
@@ -306,6 +320,18 @@
       <div class="grid2">
         <div class="card tight"><b>비밀번호 초기화</b><p style="font-size:13px;margin:6px 0 0">사용자 상세 → "비밀번호 초기화" → 새 임시비번 자동 발송 + 변경 강제 재설정</p></div>
         <div class="card tight"><b>비활성화</b><p style="font-size:13px;margin:6px 0 0"><code>is_active=false</code> → 로그인 불가, 접수 이력은 보존. 다시 활성화 가능</p></div>
+      </div>
+
+      <div class="note ok">
+        <b>🆕 2026-06 업데이트 — 계정 생성 정책 변경 (위 3·4단계 대체)</b>
+        이관 사용자 운영에 맞춰 생성 흐름이 표준화됐습니다.
+        <ul class="clean" style="margin:8px 0 0">
+          <li><b>아이디(username)가 필수</b>입니다. 이메일은 <b>선택</b> — 이메일을 넣으면 초대 메일이 나가고, 비우면 <b>아이디로만 로그인</b>합니다.</li>
+          <li>저장 시 <b>초기 비밀번호는 <code>123456</code>으로 고정 발급</b>됩니다(자동 랜덤 생성 아님). 첫 로그인 때 비밀번호 변경·정보 입력을 권고하는 안내가 표시됩니다.</li>
+          <li><b>계정 안내문 복사</b>: 사용자 목록의 복사 아이콘을 누르면 <b>접속 주소·아이디·초기 비밀번호(123456)·안내 문구</b>가 한 번에 클립보드에 담깁니다 → 그대로 고객에게 전달.</li>
+          <li><b>사용자 검색에 호텔명 매칭 추가</b>: 이제 이름·아이디·이메일·연락처뿐 아니라 <b>소속 호텔명</b>으로도 계정을 찾습니다.</li>
+          <li>호텔리어 계정 생성 중 매핑할 호텔이 없으면 <b>"신규 호텔"</b> 버튼으로 팝업에서 즉시 호텔을 만들어 바로 매핑합니다.</li>
+        </ul>
       </div>
 
       <h3 id="acc-staff">호텔리어의 직원 관리 (참고)</h3>
@@ -374,6 +400,34 @@
       </table>
       <div class="note warn"><b>⚠️ 메시지 종류를 헷갈리지 마세요</b><b>공개 답변</b>은 고객이 봅니다. <b>내부 메모</b>는 절대 고객에게 노출되지 않습니다. 민감한 논의는 반드시 내부 메모로.</div>
 
+      <div class="note ok">
+        <b>🆕 2026-06 업데이트 — 답변 임시저장 강화</b>
+        답변 작성 중 <b>페이지를 떠나거나(뒤로·탭 닫기·다른 티켓 클릭) 모바일에서 앱을 전환</b>하면 디바운스 대기 없이 <b>즉시 저장(flush)</b>됩니다. 서버 자동저장 주기도 30초 → 8초로 짧아졌고, 폼 하단의 <b>저장 인디케이터</b>가 <code>저장 중…/저장됨/오프라인—로컬 보관/저장 실패</code> 상태를 색으로 보여줍니다. 작성 중이던 답변을 잃지 않습니다.
+      </div>
+
+      <!-- AI 답변 어시스트 -->
+      <h3 id="tickets-ai">🆕 AI 답변 어시스트 <span class="badge b-ok">NEW</span></h3>
+      <p>티켓 상세 우측의 <b>"✨ AI 답변 어시스트"</b> 패널에서, 비슷한 콘텐츠·과거 사례를 근거로 답변 초안을 빠르게 만듭니다. <b>근거 문서만 인용</b>하도록 설계되어 환각(없는 사실 지어내기)을 억제합니다.</p>
+      <table>
+        <tr><th>기능</th><th>동작</th><th>버튼</th></tr>
+        <tr><td><b>관련 도움말 추천</b></td><td>티켓 내용과 의미가 유사한 아티클·FAQ를 자동 검색(유사도 78%↑, 최대 5건)</td><td><b>인용</b> → 에디터에 링크·요약 삽입</td></tr>
+        <tr><td><b>유사 과거 티켓</b></td><td>비슷한 과거 접수 최대 3건(상태·해결 요약)</td><td><b>열기</b> → 과거 티켓 확인</td></tr>
+        <tr><td><b>AI 답변 초안 생성</b></td><td>모델·참고문서를 고르면 <b>선택한 문서만 근거(RAG)</b>로 초안 작성 → 에디터에 삽입(출처 칩 표시)</td><td><b>AI 답변 초안 생성</b></td></tr>
+      </table>
+      <h4>사용할 수 있는 AI 모델 (어드민이 활성/기본값 관리)</h4>
+      <table>
+        <tr><th>모델</th><th>등급</th><th>대략 단가</th><th>적합</th></tr>
+        <tr><td>GPT-4.1 mini</td><td><span class="badge b-slate">economy</span></td><td>≈ 2.6원/건</td><td>일반·정형 문의, 빠름·저비용</td></tr>
+        <tr><td>Claude Haiku 4.5 <span class="badge b-brand">기본값</span></td><td><span class="badge b-info">balanced</span></td><td>≈ 7원/건</td><td>한국어 CS 균형</td></tr>
+        <tr><td>GPT-4o</td><td><span class="badge b-warn">premium</span></td><td>≈ 16원/건</td><td>고품질</td></tr>
+        <tr><td>Claude Sonnet 4.6</td><td><span class="badge b-warn">premium</span></td><td>≈ 21원/건</td><td>복잡한 기술이슈·뉘앙스</td></tr>
+      </table>
+      <ul class="clean">
+        <li>모델 활성화/비활성화·기본값·단가 표기는 <span class="path">/admin/master/ai-models</span>에서 어드민이 관리합니다. 활성 모델이 없으면 패널에 "활성 AI 모델이 없습니다" 안내가 뜹니다.</li>
+        <li>환경변수: <code>ANTHROPIC_API_KEY</code>(Claude) · <code>OPENAI_API_KEY</code>(GPT·임베딩).</li>
+      </ul>
+      <div class="note warn"><b>⚠️ AI 초안은 반드시 검수</b>AI 초안을 <b>수정 없이 그대로 발송</b>하려 하면 "AI 초안 검수 확인" 대화창이 한 번 더 뜹니다. 초안은 시작점일 뿐, 내용을 확인·보정한 뒤 발송하세요. 출처 칩으로 어떤 문서를 참고했는지 항상 표시됩니다.</div>
+
       <h3 id="tickets-phone">대리 접수 (전화·외부 채널) <span class="path">/admin/tickets/new-by-phone</span></h3>
       <p>호텔이 <b>전화·카카오·이메일·방문</b> 등으로 문의했을 때, 매니저가 대신 티켓을 만드는 기능입니다.</p>
       <ol class="steps">
@@ -382,7 +436,63 @@
         <li>제품·유형·긴급도·제목·내용 입력, 필요 시 첨부</li>
         <li>연락 수단(SMS/메일) 선택 후 접수 — 호텔/호텔리어가 매핑되면 자동 알림 발송</li>
       </ol>
-      <p style="font-size:13px;color:var(--muted)">"직접 접수"(<span class="path">/tickets/new</span>)는 호텔리어 본인이 쓰는 셀프 접수 화면입니다.</p>
+      <p style="font-size:13px;color:var(--muted)">"직접 접수"(<span class="path">/tickets/new</span>)는 호텔리어 본인이 쓰는 셀프 접수 화면입니다. <b>🆕</b> 티켓 큐 상단에 <b>"직접 접수"</b> 버튼이 추가되어, 고객이 직접 접수하도록 이 화면으로 바로 안내할 수 있습니다(대리 접수 버튼 옆).</p>
+    </section>
+
+    <!-- INSIGHTS (NEW 2026-06) -->
+    <section id="insights">
+      <h2 class="sec"><span class="no">📊</span>운영 인사이트 대시보드 <span class="badge b-ok">NEW</span></h2>
+      <p class="lead">🆕 2026-06 신규. 셀프검색부터 완료까지 운영 흐름을 한눈에 봅니다. 사이드바 최상단. 매니저·어드민 전용. <span class="path">/admin/insights</span></p>
+      <div class="note"><b>기간 기준</b>모든 집계는 <b>KST 자정 경계</b>이며 <b>오늘은 제외</b>(정정 중 데이터 미포함)합니다. 기간은 어제 / 최근 7일 / 최근 30일, 제품별 필터를 지원합니다.</div>
+
+      <h3 id="insights-dashboard">① 인사이트 대시보드 <span class="path">/admin/insights/dashboard</span></h3>
+
+      <h4>핵심지표 3종 — 완료건을 어떻게 끝냈나 (모수 = 완료 티켓)</h4>
+      <table>
+        <tr><th>지표</th><th>의미</th><th>운영 해석</th></tr>
+        <tr><td><b>원콜완료</b> <span class="badge b-ok">one_call_resolved</span></td><td>1회 작업으로 해결(담당자가 기록하는 속성)</td><td>높을수록 첫 응대 정확도·효율 우수. 낮으면 표준답변·FAQ 강화</td></tr>
+        <tr><td><b>원팀완료(자체해결)</b></td><td>운영팀이 Dev 개입 없이 자체 종결</td><td>팀 자체 역량. Dev개입과 합이 100%</td></tr>
+        <tr><td><b>Dev개입</b></td><td>Slack 공유로 개발팀 이관(에스컬레이션)</td><td>높으면 기술 이슈 다발 또는 운영 프로세스 점검 신호</td></tr>
+      </table>
+      <p style="font-size:13px;color:var(--muted)"><b>one_call_resolved</b>는 티켓에 새로 생긴 컬럼으로, 담당자가 "한 번에 끝냈다"고 표시한 건입니다. 원콜완료율은 완료건 대비 비율로 집계됩니다.</p>
+
+      <h4>행위자 5단계 처리 퍼널</h4>
+      <div class="flow">
+        <span class="node">검색<br><span style="font-size:11px;color:var(--muted)">호텔리어</span></span><span class="arrow">→</span>
+        <span class="node">문의<br><span style="font-size:11px;color:var(--muted)">호텔리어</span></span><span class="arrow">→</span>
+        <span class="node">접수<br><span style="font-size:11px;color:var(--muted)">운영팀</span></span><span class="arrow">→</span>
+        <span class="node">Dev이관<br><span style="font-size:11px;color:var(--muted)">운영팀</span></span><span class="arrow">→</span>
+        <span class="node">완료<br><span style="font-size:11px;color:var(--muted)">운영팀</span></span>
+      </div>
+      <ul class="clean">
+        <li><b>검색→문의</b> 전환이 낮으면 검색 UX·콘텐츠 부족, <b>문의→접수</b>가 높으면 자가해결 콘텐츠 부족(FAQ·아티클 보강 필요).</li>
+        <li>전화 문의는 검색 없이 바로 접수됩니다(채널 특성).</li>
+      </ul>
+
+      <h4>그 외 카드</h4>
+      <div class="grid2">
+        <div class="card tight"><b>🔴 액션 카드</b><p style="font-size:13px;margin:6px 0 0">긴급 처리건(P1 미완료) · 장기 지연건(영업일 3일+) — 즉시 추적 대상</p></div>
+        <div class="card tight"><b>⏱ 시간 지표</b><p style="font-size:13px;margin:6px 0 0">평균 첫 응답 시간 · 평균 해결 소요(영업일, 주말·공휴일 제외)</p></div>
+        <div class="card tight"><b>🔤 검색어 워드클라우드</b><p style="font-size:13px;margin:6px 0 0">동의어 대표어 기준 빈도. <b>붉은 단어 = 0건 다발</b>(콘텐츠 갭 신호)</p></div>
+        <div class="card tight"><b>🏨 호텔별 문의 Top 15</b><p style="font-size:13px;margin:6px 0 0">집중 케어·온보딩 점검 대상 발굴</p></div>
+        <div class="card tight"><b>📈 유입·분포</b><p style="font-size:13px;margin:6px 0 0">일자별·채널별 유입, 제품별 도넛, 유형별 완료/처리중</p></div>
+        <div class="card tight"><b>🛠 Dev 에스컬 백로그 · 담당자별 현황</b><p style="font-size:13px;margin:6px 0 0">미완료 에스컬 경과 영업일, 담당자별 완료/처리중/평균 해결</p></div>
+      </div>
+
+      <h3 id="insights-search">② 검색로그 <span class="path">/admin/insights/search-logs</span></h3>
+      <p>호텔리어의 실제 검색을 <b>1행 = 1회</b>로 나열합니다. 유입 키워드 → 도착(유출) 페이지까지 추적해 콘텐츠 갭을 찾습니다.</p>
+      <table>
+        <tr><th>통계 카드</th><th>의미</th></tr>
+        <tr><td>검색 수</td><td>총 검색 시도</td></tr>
+        <tr><td>결과 클릭 (CTR)</td><td>검색 결과를 클릭한 비율 — 자가해결 진입</td></tr>
+        <tr><td>티켓 전환 <span class="badge b-danger">위험</span></td><td>검색 후 바로 접수 — 검색 실패 신호</td></tr>
+        <tr><td>결과없음 <span class="badge b-warn">경고</span></td><td>0건 반환 비율 — 콘텐츠/동의어 갭</td></tr>
+      </table>
+      <ul class="clean">
+        <li>기간: <b>오늘(실시간, 30초 자동 갱신)</b> / 어제 / 최근 7일 / 30일.</li>
+        <li>리스트: 유입 키워드 · 유입일시(초까지) · 도움됨(👍/👎) · 유출 채널(도착 아티클·FAQ·공지 링크, 미클릭 시 "이탈", 접수 전환 시 "티켓 접수").</li>
+      </ul>
+      <div class="note ok"><b>0건·티켓전환 키워드를 콘텐츠로</b>결과없음·티켓전환이 많은 키워드는 <b>동의어 사전</b>(<a href="#master">마스터</a>)이나 <b>FAQ/아티클</b>로 보강하세요. 검색 품질 측정은 <span class="path">/admin/master/search-quality</span>(검색 골든셋·품질)에서 순위·실사용 퍼널로 관리합니다.</div>
     </section>
 
     <!-- NOTICES -->
@@ -402,10 +512,12 @@
       <table>
         <tr><th>옵션</th><th>동작</th></tr>
         <tr><td>제품 선택</td><td>특정 제품 공지 / 비우면 <b>전체 공지</b></td></tr>
-        <tr><td>📌 핀 고정</td><td>공지 목록 상단에 항상 고정</td></tr>
-        <tr><td>🎗 홈 배너</td><td>모든 페이지 상단에 띠로 표시 (긴급용). 자동 해제 시각 설정 가능</td></tr>
+        <tr><td>📌 상단 고정 <span class="badge b-ok">🆕 명칭변경</span></td><td>공지 목록 상단에 항상 고정 (구 "핀 고정")</td></tr>
+        <tr><td>🎗 홈 상단 티커 <span class="badge b-ok">🆕 명칭변경</span></td><td>모든 페이지 상단에 띠로 표시 (긴급용). 자동 해제 시각 설정 가능 (구 "홈 배너")</td></tr>
         <tr><td>🖼 홈 팝업 배너 <span class="badge b-brand">NT-04</span></td><td>홈 진입 시 이미지 모달. 이미지 필수, 크기(소/중/대)·노출 종료일 설정</td></tr>
       </table>
+      <p style="font-size:13px;color:var(--muted)">🆕 옵션·제품·팝업 크기는 드롭다운에서 <b>버튼형 선택 카드</b>로 바뀌었고, 편집 폼에 <b>본문·팝업 미리보기</b> 버튼이 추가됐습니다.</p>
+      <div class="note ok"><b>🆕 2026-06 업데이트 — 공지 본문 AI 초안 작성</b>본문 에디터 상단의 <b>"✨ AI 초안 작성"</b> 버튼을 누르면, 입력한 <b>종류·제품·제목·현재 목차</b>를 근거로 본문 초안을 생성합니다(모델: Claude Haiku). 제목은 필수이고, 본문이 30자 이상이면 교체 전 확인창이 뜹니다. 호출 제한은 분당 5회·일 100회. 생성 후 반드시 내용을 확인·보정하세요.</div>
 
       <h4>발행 흐름</h4>
       <div class="flow">
@@ -495,7 +607,8 @@
       <h3 id="faqs">FAQ 작성 <span class="path">/admin/faqs</span></h3>
       <p>자주 묻는 질문을 짧은 Q&amp;A로. <b>Draft 개념 없이 저장 즉시 노출</b>됩니다.</p>
       <ul class="clean">
-        <li>입력: 제품(필수) · 문제 유형(선택) · 질문 · 답변(마크다운) · 정렬 순서</li>
+        <li>입력: 제품(필수) · 문제 유형(선택) · 질문 · 답변(마크다운) · 정렬 순서 · <b>🆕 키워드</b>(AI 제안 버튼 제공)</li>
+        <li>🆕 FAQ도 <b>키워드 + 임베딩</b>이 붙어 아티클과 동일한 <b>하이브리드(동의어+시맨틱) 검색</b> 대상이 됩니다(v1.7).</li>
         <li>고객 측: <span class="path">/faq</span> 아코디언 UI (제품·유형 필터, 도움됨 피드백)</li>
         <li>삭제는 비활성화로 (물리 삭제 금지)</li>
       </ul>
@@ -549,19 +662,33 @@
 
       <table>
         <tr><th>메뉴</th><th>관리 대상</th><th>어디에 반영</th><th>권한</th></tr>
+        <tr><td>서비스 상태 <span class="badge b-ok">🆕 이동</span></td><td>정상/성능저하/장애/유지보수</td><td>홈·긴급 배너·<span class="path">/status</span> 즉시 반영</td><td>매니저+</td></tr>
         <tr><td>카테고리</td><td>제품·유형·긴급도·영향도</td><td>티켓·콘텐츠 분류 전반</td><td>매니저+</td></tr>
         <tr><td>알림 템플릿</td><td>접수확인·처리중·완료·계정초대 등 문구</td><td>SMS/메일 발송문 (변수 <code>{{ticketNo}}</code> 등)</td><td>매니저+</td></tr>
         <tr><td>빠른 응대</td><td>티켓 정형 답변 템플릿</td><td>티켓 답변창</td><td>매니저+</td></tr>
         <tr><td>자주 찾는 작업</td><td>홈 바로가기 카드</td><td>호텔리어 홈</td><td>매니저+</td></tr>
-        <tr><td>역할별 시작</td><td>역할(프론트/하우스키핑 등)별 추천 가이드</td><td>홈 "역할별 시작하기"</td><td>매니저+</td></tr>
+        <tr><td>역할별 시작 <span class="badge b-ok">🆕 FAQ</span></td><td>역할(프론트/하우스키핑 등)별 추천 가이드 <b>+ FAQ 매핑</b>(드래그 정렬)</td><td>홈 "역할별 시작하기" · <span class="path">/role/[역할]</span>에 아티클+FAQ 함께</td><td>매니저+</td></tr>
+        <tr><td>인기검색어 <span class="badge b-ok">🆕</span></td><td>최근 30일 검색 자동집계 + 고정(pin)/제외(block) 큐레이션</td><td>홈·검색 화면 인기검색어 칩(최대 6개)</td><td>매니저+</td></tr>
+        <tr><td>검색 골든셋·품질 <span class="badge b-ok">🆕</span></td><td>골든셋 100문항 순위 측정·실사용 퍼널·0건 보강</td><td>검색 품질 모니터링(Hit@상위·CTR·접수율)</td><td>매니저+</td></tr>
+        <tr><td>지식팩 내보내기 <span class="badge b-ok">🆕</span></td><td>발행 아티클+활성 FAQ+동의어를 Markdown/JSONL로 내보내기</td><td>외부 챗봇·RAG·Custom GPT 지식 파일</td><td>매니저+</td></tr>
         <tr><td>솔루션 링크 프리셋</td><td>호텔 프로필 기본 링크(Keyless·홈페이지 등)</td><td>호텔 프로필</td><td>매니저+</td></tr>
-        <tr><td>접수 폼 필드</td><td>제품별 동적 접수폼 필드 정의</td><td>접수 폼</td><td>어드민</td></tr>
+        <tr><td>접수 폼 필드</td><td>제품별 동적 접수폼 필드 정의</td><td>접수 폼</td><td>매니저+</td></tr>
         <tr><td>유입 채널</td><td>web/phone/chatbot/kakao/email/walk_in</td><td>대리 접수 드롭다운·티켓 필터</td><td>어드민</td></tr>
         <tr><td>운영시간</td><td>평일/주말·점심·공휴일·임시변경·긴급전화</td><td>호텔리어 컨택 패널 실시간 상태</td><td>어드민</td></tr>
         <tr><td>시스템 설정</td><td>업로드 한도·로그인 제한·Slack채널 등</td><td>플랫폼 전역 동작</td><td>어드민</td></tr>
         <tr><td>동의어 사전</td><td>검색 동의어 그룹</td><td>통합 검색·가이드 검색 확장</td><td>어드민</td></tr>
         <tr><td>메뉴 구조</td><td>제품별 가이드 카테고리 트리(최대 3단)</td><td>아티클 메뉴 경로·/help 사이드바</td><td>어드민</td></tr>
+        <tr><td>메뉴 접근 제어 <span class="badge b-ok">🆕</span></td><td>매니저에게 보일 마스터 메뉴를 ON/OFF</td><td>매니저 사이드바·마스터 카드 노출 범위</td><td>어드민</td></tr>
       </table>
+      <p style="font-size:13px;color:var(--muted)">🆕 <b>권한 표기 주의</b>: 위 "매니저+" 항목 중 일부는 <b>메뉴 접근 제어</b>(<span class="path">/admin/master/menu-access</span>)에서 어드민이 매니저에게 숨길 수 있습니다. 차단된 메뉴는 매니저 화면에서 사라지고 URL 직접 진입 시 404가 됩니다. 유입 채널·운영시간·시스템 설정·동의어·메뉴 구조·메뉴 접근 제어는 항상 어드민 전용(토글 불가)입니다.</p>
+      <div class="note ok"><b>🆕 2026-06 신규 마스터 메뉴 4종 요약</b>
+        <ul class="clean" style="margin:6px 0 0">
+          <li><b>인기검색어</b>(<span class="path">/admin/master/popular-keywords</span>) — 자동집계 + pin/block로 노이즈를 걸러 홈·검색 칩을 큐레이션.</li>
+          <li><b>검색 골든셋·품질</b>(<span class="path">/admin/master/search-quality</span>) — 100문항 정답셋으로 검색 순위를 측정하고, 0건 검색어를 동의어·FAQ로 보강.</li>
+          <li><b>지식팩 내보내기</b>(<span class="path">/admin/master/knowledge-export</span>) — 발행 콘텐츠를 Markdown/JSONL로 묶어 외부 챗봇·RAG에 투입.</li>
+          <li><b>메뉴 접근 제어</b>(<span class="path">/admin/master/menu-access</span>) — 매니저별 마스터 메뉴 노출을 어드민이 제어.</li>
+        </ul>
+      </div>
 
       <div class="grid2">
         <div class="card tight">
@@ -573,7 +700,7 @@
           <p style="font-size:13px;margin:6px 0 0">"결제→페이먼트·카드" 식으로 묶으면 고객이 다른 단어로 검색해도 찾아냅니다. 띄어쓰기·하이픈 변형은 <b>자동 흡수</b>되니 중복 입력 불필요. 상단 <b>"아티클 미등록 키워드"</b> 카드가 등록 후보를 자동 추천합니다 → "그룹 생성"으로 바로 등록.</p>
         </div>
       </div>
-      <div class="note"><b>서비스 상태</b><span class="path">/admin/service-status</span>에서 정상/성능저하/장애/유지보수 상태를 전환하면, 공개 페이지 <span class="path">/status</span>와 홈에 즉시 표시됩니다(비로그인 조회 가능).</div>
+      <div class="note"><b>서비스 상태</b>🆕 마스터 메뉴로 이동했습니다. <span class="path">/admin/master/service-status</span>에서 정상/성능저하/장애/유지보수 상태를 전환하면, 공개 페이지 <span class="path">/status</span>와 홈에 즉시 표시됩니다(비로그인 조회 가능).</div>
     </section>
 
     <!-- CHATBOT -->
@@ -595,14 +722,15 @@
       <p class="lead">티켓 이벤트가 외부로 자동 전파되는 구조입니다. 대부분 <b>자동</b>이라 설정만 알면 됩니다.</p>
 
       <h3>Slack 연동</h3>
-      <p>티켓 이벤트가 운영 Slack 채널로 자동 발송됩니다(Webhook 방식). 메시지엔 "큐에서 열기" 버튼이 붙습니다.</p>
+      <p>티켓 이벤트가 운영 Slack 채널로 자동 발송됩니다. 메시지엔 "큐에서 열기" 버튼이 붙습니다.</p>
+      <div class="note ok"><b>🆕 2026-06 업데이트 — Bot Token(chat.postMessage) 방식으로 전환</b>기존 Webhook 방식에서 <b>Bot Token</b> 방식으로 바뀌었습니다. 봇(<code>SLACK_BOT_TOKEN</code>, <code>chat:write</code>)을 채널 ID로 직접 발송합니다. <b>봇을 각 채널에 미리 초대</b>해야 합니다(미초대 시 <code>not_in_channel</code> 오류).</div>
       <table>
-        <tr><th>이벤트</th><th>발송 채널</th><th>환경변수</th></tr>
-        <tr><td>🆕 모든 신규 접수</td><td>#support_new</td><td><code>SLACK_WEBHOOK_NEW</code></td></tr>
-        <tr><td>🚨 P1 긴급 접수</td><td>#support_urgent</td><td><code>SLACK_WEBHOOK_URGENT</code></td></tr>
-        <tr><td>🛠 Dev 에스컬레이션</td><td>#support_escalation</td><td><code>SLACK_WEBHOOK_DEV</code></td></tr>
+        <tr><th>이벤트</th><th>발송 채널</th><th>환경변수(채널 ID)</th></tr>
+        <tr><td>모든 신규 접수</td><td>#support_new</td><td><code>SLACK_CHANNEL_NEW</code></td></tr>
+        <tr><td>🚨 P1 긴급 접수</td><td>#support_urgent</td><td><code>SLACK_CHANNEL_URGENT</code></td></tr>
+        <tr><td>🛠 Dev 에스컬레이션</td><td>#support_escalation</td><td><code>SLACK_CHANNEL_DEV</code></td></tr>
       </table>
-      <p style="font-size:13px;color:var(--muted)">Webhook URL은 <code>.env</code>에만 저장(절대 커밋 금지). 미설정 시 실제 발송 없이 로그만 남고 메인 로직엔 영향 없습니다.</p>
+      <p style="font-size:13px;color:var(--muted)">봇 토큰·채널 ID는 <code>.env</code>에만 저장(절대 커밋 금지). 미설정 시 실제 발송 없이 로그(프로덕션은 <code>console.warn</code>)만 남고 메인 로직엔 영향 없습니다. Vercel 서버리스에서 응답 후 발송이 유실되지 않도록 <code>after()</code>로 처리해 <b>"동결"을 방지</b>합니다.</p>
 
       <h3>SMS(솔라피) &amp; 이메일(AWS SES)</h3>
       <p>호텔리어가 접수 시 고른 <b>연락 수단</b>(SMS/메일)에 따라 자동 발송됩니다.</p>
@@ -645,7 +773,9 @@
             <li><span class="path">/admin/tickets</span> 티켓 큐</li>
             <li><span class="path">/admin/tickets/kanban</span> 칸반</li>
             <li><span class="path">/admin/tickets/new-by-phone</span> 대리 접수</li>
-            <li><span class="path">/admin/service-status</span> 서비스 상태</li>
+            <li>🆕 <span class="path">/admin/insights/dashboard</span> 인사이트</li>
+            <li>🆕 <span class="path">/admin/insights/search-logs</span> 검색로그</li>
+            <li>🆕 <span class="path">/admin/master/service-status</span> 서비스 상태</li>
           </ul>
         </div>
         <div class="card tight" style="font-size:13px">
@@ -805,12 +935,12 @@ lib/
   articles/           # content-type-meta · body-validator · templates
   auth.ts · permissions.ts · rate-limit.ts · env.ts · audit.ts
 db/
-  schema/             # Drizzle 스키마 (테이블 35개)
+  schema/             # Drizzle 스키마 (테이블 41개)
   seed.ts · index.ts
 e2e/                  # Playwright
 docs/                 # IMPLEMENTATION_PLAN · dev-rules · dev-logs · guides</div>
 
-      <h3>데이터 모델 (35 테이블) — 공통 규칙</h3>
+      <h3>데이터 모델 (41 테이블) — 공통 규칙</h3>
       <ul class="clean">
         <li>모든 테이블 공통 컬럼: <code>id(uuid)</code> · <code>created_at</code> · <code>updated_at</code> · <code>is_active</code></li>
         <li>리스트 쿼리: <code>is_active = true</code> 필수 · <code>sortBy/sortOrder/page/pageSize</code> 지원 · 기본 <code>created_at DESC</code></li>
@@ -822,25 +952,25 @@ docs/                 # IMPLEMENTATION_PLAN · dev-rules · dev-logs · guides</
         <tr><td>티켓</td><td><code>tickets</code> · <code>ticket_messages</code> · <code>ticket_attachments</code> · <code>ticket_channels</code> · <code>ticket_form_fields</code> · <code>ticket_feedback</code> · <code>ticket_no_counter</code></td></tr>
         <tr><td>계정·호텔</td><td><code>users</code> · <code>hotels</code></td></tr>
         <tr><td>콘텐츠</td><td><code>articles</code> · <code>faqs</code> · <code>checklists</code> · <code>notices</code> · <code>article_feedback</code> · <code>article_redirects</code> · <code>article_templates</code> · <code>editor_drafts</code></td></tr>
-        <tr><td>마스터</td><td><code>categories</code> · <code>menu_taxonomies</code> · <code>quick_replies</code>·<code>quick_actions</code> · <code>role_starters</code> · <code>solution_links</code> · <code>system_settings</code> · <code>notification_templates</code></td></tr>
-        <tr><td>검색·운영</td><td><code>term_groups</code> · <code>term_synonyms</code> · <code>business_hours_default</code>·<code>_overrides</code> · <code>business_holidays</code> · <code>service_status</code> · <code>notification_logs</code> · <code>activity_logs</code></td></tr>
+        <tr><td>마스터</td><td><code>categories</code> · <code>menu_taxonomies</code> · <code>quick_replies</code>·<code>quick_actions</code> · <code>role_starters</code> · <code>solution_links</code> · <code>system_settings</code> · <code>notification_templates</code> · <span class="badge b-ok">🆕</span> <code>popular_keywords</code> · <code>ai_models</code></td></tr>
+        <tr><td>검색·운영</td><td><code>term_groups</code> · <code>term_synonyms</code> · <code>business_hours_default</code>·<code>_overrides</code> · <code>business_holidays</code> · <code>service_status</code> · <code>notification_logs</code> · <code>activity_logs</code> · <span class="badge b-ok">🆕</span> <code>search_logs</code> · <code>search_eval</code></td></tr>
       </table>
 
       <h3>연동 모듈 진입점</h3>
       <table>
         <tr><th>연동</th><th>파일</th><th>환경변수</th></tr>
-        <tr><td>Slack</td><td><code>lib/notifications/slack.ts</code></td><td><code>SLACK_WEBHOOK_NEW/URGENT/DEV</code></td></tr>
+        <tr><td>Slack <span class="badge b-ok">🆕</span></td><td><code>lib/notifications/slack.ts</code></td><td><code>SLACK_BOT_TOKEN</code> · <code>SLACK_CHANNEL_NEW/URGENT/DEV</code></td></tr>
         <tr><td>SMS</td><td><code>lib/notifications/solapi.ts</code></td><td><code>SOLAPI_API_KEY/SECRET/SENDER</code></td></tr>
         <tr><td>Email</td><td><code>lib/notifications/ses.ts</code></td><td><code>AWS_*</code> · <code>SES_FROM_EMAIL</code></td></tr>
         <tr><td>챗봇</td><td><code>lib/services/chatbot-meta.ts</code> · <code>components/chatbot/</code></td><td><code>OACHAT_EMBED_URL</code></td></tr>
-        <tr><td>AI 보조</td><td><code>lib/ai/</code></td><td><code>ANTHROPIC_API_KEY</code></td></tr>
+        <tr><td>AI 보조 <span class="badge b-ok">🆕</span></td><td><code>lib/ai/</code> · <code>lib/services/ticket-assist.ts</code> · <code>lib/services/ai-models.ts</code></td><td><code>ANTHROPIC_API_KEY</code> · <code>OPENAI_API_KEY</code></td></tr>
         <tr><td>첨부</td><td><code>@vercel/blob</code></td><td><code>BLOB_READ_WRITE_TOKEN</code></td></tr>
       </table>
       <div class="note"><b>더 깊이 보려면</b>기능 명세·DB 스키마·Phase 계획은 <span class="path">docs/IMPLEMENTATION_PLAN.md</span>, 컨벤션·보안·배포 규칙은 <span class="path">docs/dev-rules.md</span>, 배포 체크리스트는 <span class="path">docs/DEPLOY_CHECKLIST.md</span>를 참고하세요.</div>
     </section>
 
     <div class="foot">
-      통합 AS 플랫폼 어드민·매니저 실무 가이드 · 코드베이스 실제 정의 기반 작성 · 2026-06-01<br>
+      통합 AS 플랫폼 어드민·매니저 실무 가이드 · 코드베이스 실제 정의 기반 작성 · 2026-06-04<br>
       기능 변경 시 이 문서도 함께 갱신해주세요. (app/(admin)/admin/help/guide/admin-manager-guide.html)
     </div>
 

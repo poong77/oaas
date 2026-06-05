@@ -256,7 +256,7 @@ export function HotelsManager({
                     </td>
                     <td className="px-3 py-2 text-right">
                       <div className="inline-flex gap-1">
-                        <Button type="button" size="sm" variant="ghost" onClick={() => { setEditing(h); setShowCreate(false); }}>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => router.push(`/admin/hotels/${h.id}`)}>
                           <Pencil className="h-3.5 w-3.5" />수정
                         </Button>
                         <Button type="button" size="sm" variant="ghost" onClick={() => handleToggle(h)}>
@@ -297,7 +297,7 @@ export function HotelsManager({
                 <div>전화: {h.phone ?? '-'}</div>
               </div>
               <div className="mt-2 flex gap-1">
-                <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => { setEditing(h); setShowCreate(false); }}>
+                <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => router.push(`/admin/hotels/${h.id}`)}>
                   <Pencil className="h-3.5 w-3.5" />수정
                 </Button>
                 <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => handleToggle(h)}>
