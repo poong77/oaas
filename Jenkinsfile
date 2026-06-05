@@ -225,13 +225,17 @@ tar -xzf /tmp/deploy.tar.gz
 echo ">>> Prepare migrator (격리된 마이그레이션 전용 디렉토리)..."
 # /app/oaas/migrator/ 에 drizzle-kit + 최소 의존성만 둔다.
 # runtime(standalone/)을 오염시키지 않고 멱등 install (이미 있으면 스킵).
+#
+# ⚠️ 버전 핀 필수: 프로젝트 package.json의 drizzle-orm/drizzle-kit과 같은 major/minor를
+# 유지해야 한다. 그렇지 않으면 schema introspection이 silent fail (stderr 비어있고 exit 1)
+# 한다 — 우리 schema는 0.36.x API(vector dimensions 등)로 작성됨.
 mkdir -p ${DEPLOY_PATH}/migrator
 if [ ! -d ${DEPLOY_PATH}/migrator/node_modules ]; then
     cat > ${DEPLOY_PATH}/migrator/package.json <<EOF
 {"name":"oaas-migrator","private":true,"version":"0.0.0"}
 EOF
     (cd ${DEPLOY_PATH}/migrator && npm install --no-audit --no-fund \
-        drizzle-kit drizzle-orm pg dotenv)
+        drizzle-kit@0.30.1 drizzle-orm@0.36.4 pg@^8.13.1 dotenv@^16.4.7)
 fi
 
 # drizzle.config.ts는 dotenv/config를 import 한다 → /app/oaas/node_modules에서 dotenv를 찾아야 함.
