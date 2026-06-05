@@ -31,7 +31,7 @@ module.exports = {
       // 프로세스 관리
       autorestart: true,
       watch: false,
-      max_memory_restart: '1.5G',
+      max_memory_restart: '1500M',
       // 안정성
       min_uptime: '10s',
       max_restarts: 10,
