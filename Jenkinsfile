@@ -20,12 +20,13 @@
  *   - ec2-ssh-key             : SSH Username with private key (EC2 접속용)
  *   - oaas-slack-bot-token   : Secret text (Slack Bot Token xoxb-..., 선택)
  *
- *   [환경변수] (Jenkins Job > Configure > Parameters 또는 Environment)
- *   - DEV_EC2_HOST     : DEV EC2 Private IP
- *   - PRD_EC2_HOST     : PRD EC2 Private IP
- *   - DEV_PUBLIC_URL   : DEV 공개 URL (https://as-dev.oapms.co)
- *   - PRD_PUBLIC_URL   : PRD 공개 URL (https://support.oapms.com)
- *   - SLACK_CHANNEL    : Slack 채널명 (예: #oaas-deploy)
+ *   [환경변수] (Jenkins Manage Jenkins > System > Global properties > Environment variables)
+ *   다른 프로젝트와 충돌 방지를 위해 OAAS_ 프리픽스 사용.
+ *   - OAAS_DEV_EC2_HOST     : DEV EC2 Private IP
+ *   - OAAS_PRD_EC2_HOST     : PRD EC2 Private IP
+ *   - OAAS_DEV_PUBLIC_URL   : DEV 공개 URL (https://as-dev.oapms.co)
+ *   - OAAS_PRD_PUBLIC_URL   : PRD 공개 URL (https://support.oapms.com)
+ *   - OAAS_SLACK_CHANNEL    : Slack 채널명 (예: #oaas-deploy, 선택)
  */
 
 pipeline {
@@ -58,12 +59,12 @@ pipeline {
 
                     if (branch == 'main') {
                         env.DEPLOY_ENV  = 'prd'
-                        env.TARGET_HOST = env.PRD_EC2_HOST
-                        env.PUBLIC_URL  = env.PRD_PUBLIC_URL
+                        env.TARGET_HOST = env.OAAS_PRD_EC2_HOST
+                        env.PUBLIC_URL  = env.OAAS_PRD_PUBLIC_URL
                     } else {
                         env.DEPLOY_ENV  = 'dev'
-                        env.TARGET_HOST = env.DEV_EC2_HOST
-                        env.PUBLIC_URL  = env.DEV_PUBLIC_URL
+                        env.TARGET_HOST = env.OAAS_DEV_EC2_HOST
+                        env.PUBLIC_URL  = env.OAAS_DEV_PUBLIC_URL
                     }
 
                     // 최근 커밋 작성자 (Gitea 계정명)
@@ -118,7 +119,7 @@ pipeline {
                 script {
                     try {
                         slackSend(
-                            channel: env.SLACK_CHANNEL ?: '#oaas-deploy',
+                            channel: env.OAAS_SLACK_CHANNEL ?: '#oaas-deploy',
                             color: 'warning',
                             botUser: true,
                             tokenCredentialId: 'oaas-slack-bot-token',
@@ -142,7 +143,7 @@ pipeline {
                     } catch (err) {
                         try {
                             slackSend(
-                                channel: env.SLACK_CHANNEL ?: '#oaas-deploy',
+                                channel: env.OAAS_SLACK_CHANNEL ?: '#oaas-deploy',
                                 color: '#808080',
                                 botUser: true,
                                 tokenCredentialId: 'oaas-slack-bot-token',
@@ -304,7 +305,7 @@ ENDSSH"""
             script {
                 try {
                     slackSend(
-                        channel: env.SLACK_CHANNEL ?: '#oaas-deploy',
+                        channel: env.OAAS_SLACK_CHANNEL ?: '#oaas-deploy',
                         color: 'good',
                         botUser: true,
                         tokenCredentialId: 'oaas-slack-bot-token',
@@ -327,7 +328,7 @@ ENDSSH"""
             script {
                 try {
                     slackSend(
-                        channel: env.SLACK_CHANNEL ?: '#oaas-deploy',
+                        channel: env.OAAS_SLACK_CHANNEL ?: '#oaas-deploy',
                         color: 'danger',
                         botUser: true,
                         tokenCredentialId: 'oaas-slack-bot-token',
