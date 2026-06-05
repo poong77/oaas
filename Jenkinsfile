@@ -200,6 +200,12 @@ pipeline {
                         \${WORKSPACE}/deploy/ecosystem.${env.DEPLOY_ENV}.config.js \
                         ${EC2_USER}@${env.TARGET_HOST}:/tmp/ecosystem.config.js"""
 
+                    // generate-env.sh를 별도 scp (deploy/ 디렉토리는 tar에 안 들어있음).
+                    // EC2의 IAM Role로 SSM Parameter Store에서 값 받아 standalone/.env 생성.
+                    sh """scp -o StrictHostKeyChecking=no \
+                        \${WORKSPACE}/deploy/generate-env.sh \
+                        ${EC2_USER}@${env.TARGET_HOST}:/tmp/generate-env.sh"""
+
                     sh """ssh -o StrictHostKeyChecking=no ${EC2_USER}@${env.TARGET_HOST} << 'ENDSSH'
 set -e
 
@@ -235,8 +241,14 @@ for pkg in dotenv drizzle-kit drizzle-orm pg; do
     ln -sfn ${DEPLOY_PATH}/migrator/node_modules/\$pkg ${DEPLOY_PATH}/node_modules/\$pkg
 done
 
+echo ">>> Generate .env from SSM Parameter Store..."
+chmod +x /tmp/generate-env.sh
+sudo /tmp/generate-env.sh ${env.DEPLOY_ENV} ${DEPLOY_PATH}/standalone/.env
+sudo chown ec2-user:ec2-user ${DEPLOY_PATH}/standalone/.env
+rm -f /tmp/generate-env.sh
+
 # .env 심볼릭: /app/oaas/standalone/.env → /app/oaas/.env (cwd에서 dotenv가 자동 로드)
-if [ -f ${DEPLOY_PATH}/standalone/.env ] && [ ! -L ${DEPLOY_PATH}/.env ]; then
+if [ ! -L ${DEPLOY_PATH}/.env ]; then
     ln -sfn ${DEPLOY_PATH}/standalone/.env ${DEPLOY_PATH}/.env
 fi
 
