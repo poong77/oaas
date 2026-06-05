@@ -72,37 +72,41 @@ aws --version || {
 }
 
 # ----------------------------------------
-# 6. PostgreSQL 16 + pgvector 설치 (EC2 동일 노드)
+# 6. PostgreSQL 16 + pgvector 설치 (PGDG repo, EC2 동일 노드)
 #
+# AL2023 내장 postgresql15에는 -devel 패키지가 없어 (특히 aarch64) pgvector 소스 빌드가
+# 안 된다. PGDG EL9 repo는 RPM(postgresql16-devel + pgvector_16)을 제공해 가장 안정적.
 # 소규모 운영 / 단일 노드 자체 호스팅 정책 (사용자 결정).
 # RDS PostgreSQL로 이전 시 이 단계 스킵 가능 — DATABASE_URL만 RDS 엔드포인트로 교체.
 # ----------------------------------------
-echo ">>> [6/9] Installing PostgreSQL 16 + pgvector..."
+echo ">>> [6/9] Installing PostgreSQL 16 + pgvector (PGDG)..."
 
-# Amazon Linux 2023의 기본 PG는 15. PG 16은 PGDG repo에서 받는다.
-# (PGDG가 AL2023를 지원하지 않으면 dnf 기본 postgresql15-server로 폴백.)
-if dnf install -y postgresql16-server postgresql16 postgresql16-contrib postgresql16-devel 2>/dev/null; then
-    PG_VERSION=16
-    PG_DATA=/var/lib/pgsql/16/data
-    PG_BIN=/usr/pgsql-16/bin
-    PG_SETUP=$PG_BIN/postgresql-16-setup
-    PG_SERVICE=postgresql-16
-else
-    echo "⚠️  PostgreSQL 16 패키지 없음 — AL2023 내장 postgresql15-server로 폴백"
-    dnf install -y postgresql15-server postgresql15 postgresql15-contrib
-    PG_VERSION=15
-    PG_DATA=/var/lib/pgsql/data
-    PG_BIN=/usr/bin
-    PG_SETUP=/usr/bin/postgresql-setup
-    PG_SERVICE=postgresql
-fi
+ARCH=$(uname -m)   # x86_64 or aarch64
+PGDG_RPM="https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-${ARCH}/pgdg-redhat-repo-latest.noarch.rpm"
+
+# AL2023 stock postgresql 잔여물 제거 (충돌 방지 — 멱등)
+systemctl stop postgresql 2>/dev/null || true
+dnf remove -y postgresql15-server postgresql15 postgresql15-contrib 2>/dev/null || true
+
+# PGDG repo 등록 + AL2023 빌트인 postgresql 모듈 비활성 (PGDG 우선)
+dnf install -y "$PGDG_RPM"
+dnf -qy module disable postgresql
+
+# PG 16 + devel + pgvector RPM (소스 빌드 불필요)
+dnf install -y postgresql16-server postgresql16 postgresql16-contrib postgresql16-devel pgvector_16
+
+PG_VERSION=16
+PG_DATA=/var/lib/pgsql/16/data
+PG_BIN=/usr/pgsql-16/bin
+PG_SETUP=$PG_BIN/postgresql-16-setup
+PG_SERVICE=postgresql-16
 
 # initdb (이미 되어 있으면 skip)
 if [ ! -f "$PG_DATA/PG_VERSION" ]; then
-    $PG_SETUP --initdb
+    $PG_SETUP initdb
 fi
 
-# localhost-only 트러스트 (사내망 단일 노드 가정). 외부 노출 시 pg_hba.conf 추가 잠금 필요.
+# localhost-only 인증 (사내망 단일 노드 가정). 외부 노출 시 pg_hba.conf 추가 잠금 필요.
 PG_HBA=$PG_DATA/pg_hba.conf
 if ! grep -q "# 8_OA_AS local app" $PG_HBA 2>/dev/null; then
     cat >> $PG_HBA <<EOF
@@ -115,34 +119,28 @@ fi
 systemctl enable $PG_SERVICE
 systemctl start $PG_SERVICE
 
-# pgvector 빌드/설치 (PGDG에 패키지가 없는 케이스 대비 소스 빌드).
-# pgvector는 pgxs로 빌드되며 postgresql-devel만 있으면 충분.
-echo ">>> [6.1] Installing pgvector extension..."
-if ! sudo -u postgres psql -c "SELECT extname FROM pg_extension WHERE extname='vector'" | grep -q vector; then
-    if ! dnf install -y pgvector_$PG_VERSION 2>/dev/null; then
-        echo "  pgvector RPM 없음 — 소스 빌드"
-        dnf install -y git gcc make
-        TMP_PGV=$(mktemp -d)
-        git clone --branch v0.7.4 https://github.com/pgvector/pgvector.git $TMP_PGV
-        cd $TMP_PGV
-        PATH=$PG_BIN:$PATH make
-        PATH=$PG_BIN:$PATH make install
-        cd / && rm -rf $TMP_PGV
-    fi
-fi
+echo ">>> [6.1] Verifying pgvector RPM..."
+# pgvector_16 RPM은 이미 설치됐어야 함. extension은 DB 단위로 활성.
+sudo -u postgres psql -c "SELECT name, default_version FROM pg_available_extensions WHERE name='vector';"
 
-# DB / 사용자 / 확장 생성 (멱등)
+# DB / 사용자 / 확장 생성 (멱등 처리 — 이미 있어도 안전)
 DB_NAME=${DB_NAME:-oaas_prd}    # DEV 셋업 시 DB_NAME=oaas_dev로 export 후 실행
 DB_USER=${DB_USER:-oaas}
 DB_PASS=${DB_PASS:-changeme}     # 운영에서는 반드시 export DB_PASS=...로 덮어쓰기
 
-sudo -u postgres psql <<SQL || true
-CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}';
-CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};
-\\c ${DB_NAME}
-CREATE EXTENSION IF NOT EXISTS vector;
-GRANT ALL ON SCHEMA public TO ${DB_USER};
-SQL
+# 각 단계 멱등: 이미 있어도 에러 없이 통과.
+# `|| true`로 전체 마스킹하지 않음 — 에러는 그대로 보이게 (조용한 실패 방지).
+echo ">>> Creating DB user '${DB_USER}' (skip if exists)..."
+sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1 || \
+    sudo -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}';"
+
+echo ">>> Creating DB '${DB_NAME}' (skip if exists)..."
+sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1 || \
+    sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};"
+
+echo ">>> Enabling pgvector + granting on ${DB_NAME}..."
+sudo -u postgres psql -d "${DB_NAME}" -c "CREATE EXTENSION IF NOT EXISTS vector;"
+sudo -u postgres psql -d "${DB_NAME}" -c "GRANT ALL ON SCHEMA public TO ${DB_USER};"
 
 systemctl restart $PG_SERVICE
 
