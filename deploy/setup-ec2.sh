@@ -88,6 +88,12 @@ PGDG_RPM="https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-${ARCH}/pg
 systemctl stop postgresql 2>/dev/null || true
 dnf remove -y postgresql15-server postgresql15 postgresql15-contrib 2>/dev/null || true
 
+# PGDG RPM은 /etc/redhat-release를 요구 — AL2023에는 없어 dependency 실패.
+# RHEL 9 호환 호환문자열 1줄로 shim. 멱등 (이미 있으면 두지 않음).
+if [ ! -f /etc/redhat-release ]; then
+    echo "Red Hat Enterprise Linux release 9.4 (Plow)" > /etc/redhat-release
+fi
+
 # PGDG repo 등록 + AL2023 빌트인 postgresql 모듈 비활성 (PGDG 우선)
 dnf install -y "$PGDG_RPM"
 dnf -qy module disable postgresql
