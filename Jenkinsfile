@@ -227,7 +227,7 @@ EOF
         drizzle-kit drizzle-orm pg dotenv)
 fi
 
-# drizzle.config.ts는 \`import 'dotenv/config'\`를 한다 → /app/oaas/node_modules에서 dotenv를 찾아야 함.
+# drizzle.config.ts는 dotenv/config를 import 한다 → /app/oaas/node_modules에서 dotenv를 찾아야 함.
 # migrator의 node_modules를 /app/oaas/node_modules로 심볼릭링크 (runtime 영향 없음 — standalone은 standalone/node_modules 사용).
 mkdir -p ${DEPLOY_PATH}/node_modules
 for pkg in dotenv drizzle-kit drizzle-orm pg; do
