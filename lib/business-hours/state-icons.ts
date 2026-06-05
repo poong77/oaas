@@ -38,7 +38,15 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-export type BusinessStatusKind = 'open' | 'lunch' | 'intake_closed' | 'closed';
+// 단일 출처 — DB schema. drizzle-kit이 alias 의존 없이 파싱하도록 schema에 둠.
+import {
+  type BusinessStatusKind,
+  type StateIcons,
+  DEFAULT_STATE_ICONS,
+} from '@/db/schema/business-hours-default';
+
+export type { BusinessStatusKind, StateIcons };
+export { DEFAULT_STATE_ICONS };
 
 /** lucide 컴포넌트 매핑 — 화이트리스트 (이 외 이름은 거절) */
 export const STATE_ICON_MAP: Record<string, LucideIcon> = {
@@ -72,15 +80,8 @@ export const STATE_ICON_OPTIONS: Record<BusinessStatusKind, string[]> = {
   closed: ['DoorClosed', 'Lock', 'CircleSlash', 'PowerOff'],
 };
 
-/** DB·시드 기본값. 어드민이 미설정/잘못된 이름 저장 시 폴백. */
-export const DEFAULT_STATE_ICONS: Record<BusinessStatusKind, string> = {
-  open: 'Headset',
-  lunch: 'Coffee',
-  intake_closed: 'CircleAlert',
-  closed: 'DoorClosed',
-};
-
-export type StateIcons = Record<BusinessStatusKind, string>;
+// DEFAULT_STATE_ICONS / StateIcons 는 @/db/schema/business-hours-default 에서
+// import 후 re-export (위 import 블록). 단일 출처 유지 + drizzle-kit 파싱 가능.
 
 /** 상태별 한국어 라벨 — 폼/도움말 안내에서 사용. */
 export const STATE_LABEL_KR: Record<BusinessStatusKind, string> = {
