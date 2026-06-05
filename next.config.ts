@@ -35,6 +35,8 @@ const securityHeaders = [
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // 로그인 기반 비공개 서비스 — 검색 엔진 색인/크롤링 차단 (헤더 레벨 방어)
+  { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
   {
     key: 'Permissions-Policy',
     value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',

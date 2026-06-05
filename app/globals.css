@@ -76,6 +76,13 @@
  * @see docs/02-design/features/role-mode-ui.design.md §6
  */
 @theme {
+  /*
+   * 전역 본문 폰트 — Pretendard (layout.tsx <head>에서 dynamic-subset CSS 로드).
+   * --font-sans 를 재정의하면 Tailwind의 font-sans 유틸과 Preflight 기본 폰트가 모두 Pretendard로 적용된다.
+   */
+  --font-sans: 'Pretendard Variable', Pretendard, ui-sans-serif, system-ui, -apple-system,
+    'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+
   --color-brand-50:  oklch(0.962 0.018 272.31);
   --color-brand-100: oklch(0.930 0.034 272.79);
   --color-brand-200: oklch(0.870 0.065 274.04);
