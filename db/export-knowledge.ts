@@ -17,8 +17,7 @@ config({ path: '.env' });
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { and, asc, eq } from 'drizzle-orm';
 
 import {
@@ -49,7 +48,7 @@ async function main() {
     console.error('✗ DATABASE_URL이 설정되지 않았습니다 (.env.local / .env 확인)');
     process.exit(1);
   }
-  const db = drizzle(neon(DATABASE_URL));
+  const { db } = connectPg(DATABASE_URL);
 
   // 제품 라벨 맵
   const productRows = await db

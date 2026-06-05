@@ -8,7 +8,7 @@
  * 재실행 안전 (이미 "운영"이면 0행 영향).
  */
 import 'dotenv/config';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from '../connect';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? '';
 if (!DATABASE_URL || DATABASE_URL.includes('placeholder')) {
@@ -16,29 +16,32 @@ if (!DATABASE_URL || DATABASE_URL.includes('placeholder')) {
   process.exit(1);
 }
 
-const sql = neon(DATABASE_URL);
-
 async function main() {
-  console.log('Renaming "영업" → "운영" in DB stored texts...');
-  // business_hours_default.emergency_note
-  const r1 = await sql`
-    UPDATE business_hours_default
-    SET emergency_note = REPLACE(emergency_note, '영업', '운영')
-    WHERE emergency_note LIKE '%영업%'
-    RETURNING id
-  `;
-  console.log(`  business_hours_default.emergency_note: ${r1.length}행 갱신`);
+  const { sql, pool } = connectPg(DATABASE_URL);
+  try {
+    console.log('Renaming "영업" → "운영" in DB stored texts...');
+    // business_hours_default.emergency_note
+    const r1 = await sql`
+      UPDATE business_hours_default
+      SET emergency_note = REPLACE(emergency_note, '영업', '운영')
+      WHERE emergency_note LIKE '%영업%'
+      RETURNING id
+    `;
+    console.log(`  business_hours_default.emergency_note: ${r1.length}행 갱신`);
 
-  // business_hours_overrides.reason (어드민이 입력한 사유에 "영업" 들어있으면)
-  const r2 = await sql`
-    UPDATE business_hours_overrides
-    SET reason = REPLACE(reason, '단축영업', '단축운영')
-    WHERE reason LIKE '%단축영업%' AND is_active = true
-    RETURNING id
-  `;
-  console.log(`  business_hours_overrides.reason: ${r2.length}행 갱신`);
+    // business_hours_overrides.reason (어드민이 입력한 사유에 "영업" 들어있으면)
+    const r2 = await sql`
+      UPDATE business_hours_overrides
+      SET reason = REPLACE(reason, '단축영업', '단축운영')
+      WHERE reason LIKE '%단축영업%' AND is_active = true
+      RETURNING id
+    `;
+    console.log(`  business_hours_overrides.reason: ${r2.length}행 갱신`);
 
-  console.log('Done.');
+    console.log('Done.');
+  } finally {
+    await pool.end();
+  }
 }
 
 main().catch((err) => {

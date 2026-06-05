@@ -6,7 +6,7 @@
  * 재실행 안전 (IF NOT EXISTS + 누락된 행만 backfill).
  */
 import 'dotenv/config';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from '../connect';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? '';
 if (!DATABASE_URL || DATABASE_URL.includes('placeholder')) {
@@ -14,9 +14,9 @@ if (!DATABASE_URL || DATABASE_URL.includes('placeholder')) {
   process.exit(1);
 }
 
-const sql = neon(DATABASE_URL);
-
 async function main() {
+  const { sql, pool } = connectPg(DATABASE_URL);
+  try {
   console.log('Adding state_icons column to business_hours_default...');
   // 1) 컬럼 추가 (nullable 임시)
   await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS state_icons jsonb`;
@@ -28,6 +28,9 @@ async function main() {
   // 4) NOT NULL 적용
   await sql`ALTER TABLE business_hours_default ALTER COLUMN state_icons SET NOT NULL`;
   console.log('Done.');
+  } finally {
+    await pool.end();
+  }
 }
 
 main().catch((err) => {

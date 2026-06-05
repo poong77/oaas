@@ -7,7 +7,7 @@
  * (drizzle-kit push가 다른 세션의 ALTER/DROP을 끼워넣어 위험할 때 우회.)
  */
 import 'dotenv/config';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from '../connect';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? '';
 if (!DATABASE_URL || DATABASE_URL.includes('placeholder')) {
@@ -15,16 +15,19 @@ if (!DATABASE_URL || DATABASE_URL.includes('placeholder')) {
   process.exit(1);
 }
 
-const sql = neon(DATABASE_URL);
-
 async function main() {
-  console.log('Adding 5 contact columns to business_hours_default...');
-  await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS main_phone text`;
-  await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS main_email text`;
-  await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS ars_items jsonb NOT NULL DEFAULT '[]'::jsonb`;
-  await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS fax_number text`;
-  await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS website_url text`;
-  console.log('Done.');
+  const { sql, pool } = connectPg(DATABASE_URL);
+  try {
+    console.log('Adding 5 contact columns to business_hours_default...');
+    await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS main_phone text`;
+    await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS main_email text`;
+    await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS ars_items jsonb NOT NULL DEFAULT '[]'::jsonb`;
+    await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS fax_number text`;
+    await sql`ALTER TABLE business_hours_default ADD COLUMN IF NOT EXISTS website_url text`;
+    console.log('Done.');
+  } finally {
+    await pool.end();
+  }
 }
 
 main().catch((err) => {

@@ -16,8 +16,7 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env' });
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -33,7 +32,7 @@ async function main() {
     console.error('❌ DATABASE_URL 미설정. 중단.');
     process.exit(1);
   }
-  const db = drizzle(neon(url));
+  const { db } = connectPg(url);
 
   // 대상 집계
   const counts = await db.execute<{ role: string; n: number }>(

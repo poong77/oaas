@@ -15,7 +15,7 @@
  */
 import { config as loadEnv } from 'dotenv';
 import { existsSync } from 'node:fs';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from '../db/connect.mjs';
 
 loadEnv({ path: '.env' });
 if (existsSync('.env.local')) loadEnv({ path: '.env.local', override: true });
@@ -26,7 +26,7 @@ if (!url || url.includes('placeholder')) {
   process.exit(1);
 }
 
-const sql = neon(url);
+const { sql, pool } = connectPg(url);
 
 const menuBefore = await sql`SELECT COUNT(*)::int AS n FROM menu_taxonomies`;
 const articleBefore = await sql`SELECT COUNT(*)::int AS n FROM articles`;
@@ -51,3 +51,4 @@ console.log(
   `[after]  menu_taxonomies=${menuAfter[0].n}, articles=${articleAfter[0].n}, counters=${counterAfter[0].n}`,
 );
 console.log('\n다음 단계: npm run db:seed && node scripts/import-help-articles.mjs');
+await pool.end();

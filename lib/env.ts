@@ -26,10 +26,15 @@ export const env = {
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ?? '',
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY ?? '',
   SES_FROM_EMAIL: process.env.SES_FROM_EMAIL ?? '',
-  S3_BUCKET: process.env.S3_BUCKET ?? '',
 
-  // Vercel Blob (Phase 5 — 첨부 파일 업로드)
-  BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN ?? '',
+  // 첨부 파일 S3 (이전 Vercel Blob 대체).
+  //   - S3_UPLOAD_BUCKET   : 업로드 대상 버킷 (예: as-uploads-prd).
+  //   - S3_UPLOAD_PREFIX   : 키 prefix (선택, 멀티 테넌트/환경 구분용).
+  //   - S3_UPLOAD_PUBLIC_URL: 공개 도메인 (CloudFront/S3 웹사이트, 예: https://files.support.oapms.com).
+  //     설정 시 응답 URL은 `{PUBLIC_URL}/{key}` 형식, 미설정 시 S3 가상호스팅 URL.
+  S3_UPLOAD_BUCKET: process.env.S3_UPLOAD_BUCKET ?? '',
+  S3_UPLOAD_PREFIX: process.env.S3_UPLOAD_PREFIX ?? '',
+  S3_UPLOAD_PUBLIC_URL: process.env.S3_UPLOAD_PUBLIC_URL ?? '',
 
   // Slack (Phase 5) — Bot Token + chat.postMessage 방식.
   // 운영 환경(Vercel)에 SLACK_BOT_TOKEN + SLACK_CHANNEL_* (채널 ID `C...`) 등록.
@@ -40,8 +45,6 @@ export const env = {
   /** support.oapms.com URL — 알림 본문의 티켓 링크 생성에 사용. */
   PUBLIC_BASE_URL:
     process.env.PUBLIC_BASE_URL ?? process.env.NEXTAUTH_URL ?? '',
-  /** Vercel이 프로덕션/프리뷰 빌드에 자동 주입하는 프로덕션 도메인 (프로토콜 없음). */
-  VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL ?? '',
 
   // Chatbot (Phase 8)
   OACHAT_EMBED_URL: process.env.OACHAT_EMBED_URL ?? '',
@@ -66,15 +69,10 @@ export function isOpenAIConfigured(): boolean {
 
 /**
  * 알림/이메일 본문의 절대 링크 생성을 위한 공개 베이스 URL.
- * 우선순위: PUBLIC_BASE_URL → NEXTAUTH_URL → Vercel 자동 주입 도메인 → localhost.
- * Vercel에 env 미설정 시에도 프로덕션 도메인으로 떨어지도록 VERCEL_PROJECT_PRODUCTION_URL을 fallback에 포함.
+ * 우선순위: PUBLIC_BASE_URL → NEXTAUTH_URL → localhost.
  * 반환값은 항상 프로토콜 포함, 끝의 슬래시 제거.
  */
 export function getPublicBaseUrl(): string {
-  const explicit = env.PUBLIC_BASE_URL || env.NEXTAUTH_URL;
-  const vercel = env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : '';
-  const raw = explicit || vercel || 'http://localhost:3000';
+  const raw = env.PUBLIC_BASE_URL || env.NEXTAUTH_URL || 'http://localhost:3000';
   return raw.replace(/\/$/, '');
 }

@@ -20,8 +20,7 @@ config({ path: '.env' });
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { ilike, sql } from 'drizzle-orm';
 
 import { hotels, type NewHotel } from './schema';
@@ -47,7 +46,7 @@ async function main() {
     readFileSync(join(import.meta.dirname, 'data', 'oa-as-companies.json'), 'utf-8'),
   ) as AsCompany[];
 
-  const db = drizzle(neon(DATABASE_URL));
+  const { db } = connectPg(DATABASE_URL);
 
   const before = await db.execute<{ n: number }>(sql`SELECT count(*)::int AS n FROM hotels`);
   console.log(`📊 이관 전 hotels: ${before.rows[0]?.n ?? 0}건`);

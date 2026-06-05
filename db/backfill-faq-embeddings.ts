@@ -16,8 +16,7 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env' }); // .env.local에 없는 값만 보충 (override 안 함)
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 
 import { faqs } from './schema';
@@ -80,7 +79,7 @@ async function main() {
     process.exit(1);
   }
 
-  const db = drizzle(neon(DATABASE_URL));
+  const { db } = connectPg(DATABASE_URL);
 
   const targets = await db
     .select({

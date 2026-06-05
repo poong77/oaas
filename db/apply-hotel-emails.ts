@@ -19,8 +19,7 @@ config({ path: '.env' });
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { eq, isNotNull } from 'drizzle-orm';
 import { users, hotels } from './schema';
 
@@ -30,7 +29,7 @@ const norm = (s: string) =>
   s.toLowerCase().replace(/\(구[:\-].*?\)/g, '').replace(/[\s\-_.,·&()\[\]'"]/g, '');
 
 async function main() {
-  const db = drizzle(neon(process.env.DATABASE_URL!));
+  const { db } = connectPg();
 
   // 리스트 파싱: 호텔명(정규화) → 이메일[] (distinct, 순서 보존)
   const lines = readFileSync(join(import.meta.dirname, 'data', 'hotel-emails.tsv'), 'utf-8')

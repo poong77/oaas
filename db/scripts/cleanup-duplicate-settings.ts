@@ -6,7 +6,7 @@
  * 재실행 안전 (이미 없으면 0행 영향).
  */
 import 'dotenv/config';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from '../connect';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? '';
 if (!DATABASE_URL || DATABASE_URL.includes('placeholder')) {
@@ -14,13 +14,16 @@ if (!DATABASE_URL || DATABASE_URL.includes('placeholder')) {
   process.exit(1);
 }
 
-const sql = neon(DATABASE_URL);
-
 async function main() {
-  console.log('Cleaning up duplicate system_settings keys...');
-  const bh = await sql`DELETE FROM system_settings WHERE key = 'business_hours' RETURNING key`;
-  const cp = await sql`DELETE FROM system_settings WHERE key = 'contact_phone' RETURNING key`;
-  console.log(`Removed: business_hours=${bh.length}, contact_phone=${cp.length}`);
+  const { sql, pool } = connectPg(DATABASE_URL);
+  try {
+    console.log('Cleaning up duplicate system_settings keys...');
+    const bh = await sql`DELETE FROM system_settings WHERE key = 'business_hours' RETURNING key`;
+    const cp = await sql`DELETE FROM system_settings WHERE key = 'contact_phone' RETURNING key`;
+    console.log(`Removed: business_hours=${bh.length}, contact_phone=${cp.length}`);
+  } finally {
+    await pool.end();
+  }
 }
 
 main().catch((err) => {
