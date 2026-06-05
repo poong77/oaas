@@ -256,9 +256,12 @@ if [ ! -L ${DEPLOY_PATH}/.env ]; then
     ln -sfn ${DEPLOY_PATH}/standalone/.env ${DEPLOY_PATH}/.env
 fi
 
-echo ">>> Run DB migrations (drizzle-kit migrate)..."
-(cd ${DEPLOY_PATH} && ./migrator/node_modules/.bin/drizzle-kit migrate) || {
-    echo "❌ migration 실패 — 배포 중단"
+echo ">>> Apply DB schema (drizzle-kit push)..."
+# 현재 db/migrations/meta/ 가 gitignore라 drizzle-kit migrate가 동작 불가.
+# push로 schema 비교·자동 적용. strict:true (drizzle.config.ts)라 destructive 변경은 에러.
+# 팀이 meta/ 워크플로우 정비하면 migrate로 전환 가능.
+(cd ${DEPLOY_PATH} && ./migrator/node_modules/.bin/drizzle-kit push) || {
+    echo "❌ schema 적용 실패 — 배포 중단"
     exit 1
 }
 
