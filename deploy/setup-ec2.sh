@@ -81,24 +81,34 @@ aws --version || {
 # ----------------------------------------
 echo ">>> [6/9] Installing PostgreSQL 16 + pgvector (PGDG)..."
 
-ARCH=$(uname -m)   # x86_64 or aarch64
-PGDG_RPM="https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-${ARCH}/pgdg-redhat-repo-latest.noarch.rpm"
-
 # AL2023 stock postgresql 잔여물 제거 (충돌 방지 — 멱등)
 systemctl stop postgresql 2>/dev/null || true
 dnf remove -y postgresql15-server postgresql15 postgresql15-contrib 2>/dev/null || true
 
-# PGDG RPM은 /etc/redhat-release를 요구 — AL2023에는 없어 dependency 실패.
-# RHEL 9 호환 호환문자열 1줄로 shim. 멱등 (이미 있으면 두지 않음).
-if [ ! -f /etc/redhat-release ]; then
-    echo "Red Hat Enterprise Linux release 9.4 (Plow)" > /etc/redhat-release
-fi
+# PGDG의 메타 RPM(pgdg-redhat-repo-latest)은 /etc/redhat-release 패키지를 RPM 레벨에서
+# 요구하는데 AL2023엔 그걸 제공하는 패키지가 없어 어떤 shim으로도 우회 불가.
+# .repo 파일을 직접 작성해 PGDG 16 + common 두 repo를 등록한다.
+cat > /etc/yum.repos.d/pgdg-redhat-all.repo <<'EOF'
+[pgdg16]
+name=PostgreSQL 16 for RHEL 9 - $basearch
+baseurl=https://download.postgresql.org/pub/repos/yum/16/redhat/rhel-9-$basearch
+enabled=1
+gpgcheck=0
 
-# PGDG repo 등록 + AL2023 빌트인 postgresql 모듈 비활성 (PGDG 우선)
-dnf install -y "$PGDG_RPM"
+[pgdg-common]
+name=PostgreSQL common RPMs for RHEL 9 - $basearch
+baseurl=https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-9-$basearch
+enabled=1
+gpgcheck=0
+EOF
+
+dnf clean expire-cache
+dnf makecache
+
+# AL2023 빌트인 postgresql 모듈 비활성 (PGDG 우선)
 dnf -qy module disable postgresql
 
-# PG 16 + devel + pgvector RPM (소스 빌드 불필요)
+# PG 16 + devel + pgvector_16 RPM (소스 빌드 불필요)
 dnf install -y postgresql16-server postgresql16 postgresql16-contrib postgresql16-devel pgvector_16
 
 PG_VERSION=16
