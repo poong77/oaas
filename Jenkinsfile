@@ -345,8 +345,9 @@ ENDSSH"""
             }
         }
 
-        cleanup {
-            sh 'rm -f ${WORKSPACE}/deploy.tar.gz'
-        }
+        // post cleanup 블록 제거:
+        //   sh는 hudson.FilePath (node 컨텍스트)를 요구하는데, 일찍 실패한 빌드에선
+        //   post 시점에 그 컨텍스트가 없어 MissingContextVariableException 발생.
+        //   deploy.tar.gz는 다음 빌드의 Package stage에서 덮어쓰기 → 누적 안 함.
     }
 }
