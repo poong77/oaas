@@ -31,15 +31,19 @@ echo ">>> [1/9] System Update..."
 dnf update -y
 
 # ----------------------------------------
-# 2. Node.js 20 LTS 설치
+# 2. Node.js 20 LTS 설치 (NodeSource — AL2023 기본 repo에 nodejs20 패키지 없음)
 # ----------------------------------------
-echo ">>> [2/9] Installing Node.js 20..."
-dnf install -y nodejs20 npm
-node -v
-npm -v
+echo ">>> [2/9] Installing Node.js 20 (NodeSource)..."
 
-# npm 최신
-npm install -g npm@latest
+# 이전에 잘못 깔린 Node 18 잔여물 제거 (멱등)
+dnf remove -y nodejs nodejs18 nodejs20 npm 2>/dev/null || true
+
+# NodeSource repo 추가 → Node 20 LTS 설치 (npm 번들로 포함)
+curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
+dnf install -y nodejs
+
+node -v   # v20.x.x
+npm -v
 
 # ----------------------------------------
 # 3. PM2 설치
