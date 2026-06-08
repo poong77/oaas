@@ -94,6 +94,21 @@ for p in params:
     print(f'{key}={value}')
 " >> "${ENV_FILE}"
 
+# ── 로컬 시크릿 오버레이 ──────────────────────────────────────────────
+# SSM에 둘 수 없는 시크릿(예: 인프라와 다른 AWS 계정의 cross-account SES 키)을
+# EC2 디스크의 secrets.env에서 가져와 .env 끝에 append.
+# 이 파일은 git/배포 tar에 포함되지 않고 EC2에만 존재하므로 배포해도 보존된다.
+# (배포 스크립트의 rm 대상 경로에 secrets.env가 없음)
+LOCAL_OVERLAY="$(cd "$(dirname "${ENV_FILE}")/.." && pwd)/secrets.env"
+if [ -f "${LOCAL_OVERLAY}" ]; then
+    echo "" >> "${ENV_FILE}"
+    echo "# --- Local secrets overlay (${LOCAL_OVERLAY}) ---" >> "${ENV_FILE}"
+    grep -vE '^\s*#|^\s*$' "${LOCAL_OVERLAY}" >> "${ENV_FILE}"
+    echo ">>> Local secrets overlay applied ($(grep -cvE '^\s*#|^\s*$' "${LOCAL_OVERLAY}") keys)"
+else
+    echo ">>> No local secrets overlay (${LOCAL_OVERLAY} 없음)"
+fi
+
 chmod 600 "${ENV_FILE}"
 
 # 심볼릭 링크: PM2 cwd에서 .env 접근용
