@@ -26,6 +26,11 @@ export const env = {
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ?? '',
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY ?? '',
   SES_FROM_EMAIL: process.env.SES_FROM_EMAIL ?? '',
+  /**
+   * SES 전용 리전. 미설정 시 AWS_REGION 폴백.
+   * S3(서울 ap-northeast-2)와 SES(시드니 ap-southeast-2 도메인 인증) 리전이 달라 분리.
+   */
+  SES_REGION: process.env.SES_REGION ?? '',
 
   // 첨부 파일 S3 (이전 Vercel Blob 대체).
   //   - S3_UPLOAD_BUCKET   : 업로드 대상 버킷 (예: as-uploads-prd).

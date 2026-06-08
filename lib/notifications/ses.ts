@@ -40,11 +40,13 @@ let _client: SESv2Client | null = null;
 
 function getClient(): SESv2Client | null {
   if (_client) return _client;
-  if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY || !env.AWS_REGION) {
+  // SES 전용 리전 우선 (도메인 인증이 S3와 다른 리전에 있을 수 있음).
+  const sesRegion = env.SES_REGION || env.AWS_REGION;
+  if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY || !sesRegion) {
     return null;
   }
   _client = new SESv2Client({
-    region: env.AWS_REGION,
+    region: sesRegion,
     credentials: {
       accessKeyId: env.AWS_ACCESS_KEY_ID,
       secretAccessKey: env.AWS_SECRET_ACCESS_KEY,

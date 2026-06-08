@@ -67,8 +67,10 @@ NEXT_TELEMETRY_DISABLED=1
 # OpenAI 임베딩 (이름 지정만, 키는 SSM에서)
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 
-# AWS Region (SES / S3 공통)
+# AWS Region — S3(서울)와 SES(시드니 도메인 인증) 리전이 달라 분리.
+# 리전은 인프라 토폴로지값이라 SSM이 아닌 여기(정적)에서 권위 관리.
 AWS_REGION=ap-northeast-2
+SES_REGION=ap-southeast-2
 STATIC_EOF
 
 echo "" >> "${ENV_FILE}"
@@ -77,9 +79,17 @@ echo "# --- SSM Parameter Store (${PARAM_PREFIX}) ---" >> "${ENV_FILE}"
 echo "$PARAMS" | python3 -c "
 import json, sys
 params = json.load(sys.stdin)
+# 정적 블록에서 이미 정의된 키는 SSM에서 가져오지 않음 (중복/덮어쓰기 방지).
+# 특히 AWS_REGION/SES_REGION은 위 정적 블록이 권위값.
+STATIC_KEYS = {
+    'NODE_ENV', 'PORT', 'HOSTNAME', 'NEXT_TELEMETRY_DISABLED',
+    'OPENAI_EMBEDDING_MODEL', 'AWS_REGION', 'SES_REGION',
+}
 for p in params:
     # /oaas/prd/DATABASE_URL -> DATABASE_URL
     key = p['Name'].split('/')[-1]
+    if key in STATIC_KEYS:
+        continue
     value = p['Value']
     print(f'{key}={value}')
 " >> "${ENV_FILE}"
