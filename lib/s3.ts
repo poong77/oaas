@@ -39,6 +39,35 @@ export function buildPublicUrl(key: string): string {
   return `https://${env.S3_UPLOAD_BUCKET}.s3.${region}.amazonaws.com/${key}`;
 }
 
+/** 업로드 키 prefix 정규화 (양끝 슬래시 제거, 미설정 시 ''). */
+function normalizedUploadPrefix(): string {
+  return env.S3_UPLOAD_PREFIX
+    ? env.S3_UPLOAD_PREFIX.replace(/^\/+|\/+$/g, '')
+    : '';
+}
+
+/**
+ * 에디터 본문 이미지(`editor/` prefix) 키인지 검사.
+ *
+ * 비공개 버킷이므로 `/api/files/view` 인증 프록시는 **이 prefix의 객체만** 스트리밍한다.
+ * (티켓 첨부는 `/api/attachments/[id]`가 담당 → 임의 객체 읽기 차단)
+ */
+export function isEditorUploadKey(key: string): boolean {
+  const p = normalizedUploadPrefix();
+  const expected = p ? `${p}/editor/` : 'editor/';
+  return key.startsWith(expected);
+}
+
+/**
+ * 에디터 본문 임베드 이미지용 **인증 프록시 URL**.
+ *
+ * 버킷이 비공개라 원본 S3 URL을 본문에 박으면 AccessDenied로 깨진다.
+ * 대신 `/api/files/view?key=...` 상대 경로로 라우팅하여 로그인 게이트 통과 후 스트리밍.
+ */
+export function buildEditorProxyUrl(key: string): string {
+  return `/api/files/view?key=${encodeURIComponent(key)}`;
+}
+
 /**
  * 첨부 레코드(pathname/blobUrl)에서 실제 GetObject 대상 { bucket, key } 도출.
  *

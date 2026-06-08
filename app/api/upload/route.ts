@@ -25,7 +25,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getCurrentUser } from '@/lib/permissions';
 import { env } from '@/lib/env';
-import { getS3Client, buildPublicUrl } from '@/lib/s3';
+import { getS3Client, buildPublicUrl, buildEditorProxyUrl } from '@/lib/s3';
 import { checkRateLimit } from '@/lib/rate-limit';
 import {
   isProcessableImage,
@@ -252,9 +252,14 @@ export async function POST(request: NextRequest) {
         ContentLength: bodyBuffer.length,
       }),
     );
+    // editor 본문 이미지는 비공개 버킷 직접 URL이 깨지므로 인증 프록시 URL을 반환한다.
+    //   - editor: `/api/files/view?key=...` (본문에 그대로 임베드 → 로그인 게이트 통과 후 표시)
+    //   - ticket: 원본 S3 URL (ticket_attachments에 저장, /api/attachments/[id]가 서버측에서 해석)
+    const blobUrl =
+      purpose === 'editor' ? buildEditorProxyUrl(key) : buildPublicUrl(key);
     return NextResponse.json({
       ok: true,
-      blobUrl: buildPublicUrl(key),
+      blobUrl,
       pathname: key,
       originalName: file.name,
       mimeType: uploadContentType ?? file.type ?? null,

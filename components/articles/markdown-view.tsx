@@ -1,7 +1,7 @@
 // 순수 렌더링 컴포넌트(클라이언트 훅·이벤트 없음) → 서버 컴포넌트로 동작시켜
 // react-markdown + remark/rehype 플러그인 번들이 클라이언트로 새지 않도록 한다.
 // (서버 페이지에서 import 시 RSC 렌더, 클라 컴포넌트에서 import 시에만 클라 번들 포함)
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
@@ -107,6 +107,31 @@ const sanitizeSchema = {
   // style 속성은 css 파싱이 무거우니 화이트리스트 패턴은 별도 적용 안 함 (브라우저가 자체 안전 처리)
 };
 
+/**
+ * 레거시 본문 이미지 URL 보정.
+ *
+ * 비공개 버킷의 원본 S3 URL(`https://<bucket>.s3.<region>.amazonaws.com/editor/...`)을
+ * 인증 프록시(`/api/files/view?key=...`)로 재작성한다. 신규 업로드는 이미 프록시 URL로
+ * 저장되지만, 과거에 직접 S3 URL로 저장된 본문 이미지를 표시 가능하게 만든다.
+ *
+ * - editor 본문 이미지(키에 `editor/` 포함)만 변환. 나머지는 원본 유지.
+ * - 잘못된 키는 서버 프록시(isEditorUploadKey)가 404로 거른다.
+ * - aws-sdk 의존 없이 순수 문자열 처리 (클라이언트 번들 안전).
+ */
+function rewriteLegacyUploadUrl(url: string): string {
+  try {
+    const u = new URL(url, 'http://_'); // 상대경로도 안전 파싱
+    const isS3Host =
+      /\.amazonaws\.com$/i.test(u.hostname) && /(^|\.)s3[.-]/i.test(u.hostname);
+    if (!isS3Host) return url;
+    const key = decodeURIComponent(u.pathname).replace(/^\/+/, '');
+    if (!/(^|\/)editor\//.test(key)) return url;
+    return `/api/files/view?key=${encodeURIComponent(key)}`;
+  } catch {
+    return url;
+  }
+}
+
 export function MarkdownView({
   source,
   className,
@@ -122,6 +147,7 @@ export function MarkdownView({
       )}
     >
       <ReactMarkdown
+        urlTransform={(url) => defaultUrlTransform(rewriteLegacyUploadUrl(url))}
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[
           rehypeRaw,
