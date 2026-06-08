@@ -7,9 +7,8 @@
  */
 
 import 'dotenv/config';
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
 
+import { connectPg } from './connect';
 import { solutionLinkPresets, type NewSolutionLinkPreset } from './schema';
 
 const DEFAULT_PRESETS: NewSolutionLinkPreset[] = [
@@ -27,24 +26,27 @@ async function main() {
     console.error('[seed:solution-presets] DATABASE_URL 미설정. 종료.');
     process.exit(1);
   }
-  const db = drizzle(neon(url));
+  const { db, pool } = connectPg(url);
+  try {
+    const existing = await db
+      .select({ label: solutionLinkPresets.label })
+      .from(solutionLinkPresets);
+    const existingSet = new Set(existing.map((r) => r.label));
+    const toInsert = DEFAULT_PRESETS.filter((p) => !existingSet.has(p.label));
 
-  const existing = await db
-    .select({ label: solutionLinkPresets.label })
-    .from(solutionLinkPresets);
-  const existingSet = new Set(existing.map((r) => r.label));
-  const toInsert = DEFAULT_PRESETS.filter((p) => !existingSet.has(p.label));
-
-  if (toInsert.length === 0) {
-    console.log('[seed:solution-presets] 모든 기본 프리셋이 이미 존재합니다.');
-    return;
+    if (toInsert.length === 0) {
+      console.log('[seed:solution-presets] 모든 기본 프리셋이 이미 존재합니다.');
+      return;
+    }
+    await db.insert(solutionLinkPresets).values(toInsert);
+    console.log(
+      `[seed:solution-presets] ${toInsert.length}건 삽입: ${toInsert
+        .map((p) => p.label)
+        .join(', ')}`,
+    );
+  } finally {
+    await pool.end();
   }
-  await db.insert(solutionLinkPresets).values(toInsert);
-  console.log(
-    `[seed:solution-presets] ${toInsert.length}건 삽입: ${toInsert
-      .map((p) => p.label)
-      .join(', ')}`,
-  );
 }
 
 main()

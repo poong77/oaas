@@ -20,11 +20,10 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env' });
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
 import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
+import { connectPg } from './connect';
 import { users, hotels } from './schema';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? '';
@@ -65,7 +64,7 @@ async function main() {
     process.exit(1);
   }
 
-  const db = drizzle(neon(DATABASE_URL));
+  const { db } = connectPg(DATABASE_URL);
 
   // 호텔 ID 조회
   const hotelRows = await db

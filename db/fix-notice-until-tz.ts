@@ -24,9 +24,9 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env' });
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
 import { sql } from 'drizzle-orm';
+
+import { connectPg } from './connect';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? '';
 const APPLY = process.argv.includes('--apply');
@@ -42,7 +42,7 @@ async function main() {
     console.error('❌ DATABASE_URL 미설정. 중단.');
     process.exit(1);
   }
-  const db = drizzle(neon(DATABASE_URL));
+  const { db } = connectPg(DATABASE_URL);
 
   // 보정 대상 미리보기 (현재값 / 보정 후 예상값)
   const rows = (await db.execute(sql`
