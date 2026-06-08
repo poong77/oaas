@@ -33,6 +33,7 @@ import {
 import { getAllTicketChannelsMap } from '@/lib/services/master-ticket-channels';
 import { listHotelSolutions } from '@/lib/services/hotels';
 import { getCategoriesByType } from '@/lib/services/categories';
+import { getProductTaxonomyTree } from '@/lib/services/master-categories';
 import { getTicketAssist } from '@/lib/services/ticket-assist';
 import { listActiveModels, getDefaultModel } from '@/lib/services/ai-models';
 import { getChannelDisplay } from '@/lib/ticket-channel-label';
@@ -100,7 +101,7 @@ export default async function AdminTicketDetailPage({
     assist,
     aiModels,
     defaultModel,
-    productOptions,
+    productTree,
     issueTypeOptions,
     urgencyOptions,
   ] = await Promise.all([
@@ -116,7 +117,7 @@ export default async function AdminTicketDetailPage({
     getTicketAssist(id),
     listActiveModels(),
     getDefaultModel(),
-    getCategoriesByType('product'),
+    getProductTaxonomyTree(),
     getCategoriesByType('issue_type'),
     getCategoriesByType('urgency'),
   ]);
@@ -314,10 +315,7 @@ export default async function AdminTicketDetailPage({
             productCode={ticket.productCode}
             issueType={ticket.issueType}
             urgency={ticket.urgency}
-            products={productOptions.map((c) => ({
-              code: c.code,
-              label: c.label,
-            }))}
+            productTree={productTree}
             issueTypes={issueTypeOptions.map((c) => ({
               code: c.code,
               label: c.label,

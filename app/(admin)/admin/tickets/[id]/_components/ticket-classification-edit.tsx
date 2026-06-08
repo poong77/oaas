@@ -5,7 +5,7 @@
  * 마스터 categories 옵션과 연동. 기본은 읽기 표시, '수정'으로 셀렉트 전환.
  */
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Pencil, X } from 'lucide-react';
@@ -13,16 +13,32 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { ProductPicker } from '@/components/forms/product-picker';
 import { updateTicketClassificationAction } from '@/app/actions/ticket-actions';
+import type { ProductTaxonomyNode } from '@/lib/services/master-categories';
 
 type Option = { code: string; label: string };
+
+/** 제품 트리에서 code → 라벨 경로(대 › 중 › 소) 맵 구성. */
+function buildProductPathMap(
+  tree: ProductTaxonomyNode[],
+): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  const walk = (node: ProductTaxonomyNode, ancestors: string[]) => {
+    const labels = [...ancestors, node.label];
+    map.set(node.code, labels);
+    for (const c of node.children) walk(c, labels);
+  };
+  for (const r of tree) walk(r, []);
+  return map;
+}
 
 export function TicketClassificationEdit({
   ticketId,
   productCode,
   issueType,
   urgency,
-  products,
+  productTree,
   issueTypes,
   urgencies,
 }: {
@@ -30,7 +46,7 @@ export function TicketClassificationEdit({
   productCode: string;
   issueType: string;
   urgency: string;
-  products: Option[];
+  productTree: ProductTaxonomyNode[];
   issueTypes: Option[];
   urgencies: Option[];
 }) {
@@ -40,6 +56,12 @@ export function TicketClassificationEdit({
   const [p, setP] = useState(productCode);
   const [t, setT] = useState(issueType);
   const [u, setU] = useState(urgency);
+
+  const productPathMap = useMemo(
+    () => buildProductPathMap(productTree),
+    [productTree],
+  );
+  const productPath = productPathMap.get(p) ?? [p];
 
   const labelOf = (opts: Option[], code: string) =>
     opts.find((o) => o.code === code)?.label ?? code;
@@ -100,7 +122,11 @@ export function TicketClassificationEdit({
 
         {!editing ? (
           <div className="flex flex-wrap items-center gap-1.5 text-sm">
-            <Badge tone="slate">{labelOf(products, productCode)}</Badge>
+            {productPath.map((seg, i) => (
+              <Badge key={`${seg}-${i}`} tone="slate">
+                {seg}
+              </Badge>
+            ))}
             <Badge tone="slate">{labelOf(issueTypes, issueType)}</Badge>
             <Badge tone={urgency === 'p1' ? 'danger' : 'slate'}>
               긴급도 {labelOf(urgencies, urgency)}
@@ -109,14 +135,15 @@ export function TicketClassificationEdit({
         ) : (
           <div className="flex flex-col gap-2">
             <label className="flex flex-col gap-1 text-xs text-slate-500">
-              제품
-              <Select value={p} onChange={(e) => setP(e.target.value)} disabled={pending}>
-                {products.map((o) => (
-                  <option key={o.code} value={o.code}>
-                    {o.label}
-                  </option>
-                ))}
-              </Select>
+              제품 (대 / 중 / 소분류)
+              <ProductPicker
+                tree={productTree}
+                value={p}
+                onChange={setP}
+                mode="cascade"
+                includeUndefined={false}
+                disabled={pending}
+              />
             </label>
             <label className="flex flex-col gap-1 text-xs text-slate-500">
               유형
