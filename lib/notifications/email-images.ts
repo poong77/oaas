@@ -69,11 +69,9 @@ export async function extractEditorInlineImages(
   html: string,
 ): Promise<{ html: string; images: InlineImage[] }> {
   if (!html || !html.includes('/api/files/view')) return { html, images: [] };
-  if (
-    !env.S3_UPLOAD_BUCKET ||
-    !env.AWS_ACCESS_KEY_ID ||
-    !env.AWS_SECRET_ACCESS_KEY
-  ) {
+  // S3는 EC2 IAM Role을 사용하므로 AWS 키 존재 여부는 체크하지 않는다.
+  // 버킷만 미설정이면 스킵.
+  if (!env.S3_UPLOAD_BUCKET) {
     return { html, images: [] };
   }
 

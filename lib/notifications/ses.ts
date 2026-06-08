@@ -4,7 +4,10 @@
  * Phase 1: oa-marketing 키 재사용. noreply@oapms.com (도메인 검증 완료).
  * 발송 실패는 호출부에서 처리 (fire-and-forget 아님 — 사용자 가시 알림이라 결과 필요).
  *
- * `AWS_ACCESS_KEY_ID`가 비어있으면 console.log로 stub 처리하고 ok 반환.
+ * 자격증명: `SES_ACCESS_KEY_ID`/`SES_SECRET_ACCESS_KEY` (cross-account IAM User).
+ * S3와 분리 — S3는 EC2 IAM Role 사용. 자세한 이유는 lib/env.ts 주석 참고.
+ *
+ * SES 키가 비어있으면 console.log로 stub 처리하고 ok 반환.
  */
 
 import {
@@ -44,14 +47,14 @@ function getClient(): SESv2Client | null {
   if (_client) return _client;
   // SES 전용 리전 우선 (도메인 인증이 S3와 다른 리전에 있을 수 있음).
   const sesRegion = env.SES_REGION || env.AWS_REGION;
-  if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY || !sesRegion) {
+  if (!env.SES_ACCESS_KEY_ID || !env.SES_SECRET_ACCESS_KEY || !sesRegion) {
     return null;
   }
   _client = new SESv2Client({
     region: sesRegion,
     credentials: {
-      accessKeyId: env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+      accessKeyId: env.SES_ACCESS_KEY_ID,
+      secretAccessKey: env.SES_SECRET_ACCESS_KEY,
     },
   });
   return _client;
@@ -69,8 +72,8 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
 
   if (!client || !fromAddress) {
     const missing = [
-      !env.AWS_ACCESS_KEY_ID && 'AWS_ACCESS_KEY_ID',
-      !env.AWS_SECRET_ACCESS_KEY && 'AWS_SECRET_ACCESS_KEY',
+      !env.SES_ACCESS_KEY_ID && 'SES_ACCESS_KEY_ID',
+      !env.SES_SECRET_ACCESS_KEY && 'SES_SECRET_ACCESS_KEY',
       !(env.SES_REGION || env.AWS_REGION) && 'SES_REGION/AWS_REGION',
       !fromAddress && 'SES_FROM_EMAIL',
     ].filter(Boolean);

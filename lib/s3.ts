@@ -15,16 +15,15 @@ let s3ClientSingleton: S3Client | null = null;
 
 export function getS3Client(): S3Client {
   if (!s3ClientSingleton) {
+    // S3는 EC2 IAM Role(`oaas-IAM-role-ec2-prd`)을 사용한다.
+    // credentials 옵션을 지정하지 않으면 SDK default provider chain이
+    // 인스턴스 메타데이터(IAM Role)로 폴백한다.
+    //
+    // ⚠️ .env에 `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`가 있으면
+    // SDK가 자동으로 그 키를 잡아 IAM Role 폴백을 막는다. SES 키는
+    // `SES_*` 네임스페이스로 분리해 .env의 AWS_* 충돌을 회피한다.
     s3ClientSingleton = new S3Client({
       region: env.AWS_REGION || 'ap-northeast-2',
-      ...(env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY
-        ? {
-            credentials: {
-              accessKeyId: env.AWS_ACCESS_KEY_ID,
-              secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-            },
-          }
-        : {}),
     });
   }
   return s3ClientSingleton;

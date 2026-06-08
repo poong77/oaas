@@ -275,10 +275,35 @@ echo ">>> Apply DB schema (drizzle-kit push --force)..."
 
 echo ">>> Copy ecosystem config..."
 cp /tmp/ecosystem.config.js ${DEPLOY_PATH}/ecosystem.config.js
+ls -la ${DEPLOY_PATH}/ecosystem.config.js
 
-echo ">>> PM2 reload..."
+echo ">>> PM2 (re)start..."
 cd ${DEPLOY_PATH}
-pm2 reload ecosystem.config.js --update-env || pm2 start ecosystem.config.js
+mkdir -p ${DEPLOY_PATH}/logs
+
+# pm2 reload <file>은 PM2 버전에 따라 "0 process to reload"여도 exit 0을
+# 반환해 || 폴백이 동작 안 하는 사례가 있다. describe로 명시적 분기.
+if pm2 describe oaas > /dev/null 2>&1; then
+    echo "    [pm2] oaas already running → reload"
+    pm2 reload ecosystem.config.js --update-env
+else
+    echo "    [pm2] oaas not found → start"
+    pm2 start ecosystem.config.js
+fi
+
+# 재부팅 시 자동 복원을 위해 dump 저장
+pm2 save
+
+# 결과 검증 — online 상태가 아니면 배포 실패로 처리
+sleep 3
+pm2 list
+STATUS=\$(pm2 jlist | python3 -c "import json,sys; apps=json.load(sys.stdin); print(next((a['pm2_env']['status'] for a in apps if a['name']=='oaas'), 'NOT_FOUND'))")
+echo "    [pm2] oaas status: \$STATUS"
+if [ "\$STATUS" != "online" ]; then
+    echo "❌ PM2 oaas not online (status=\$STATUS) — 배포 실패 처리"
+    pm2 logs oaas --lines 30 --nostream || true
+    exit 1
+fi
 
 echo ">>> Cleanup old backups (keep last 5)..."
 cd ${DEPLOY_PATH}/backups 2>/dev/null && ls -dt */ | tail -n +6 | xargs rm -rf 2>/dev/null || true

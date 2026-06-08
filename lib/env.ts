@@ -23,8 +23,16 @@ export const env = {
 
   // AWS (Phase 5)
   AWS_REGION: process.env.AWS_REGION ?? '',
-  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ?? '',
-  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY ?? '',
+  /**
+   * SES 전용 IAM User 키 (cross-account, oa-marketing 계정 발급).
+   * S3는 같은 계정의 EC2 IAM Role(`oaas-IAM-role-ec2-prd`) 사용 → 키 불필요.
+   * 둘을 분리한 이유: SES 키가 노출돼도 S3 첨부 권한엔 영향 없음 + S3 키 회전 부담 제거.
+   *
+   * ⚠️ .env에는 절대 `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`를 넣지 마라.
+   * 들어있으면 AWS SDK가 자동으로 그 키를 잡아 IAM Role 폴백을 막는다.
+   */
+  SES_ACCESS_KEY_ID: process.env.SES_ACCESS_KEY_ID ?? '',
+  SES_SECRET_ACCESS_KEY: process.env.SES_SECRET_ACCESS_KEY ?? '',
   SES_FROM_EMAIL: process.env.SES_FROM_EMAIL ?? '',
   /**
    * SES 전용 리전. 미설정 시 AWS_REGION 폴백.
