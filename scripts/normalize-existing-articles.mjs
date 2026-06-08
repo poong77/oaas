@@ -13,8 +13,8 @@ import { existsSync } from 'node:fs';
 loadEnv({ path: '.env' });
 if (existsSync('.env.local')) loadEnv({ path: '.env.local', override: true });
 
-import { neon } from '@neondatabase/serverless';
-const sql = neon(process.env.DATABASE_URL);
+import { connectPg } from '../db/connect.mjs';
+const { sql, pool } = connectPg(process.env.DATABASE_URL);
 
 // lib/editor/normalize-markdown.ts와 동일 로직 (mjs라 별도 인라인)
 function normalizeMarkdown(md) {
@@ -43,3 +43,4 @@ for (const row of rows) {
   fixed++;
 }
 console.log(`\n✓ 완료: fixed=${fixed}, skipped=${skipped} (이미 깨끗)`);
+await pool.end();

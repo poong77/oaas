@@ -1,25 +1,44 @@
 import type { NextConfig } from 'next';
 
 /**
- * Phase 10 보안 헤더 — 통합AS 프로덕션 정책.
+ * 보안 헤더 + 배포 산출물.
  *
- * CSP: 외부 챗봇(oachat.ai)은 iframe으로 임베드되므로 `frame-src` 허용.
- *      Vercel Blob 다운로드 URL은 `*.public.blob.vercel-storage.com` / `*.private.blob.vercel-storage.com`.
- *      이미지/미디어 (티켓 첨부)는 위 도메인 + Neon 응답 X.
- *      HMR/turbopack을 위해 dev에서는 `unsafe-eval` 허용 (production에선 strict).
+ * 배포 모델:
+ *   - 자체 호스팅(EC2 + Nginx + PM2). Vercel 사용 안 함.
+ *   - `output: 'standalone'` → `.next/standalone/server.js` 단일 진입점 (PM2가 실행).
+ *
+ * CSP:
+ *   - 외부 챗봇(oachat.ai)은 iframe으로 임베드되므로 `frame-src` 허용.
+ *   - 첨부/이미지: 자체 S3/CloudFront 도메인. `S3_UPLOAD_PUBLIC_URL` 환경변수 기반으로
+ *     CSP에 동적으로 host 추가. 미설정 시에는 self만 허용.
+ *   - HMR/turbopack을 위해 dev에서는 `unsafe-eval` 허용 (production에선 strict).
  */
 const isProd = process.env.NODE_ENV === 'production';
+
+/** S3 공개 URL에서 origin(https://host)을 추출. 빈 문자열 안전. */
+function originOf(rawUrl: string): string {
+  if (!rawUrl) return '';
+  try {
+    const u = new URL(rawUrl);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return '';
+  }
+}
+
+const uploadPublicOrigin = originOf(process.env.S3_UPLOAD_PUBLIC_URL ?? '');
+const extraImgSources = uploadPublicOrigin ? ` ${uploadPublicOrigin}` : '';
 
 const cspDirectives = [
   "default-src 'self'",
   // Next 16 inline boot scripts + turbopack dev
   `script-src 'self' 'unsafe-inline'${isProd ? '' : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com https://*.private.blob.vercel-storage.com",
-  "media-src 'self' blob: https://*.public.blob.vercel-storage.com https://*.private.blob.vercel-storage.com",
+  `img-src 'self' data: blob:${extraImgSources}`,
+  `media-src 'self' blob:${extraImgSources}`,
   "font-src 'self' data:",
-  // SES/Slack/Solapi/Neon outbound는 모두 서버 사이드 — 브라우저 connect는 self + Vercel Blob upload
-  "connect-src 'self' https://*.public.blob.vercel-storage.com https://*.private.blob.vercel-storage.com https://blob.vercel-storage.com",
+  // SES/Slack/Solapi/PG outbound는 모두 서버 사이드 — 브라우저 connect는 self만 필요
+  `connect-src 'self'${extraImgSources}`,
   // 챗봇 iframe (oachat.ai), 외부 차단
   "frame-src 'self' https://*.oachat.ai https://oachat.ai",
   "frame-ancestors 'self'",
@@ -56,16 +75,20 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // PM2가 .next/standalone/server.js를 실행한다 (Dockerfile/Jenkins 산출물 최소화).
+  output: 'standalone',
   // server-only 라이브러리 외부 처리 (bundler가 client chunk로 끌고 가지 못하게)
   // @anthropic-ai/sdk: 내부 agent-toolset이 node:fs/promises를 require하여
   //   Turbopack chunking 컨텍스트에서 실패 → 무조건 external 필요
   // sharp: 네이티브 바인딩 (libvips), server-only
+  // pg: native pg-native binding 회피, server-only
   serverExternalPackages: [
     'bcryptjs',
-    '@neondatabase/serverless',
+    'pg',
     'solapi',
     '@slack/web-api',
-    '@vercel/blob',
+    '@aws-sdk/client-s3',
+    '@aws-sdk/client-sesv2',
     '@anthropic-ai/sdk',
     'sharp',
   ],

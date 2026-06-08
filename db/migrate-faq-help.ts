@@ -20,8 +20,7 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env' });
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { and, eq, sql } from 'drizzle-orm';
 
 import { faqs, type NewFaq } from './schema';
@@ -520,7 +519,7 @@ async function main() {
     process.exit(1);
   }
 
-  const db = drizzle(neon(DATABASE_URL));
+  const { db } = connectPg(DATABASE_URL);
 
   // ─── 1. 기존 샘플 FAQ 12건 물리 삭제 ──────────────────────────────
   console.log('🗑  기존 샘플 FAQ 12건 물리 삭제...');

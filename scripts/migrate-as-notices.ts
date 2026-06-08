@@ -26,8 +26,7 @@ config({ path: '.env.local' });
 config();
 
 import { writeFileSync } from 'node:fs';
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { connectPg } from '../db/connect';
 import { eq, inArray } from 'drizzle-orm';
 import { notices } from '../db/schema/notices';
 import { users } from '../db/schema/users';
@@ -244,12 +243,15 @@ function parseDetail(html: string): {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// Blob 업로드 (commit 전용)
+// S3 업로드 (commit 전용) — 이전 uploadToS3, S3로 이관 (자체 호스팅).
 // ──────────────────────────────────────────────────────────────────────────
-async function uploadToBlob(srcUrl: string, boardKey: string): Promise<string> {
-  const { put } = await import('@vercel/blob');
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) throw new Error('BLOB_READ_WRITE_TOKEN 미설정 — 첨부 이관 불가');
+async function uploadToS3(srcUrl: string, boardKey: string): Promise<string> {
+  const { PutObjectCommand, S3Client } = await import('@aws-sdk/client-s3');
+  const bucket = process.env.S3_UPLOAD_BUCKET;
+  if (!bucket) throw new Error('S3_UPLOAD_BUCKET 미설정 — 첨부 이관 불가');
+  const region = process.env.AWS_REGION || 'ap-northeast-2';
+  const publicBase = process.env.S3_UPLOAD_PUBLIC_URL || '';
+  const prefix = (process.env.S3_UPLOAD_PREFIX || '').replace(/^\/+|\/+$/g, '');
 
   const res = await fetch(srcUrl, { headers: { 'User-Agent': UA } });
   if (!res.ok) throw new Error(`첨부 다운로드 실패 ${srcUrl} → ${res.status}`);
@@ -257,14 +259,22 @@ async function uploadToBlob(srcUrl: string, boardKey: string): Promise<string> {
 
   const rawName = decodeURIComponent(srcUrl.split('/').pop()?.split('?')[0] || 'file');
   const safeName = rawName.replace(/[^\w.\-가-힣]/g, '_').slice(0, 120) || 'file';
-  const pathname = `notices/migrated/${boardKey}/${Date.now()}-${safeName}`;
-  const result = await put(pathname, buf, {
-    access: 'public',
-    addRandomSuffix: false,
-    token,
-    contentType: res.headers.get('content-type') || undefined,
-  });
-  return result.url;
+  const base = `notices/migrated/${boardKey}/${Date.now()}-${safeName}`;
+  const key = prefix ? `${prefix}/${base}` : base;
+
+  const client = new S3Client({ region });
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: buf,
+      ContentType: res.headers.get('content-type') || undefined,
+      ContentLength: buf.length,
+    }),
+  );
+  return publicBase
+    ? `${publicBase.replace(/\/$/, '')}/${key}`
+    : `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -385,7 +395,7 @@ async function main() {
   if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL 미설정 — .env / .env.local 확인');
   }
-  const db = drizzle(neon(process.env.DATABASE_URL), { schema: { notices, users } });
+  const { db } = connectPg(process.env.DATABASE_URL);
 
   let authorId: string | null = null;
   let authorLabel = 'null(시스템)';
@@ -453,7 +463,7 @@ async function main() {
     let body = item.bodyMarkdown;
     for (const img of item.inlineImages) {
       try {
-        const blobUrl = await uploadToBlob(img, item.boardKey);
+        const blobUrl = await uploadToS3(img, item.boardKey);
         body = body.split(img).join(blobUrl);
       } catch (err) {
         console.warn(`    ⚠ 이미지 이관 실패 (board ${item.boardKey}): ${(err as Error).message}`);
@@ -465,7 +475,7 @@ async function main() {
       for (const att of item.attachments) {
         let url = att.src;
         try {
-          att.blobUrl = await uploadToBlob(att.src, item.boardKey);
+          att.blobUrl = await uploadToS3(att.src, item.boardKey);
           url = att.blobUrl;
         } catch (err) {
           console.warn(`    ⚠ 첨부 이관 실패 (board ${item.boardKey}): ${(err as Error).message}`);

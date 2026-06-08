@@ -1,0 +1,74 @@
+{
+  "name": "8_OA_AS — Cron: business-hours-overrides",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "1 0 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily 00:01 KST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://support.oapms.com/api/cron/business-hours-overrides",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 60000,
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "id": "http-bho",
+      "name": "GET /api/cron/business-hours-overrides",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_OA_AS_CRON_HEADER_AUTH_ID",
+          "name": "OA-AS Cron Bearer"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 00:01 KST": {
+      "main": [
+        [
+          {
+            "node": "GET /api/cron/business-hours-overrides",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Seoul"
+  },
+  "tags": [
+    {
+      "name": "8_OA_AS"
+    },
+    {
+      "name": "cron"
+    }
+  ],
+  "meta": {
+    "description": "통합AS — 운영시간 예약 변경 상태 자동 전환(scheduled→active, active→expired). 매일 00:01 KST. Vercel Cron 대체. 인증: Header Auth credential 'OA-AS Cron Bearer' (Name=Authorization, Value=Bearer <CRON_SECRET>)."
+  }
+}

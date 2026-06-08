@@ -1,5 +1,5 @@
 /**
- * `/api/upload` — Vercel Blob 업로드 (Phase 5 IC-02).
+ * `/api/upload` — S3 첨부 업로드 (Phase 5 IC-02, 자체 호스팅 이전 후).
  *
  * 요청: multipart/form-data (FormData)
  *   - `file`: 단일 파일
@@ -7,6 +7,7 @@
  *
  * 응답 (성공):
  *   { ok: true, blobUrl, pathname, originalName, mimeType, sizeBytes }
+ *   ※ `blobUrl` 필드명은 클라이언트 호환성을 위해 유지 (실제로는 S3/CloudFront URL).
  *
  * 응답 (실패):
  *   { ok: false, message }
@@ -14,14 +15,14 @@
  * 보안:
  *   - 로그인 필수 (`requireAuth` X — Route Handler에서는 getCurrentUser).
  *   - 파일 확장자 / mime 화이트리스트.
- *   - 최대 50MB (BLOB API 자체 한계도 50MB).
- *   - 인증된 사용자 ID를 staging pathname에 포함하여 사용자별 격리.
+ *   - 최대 50MB.
+ *   - 인증된 사용자 ID를 키에 포함하여 사용자별 격리.
  *
- * 토큰 미설정 (`BLOB_READ_WRITE_TOKEN` 비어있음) 시 503 반환.
+ * 버킷 미설정 (`S3_UPLOAD_BUCKET` 비어있음) 시 503 반환.
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { put } from '@vercel/blob';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getCurrentUser } from '@/lib/permissions';
 import { env } from '@/lib/env';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -30,6 +31,32 @@ import {
   processImage,
   replaceExtension,
 } from '@/lib/images/processor';
+
+let s3ClientSingleton: S3Client | null = null;
+function getS3(): S3Client {
+  if (!s3ClientSingleton) {
+    s3ClientSingleton = new S3Client({
+      region: env.AWS_REGION || 'ap-northeast-2',
+      ...(env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY
+        ? {
+            credentials: {
+              accessKeyId: env.AWS_ACCESS_KEY_ID,
+              secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+            },
+          }
+        : {}),
+    });
+  }
+  return s3ClientSingleton;
+}
+
+function buildPublicUrl(key: string): string {
+  if (env.S3_UPLOAD_PUBLIC_URL) {
+    return `${env.S3_UPLOAD_PUBLIC_URL.replace(/\/$/, '')}/${key}`;
+  }
+  const region = env.AWS_REGION || 'ap-northeast-2';
+  return `https://${env.S3_UPLOAD_BUCKET}.s3.${region}.amazonaws.com/${key}`;
+}
 
 export const runtime = 'nodejs';
 
@@ -96,12 +123,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!env.BLOB_READ_WRITE_TOKEN) {
+  if (!env.S3_UPLOAD_BUCKET) {
     return NextResponse.json(
       {
         ok: false,
         message:
-          'Vercel Blob 토큰이 설정되지 않았습니다 (BLOB_READ_WRITE_TOKEN).',
+          'S3 업로드 버킷이 설정되지 않았습니다 (S3_UPLOAD_BUCKET).',
       },
       { status: 503 },
     );
@@ -227,22 +254,33 @@ export async function POST(request: NextRequest) {
   // purpose별 pathname 분기:
   //   - 'editor' → editor/{userId}/{uniq}-{name}     (본문 임베드 이미지·PDF)
   //   - 'ticket' → tickets/_staging/{purpose}/{userId}/{uniq}-{name}  (티켓 첨부)
-  const pathname =
+  const basePathname =
     purpose === 'editor'
       ? `editor/${user.id}/${uniq}-${safeName}`
       : `tickets/_staging/${purpose}/${user.id}/${uniq}-${safeName}`;
+  const key = env.S3_UPLOAD_PREFIX
+    ? `${env.S3_UPLOAD_PREFIX.replace(/^\/+|\/+$/g, '')}/${basePathname}`
+    : basePathname;
 
   try {
-    const result = await put(pathname, uploadPayload, {
-      access: 'public',
-      addRandomSuffix: false,
-      token: env.BLOB_READ_WRITE_TOKEN,
-      ...(uploadContentType ? { contentType: uploadContentType } : {}),
-    });
+    const bodyBuffer = Buffer.from(
+      await (uploadPayload instanceof Blob
+        ? uploadPayload.arrayBuffer()
+        : (uploadPayload as File).arrayBuffer()),
+    );
+    await getS3().send(
+      new PutObjectCommand({
+        Bucket: env.S3_UPLOAD_BUCKET,
+        Key: key,
+        Body: bodyBuffer,
+        ContentType: uploadContentType,
+        ContentLength: bodyBuffer.length,
+      }),
+    );
     return NextResponse.json({
       ok: true,
-      blobUrl: result.url,
-      pathname: result.pathname,
+      blobUrl: buildPublicUrl(key),
+      pathname: key,
       originalName: file.name,
       mimeType: uploadContentType ?? file.type ?? null,
       sizeBytes: finalSizeBytes,
@@ -250,12 +288,12 @@ export async function POST(request: NextRequest) {
       image: imageMeta.optimized ? imageMeta : undefined,
     });
   } catch (err) {
-    console.error('[api/upload] Vercel Blob put 실패:', err);
+    console.error('[api/upload] S3 PutObject 실패:', err);
     return NextResponse.json(
       {
         ok: false,
         message:
-          err instanceof Error ? err.message : 'Blob 업로드 중 오류가 발생했습니다',
+          err instanceof Error ? err.message : 'S3 업로드 중 오류가 발생했습니다',
       },
       { status: 500 },
     );

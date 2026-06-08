@@ -24,10 +24,6 @@
 import { boolean, jsonb, pgTable, text, time, uuid } from 'drizzle-orm/pg-core';
 import { commonColumns } from './_shared';
 import { users } from './users';
-import {
-  DEFAULT_STATE_ICONS,
-  type StateIcons,
-} from '@/lib/business-hours/state-icons';
 
 /**
  * ARS 메뉴 항목 — `business_hours_default.ars_items` jsonb 형식.
@@ -35,8 +31,22 @@ import {
  */
 export type ArsItem = { num: string; label: string };
 
-// 운영 상태 아이콘 매핑 — `lib/business-hours/state-icons.ts` 정의 재export
-export type { StateIcons };
+/**
+ * 운영 상태 종류. UI는 [lib/business-hours/state-icons.ts]에서 lucide 컴포넌트와 매핑.
+ * 여기 schema에 정의해두면 drizzle-kit이 외부 alias(@/lib) 의존 없이 파싱 가능.
+ */
+export type BusinessStatusKind = 'open' | 'lunch' | 'intake_closed' | 'closed';
+
+/** state_icons jsonb 컬럼의 타입 — lucide 컴포넌트 이름 문자열. */
+export type StateIcons = Record<BusinessStatusKind, string>;
+
+/** DB 기본값 + 어드민 미설정/잘못된 이름 저장 시 폴백. */
+export const DEFAULT_STATE_ICONS: StateIcons = {
+  open: 'Headset',
+  lunch: 'Coffee',
+  intake_closed: 'CircleAlert',
+  closed: 'DoorClosed',
+};
 
 export const businessHoursDefault = pgTable('business_hours_default', {
   ...commonColumns(),

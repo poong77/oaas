@@ -1,31 +1,53 @@
 /**
- * Drizzle DB 클라이언트 (Neon serverless).
+ * Drizzle DB 클라이언트 (node-postgres / 표준 PostgreSQL).
  *
- * Phase 0 정책:
+ * 자체 호스팅 EC2 + PostgreSQL 16 환경에 맞춰 `pg` Pool 사용.
+ * 기존 Neon HTTP 드라이버에서 이관 (참고 가이드: docs/CICD_PIPELINE.md).
+ *
+ * 정책:
  *   - DATABASE_URL이 비어있어도 모듈 로드는 실패하지 않게 한다 (graceful degrade).
  *   - 실제 쿼리 시점에 연결 시도하며, 실패하면 호출부에서 처리.
+ *   - PgPool은 프로세스 전역에서 단일 인스턴스로 재사용 (HMR 안전).
  *
- * Phase 1 진입 시:
- *   - 실제 스키마를 `db/schema/`에 작성하고 `drizzle-kit push`로 반영.
+ * SSL:
+ *   - DATABASE_URL에 `sslmode=require`가 포함되거나 NODE_ENV=production일 때 SSL ON.
+ *   - 자체 서명 인증서 대응을 위해 `rejectUnauthorized: false` (사내망 RDS/EC2 가정).
  */
 
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { env, isDbConfigured } from '@/lib/env';
 import * as schema from './schema';
 
-// Neon HTTP 드라이버는 fetch 기반이라 Vercel Edge에서도 동작
+declare global {
+  // eslint-disable-next-line no-var
+  var __pgPool: Pool | undefined;
+}
 
-/**
- * `db`는 lazy proxy로 노출되어, DATABASE_URL이 비어있는 Phase 0 상태에서도
- * 모듈 import는 성공하고 실제 호출 시에만 에러를 던지도록 한다.
- */
+function shouldUseSsl(url: string): boolean {
+  if (/sslmode=require/i.test(url)) return true;
+  if (/sslmode=disable/i.test(url)) return false;
+  return env.NODE_ENV === 'production';
+}
+
+function getPool(): Pool | null {
+  if (!isDbConfigured()) return null;
+  if (globalThis.__pgPool) return globalThis.__pgPool;
+  const pool = new Pool({
+    connectionString: env.DATABASE_URL,
+    ...(shouldUseSsl(env.DATABASE_URL)
+      ? { ssl: { rejectUnauthorized: false } }
+      : {}),
+    max: 10,
+  });
+  globalThis.__pgPool = pool;
+  return pool;
+}
+
 function createDb() {
-  if (!isDbConfigured()) {
-    return null;
-  }
-  const sql = neon(env.DATABASE_URL);
-  return drizzle(sql, { schema });
+  const pool = getPool();
+  if (!pool) return null;
+  return drizzle(pool, { schema });
 }
 
 export const db = createDb();
@@ -33,17 +55,17 @@ export const db = createDb();
 export { isDbConfigured };
 
 export async function pingDb(): Promise<{ ok: boolean; message: string }> {
-  if (!db) {
+  const pool = getPool();
+  if (!pool) {
     return {
       ok: false,
       message: 'DATABASE_URL not configured (Phase 0 graceful degrade)',
     };
   }
   try {
-    const sql = neon(env.DATABASE_URL);
-    const rows = (await sql`select 1 as ok`) as Array<{ ok: number }>;
+    const result = await pool.query<{ ok: number }>('select 1 as ok');
     return {
-      ok: rows[0]?.ok === 1,
+      ok: result.rows[0]?.ok === 1,
       message: 'database reachable',
     };
   } catch (err) {

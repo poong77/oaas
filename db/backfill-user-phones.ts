@@ -18,8 +18,7 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env' });
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { sql } from 'drizzle-orm';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? '';
@@ -37,7 +36,7 @@ async function main() {
     process.exit(1);
   }
 
-  const db = drizzle(neon(DATABASE_URL));
+  const { db } = connectPg(DATABASE_URL);
 
   // 채워질 대상 미리보기
   const targets = await db.execute<{

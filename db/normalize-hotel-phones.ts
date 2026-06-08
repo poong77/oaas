@@ -16,8 +16,7 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env' });
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { eq, ilike, sql } from 'drizzle-orm';
 
 import { hotels } from './schema';
@@ -32,7 +31,7 @@ async function main() {
     process.exit(1);
   }
 
-  const db = drizzle(neon(DATABASE_URL));
+  const { db } = connectPg(DATABASE_URL);
 
   const rows = await db
     .select({ id: hotels.id, name: hotels.name, phone: hotels.phone })

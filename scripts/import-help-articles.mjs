@@ -19,8 +19,8 @@
  */
 import { config as loadEnv } from 'dotenv';
 import { existsSync } from 'node:fs';
-import { put } from '@vercel/blob';
-import { neon } from '@neondatabase/serverless';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { connectPg } from '../db/connect.mjs';
 
 loadEnv({ path: '.env' });
 if (existsSync('.env.local')) loadEnv({ path: '.env.local', override: true });
@@ -38,17 +38,31 @@ const sources = [...sourcesPmsRoom, ...sourcesPmsRoomExtra, ...sourcesPmsCDR, ..
 const specs = [...specsPmsRoom, ...specsPmsRoomExtra, ...specsPmsCDR, ...specsCms, ...specsKK, ...specsWC];
 
 const dbUrl = process.env.DATABASE_URL;
-const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+const s3Bucket = process.env.S3_UPLOAD_BUCKET;
 if (!dbUrl || dbUrl.includes('placeholder')) {
   console.error('DATABASE_URL not set. abort.');
   process.exit(1);
 }
-if (!blobToken) {
-  console.error('BLOB_READ_WRITE_TOKEN not set. abort.');
+if (!s3Bucket) {
+  console.error('S3_UPLOAD_BUCKET not set. abort.');
   process.exit(1);
 }
 
-const sql = neon(dbUrl);
+const s3Region = process.env.AWS_REGION || 'ap-northeast-2';
+const s3PublicBase = process.env.S3_UPLOAD_PUBLIC_URL || '';
+const s3Prefix = (process.env.S3_UPLOAD_PREFIX || '').replace(/^\/+|\/+$/g, '');
+const s3 = new S3Client({ region: s3Region });
+
+function s3KeyOf(path) {
+  return s3Prefix ? `${s3Prefix}/${path}` : path;
+}
+function s3UrlOf(key) {
+  return s3PublicBase
+    ? `${s3PublicBase.replace(/\/$/, '')}/${key}`
+    : `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${key}`;
+}
+
+const { sql, pool } = connectPg(dbUrl);
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
@@ -59,14 +73,17 @@ async function fetchAndFrame(srcUrl, dstPath) {
   if (!res.ok) throw new Error(`fetch ${srcUrl} → ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
   const framed = await compositeBrowserFrame(buf);
-  const blob = await put(dstPath, framed, {
-    access: 'public',
-    contentType: 'image/png',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    token: blobToken,
-  });
-  return { url: blob.url, originalBytes: buf.length, framedBytes: framed.length };
+  const key = s3KeyOf(dstPath);
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: s3Bucket,
+      Key: key,
+      Body: framed,
+      ContentType: 'image/png',
+      ContentLength: framed.length,
+    }),
+  );
+  return { url: s3UrlOf(key), originalBytes: buf.length, framedBytes: framed.length };
 }
 
 function extractToc(markdown) {
@@ -217,4 +234,5 @@ for (const spec of specs) {
 }
 
 console.log(`\n✓ 완료: created=${created}, skipped=${skipped}, failed=${failed}`);
+await pool.end();
 console.log('  확인 → /admin/articles (draft 필터)');

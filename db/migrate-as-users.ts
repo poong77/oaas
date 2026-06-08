@@ -25,8 +25,7 @@ config({ path: '.env' });
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -63,7 +62,7 @@ async function main() {
     readFileSync(join(import.meta.dirname, 'data', 'oa-as-users.json'), 'utf-8'),
   ) as ScrapedUser[];
 
-  const db = drizzle(neon(DATABASE_URL));
+  const { db } = connectPg(DATABASE_URL);
 
   // 1) compKey → hotelId 매핑 테이블 구축
   const hotelRows = await db

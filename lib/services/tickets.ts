@@ -171,7 +171,8 @@ export async function generateTicketNo(): Promise<string> {
         RETURNING last_no
       `,
     )) as unknown as { rows: Array<{ last_no: number }> } | Array<{ last_no: number }>;
-    // neon-http drizzle 결과는 보통 배열 그 자체 (rows 래핑 X)
+    // node-postgres drizzle은 { rows: ... }로 감싸 반환 (이전 neon-http는 배열 직반환).
+    // 두 형태 모두 안전하게 흡수.
     const arr = Array.isArray(rows)
       ? rows
       : (rows as { rows: Array<{ last_no: number }> }).rows;

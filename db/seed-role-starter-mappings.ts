@@ -17,8 +17,7 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env' });
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { and, eq, inArray } from 'drizzle-orm';
 
 import { articles, faqs, roleStarters } from './schema';
@@ -180,7 +179,7 @@ const FAQ_MAPPING: Record<string, string[]> = {
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL 없음');
-  const db = drizzle(neon(url));
+  const { db } = connectPg(url);
 
   // 1) 발행 아티클 검증
   const allArticleIds = [...new Set(Object.values(ARTICLE_MAPPING).flat())];

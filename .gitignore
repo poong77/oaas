@@ -60,6 +60,8 @@ Thumbs.db
 !.vscode/settings.json
 .idea
 .env*
+# deploy/env/ 의 .env.{dev,prd}.example 도 템플릿이므로 예외 (위 .env* 룰 뒤에 와야 효과)
+!deploy/env/.env.*.example
 
 # Playwright E2E (test-results/auth state/report 모두 빌드 산출물)
 /e2e/.auth/
@@ -73,3 +75,4 @@ oa-knowledge-*.jsonl
 
 # 내부 데이터 덤프 (코드 미참조 · 로컬 작업 산출물)
 docs/hotel-names-*.txt
+

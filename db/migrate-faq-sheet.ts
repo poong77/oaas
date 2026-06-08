@@ -22,8 +22,7 @@ config({ path: '.env' });
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import { and, eq, sql } from 'drizzle-orm';
 
 import { faqs, type NewFaq } from './schema';
@@ -49,7 +48,7 @@ async function main() {
     readFileSync(join(import.meta.dirname, 'data', 'faq-sheet.json'), 'utf-8'),
   ) as SheetFaq[];
 
-  const db = drizzle(neon(DATABASE_URL));
+  const { db } = connectPg(DATABASE_URL);
 
   console.log(`📥 시트 FAQ ${rows.length}건 이관...`);
   let created = 0;

@@ -1,0 +1,74 @@
+{
+  "name": "8_OA_AS — Cron: cleanup-drafts",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily 03:00 KST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://support.oapms.com/api/cron/cleanup-drafts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 60000,
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "id": "http-cleanup",
+      "name": "GET /api/cron/cleanup-drafts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_OA_AS_CRON_HEADER_AUTH_ID",
+          "name": "OA-AS Cron Bearer"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 03:00 KST": {
+      "main": [
+        [
+          {
+            "node": "GET /api/cron/cleanup-drafts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Seoul"
+  },
+  "tags": [
+    {
+      "name": "8_OA_AS"
+    },
+    {
+      "name": "cron"
+    }
+  ],
+  "meta": {
+    "description": "통합AS — editor_drafts 30일 경과 정리. 매일 03:00 KST. Vercel Cron 대체. 인증: Header Auth credential 'OA-AS Cron Bearer' (Name=Authorization, Value=Bearer <CRON_SECRET>)."
+  }
+}

@@ -13,8 +13,7 @@
  */
 
 import 'dotenv/config';
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { connectPg } from './connect';
 import bcrypt from 'bcryptjs';
 import { eq, sql } from 'drizzle-orm';
 
@@ -69,14 +68,13 @@ async function main() {
   if (!DATABASE_URL || DATABASE_URL.includes('placeholder')) {
     console.error(
       '\n[seed] ❌ DATABASE_URL이 placeholder입니다.\n' +
-        '       실제 Neon 연결 문자열로 교체한 뒤 다시 실행하세요.\n',
+        '       실제 PostgreSQL 연결 문자열로 교체한 뒤 다시 실행하세요.\n',
     );
     process.exit(1);
   }
 
   console.log('[seed] DB 연결 중...');
-  const sqlClient = neon(DATABASE_URL);
-  const db = drizzle(sqlClient);
+  const { db } = connectPg(DATABASE_URL);
 
   // ─── 1. categories ──────────────────────────────────────────────
   const productCats: NewCategory[] = [
@@ -2366,7 +2364,9 @@ async function main() {
   console.log('       hotelier@oa.local / oa1234!  (호텔리어)\n');
 }
 
-main().catch((err) => {
-  console.error('[seed] ❌ 실패:', err);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error('[seed] ❌ 실패:', err);
+    process.exit(1);
+  });

@@ -18,8 +18,8 @@ import { existsSync } from 'node:fs';
 loadEnv({ path: '.env' });
 if (existsSync('.env.local')) loadEnv({ path: '.env.local', override: true });
 
-import { neon } from '@neondatabase/serverless';
-const sql = neon(process.env.DATABASE_URL);
+import { connectPg } from '../db/connect.mjs';
+const { sql, pool } = connectPg(process.env.DATABASE_URL);
 
 const productCode = process.argv[2] || 'pms';
 
@@ -134,3 +134,4 @@ console.log(`  🟢 깨끗:  ${summary.clean}`);
 console.log(`  🟡 워닝:  ${summary.warn}`);
 console.log(`  🔴 에러:  ${summary.error}`);
 console.log(`  📊 합계:  ${articles.length}`);
+await pool.end();
