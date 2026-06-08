@@ -25,7 +25,7 @@ import {
 import { ToggleActiveButton } from './_components/toggle-active-button';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '유입 채널 — 마스터 데이터' };
+export const metadata = { title: '유입 채널 — 마스터DB' };
 
 export default async function MasterTicketChannelsPage() {
   await requireRole(['admin']);
@@ -42,7 +42,7 @@ export default async function MasterTicketChannelsPage() {
             href="/admin/master"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
-            <ArrowLeft className="h-3 w-3" /> 마스터 데이터
+            <ArrowLeft className="h-3 w-3" /> 마스터DB
           </Link>
         }
         actions={

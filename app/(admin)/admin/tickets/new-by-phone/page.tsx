@@ -1,5 +1,5 @@
 /**
- * `/admin/tickets/new-by-phone` — 대리 접수 (IC-04 확장).
+ * `/admin/tickets/new-by-phone` — 티켓 생성 (IC-04 확장).
  *
  * 매니저+어드민. 전화·카카오톡·이메일·방문 등 외부 채널 문의를 매니저가 대신 접수.
  * channel은 ticket_channels 마스터에서 선택 (Plan ticket-channels-master Q-3).
@@ -14,7 +14,7 @@ import { getCategoriesByType } from '@/lib/services/categories';
 import { listAgentSelectableChannels } from '@/lib/services/master-ticket-channels';
 import { PhoneTicketForm } from './_components/phone-ticket-form';
 
-export const metadata = { title: '대리 접수 — OA 통합 AS' };
+export const metadata = { title: '티켓 생성 — OA 통합 AS' };
 export const dynamic = 'force-dynamic';
 
 export default async function PhoneTicketPage() {
@@ -45,13 +45,13 @@ export default async function PhoneTicketPage() {
             className="inline-flex items-center gap-1 hover:underline"
           >
             <ArrowLeft className="h-3 w-3" />
-            티켓 큐로
+            문의 관리로
           </Link>
         }
         title={
           <span className="inline-flex items-center gap-2">
             <Headset className="h-5 w-5 text-brand-600" />
-            대리 접수
+            티켓 생성
           </span>
         }
         description="전화·카카오톡·이메일 등 외부 채널로 들어온 문의를 매니저가 대신 접수합니다. 호텔·호텔리어를 매핑하면 알림이 자동 발송됩니다."

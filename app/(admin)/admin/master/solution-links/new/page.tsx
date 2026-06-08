@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { SolutionLinkEditor } from '../_components/solution-link-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '신규 솔루션 링크 프리셋 — 마스터 데이터' };
+export const metadata = { title: '신규 솔루션 링크 프리셋 — 마스터DB' };
 
 export default async function NewSolutionLinkPresetPage() {
   await requireRole(['manager', 'admin']);

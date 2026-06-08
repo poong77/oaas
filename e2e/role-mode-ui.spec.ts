@@ -57,9 +57,9 @@ test.describe('매니저 시나리오', () => {
     // 챗봇 FAB (aria-label="챗봇 열기") 비노출
     await expect(page.locator('button[aria-label="챗봇 열기"]')).toHaveCount(0);
 
-    // AdminNav의 "티켓 큐" 또는 ㅁ스터데이터 등 어드민 메뉴는 노출
+    // AdminNav의 "문의 관리" 또는 ㅁ스터데이터 등 어드민 메뉴는 노출
     await expect(
-      page.getByRole('link', { name: /티켓 큐|서비스 상태/ }).first(),
+      page.getByRole('link', { name: /문의 관리|서비스 상태/ }).first(),
     ).toBeVisible();
   });
 

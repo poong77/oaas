@@ -40,7 +40,7 @@ export function UserNav({ role }: { role: UserRole }) {
           );
         })}
         {(role === 'admin' || role === 'manager') && (
-          // 매니저/어드민 모두 어드민 영역의 첫 진입점은 티켓 큐.
+          // 매니저/어드민 모두 어드민 영역의 첫 진입점은 문의 관리.
           // (이전 코드: 둘 다 /admin/users → 매니저는 requireRole(['admin'])에서 notFound() 발생)
           <Link
             href="/admin/tickets"

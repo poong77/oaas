@@ -8,7 +8,7 @@ import type { PopularKeywordKind } from '@/db/schema';
 import { PopularKeywordEditor } from '../_components/popular-keyword-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '신규 인기검색어 — 마스터 데이터' };
+export const metadata = { title: '신규 인기검색어 — 마스터DB' };
 
 type SearchParams = Promise<{ keyword?: string; kind?: string }>;
 

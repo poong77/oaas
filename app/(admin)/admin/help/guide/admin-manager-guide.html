@@ -170,7 +170,7 @@
       <div class="grp">일상 운영</div>
       <a href="#accounts">0. 호텔·계정 관리</a>
       <a href="#tickets">0. 티켓 관리</a>
-      <a class="sub" href="#tickets-queue">└ 티켓 큐·칸반</a>
+      <a class="sub" href="#tickets-queue">└ 문의 관리·칸반</a>
       <a class="sub" href="#tickets-actions">└ 티켓 처리 액션</a>
       <a class="sub" href="#tickets-ai">└ 🆕 AI 답변 어시스트</a>
       <a class="sub" href="#tickets-phone">└ 대리(전화) 접수</a>
@@ -179,7 +179,7 @@
       <a class="sub" href="#insights-dashboard">└ 인사이트 대시보드</a>
       <a class="sub" href="#insights-search">└ 검색로그</a>
       <div class="grp">콘텐츠</div>
-      <a href="#notices">1. 공지 관리</a>
+      <a href="#notices">1. 공지</a>
       <a href="#content">2. 콘텐츠 관리</a>
       <a class="sub" href="#concept">└ ⭐ 핵심 개념</a>
       <a class="sub" href="#articles">└ 아티클</a>
@@ -274,7 +274,7 @@
         <tr><td>콘텐츠 열람·자가해결</td><td>✅</td><td>✅</td><td>✅</td></tr>
         <tr><td>본인 숙소 티켓 접수·조회</td><td>✅</td><td>—</td><td>—</td></tr>
         <tr><td>본인 숙소 직원 계정 관리</td><td>✅</td><td>—</td><td>—</td></tr>
-        <tr><td>전체 티켓 큐·상태 변경·담당 지정</td><td>❌</td><td>✅</td><td>✅</td></tr>
+        <tr><td>전체 문의 관리·상태 변경·담당 지정</td><td>❌</td><td>✅</td><td>✅</td></tr>
         <tr><td>대리(전화) 접수 · Dev 에스컬</td><td>❌</td><td>✅</td><td>✅</td></tr>
         <tr><td>아티클·FAQ·공지·체크리스트 발행</td><td>❌</td><td>✅</td><td>✅</td></tr>
         <tr><td>호텔 관리 · 사용자(계정) 관리</td><td>❌</td><td>❌</td><td>✅</td></tr>
@@ -366,11 +366,11 @@
         <tr><td>채널</td><td>web · phone · chatbot · kakao · email · walk_in</td><td>유입 경로. web=셀프접수</td></tr>
       </table>
 
-      <h3 id="tickets-queue">티켓 큐 &amp; 칸반</h3>
+      <h3 id="tickets-queue">문의 관리 &amp; 칸반</h3>
       <p>상단 요약 카드로 한눈에 현황을 봅니다: <span class="badge b-danger">P1 긴급</span> <span class="badge b-brand">미처리</span> <span class="badge b-warn">처리중</span> <span class="badge b-ok">오늘 완료</span></p>
       <div class="grid2">
         <div class="card tight">
-          <b>리스트(티켓 큐) 뷰</b>
+          <b>리스트(문의 관리) 뷰</b>
           <ul class="clean" style="margin-bottom:0">
             <li>탭: 미처리 / 처리중 / 보류 / 완료 / 전체</li>
             <li>필터: 제품 · 유형 · 긴급도 · 담당(미배정/내 담당/개별)</li>
@@ -385,7 +385,7 @@
           </ul>
         </div>
       </div>
-      <p style="font-size:13px;color:var(--muted)">상단 토글로 <b>티켓 큐 ↔ 칸반</b>을 전환합니다.</p>
+      <p style="font-size:13px;color:var(--muted)">상단 토글로 <b>문의 관리 ↔ 칸반</b>을 전환합니다.</p>
 
       <h3 id="tickets-actions">티켓 상세에서 할 수 있는 일</h3>
       <p>티켓을 열면 다음 액션을 수행합니다. 처리 흐름은 보통 <b>담당 지정 → 처리중 변경 → 답변/메모 → 완료</b> 순입니다.</p>
@@ -428,15 +428,15 @@
       </ul>
       <div class="note warn"><b>⚠️ AI 초안은 반드시 검수</b>AI 초안을 <b>수정 없이 그대로 발송</b>하려 하면 "AI 초안 검수 확인" 대화창이 한 번 더 뜹니다. 초안은 시작점일 뿐, 내용을 확인·보정한 뒤 발송하세요. 출처 칩으로 어떤 문서를 참고했는지 항상 표시됩니다.</div>
 
-      <h3 id="tickets-phone">대리 접수 (전화·외부 채널) <span class="path">/admin/tickets/new-by-phone</span></h3>
+      <h3 id="tickets-phone">티켓 생성 (전화·외부 채널) <span class="path">/admin/tickets/new-by-phone</span></h3>
       <p>호텔이 <b>전화·카카오·이메일·방문</b> 등으로 문의했을 때, 매니저가 대신 티켓을 만드는 기능입니다.</p>
       <ol class="steps">
-        <li>"대리 접수" 버튼 클릭</li>
+        <li>"티켓 생성" 버튼 클릭</li>
         <li>호텔·접수자 선택(선택사항) → <b>유입 채널 선택</b>(전화 등, 필수)</li>
         <li>제품·유형·긴급도·제목·내용 입력, 필요 시 첨부</li>
         <li>연락 수단(SMS/메일) 선택 후 접수 — 호텔/호텔리어가 매핑되면 자동 알림 발송</li>
       </ol>
-      <p style="font-size:13px;color:var(--muted)">"직접 접수"(<span class="path">/tickets/new</span>)는 호텔리어 본인이 쓰는 셀프 접수 화면입니다. <b>🆕</b> 티켓 큐 상단에 <b>"직접 접수"</b> 버튼이 추가되어, 고객이 직접 접수하도록 이 화면으로 바로 안내할 수 있습니다(대리 접수 버튼 옆).</p>
+      <p style="font-size:13px;color:var(--muted)">"호텔리어 접수"(<span class="path">/tickets/new</span>)는 호텔리어 본인이 쓰는 셀프 접수 화면입니다. <b>🆕</b> 문의 관리 상단에 <b>"호텔리어 접수"</b> 버튼이 추가되어, 고객이 호텔리어 접수하도록 이 화면으로 바로 안내할 수 있습니다(티켓 생성 버튼 옆).</p>
     </section>
 
     <!-- INSIGHTS (NEW 2026-06) -->
@@ -497,7 +497,7 @@
 
     <!-- NOTICES -->
     <section id="notices">
-      <h2 class="sec"><span class="no">1</span>공지 관리</h2>
+      <h2 class="sec"><span class="no">1</span>공지</h2>
       <p class="lead">점검·장애·업데이트 소식을 호텔리어에게 알립니다. <span class="path">/admin/notices</span></p>
 
       <h4>공지 종류</h4>
@@ -673,7 +673,7 @@
         <tr><td>지식팩 내보내기 <span class="badge b-ok">🆕</span></td><td>발행 아티클+활성 FAQ+동의어를 Markdown/JSONL로 내보내기</td><td>외부 챗봇·RAG·Custom GPT 지식 파일</td><td>매니저+</td></tr>
         <tr><td>솔루션 링크 프리셋</td><td>호텔 프로필 기본 링크(Keyless·홈페이지 등)</td><td>호텔 프로필</td><td>매니저+</td></tr>
         <tr><td>접수 폼 필드</td><td>제품별 동적 접수폼 필드 정의</td><td>접수 폼</td><td>매니저+</td></tr>
-        <tr><td>유입 채널</td><td>web/phone/chatbot/kakao/email/walk_in</td><td>대리 접수 드롭다운·티켓 필터</td><td>어드민</td></tr>
+        <tr><td>유입 채널</td><td>web/phone/chatbot/kakao/email/walk_in</td><td>티켓 생성 드롭다운·티켓 필터</td><td>어드민</td></tr>
         <tr><td>운영시간</td><td>평일/주말·점심·공휴일·임시변경·긴급전화</td><td>호텔리어 컨택 패널 실시간 상태</td><td>어드민</td></tr>
         <tr><td>시스템 설정</td><td>업로드 한도·로그인 제한·Slack채널 등</td><td>플랫폼 전역 동작</td><td>어드민</td></tr>
         <tr><td>동의어 사전</td><td>검색 동의어 그룹</td><td>통합 검색·가이드 검색 확장</td><td>어드민</td></tr>
@@ -770,9 +770,9 @@
         <div class="card tight" style="font-size:13px">
           <b>일상 운영</b>
           <ul class="clean" style="margin-bottom:0">
-            <li><span class="path">/admin/tickets</span> 티켓 큐</li>
+            <li><span class="path">/admin/tickets</span> 문의 관리</li>
             <li><span class="path">/admin/tickets/kanban</span> 칸반</li>
-            <li><span class="path">/admin/tickets/new-by-phone</span> 대리 접수</li>
+            <li><span class="path">/admin/tickets/new-by-phone</span> 티켓 생성</li>
             <li>🆕 <span class="path">/admin/insights/dashboard</span> 인사이트</li>
             <li>🆕 <span class="path">/admin/insights/search-logs</span> 검색로그</li>
             <li>🆕 <span class="path">/admin/master/service-status</span> 서비스 상태</li>

@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ChannelForm } from '../_components/channel-form';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '새 유입 채널 — 마스터 데이터' };
+export const metadata = { title: '새 유입 채널 — 마스터DB' };
 
 export default async function NewTicketChannelPage() {
   await requireRole(['admin']);
@@ -19,7 +19,7 @@ export default async function NewTicketChannelPage() {
     <div className="flex flex-col gap-5">
       <PageHeader
         title="새 유입 채널"
-        description="대리 접수 폼에서 선택할 수 있는 채널을 추가합니다."
+        description="티켓 생성 폼에서 선택할 수 있는 채널을 추가합니다."
         breadcrumb={
           <Link
             href="/admin/master/ticket-channels"

@@ -1,5 +1,5 @@
 /**
- * `/admin/tickets` — 매니저+어드민 티켓 큐 (IS-04).
+ * `/admin/tickets` — 매니저+어드민 문의 관리 (IS-04).
  *
  * 상태 탭 + 제품/유형/긴급도/담당자 필터 + 검색 + 페이지네이션.
  * 상단 요약 카드 4종 (P1 긴급 / 미처리 / 처리중 / 오늘 완료).
@@ -24,7 +24,7 @@ import { TicketsListClient } from './_components/tickets-list-client';
 import { TicketsSummaryCards } from './_components/tickets-summary-cards';
 import { ListKanbanToggle } from './_components/list-kanban-toggle';
 
-export const metadata = { title: '티켓 큐 — OA 통합 AS' };
+export const metadata = { title: '문의 관리 — OA 통합 AS' };
 export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{
@@ -113,7 +113,7 @@ export default async function AdminTicketsQueuePage({
       <PageHeader
         title={
           <span className="inline-flex items-center gap-2">
-            <span>티켓 큐</span>
+            <span>문의 관리</span>
             <ListKanbanToggle />
           </span>
         }
@@ -121,16 +121,16 @@ export default async function AdminTicketsQueuePage({
         guideAnchor="tickets"
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline" size="sm">
+            <Button asChild size="sm">
               <Link href="/admin/tickets/new-by-phone">
                 <Headset className="h-4 w-4" />
-                대리 접수
+                티켓 생성
               </Link>
             </Button>
-            <Button asChild size="sm">
+            <Button asChild variant="outline" size="sm">
               <Link href="/tickets/new">
                 <FilePlus2 className="h-4 w-4" />
-                직접 접수
+                호텔리어 접수
               </Link>
             </Button>
           </div>

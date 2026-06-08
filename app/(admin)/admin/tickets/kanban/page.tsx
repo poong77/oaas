@@ -22,7 +22,7 @@ import { ListKanbanToggle } from '../_components/list-kanban-toggle';
 import { KanbanFilters } from './_components/kanban-filters';
 import { KanbanBoard, type KanbanCard } from './_components/kanban-board';
 
-export const metadata = { title: '티켓 큐 (칸반) — OA 통합 AS' };
+export const metadata = { title: '문의 관리 (칸반) — OA 통합 AS' };
 export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{
@@ -68,23 +68,23 @@ export default async function AdminTicketsKanbanPage({
       <PageHeader
         title={
           <span className="inline-flex items-center gap-2">
-            <span>티켓 큐</span>
+            <span>문의 관리</span>
             <ListKanbanToggle />
           </span>
         }
         description="상태별 카드를 한눈에 보고, 드래그앤드롭으로 상태를 변경하세요."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline" size="sm">
+            <Button asChild size="sm">
               <Link href="/admin/tickets/new-by-phone">
                 <Headset className="h-4 w-4" />
-                대리 접수
+                티켓 생성
               </Link>
             </Button>
-            <Button asChild size="sm">
+            <Button asChild variant="outline" size="sm">
               <Link href="/tickets/new">
                 <FilePlus2 className="h-4 w-4" />
-                직접 접수
+                호텔리어 접수
               </Link>
             </Button>
           </div>

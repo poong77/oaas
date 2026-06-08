@@ -13,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { TemplateEditor } from '../_components/template-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '알림 템플릿 편집 — 마스터 데이터' };
+export const metadata = { title: '알림 템플릿 편집 — 마스터DB' };
 
 type Params = Promise<{ id: string }>;
 

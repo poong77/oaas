@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * 대리 접수 폼 (IC-04 확장) — 매니저/어드민이 외부 채널 문의를 대신 접수.
+ * 티켓 생성 폼 (IC-04 확장) — 매니저/어드민이 외부 채널 문의를 대신 접수.
  *
  * 단순화 (3단계 스텝퍼 X — 한 페이지에 다 펼침).
  * 채널/호텔/접수자 선택 + 일반 접수폼과 동일한 필수 항목.
@@ -336,7 +336,7 @@ export function PhoneTicketForm({
 
       <p className="text-center text-xs text-slate-500 dark:text-slate-400">
         <Headset className="mr-1 inline h-3 w-3" />
-        대리 접수는 선택한 유입 채널로 저장되며, 통화/대화 메모는 본문 그대로
+        티켓 생성는 선택한 유입 채널로 저장되며, 통화/대화 메모는 본문 그대로
         보존됩니다.
       </p>
     </form>

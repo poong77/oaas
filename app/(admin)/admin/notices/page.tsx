@@ -1,5 +1,5 @@
 /**
- * /admin/notices — 공지 관리 (NT-01, Phase 7).
+ * /admin/notices — 공지 (NT-01, Phase 7).
  *
  * 매니저+어드민. 검색·필터·정렬·페이징. 발행/비활성/편집.
  * 패턴은 /admin/articles와 동일.
@@ -20,7 +20,7 @@ import { NoticesAdminFilters } from './_components/notices-admin-filters';
 import { NoticesListClient } from './_components/notices-list-client';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '공지 관리 — OA 통합 AS 어드민' };
+export const metadata = { title: '공지 — OA 통합 AS 어드민' };
 
 type SearchParams = Promise<{
   q?: string;
@@ -80,7 +80,7 @@ export default async function AdminNoticesPage({
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title="공지 관리"
+        title="공지"
         guideAnchor="notices"
         description={`전체 ${total}건 (${pageSize}건/페이지). 공지·릴리즈노트·장애 공지를 통합 관리합니다.`}
         actions={

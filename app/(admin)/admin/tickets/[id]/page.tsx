@@ -150,7 +150,7 @@ export default async function AdminTicketDetailPage({
             className="inline-flex items-center gap-1 hover:underline"
           >
             <ArrowLeft className="h-3 w-3" />
-            티켓 큐로
+            문의 관리로
           </Link>
         }
         title={

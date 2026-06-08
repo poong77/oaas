@@ -22,7 +22,7 @@ import { getManagerAccessMap } from '@/lib/services/master-menu-access';
 import { MenuAccessList } from './_components/menu-access-list';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '메뉴 접근 제어 — 마스터 데이터' };
+export const metadata = { title: '메뉴 접근 제어 — 마스터DB' };
 
 export default async function MasterMenuAccessPage() {
   await requireRole(['admin']);
@@ -44,7 +44,7 @@ export default async function MasterMenuAccessPage() {
             href="/admin/master"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
-            <ArrowLeft className="h-3 w-3" /> 마스터 데이터
+            <ArrowLeft className="h-3 w-3" /> 마스터DB
           </Link>
         }
       />

@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * 어드민 마스터 데이터 Server Actions (Phase 9).
+ * 어드민 마스터DB Server Actions (Phase 9).
  *
  * 도메인별 액션을 한 파일에 정리 (단순 CRUD라 분리 비용 > 이득).
  * 권한:
@@ -56,7 +56,7 @@ function revalidateAdminMaster(...subPaths: string[]) {
   revalidatePath('/admin/master');
   for (const p of subPaths) {
     revalidatePath(p);
-    // 홈/공개 화면이 unstable_cache로 캐싱하는 마스터 데이터는 path가 아닌 tag로만
+    // 홈/공개 화면이 unstable_cache로 캐싱하는 마스터DB는 path가 아닌 tag로만
     // 무효화된다. 해당 도메인 변경 시 캐시 태그도 함께 만료시킨다.
     if (p === '/admin/master/categories') {
       revalidateTag(CATEGORIES_CACHE_TAG, 'default');

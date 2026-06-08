@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { QuickReplyEditor } from '../_components/quick-reply-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '빠른 응대 편집 — 마스터 데이터' };
+export const metadata = { title: '빠른 응대 편집 — 마스터DB' };
 
 type Params = Promise<{ id: string }>;
 

@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FormFieldEditor } from '../_components/form-field-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '폼 필드 편집 — 마스터 데이터' };
+export const metadata = { title: '폼 필드 편집 — 마스터DB' };
 
 type Params = Promise<{ id: string }>;
 

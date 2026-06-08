@@ -20,7 +20,7 @@ import {
 } from '@/lib/services/master-templates';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '알림 템플릿 — 마스터 데이터' };
+export const metadata = { title: '알림 템플릿 — 마스터DB' };
 
 const CHANNEL_LABEL: Record<string, string> = {
   sms: 'SMS',
@@ -42,7 +42,7 @@ export default async function MasterNotificationTemplatesPage() {
             href="/admin/master"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
-            <ArrowLeft className="h-3 w-3" /> 마스터 데이터
+            <ArrowLeft className="h-3 w-3" /> 마스터DB
           </Link>
         }
         actions={

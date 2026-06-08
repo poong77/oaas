@@ -33,8 +33,8 @@ export function ToggleActiveButton({ id, isActive, isSystem }: Props) {
       title: target === 'deactivate' ? '채널을 비활성화합니다' : '채널을 복구합니다',
       description:
         target === 'deactivate'
-          ? '비활성 채널은 대리 접수 폼 드롭다운에서 사라집니다. 기존 티켓 라벨은 유지됩니다.'
-          : '활성화된 채널은 다시 대리 접수 폼에 노출됩니다.',
+          ? '비활성 채널은 티켓 생성 폼 드롭다운에서 사라집니다. 기존 티켓 라벨은 유지됩니다.'
+          : '활성화된 채널은 다시 티켓 생성 폼에 노출됩니다.',
       confirmText: target === 'deactivate' ? '비활성화' : '복구',
       tone: target === 'deactivate' ? 'danger' : 'default',
     });

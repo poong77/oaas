@@ -20,7 +20,7 @@ import { resolveIcon } from '@/components/icon-resolver';
 import { RoleStarterUpsert } from './_components/role-starter-upsert';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '역할별 시작 — 마스터 데이터' };
+export const metadata = { title: '역할별 시작 — 마스터DB' };
 
 export default async function MasterRoleStartersPage() {
   await requireRole(['manager', 'admin']);
@@ -36,7 +36,7 @@ export default async function MasterRoleStartersPage() {
             href="/admin/master"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
-            <ArrowLeft className="h-3 w-3" /> 마스터 데이터
+            <ArrowLeft className="h-3 w-3" /> 마스터DB
           </Link>
         }
       />

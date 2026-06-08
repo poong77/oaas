@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { QuickActionEditor } from '../_components/quick-action-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '자주 찾는 작업 편집 — 마스터 데이터' };
+export const metadata = { title: '자주 찾는 작업 편집 — 마스터DB' };
 
 type Params = Promise<{ id: string }>;
 

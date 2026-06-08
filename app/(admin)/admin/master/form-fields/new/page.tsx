@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FormFieldEditor } from '../_components/form-field-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '신규 폼 필드 — 마스터 데이터' };
+export const metadata = { title: '신규 폼 필드 — 마스터DB' };
 
 export default async function NewFormFieldPage() {
   await requireRole(['manager', 'admin']);

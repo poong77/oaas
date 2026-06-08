@@ -168,7 +168,7 @@ export function ChannelForm({ channel }: Props) {
           />
           <span>
             <span className="font-medium text-slate-700 dark:text-slate-200">
-              대리 접수 폼에 노출
+              티켓 생성 폼에 노출
             </span>
             <span className="ml-1 text-xs text-slate-500">
               (체크 해제 시 매니저 폼 드롭다운에서 숨김. 'web'/'chatbot'은 자동 태깅용으로 끄세요)
@@ -185,7 +185,7 @@ export function ChannelForm({ channel }: Props) {
           />
           <span>
             <span className="font-medium text-slate-700 dark:text-slate-200">
-              대리 접수 폼 기본 선택값
+              티켓 생성 폼 기본 선택값
             </span>
             <span className="ml-1 text-xs text-slate-500">
               (true는 1개만. 저장 시 기존 기본값은 자동 해제)

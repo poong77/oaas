@@ -19,7 +19,7 @@ import type { CategoryType } from '@/db/schema';
 import { CategoriesEditor } from './_components/categories-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '카테고리 관리 — 마스터 데이터' };
+export const metadata = { title: '카테고리 관리 — 마스터DB' };
 
 const TABS: Array<{ key: CategoryType; label: string; description: string }> = [
   {
@@ -70,7 +70,7 @@ export default async function MasterCategoriesPage({
             href="/admin/master"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
-            <ArrowLeft className="h-3 w-3" /> 마스터 데이터
+            <ArrowLeft className="h-3 w-3" /> 마스터DB
           </Link>
         }
       />

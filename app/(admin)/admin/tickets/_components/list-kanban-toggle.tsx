@@ -20,7 +20,7 @@ export function ListKanbanToggle() {
   return (
     <div
       role="tablist"
-      aria-label="티켓 큐 보기 모드"
+      aria-label="문의 관리 보기 모드"
       className="inline-flex items-center rounded-md border border-slate-200 bg-white p-0.5 text-xs font-medium dark:border-slate-700 dark:bg-slate-900"
     >
       <Link

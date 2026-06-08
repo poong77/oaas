@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { QuickReplyEditor } from '../_components/quick-reply-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '신규 빠른 응대 — 마스터 데이터' };
+export const metadata = { title: '신규 빠른 응대 — 마스터DB' };
 
 export default async function NewQuickReplyPage() {
   await requireRole(['manager', 'admin']);

@@ -13,7 +13,7 @@ import { getTicketChannelById } from '@/lib/services/master-ticket-channels';
 import { ChannelForm } from '../_components/channel-form';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '유입 채널 편집 — 마스터 데이터' };
+export const metadata = { title: '유입 채널 편집 — 마스터DB' };
 
 type Params = Promise<{ id: string }>;
 

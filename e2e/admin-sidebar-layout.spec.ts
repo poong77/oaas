@@ -60,7 +60,7 @@ test.describe('데스크탑 기능 (매니저)', () => {
     viewport: { width: 1440, height: 900 },
   });
 
-  test('F-01: /admin/tickets 진입 시 좌측 120px 사이드바 노출 + 티켓 큐 active', async ({
+  test('F-01: /admin/tickets 진입 시 좌측 120px 사이드바 노출 + 문의 관리 active', async ({
     page,
   }) => {
     await setCollapsedCookie(page, false);
@@ -69,10 +69,10 @@ test.describe('데스크탑 기능 (매니저)', () => {
 
     await expectSidebarVisible(page, 120);
 
-    // 티켓 큐 메뉴가 aria-current="page" 보유
+    // 문의 관리 메뉴가 aria-current="page" 보유
     const ticketsLink = page
       .locator('aside[aria-label="관리자 내비게이션"]')
-      .getByRole('link', { name: /티켓 큐/ });
+      .getByRole('link', { name: /문의 관리/ });
     await expect(ticketsLink).toBeVisible();
     await expect(ticketsLink).toHaveAttribute('aria-current', 'page');
   });

@@ -75,7 +75,7 @@ export default async function EditNoticePage({
             className="inline-flex items-center gap-1 hover:underline"
           >
             <ArrowLeft className="h-3 w-3" />
-            공지 관리
+            공지
           </Link>
         }
         actions={
