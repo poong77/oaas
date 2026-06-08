@@ -1,8 +1,8 @@
 /**
  * `/admin/tickets` — 매니저+어드민 문의 관리 (IS-04).
  *
- * 상태 탭 + 제품/유형/긴급도/담당자 필터 + 검색 + 페이지네이션.
- * 상단 요약 카드 4종 (P1 긴급 / 미처리 / 처리중 / 오늘 완료).
+ * 상단 상태 카드(클릭형 바로가기 5종: 전체/미처리/처리중/완료/P1 긴급)가 상태 필터를
+ * 담당(별도 탭 없음) + 제품/유형/긴급도/담당자 필터 + 검색 + 페이지네이션.
  */
 
 import Link from 'next/link';
@@ -139,7 +139,6 @@ export default async function AdminTicketsQueuePage({
       <TicketsSummaryCards {...summary} />
 
       <TicketsFilters
-        status={status}
         productCode={params.productCode || null}
         issueType={params.issueType || null}
         urgency={params.urgency || null}

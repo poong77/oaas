@@ -29,7 +29,11 @@ import { LiteToolbar } from './toolbar/lite-toolbar';
 import { MobileBottomToolbar } from './toolbar/mobile-bottom-toolbar';
 import { SaveIndicator } from './panels/save-indicator';
 import { useAutoSave, type AutoSaveConfig } from './hooks/use-auto-save';
-import { ImageUploadDialog } from './dialogs/image-upload-dialog';
+import {
+  ImageUploadDialog,
+  resizeImage,
+  MAX_DISPLAY_SIZE_PX,
+} from './dialogs/image-upload-dialog';
 import { LinkInputDialog } from './dialogs/link-input-dialog';
 import { ShortcutHelpModal } from './dialogs/shortcut-help-modal';
 import { DraftRestoreDialog } from './dialogs/draft-restore-dialog';
@@ -163,6 +167,45 @@ export function RichEditor({
     editorProps: {
       attributes: {
         class: cn('px-4 py-3 focus:outline-none', contentClassName),
+      },
+      // Ctrl/Cmd+V 이미지 붙여넣기 → /api/upload 업로드 후 인라인 삽입.
+      handlePaste: (view, event) => {
+        if (disabled) return false;
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+        const imageItem = Array.from(items).find((it) =>
+          it.type.startsWith('image/'),
+        );
+        if (!imageItem) return false;
+        const file = imageItem.getAsFile();
+        if (!file) return false;
+        event.preventDefault();
+        void (async () => {
+          const tid = toast.loading('이미지 업로드 중...');
+          try {
+            const toSend = await resizeImage(file, MAX_DISPLAY_SIZE_PX);
+            const fd = new FormData();
+            fd.append('file', toSend);
+            fd.append('purpose', 'editor');
+            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+            const json = (await res.json()) as {
+              ok: boolean;
+              blobUrl?: string;
+              message?: string;
+            };
+            if (!json.ok || !json.blobUrl) {
+              toast.error(json.message ?? '이미지 업로드 실패', { id: tid });
+              return;
+            }
+            const { schema } = view.state;
+            const node = schema.nodes.image.create({ src: json.blobUrl });
+            view.dispatch(view.state.tr.replaceSelectionWith(node));
+            toast.success('이미지를 붙여넣었습니다', { id: tid });
+          } catch {
+            toast.error('이미지 붙여넣기에 실패했습니다', { id: tid });
+          }
+        })();
+        return true;
       },
     },
     onUpdate: ({ editor }) => {

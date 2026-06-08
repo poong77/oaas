@@ -31,6 +31,8 @@ import {
   loadCategoryLabelMaps,
 } from '@/lib/services/tickets';
 import { getAllTicketChannelsMap } from '@/lib/services/master-ticket-channels';
+import { listHotelSolutions } from '@/lib/services/hotels';
+import { getCategoriesByType } from '@/lib/services/categories';
 import { getTicketAssist } from '@/lib/services/ticket-assist';
 import { listActiveModels, getDefaultModel } from '@/lib/services/ai-models';
 import { getChannelDisplay } from '@/lib/ticket-channel-label';
@@ -39,6 +41,8 @@ import type { TicketStatus } from '@/db/schema';
 import { TicketThread } from '@/app/tickets/[id]/_components/ticket-thread';
 import { AttachmentList } from '@/components/tickets/attachment-list';
 import { AdminTicketActions } from './_components/admin-ticket-actions';
+import { TicketHotelSolutions } from './_components/ticket-hotel-solutions';
+import { TicketClassificationEdit } from './_components/ticket-classification-edit';
 import { AdminReplyForm } from './_components/admin-reply-form';
 
 export const dynamic = 'force-dynamic';
@@ -96,6 +100,9 @@ export default async function AdminTicketDetailPage({
     assist,
     aiModels,
     defaultModel,
+    productOptions,
+    issueTypeOptions,
+    urgencyOptions,
   ] = await Promise.all([
     getTicketDetail(id, {
       id: user.id,
@@ -109,11 +116,19 @@ export default async function AdminTicketDetailPage({
     getTicketAssist(id),
     listActiveModels(),
     getDefaultModel(),
+    getCategoriesByType('product'),
+    getCategoriesByType('issue_type'),
+    getCategoriesByType('urgency'),
   ]);
 
   if (!ticket) {
     notFound();
   }
+
+  // 숙소 이용 솔루션 (사이드 바로가기) — 티켓 hotelId 의존이라 별도 조회
+  const hotelSolutions = ticket.hotelId
+    ? await listHotelSolutions(ticket.hotelId)
+    : [];
 
   // 직렬화 안전 형태로 매핑(Date 제외) — 클라이언트 폼에 전달
   const assistModels = aiModels.map((m) => ({
@@ -293,6 +308,33 @@ export default async function AdminTicketDetailPage({
               />
             </CardContent>
           </Card>
+
+          <TicketClassificationEdit
+            ticketId={ticket.id}
+            productCode={ticket.productCode}
+            issueType={ticket.issueType}
+            urgency={ticket.urgency}
+            products={productOptions.map((c) => ({
+              code: c.code,
+              label: c.label,
+            }))}
+            issueTypes={issueTypeOptions.map((c) => ({
+              code: c.code,
+              label: c.label,
+            }))}
+            urgencies={urgencyOptions.map((c) => ({
+              code: c.code,
+              label: c.label,
+            }))}
+          />
+
+          {ticket.hotelId && hotelSolutions.length > 0 && (
+            <TicketHotelSolutions
+              hotelId={ticket.hotelId}
+              solutions={hotelSolutions}
+              canReveal={user.role === 'admin'}
+            />
+          )}
 
           {feedback && (
             <Card className="border-emerald-200 bg-emerald-50/40 dark:border-emerald-900 dark:bg-emerald-950/20">

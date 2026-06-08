@@ -44,7 +44,7 @@ interface ImageUploadDialogProps {
 }
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif';
-const MAX_DISPLAY_SIZE_PX = 1600;
+export const MAX_DISPLAY_SIZE_PX = 1600;
 
 type Stage = 'select' | 'annotate';
 
@@ -346,7 +346,7 @@ function AnnotatorLoading() {
  * 긴 변이 maxSize 이하면 원본 그대로, 초과 시 비율 유지하며 축소. JPEG 0.85.
  * PNG 입력(마크업 결과)은 PNG 유지.
  */
-async function resizeImage(file: File, maxSize: number): Promise<File> {
+export async function resizeImage(file: File, maxSize: number): Promise<File> {
   if (!file.type.startsWith('image/')) return file;
   if (file.type === 'image/gif') return file; // 애니메이션 보존
 

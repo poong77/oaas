@@ -1055,6 +1055,67 @@ export async function assignTicket(
   }
 }
 
+/**
+ * 티켓 분류(제품/유형/긴급도) 수정 — 매니저/어드민.
+ * 마스터 categories 코드 기준. 변경 내역은 system 메시지로 기록.
+ */
+export async function updateTicketClassification(input: {
+  ticketId: string;
+  actorId: string;
+  productCode: string;
+  issueType: string;
+  urgency: string;
+}): Promise<{ ok: boolean; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    const current = await getTicketRaw(input.ticketId);
+    if (!current) return { ok: false, message: 'NOT_FOUND' };
+
+    const changed =
+      current.productCode !== input.productCode ||
+      current.issueType !== input.issueType ||
+      current.urgency !== input.urgency;
+    if (!changed) return { ok: true };
+
+    await db
+      .update(tickets)
+      .set({
+        productCode: input.productCode,
+        issueType: input.issueType,
+        urgency: input.urgency,
+      })
+      .where(eq(tickets.id, input.ticketId));
+
+    await db.insert(ticketMessages).values({
+      ticketId: input.ticketId,
+      authorId: input.actorId,
+      kind: 'system',
+      content: '문의 분류(제품/유형/긴급도)가 수정되었습니다.',
+      metadata: {
+        eventKey: 'ticket.classification_change',
+        from: {
+          productCode: current.productCode,
+          issueType: current.issueType,
+          urgency: current.urgency,
+        },
+        to: {
+          productCode: input.productCode,
+          issueType: input.issueType,
+          urgency: input.urgency,
+        },
+      },
+    });
+
+    return { ok: true };
+  } catch (err) {
+    console.error('[tickets.updateTicketClassification] 실패:', err);
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
+    };
+  }
+}
+
 export type EscalateToDevInput = {
   ticketId: string;
   actorId: string;
@@ -1165,16 +1226,41 @@ export async function escalateToDev(
 // ─────────────────────────────────────────────────────────────────────
 
 export async function getTicketQueueSummary(): Promise<{
-  p1Urgent: number;
+  total: number;
+  received: number;
   inProgress: number;
-  pending: number;
-  todayCompleted: number;
+  completed: number;
+  p1Urgent: number;
 }> {
-  const empty = { p1Urgent: 0, inProgress: 0, pending: 0, todayCompleted: 0 };
+  const empty = {
+    total: 0,
+    received: 0,
+    inProgress: 0,
+    completed: 0,
+    p1Urgent: 0,
+  };
   if (!db) return empty;
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 상태별 카운트 (활성 티켓) — 1회 groupBy
+    const statusRows = await db
+      .select({ status: tickets.status, count: sql<number>`count(*)::int` })
+      .from(tickets)
+      .where(eq(tickets.isActive, true))
+      .groupBy(tickets.status);
+
+    let total = 0;
+    let received = 0;
+    let inProgress = 0;
+    let completed = 0;
+    for (const r of statusRows) {
+      const c = Number(r.count ?? 0);
+      total += c;
+      if (r.status === 'received') received = c;
+      else if (r.status === 'in_progress') inProgress = c;
+      else if (r.status === 'completed') completed = c;
+    }
+
+    // P1 긴급(미완료) 별도 — 상태와 교차되므로 분리 집계
     const [p1Row] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(tickets)
@@ -1185,37 +1271,13 @@ export async function getTicketQueueSummary(): Promise<{
           inArray(tickets.status, ['received', 'in_progress']),
         ),
       );
-    const [inProgressRow] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(tickets)
-      .where(
-        and(
-          eq(tickets.isActive, true),
-          eq(tickets.status, 'in_progress'),
-        ),
-      );
-    const [pendingRow] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(tickets)
-      .where(
-        and(eq(tickets.isActive, true), eq(tickets.status, 'received')),
-      );
-    const [todayDoneRow] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(tickets)
-      .where(
-        and(
-          eq(tickets.isActive, true),
-          eq(tickets.status, 'completed'),
-          sql`${tickets.updatedAt} >= ${today.toISOString()}`,
-        ),
-      );
 
     return {
+      total,
+      received,
+      inProgress,
+      completed,
       p1Urgent: Number(p1Row?.count ?? 0),
-      inProgress: Number(inProgressRow?.count ?? 0),
-      pending: Number(pendingRow?.count ?? 0),
-      todayCompleted: Number(todayDoneRow?.count ?? 0),
     };
   } catch (err) {
     console.error('[tickets.getTicketQueueSummary] 실패:', err);

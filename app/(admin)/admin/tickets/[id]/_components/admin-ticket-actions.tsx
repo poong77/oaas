@@ -303,43 +303,22 @@ export function AdminTicketActions({
           <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             담당 · 마감일
           </div>
-          <Select
-            value={localAssignee}
-            onChange={(e) => setLocalAssignee(e.target.value)}
-            disabled={pending}
-          >
-            <option value="">미배정</option>
-            {managers.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} ({m.role === 'admin' ? '어드민' : '매니저'})
-                {m.id === currentUserId ? ' · 나' : ''}
-              </option>
-            ))}
-          </Select>
-          <Input
-            type="datetime-local"
-            value={localDue}
-            onChange={(e) => setLocalDue(e.target.value)}
-            disabled={pending}
-          />
-          <button
-            type="button"
-            onClick={setDueNow}
-            disabled={pending}
-            className="inline-flex w-fit items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-60 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/70"
-          >
-            <CalendarClock className="h-3.5 w-3.5" />
-            지금 마감
-          </button>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              size="sm"
-              onClick={applyAssignment}
+          {/* 담당자 + '내가 담당' (드롭다운 옆 — 동선 최적화) */}
+          <div className="flex items-center gap-2">
+            <Select
+              value={localAssignee}
+              onChange={(e) => setLocalAssignee(e.target.value)}
               disabled={pending}
+              className="min-w-0 flex-1"
             >
-              저장
-            </Button>
+              <option value="">미배정</option>
+              {managers.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} ({m.role === 'admin' ? '어드민' : '매니저'})
+                  {m.id === currentUserId ? ' · 나' : ''}
+                </option>
+              ))}
+            </Select>
             {localAssignee !== currentUserId && (
               <Button
                 type="button"
@@ -347,12 +326,41 @@ export function AdminTicketActions({
                 size="sm"
                 onClick={takeOver}
                 disabled={pending}
+                className="shrink-0"
               >
                 <UserPen className="h-4 w-4" />
                 내가 담당
               </Button>
             )}
           </div>
+          {/* 마감일 + '지금 마감' (일시선택바 옆 — 동선 최적화) */}
+          <div className="flex items-center gap-2">
+            <Input
+              type="datetime-local"
+              value={localDue}
+              onChange={(e) => setLocalDue(e.target.value)}
+              disabled={pending}
+              className="min-w-0 flex-1"
+            />
+            <button
+              type="button"
+              onClick={setDueNow}
+              disabled={pending}
+              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-60 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/70"
+            >
+              <CalendarClock className="h-3.5 w-3.5" />
+              지금 마감
+            </button>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={applyAssignment}
+            disabled={pending}
+            className="w-fit"
+          >
+            저장
+          </Button>
         </CardContent>
       </Card>
 

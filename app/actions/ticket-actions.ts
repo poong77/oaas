@@ -29,6 +29,7 @@ import {
   createTicket,
   escalateToDev,
   submitFeedback,
+  updateTicketClassification,
   type CreateTicketInput,
 } from '@/lib/services/tickets';
 import { isAgentChannelCodeValid } from '@/lib/services/master-ticket-channels';
@@ -434,6 +435,51 @@ export async function assignTicketAction(
       targetId: parsed.data.ticketId,
       payload: { assigneeId: parsed.data.assigneeId, dueDate: parsed.data.dueDate },
     });
+    revalidatePath(`/admin/tickets/${parsed.data.ticketId}`);
+    revalidatePath('/admin/tickets');
+  }
+  return result;
+}
+
+const ClassificationSchema = z.object({
+  ticketId: z.string().uuid(),
+  productCode: z.string().min(1).max(64),
+  issueType: z.string().min(1).max(64),
+  urgency: z.string().min(1).max(64),
+});
+
+export async function updateTicketClassificationAction(
+  formData: FormData,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const parsed = ClassificationSchema.safeParse({
+    ticketId: formData.get('ticketId'),
+    productCode: formData.get('productCode'),
+    issueType: formData.get('issueType'),
+    urgency: formData.get('urgency'),
+  });
+  if (!parsed.success) return { ok: false, message: '잘못된 요청' };
+
+  const result = await updateTicketClassification({
+    ticketId: parsed.data.ticketId,
+    actorId: user.id,
+    productCode: parsed.data.productCode,
+    issueType: parsed.data.issueType,
+    urgency: parsed.data.urgency,
+  });
+  if (result.ok) {
+    logActivity({
+      userId: user.id,
+      action: 'ticket.classification_change',
+      targetType: 'ticket',
+      targetId: parsed.data.ticketId,
+      payload: {
+        productCode: parsed.data.productCode,
+        issueType: parsed.data.issueType,
+        urgency: parsed.data.urgency,
+      },
+    });
+    revalidatePath(`/tickets/${parsed.data.ticketId}`);
     revalidatePath(`/admin/tickets/${parsed.data.ticketId}`);
     revalidatePath('/admin/tickets');
   }

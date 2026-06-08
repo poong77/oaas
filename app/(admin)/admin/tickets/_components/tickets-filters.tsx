@@ -1,7 +1,8 @@
 'use client';
 
 /**
- * 매니저 큐 필터 — 상태 탭 + 제품/유형/긴급도/담당자/검색
+ * 매니저 큐 필터 — 제품/유형/긴급도/담당자/검색.
+ * 상태 필터는 상단 상태 카드(TicketsSummaryCards)가 담당한다(탭 제거, 중복 해소).
  */
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -10,17 +11,8 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-
-const STATUS_TABS = [
-  { key: 'received', label: '미처리' },
-  { key: 'in_progress', label: '처리중' },
-  { key: 'completed', label: '완료' },
-  { key: 'all', label: '전체' },
-] as const;
 
 export function TicketsFilters({
-  status,
   productCode,
   issueType,
   urgency,
@@ -32,7 +24,6 @@ export function TicketsFilters({
   managers,
   currentUserId,
 }: {
-  status: string;
   productCode: string | null;
   issueType: string | null;
   urgency: string | null;
@@ -53,12 +44,8 @@ export function TicketsFilters({
     (next: Record<string, string | null>) => {
       const params = new URLSearchParams(sp.toString());
       for (const [k, v] of Object.entries(next)) {
-        if (v === null || v === '' || (k === 'status' && v === 'received')) {
-          if (k === 'status' && v === 'received') params.delete(k);
-          else if (v === null || v === '') params.delete(k);
-        } else {
-          params.set(k, v);
-        }
+        if (v === null || v === '') params.delete(k);
+        else params.set(k, v);
       }
       params.delete('page');
       router.push(`${pathname}?${params.toString()}`);
@@ -73,27 +60,6 @@ export function TicketsFilters({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-1 border-b border-slate-200 dark:border-slate-700">
-        {STATUS_TABS.map((tab) => {
-          const active = (status || 'received') === tab.key;
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => updateParams({ status: tab.key })}
-              className={cn(
-                '-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors',
-                active
-                  ? 'border-brand-500 text-brand-700 dark:border-brand-400 dark:text-brand-300'
-                  : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-slate-100',
-              )}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Select
