@@ -21,7 +21,6 @@ const TAXONOMY: Node[] = [
       {
         code: 'pms_pms',
         label: 'PMS',
-        memo: 'ver / 설치형 / 웹',
         children: [
           { code: 'pms_pms_ver', label: 'ver' },
           { code: 'pms_pms_installed', label: '설치형' },
@@ -56,7 +55,6 @@ const TAXONOMY: Node[] = [
       {
         code: 'kl_doorlock',
         label: '도어락',
-        memo: '빌드원 / 하이원 / 모듈ver',
         children: [
           { code: 'kl_doorlock_buildone', label: '빌드원' },
           { code: 'kl_doorlock_hione', label: '하이원' },
@@ -66,7 +64,6 @@ const TAXONOMY: Node[] = [
       {
         code: 'kl_mobilekey',
         label: '모바일키',
-        memo: '와이파이 / 블루투스 / ver',
         children: [
           { code: 'kl_mobilekey_wifi', label: '와이파이' },
           { code: 'kl_mobilekey_ble', label: '블루투스' },
@@ -77,7 +74,7 @@ const TAXONOMY: Node[] = [
       {
         code: 'kl_relay',
         label: '릴레이보드',
-        memo: '도어락+보드 / 도어락·보드',
+        memo: '도어락 + 보드, 도어락/보드',
         children: [
           { code: 'kl_relay_4', label: '4구' },
           { code: 'kl_relay_1', label: '1구' },
@@ -104,7 +101,7 @@ const TAXONOMY: Node[] = [
     label: '기타',
     children: [
       { code: 'etc_general', label: '일반', memo: '문의 디폴트값' },
-      { code: 'etc_message', label: '메시지', memo: '문자 / 알림톡' },
+      { code: 'etc_message', label: '메시지', memo: '문자, 알림톡' },
       { code: 'etc_alimtalk', label: '알림톡', memo: '챗봇' },
       { code: 'etc_hoteltv', label: 'Hotel TV' },
       { code: 'etc_parking', label: '주차연동' },
@@ -112,7 +109,7 @@ const TAXONOMY: Node[] = [
       {
         code: 'etc_pgvan',
         label: 'PG/VAN',
-        memo: 'PG / VAN / POS',
+        memo: 'PG, VAN, POS',
         children: [{ code: 'etc_pgvan_payment', label: 'Payment API' }],
       },
     ],
