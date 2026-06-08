@@ -24,6 +24,7 @@ import {
   ListChecks,
   Megaphone,
   Search,
+  Send,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -86,11 +87,18 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['manager', 'admin'],
     group: 'content',
   },
-  // 인사이트
+  // 툴 박스
   {
     href: '/admin/insights/search-logs',
     label: '검색로그',
     icon: Search,
+    roles: ['manager', 'admin'],
+    group: 'insight',
+  },
+  {
+    href: '/admin/insights/messaging',
+    label: '메일&문자',
+    icon: Send,
     roles: ['manager', 'admin'],
     group: 'insight',
   },
@@ -130,6 +138,6 @@ export const GROUP_LABEL: Record<TabGroup, string> = {
   overview: '개요',
   tickets: '티켓 운영',
   content: '콘텐츠',
-  insight: '인사이트',
+  insight: '툴 박스',
   org: '조직 & 마스터',
 };

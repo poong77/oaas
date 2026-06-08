@@ -175,6 +175,51 @@ export function buildTicketNewBlocks(t: TicketSummaryForSlack): SlackBlock[] {
   ];
 }
 
+/** 호텔리어가 접수 단계에서 '답변 보완'을 올렸을 때 운영팀 알림. */
+export function buildAnswerSupplementBlocks(t: {
+  ticketNo: string;
+  title: string;
+  hotelName: string | null;
+  reporterName: string | null;
+  contentExcerpt: string;
+  link: string;
+}): SlackBlock[] {
+  const lines: string[] = [];
+  if (t.hotelName) lines.push(`*호텔:* ${t.hotelName}`);
+  if (t.reporterName) lines.push(`*작성자:* ${t.reporterName}`);
+  return [
+    {
+      type: 'header',
+      text: { type: 'plain_text', text: `💬 답변 보완  ${t.ticketNo}` },
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*${t.title}*${lines.length ? `\n${lines.join('\n')}` : ''}`,
+      },
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `>${markdownToSlackMrkdwn(t.contentExcerpt).replace(/\n/g, '\n>')}`,
+      },
+    },
+    {
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          text: { type: 'plain_text', text: '큐에서 열기' },
+          url: t.link,
+          style: 'primary',
+        },
+      ],
+    },
+  ];
+}
+
 export function buildTicketUrgentBlocks(t: TicketSummaryForSlack): SlackBlock[] {
   return [
     {

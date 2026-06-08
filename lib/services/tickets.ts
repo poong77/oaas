@@ -59,6 +59,7 @@ import {
   buildTicketReceived,
 } from '@/lib/notifications/templates';
 import {
+  buildAnswerSupplementBlocks,
   buildTicketEscalateBlocks,
   buildTicketNewBlocks,
   buildTicketUrgentBlocks,
@@ -1109,6 +1110,152 @@ export async function updateTicketClassification(input: {
     return { ok: true };
   } catch (err) {
     console.error('[tickets.updateTicketClassification] 실패:', err);
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
+    };
+  }
+}
+
+/** 본인(또는 동일 호텔) 티켓인지 확인. */
+function reporterOwns(
+  ticket: Ticket,
+  actorId: string,
+  hotelId: string | null,
+): boolean {
+  if (ticket.reporterId === actorId) return true;
+  if (hotelId && ticket.hotelId === hotelId) return true;
+  return false;
+}
+
+/**
+ * 호텔리어 '답변 보완' — 접수(received) 단계에서만. 공개 메시지 추가 + 운영팀 Slack 알림.
+ */
+export async function addAnswerSupplement(input: {
+  ticketId: string;
+  authorId: string;
+  hotelId: string | null;
+  content: string;
+}): Promise<{ ok: boolean; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    const current = await getTicketRaw(input.ticketId);
+    if (!current) return { ok: false, message: 'NOT_FOUND' };
+    if (!reporterOwns(current, input.authorId, input.hotelId))
+      return { ok: false, message: 'FORBIDDEN' };
+    if (current.status !== 'received')
+      return {
+        ok: false,
+        message: '답변 보완은 접수 단계에서만 가능합니다.',
+      };
+
+    const r = await addMessage({
+      ticketId: input.ticketId,
+      authorId: input.authorId,
+      kind: 'public',
+      content: input.content,
+    });
+    if (!r.ok) return r;
+
+    after(() => dispatchAnswerSupplementNotification(input.ticketId));
+    return { ok: true };
+  } catch (err) {
+    console.error('[tickets.addAnswerSupplement] 실패:', err);
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
+    };
+  }
+}
+
+/** '답변 보완' 운영팀 Slack 알림 (fire-and-forget). */
+async function dispatchAnswerSupplementNotification(
+  ticketId: string,
+): Promise<void> {
+  if (!db) return;
+  try {
+    const t = await getTicketRaw(ticketId);
+    if (!t) return;
+    let hotelName: string | null = null;
+    if (t.hotelId) {
+      const h = await db
+        .select({ name: hotels.name })
+        .from(hotels)
+        .where(eq(hotels.id, t.hotelId))
+        .limit(1);
+      hotelName = h[0]?.name ?? null;
+    }
+    let reporterName: string | null = null;
+    if (t.reporterId) {
+      const u = await db
+        .select({ name: users.name })
+        .from(users)
+        .where(eq(users.id, t.reporterId))
+        .limit(1);
+      reporterName = u[0]?.name ?? null;
+    }
+    const baseUrl = getPublicBaseUrl();
+    const link = `${baseUrl.replace(/\/$/, '')}/admin/tickets/${ticketId}`;
+    await notifySlack(
+      {
+        channel: 'new',
+        blocks: buildAnswerSupplementBlocks({
+          ticketNo: t.ticketNo,
+          title: t.title,
+          hotelName,
+          reporterName,
+          contentExcerpt: (t.content ?? '').slice(0, 300),
+          link,
+        }),
+        fallbackText: `답변 보완 ${t.ticketNo}`,
+      },
+      { eventKey: 'ticket.answer_supplement', ticketId },
+    );
+  } catch (err) {
+    console.error('[tickets.dispatchAnswerSupplementNotification] 실패:', err);
+  }
+}
+
+/**
+ * 호텔리어 '접수 취소' — 접수(received) 단계에서만. 완료 처리 + 상태변경 로그.
+ */
+export async function cancelTicketByReporter(input: {
+  ticketId: string;
+  actorId: string;
+  hotelId: string | null;
+}): Promise<{ ok: boolean; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    const current = await getTicketRaw(input.ticketId);
+    if (!current) return { ok: false, message: 'NOT_FOUND' };
+    if (!reporterOwns(current, input.actorId, input.hotelId))
+      return { ok: false, message: 'FORBIDDEN' };
+    if (current.status !== 'received')
+      return {
+        ok: false,
+        message: '접수 취소는 접수 단계에서만 가능합니다.',
+      };
+
+    await db
+      .update(tickets)
+      .set({ status: 'completed' })
+      .where(eq(tickets.id, input.ticketId));
+
+    await db.insert(ticketMessages).values({
+      ticketId: input.ticketId,
+      authorId: input.actorId,
+      kind: 'status_change',
+      content: '접수가 취소되어 완료 처리되었습니다.',
+      metadata: {
+        from: 'received',
+        to: 'completed',
+        eventKey: 'ticket.cancelled_by_reporter',
+      },
+    });
+
+    return { ok: true };
+  } catch (err) {
+    console.error('[tickets.cancelTicketByReporter] 실패:', err);
     return {
       ok: false,
       message: err instanceof Error ? err.message : 'INTERNAL_ERROR',

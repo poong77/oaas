@@ -9,8 +9,10 @@
 import { Suspense } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { ContactPanel } from '@/components/contact/contact-panel';
-import { requireAuth } from '@/lib/permissions';
+import { requireAuth, isManagerOrAdmin } from '@/lib/permissions';
 import { getCategoriesByType } from '@/lib/services/categories';
+import { getProductTaxonomyTree } from '@/lib/services/master-categories';
+import { listQuickReplies } from '@/lib/services/master-quick-replies';
 import { getHotelById, getUserById } from '@/lib/services/users';
 import { TicketCreateForm } from './_components/ticket-create-form';
 
@@ -34,22 +36,22 @@ export default async function NewTicketPage({
   const params = await searchParams;
 
   const [
-    productCategories,
+    productTree,
     issueTypeCategories,
-    urgencyCategories,
+    templates,
     hotel,
     fullUser,
   ] = await Promise.all([
-    getCategoriesByType('product'),
+    getProductTaxonomyTree(),
     getCategoriesByType('issue_type'),
-    getCategoriesByType('urgency'),
+    listQuickReplies(),
     user.hotelId ? getHotelById(user.hotelId) : Promise.resolve(null),
     getUserById(user.id),
   ]);
 
   const description =
     params.type === 'error'
-      ? '발생한 오류·장애를 빠르게 접수합니다. 3단계 폼으로 1분이면 완료됩니다.'
+      ? '발생한 오류·장애를 빠르게 접수합니다. 한 화면에서 1분이면 완료됩니다.'
       : params.from === 'checklist'
         ? '셀프 픽스로 해결되지 않은 이슈입니다. 진단 내용이 자동 첨부됩니다.'
         : params.from === 'chatbot'
@@ -74,20 +76,17 @@ export default async function NewTicketPage({
             phone: fullUser?.phone ?? null,
             hotelName: hotel?.name ?? null,
           }}
-          productCategories={productCategories.map((c) => ({
-            code: c.code,
-            label: c.label,
-            icon: c.icon,
-          }))}
+          productTree={productTree}
+          productMode={isManagerOrAdmin(user.role) ? 'cascade' : 'root-only'}
           issueTypeCategories={issueTypeCategories.map((c) => ({
             code: c.code,
             label: c.label,
-            icon: c.icon,
           }))}
-          urgencyCategories={urgencyCategories.map((c) => ({
-            code: c.code,
-            label: c.label,
-            icon: c.icon,
+          templates={templates.map((t) => ({
+            id: t.id,
+            title: t.title,
+            content: t.content,
+            category: t.category ?? null,
           }))}
           prefill={{
             product: params.product ?? null,

@@ -56,6 +56,7 @@ export type MasterMenuMeta = {
 
 export const MASTER_MENUS: readonly MasterMenuMeta[] = [
   { key: 'service-status', label: '서비스 상태', hardAdminOnly: false },
+  { key: 'product-categories', label: '제품 분류', hardAdminOnly: false },
   { key: 'categories', label: '카테고리', hardAdminOnly: false },
   { key: 'notification-templates', label: '알림 템플릿', hardAdminOnly: false },
   { key: 'quick-replies', label: '빠른 응대', hardAdminOnly: false },

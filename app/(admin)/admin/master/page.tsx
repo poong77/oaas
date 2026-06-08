@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Bell,
   BookA,
+  Boxes,
   Clock,
   Database,
   FolderTree,
@@ -57,10 +58,17 @@ const ITEMS: MasterItem[] = [
     badge: '실시간 반영',
   },
   {
+    href: '/admin/master/product-categories',
+    label: '제품 분류',
+    description:
+      '제품 대/중/소 3단계 + 메모 트리. 접수폼은 호텔리어=대분류만, 매니저·어드민=대중소 선택.',
+    icon: Boxes,
+  },
+  {
     href: '/admin/master/categories',
     label: '카테고리',
     description:
-      '제품 / 이슈 유형 / 긴급도 / 영향 범위 4종을 편집합니다. 홈/검색/접수폼 전반 영향.',
+      '이슈 유형 / 긴급도 / 영향 범위 3종을 편집합니다. (제품 분류는 별도 메뉴)',
     icon: Layers,
   },
   {

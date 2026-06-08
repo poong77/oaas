@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { requireRole } from '@/lib/permissions';
 import { listHotels } from '@/lib/services/users';
 import { getCategoriesByType } from '@/lib/services/categories';
+import { getProductTaxonomyTree } from '@/lib/services/master-categories';
 import { listAgentSelectableChannels } from '@/lib/services/master-ticket-channels';
 import { PhoneTicketForm } from './_components/phone-ticket-form';
 
@@ -22,14 +23,14 @@ export default async function PhoneTicketPage() {
 
   const [
     hotelsResult,
-    productCategories,
+    productTree,
     issueTypeCategories,
     urgencyCategories,
     impactCategories,
     channels,
   ] = await Promise.all([
     listHotels({ isActive: true, pageSize: 100, sortBy: 'name', sortOrder: 'asc' }),
-    getCategoriesByType('product'),
+    getProductTaxonomyTree(),
     getCategoriesByType('issue_type'),
     getCategoriesByType('urgency'),
     getCategoriesByType('impact'),
@@ -68,10 +69,7 @@ export default async function PhoneTicketPage() {
           name: h.name,
           oaPmsHotelId: h.oaPmsHotelId,
         }))}
-        productCategories={productCategories.map((c) => ({
-          code: c.code,
-          label: c.label,
-        }))}
+        productTree={productTree}
         issueTypeCategories={issueTypeCategories.map((c) => ({
           code: c.code,
           label: c.label,

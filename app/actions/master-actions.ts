@@ -80,6 +80,8 @@ const CategorySchema = z.object({
   label: z.string().min(1).max(100),
   icon: z.string().max(50).nullable().optional(),
   sortOrder: z.number().int().default(0),
+  parentId: z.string().uuid().nullable().optional(),
+  memo: z.string().max(2000).nullable().optional(),
 });
 
 export async function createCategoryAction(
@@ -93,6 +95,8 @@ export async function createCategoryAction(
     label: getStr(formData, 'label'),
     icon: getOptStr(formData, 'icon'),
     sortOrder: getInt(formData, 'sortOrder', 0),
+    parentId: getOptStr(formData, 'parentId'),
+    memo: getOptStr(formData, 'memo'),
   };
   const parsed = CategorySchema.safeParse(raw);
   if (!parsed.success) {
@@ -109,7 +113,11 @@ export async function createCategoryAction(
     targetId: result.id,
     payload: { type: parsed.data.type, code: parsed.data.code },
   });
-  revalidateAdminMaster('/admin/master/categories', '/');
+  revalidateAdminMaster(
+    '/admin/master/categories',
+    '/admin/master/product-categories',
+    '/',
+  );
   return { ok: true, id: result.id };
 }
 
@@ -124,6 +132,8 @@ export async function updateCategoryAction(
     label: getStr(formData, 'label') || undefined,
     icon: getOptStr(formData, 'icon'),
     sortOrder: getInt(formData, 'sortOrder', 0),
+    parentId: getOptStr(formData, 'parentId'),
+    memo: getOptStr(formData, 'memo'),
   });
   if (!result.ok) return { ok: false, message: result.message };
   logActivity({
@@ -132,7 +142,11 @@ export async function updateCategoryAction(
     targetType: 'category',
     targetId: id,
   });
-  revalidateAdminMaster('/admin/master/categories', '/');
+  revalidateAdminMaster(
+    '/admin/master/categories',
+    '/admin/master/product-categories',
+    '/',
+  );
   return { ok: true };
 }
 
@@ -149,7 +163,11 @@ export async function setCategoryActiveAction(
       targetType: 'category',
       targetId: id,
     });
-    revalidateAdminMaster('/admin/master/categories', '/');
+    revalidateAdminMaster(
+    '/admin/master/categories',
+    '/admin/master/product-categories',
+    '/',
+  );
   }
   return result;
 }

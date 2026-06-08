@@ -66,9 +66,23 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   const text = input.text ?? (input.markdown ? markdownToPlain(input.markdown) : undefined);
 
   if (!client || !fromAddress) {
-    console.log('[EMAIL STUB] (AWS 키 또는 SES_FROM_EMAIL 미설정)', {
+    const missing = [
+      !env.AWS_ACCESS_KEY_ID && 'AWS_ACCESS_KEY_ID',
+      !env.AWS_SECRET_ACCESS_KEY && 'AWS_SECRET_ACCESS_KEY',
+      !(env.SES_REGION || env.AWS_REGION) && 'SES_REGION/AWS_REGION',
+      !fromAddress && 'SES_FROM_EMAIL',
+    ].filter(Boolean);
+    // 프로덕션에서 stub은 "조용한 실패"다. 가짜 성공(ok:true)으로 로그를
+    // 'sent'로 남기면 미발송이 가려진다. → 프로덕션은 실패로 표면화한다.
+    if (env.NODE_ENV === 'production') {
+      const error = `SES 미설정으로 발송 불가 (누락: ${missing.join(', ')})`;
+      console.error('[SES] 발송 차단 —', error, { to: input.to, subject: input.subject });
+      return { ok: false, error };
+    }
+    console.log('[EMAIL STUB] (개발: AWS 키 또는 SES_FROM_EMAIL 미설정)', {
       to: input.to,
       subject: input.subject,
+      missing,
     });
     return { ok: true, messageId: 'stub-' + Date.now(), stub: true };
   }

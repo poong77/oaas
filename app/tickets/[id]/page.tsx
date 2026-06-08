@@ -112,10 +112,6 @@ export default async function HotelierTicketDetailPage({
   const productLabel = labels.product[ticket.productCode] ?? ticket.productCode;
   const issueTypeLabel =
     labels.issueType[ticket.issueType] ?? ticket.issueType;
-  const urgencyLabel = labels.urgency[ticket.urgency] ?? ticket.urgency;
-  const impactLabel = ticket.impactScope
-    ? (labels.impact[ticket.impactScope] ?? ticket.impactScope)
-    : null;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
@@ -143,13 +139,7 @@ export default async function HotelierTicketDetailPage({
         }
         description={
           <span className="inline-flex flex-wrap items-center gap-2">
-            <span>{productLabel}</span>·<span>{issueTypeLabel}</span>·
-            <span>긴급도 {urgencyLabel}</span>
-            {impactLabel && (
-              <>
-                ·<span>영향범위 {impactLabel}</span>
-              </>
-            )}
+            <span>{productLabel}</span>·<span>{issueTypeLabel}</span>
           </span>
         }
       />
@@ -267,23 +257,25 @@ export default async function HotelierTicketDetailPage({
         </CardContent>
       </Card>
 
-      {/* 답변 폼 */}
-      <Card>
-        <CardContent className="p-5">
-          <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            추가 답변
-          </div>
-          <ReplyForm
-            ticketId={ticket.id}
-            disabled={ticket.status === 'completed'}
-            disabledReason={
-              ticket.status === 'completed'
-                ? '완료된 티켓입니다. 추가 문의는 신규 접수해주세요.'
-                : undefined
-            }
-          />
-        </CardContent>
-      </Card>
+      {/* 답변 보완 / 접수 취소 — 접수(received) 단계에서만 */}
+      {ticket.status === 'received' ? (
+        <Card>
+          <CardContent className="p-5">
+            <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              답변 보완
+            </div>
+            <ReplyForm ticketId={ticket.id} />
+          </CardContent>
+        </Card>
+      ) : ticket.status === 'completed' ? (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50/40 px-4 py-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+          완료된 티켓입니다. 추가 문의는 신규 접수해주세요.
+        </div>
+      ) : (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50/40 px-4 py-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+          운영팀이 처리 중입니다. 처리 상황은 이 페이지에서 확인하실 수 있습니다.
+        </div>
+      )}
 
       {showFeedback && (
         <FeedbackWidget

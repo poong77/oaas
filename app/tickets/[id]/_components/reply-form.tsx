@@ -1,35 +1,34 @@
 'use client';
 
 /**
- * 호텔리어 추가 답변 폼 (IS-02).
+ * 호텔리어 '답변 보완' 폼 (IS-02, major-overhaul P4).
  *
- * - completed 상태에선 폼을 숨기고 안내 노출.
- * - 제출 후 router.refresh()로 메시지 타임라인 갱신.
- * - Phase 3: RichEditor lite 통합 + 자동 저장
+ * - 접수(received) 단계에서만 노출(페이지가 제어). 답변 보완 + 접수 취소.
+ * - 답변 보완: 공개 메시지 추가 + 운영팀 Slack 알림.
+ * - 접수 취소: 완료 처리(로그). 확인 다이얼로그 경유.
+ * - 제출 후 router.refresh()로 타임라인 갱신.
  */
 
 import { useCallback, useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Send } from 'lucide-react';
+import { Send, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RichEditor } from '@/components/editor/rich-editor';
 import {
   SaveIndicator,
   type SaveStatus,
 } from '@/components/editor/panels/save-indicator';
+import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { toast } from 'sonner';
 import { deleteDraftAfterPublish } from '@/lib/editor/draft-client';
-import { addPublicMessageAction } from '@/app/actions/ticket-actions';
+import {
+  addAnswerSupplementAction,
+  cancelTicketAction,
+} from '@/app/actions/ticket-actions';
 
-export function ReplyForm({
-  ticketId,
-  disabled,
-  disabledReason,
-}: {
-  ticketId: string;
-  disabled?: boolean;
-  disabledReason?: string;
-}) {
+export function ReplyForm({ ticketId }: { ticketId: string }) {
   const router = useRouter();
+  const confirm = useConfirmDialog();
   const [content, setContent] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -55,23 +54,38 @@ export function ReplyForm({
     fd.append('ticketId', ticketId);
     fd.append('content', content.trim());
     startTransition(async () => {
-      const result = await addPublicMessageAction(fd);
+      const result = await addAnswerSupplementAction(fd);
       if (!result.ok) {
         setError(result.message ?? '저장 실패');
         return;
       }
       await deleteDraftAfterPublish('ticket-message', ticketId);
       setContent('');
+      toast.success('답변 보완을 등록했습니다');
       router.refresh();
     });
   }
 
-  if (disabled) {
-    return (
-      <div className="rounded-md border border-dashed border-slate-300 bg-slate-50/40 px-4 py-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-        {disabledReason ?? '현재 상태에서는 답변을 작성할 수 없습니다.'}
-      </div>
-    );
+  async function handleCancelTicket() {
+    const ok = await confirm({
+      title: '접수를 취소하시겠습니까?',
+      description:
+        '취소하면 이 문의는 완료 처리되며 더 이상 답변을 추가할 수 없습니다. 필요 시 새로 접수해주세요.',
+      confirmText: '접수 취소',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    const fd = new FormData();
+    fd.append('ticketId', ticketId);
+    startTransition(async () => {
+      const result = await cancelTicketAction(fd);
+      if (!result.ok) {
+        toast.error(result.message ?? '취소 실패');
+        return;
+      }
+      toast.success('접수가 취소되었습니다');
+      router.refresh();
+    });
   }
 
   return (
@@ -81,7 +95,7 @@ export function ReplyForm({
         value={content}
         onChange={setContent}
         minHeight={180}
-        placeholder="추가로 알려주실 내용을 작성해주세요."
+        placeholder="접수 내용에 보완하거나 추가로 알려주실 내용을 작성해주세요."
         disabled={pending}
         autoSave={{
           scope: 'ticket-message',
@@ -91,12 +105,24 @@ export function ReplyForm({
         onAutosaveStatusChange={handleAutosaveStatus}
       />
       {error && <p className="text-xs text-red-500">{error}</p>}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <SaveIndicator status={saveStatus} lastSavedAt={savedAt} />
-        <Button type="submit" disabled={pending}>
-          {pending ? '저장 중...' : '답변 등록'}
-          <Send className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancelTicket}
+            disabled={pending}
+            className="text-red-600 hover:text-red-700 dark:text-red-400"
+          >
+            <XCircle className="h-4 w-4" />
+            접수 취소
+          </Button>
+          <Button type="submit" disabled={pending}>
+            {pending ? '저장 중...' : '답변 보완'}
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </form>
   );

@@ -1,7 +1,8 @@
 /**
  * /admin/master/categories — 카테고리 관리 (Phase 9).
  *
- * 4 타입(product/issue_type/urgency/impact) 탭 UI. 단일 페이지에서 type 쿼리로 분기.
+ * 3 타입(issue_type/urgency/impact) 탭 UI. 단일 페이지에서 type 쿼리로 분기.
+ * 제품(product)은 계층 트리라 전용 메뉴(/admin/master/product-categories)로 분리.
  * 매니저+어드민. (type, code) unique.
  */
 
@@ -22,11 +23,6 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: '카테고리 관리 — 마스터DB' };
 
 const TABS: Array<{ key: CategoryType; label: string; description: string }> = [
-  {
-    key: 'product',
-    label: '제품',
-    description: 'PMS · CMS · Keyless · 키오스크 · 웹서비스 · 설정',
-  },
   {
     key: 'issue_type',
     label: '이슈 유형',
@@ -54,7 +50,7 @@ export default async function MasterCategoriesPage({
   await requireRole(['manager', 'admin']);
   const sp = await searchParams;
   const activeType: CategoryType =
-    sp.type && TABS.some((t) => t.key === sp.type) ? sp.type : 'product';
+    sp.type && TABS.some((t) => t.key === sp.type) ? sp.type : 'issue_type';
 
   const items = await listAllCategories(activeType, true);
 
@@ -64,7 +60,7 @@ export default async function MasterCategoriesPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title="카테고리 관리"
-        description="제품 · 이슈 유형 · 긴급도 · 영향 범위 4종을 통합 편집합니다."
+        description="이슈 유형 · 긴급도 · 영향 범위 3종을 편집합니다. (제품 분류는 ‘제품 분류’ 메뉴에서 트리로 관리)"
         breadcrumb={
           <Link
             href="/admin/master"
@@ -153,7 +149,7 @@ export default async function MasterCategoriesPage({
               </Link>
             </Button>
           </div>
-          <CategoriesEditor type={activeType} items={[]} createOnly />
+          <CategoriesEditor type={activeType} items={items} createOnly />
         </CardContent>
       </Card>
 

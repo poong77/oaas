@@ -17,6 +17,7 @@ import { resolveIcon, KNOWN_ICON_NAMES } from '@/components/icon-resolver';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import {
   createCategoryAction,
@@ -24,6 +25,31 @@ import {
   setCategoryActiveAction,
 } from '@/app/actions/master-actions';
 import type { Category, CategoryType } from '@/db/schema';
+
+/** 부모 선택용 라벨(계층 들여쓰기). */
+type ParentOption = { id: string; label: string; depth: number };
+
+/** parent_id 기준으로 들여쓰기 라벨 목록 생성 (product 계층 표시용). */
+function buildParentOptions(items: Category[]): ParentOption[] {
+  const byParent = new Map<string | null, Category[]>();
+  for (const it of items) {
+    const key = it.parentId ?? null;
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key)!.push(it);
+  }
+  const out: ParentOption[] = [];
+  const walk = (parent: string | null, depth: number) => {
+    const children = (byParent.get(parent) ?? []).sort(
+      (a, b) => a.sortOrder - b.sortOrder,
+    );
+    for (const c of children) {
+      out.push({ id: c.id, label: `${'  '.repeat(depth)}${c.label}`, depth });
+      walk(c.id, depth + 1);
+    }
+  };
+  walk(null, 0);
+  return out;
+}
 
 export function CategoriesEditor({
   type,
@@ -34,20 +60,36 @@ export function CategoriesEditor({
   items: Category[];
   createOnly?: boolean;
 }) {
+  // product 타입만 계층(부모) 지원. 부모 후보 = 전체 product 카테고리.
+  const parentOptions = type === 'product' ? buildParentOptions(items) : [];
+
   if (createOnly) {
-    return <CreateRow type={type} />;
+    return <CreateRow type={type} parentOptions={parentOptions} />;
   }
 
   return (
     <div className="divide-y divide-slate-100 dark:divide-slate-800">
       {items.map((it) => (
-        <CategoryRow key={it.id} item={it} type={type} />
+        <CategoryRow
+          key={it.id}
+          item={it}
+          type={type}
+          parentOptions={parentOptions}
+        />
       ))}
     </div>
   );
 }
 
-function CategoryRow({ item, type }: { item: Category; type: CategoryType }) {
+function CategoryRow({
+  item,
+  type,
+  parentOptions,
+}: {
+  item: Category;
+  type: CategoryType;
+  parentOptions: ParentOption[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const confirm = useConfirmDialog();
@@ -141,6 +183,36 @@ function CategoryRow({ item, type }: { item: Category; type: CategoryType }) {
           className="h-8 text-xs"
         />
       </div>
+      {type === 'product' && (
+        <>
+          <div className="flex w-40 flex-col gap-1">
+            <Label className="text-[10px]">상위 분류</Label>
+            <Select
+              name="parentId"
+              defaultValue={item.parentId ?? ''}
+              className="h-8 text-xs"
+            >
+              <option value="">— 대분류(최상위)</option>
+              {parentOptions
+                .filter((o) => o.id !== item.id)
+                .map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+            </Select>
+          </div>
+          <div className="flex min-w-[140px] flex-1 flex-col gap-1">
+            <Label className="text-[10px]">메모</Label>
+            <Input
+              name="memo"
+              defaultValue={item.memo ?? ''}
+              placeholder="예: 문의 디폴트값"
+              className="h-8 text-xs"
+            />
+          </div>
+        </>
+      )}
       <div className="flex items-center gap-1">
         <Button type="submit" size="sm" disabled={pending}>
           저장
@@ -159,7 +231,13 @@ function CategoryRow({ item, type }: { item: Category; type: CategoryType }) {
   );
 }
 
-function CreateRow({ type }: { type: CategoryType }) {
+function CreateRow({
+  type,
+  parentOptions,
+}: {
+  type: CategoryType;
+  parentOptions: ParentOption[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -223,6 +301,29 @@ function CreateRow({ type }: { type: CategoryType }) {
           className="h-8 text-xs"
         />
       </div>
+      {type === 'product' && (
+        <>
+          <div className="flex w-40 flex-col gap-1">
+            <Label className="text-[10px]">상위 분류</Label>
+            <Select name="parentId" defaultValue="" className="h-8 text-xs">
+              <option value="">— 대분류(최상위)</option>
+              {parentOptions.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="flex min-w-[140px] flex-1 flex-col gap-1">
+            <Label className="text-[10px]">메모</Label>
+            <Input
+              name="memo"
+              placeholder="예: 문의 디폴트값"
+              className="h-8 text-xs"
+            />
+          </div>
+        </>
+      )}
       <Button type="submit" size="sm" disabled={pending}>
         추가
       </Button>

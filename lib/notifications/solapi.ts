@@ -71,7 +71,18 @@ export async function sendSms(input: SendSmsInput): Promise<SendSmsResult> {
   const safeText = markdownToPlain(input.text);
 
   if (!client || !env.SOLAPI_SENDER) {
-    console.log('[SMS STUB]', { to: input.to, text: safeText });
+    const missing = [
+      !env.SOLAPI_API_KEY && 'SOLAPI_API_KEY',
+      !env.SOLAPI_API_SECRET && 'SOLAPI_API_SECRET',
+      !env.SOLAPI_SENDER && 'SOLAPI_SENDER',
+    ].filter(Boolean);
+    // 프로덕션 stub은 "조용한 실패" — 로그 'sent' 마스킹 방지 위해 실패로 표면화.
+    if (env.NODE_ENV === 'production') {
+      const error = `솔라피 미설정으로 발송 불가 (누락: ${missing.join(', ')})`;
+      console.error('[SMS] 발송 차단 —', error, { to: input.to });
+      return { ok: false, error };
+    }
+    console.log('[SMS STUB]', { to: input.to, text: safeText, missing });
     return { ok: true, messageId: 'stub-sms-' + Date.now(), stub: true };
   }
 

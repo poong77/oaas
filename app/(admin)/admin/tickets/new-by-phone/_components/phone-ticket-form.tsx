@@ -18,6 +18,8 @@ import { HotelCombobox } from '@/components/ui/hotel-combobox';
 import { Button } from '@/components/ui/button';
 import { RichEditor } from '@/components/editor/rich-editor';
 import { createTicketByPhoneAction } from '@/app/actions/ticket-actions';
+import { ProductPicker } from '@/components/forms/product-picker';
+import type { ProductTaxonomyNode } from '@/lib/services/master-categories';
 import {
   AttachmentUploader,
   type UploadedAttachment,
@@ -31,14 +33,14 @@ type ChannelOption = { code: string; label: string; isAgentDefault: boolean };
 export function PhoneTicketForm({
   channels,
   hotels,
-  productCategories,
+  productTree,
   issueTypeCategories,
   urgencyCategories,
   impactCategories,
 }: {
   channels: ChannelOption[];
   hotels: HotelItem[];
-  productCategories: CategoryItem[];
+  productTree: ProductTaxonomyNode[];
   issueTypeCategories: CategoryItem[];
   urgencyCategories: CategoryItem[];
   impactCategories: CategoryItem[];
@@ -188,22 +190,23 @@ export function PhoneTicketForm({
             </div>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label required title="제품" error={fieldErrors.productCode} />
-              <Select
-                value={productCode}
-                onChange={(e) => setProductCode(e.target.value)}
-                disabled={pending}
-              >
-                <option value="">선택</option>
-                {productCategories.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
+          <div>
+            <Label required title="제품 (대 · 중 · 소)" error={fieldErrors.productCode} />
+            <ProductPicker
+              mode="cascade"
+              tree={productTree}
+              value={productCode}
+              onChange={setProductCode}
+              disabled={pending}
+              undefinedLabel="대분류 선택"
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              대분류 선택 후 중·소분류가 있으면 추가로 지정하세요. 가장 구체적인
+              단계가 제품으로 저장됩니다.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <Label required title="유형" error={fieldErrors.issueType} />
               <Select

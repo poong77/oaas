@@ -9,7 +9,7 @@
 
 import 'server-only';
 import { unstable_cache } from 'next/cache';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { categories, type Category, type CategoryType } from '@/db/schema';
@@ -58,8 +58,15 @@ const _getProductCategoriesCached = unstable_cache(
           sortOrder: categories.sortOrder,
         })
         .from(categories)
+        // 대분류(root)만 반환: 제품 분류가 대/중/소 계층이 된 뒤에도 홈·검색·help의
+        // 제품 카드/필터는 대분류 6종만 노출한다. 중/소분류는 접수폼 cascade
+        // (getProductTaxonomyTree) 전용. 라벨 해석은 별도 전체 맵을 사용한다.
         .where(
-          and(eq(categories.type, 'product'), eq(categories.isActive, true)),
+          and(
+            eq(categories.type, 'product'),
+            eq(categories.isActive, true),
+            isNull(categories.parentId),
+          ),
         )
         .orderBy(asc(categories.sortOrder), asc(categories.label));
       if (rows.length === 0) {
@@ -73,7 +80,7 @@ const _getProductCategoriesCached = unstable_cache(
       return FALLBACK_PRODUCT_CATEGORIES.map(({ fallback: _f, ...rest }) => rest);
     }
   },
-  ['product-categories:v1'],
+  ['product-categories:v2-roots'],
   { revalidate: 3600, tags: [CATEGORIES_CACHE_TAG] },
 );
 
