@@ -22,41 +22,16 @@
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getCurrentUser } from '@/lib/permissions';
 import { env } from '@/lib/env';
+import { getS3Client, buildPublicUrl } from '@/lib/s3';
 import { checkRateLimit } from '@/lib/rate-limit';
 import {
   isProcessableImage,
   processImage,
   replaceExtension,
 } from '@/lib/images/processor';
-
-let s3ClientSingleton: S3Client | null = null;
-function getS3(): S3Client {
-  if (!s3ClientSingleton) {
-    s3ClientSingleton = new S3Client({
-      region: env.AWS_REGION || 'ap-northeast-2',
-      ...(env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY
-        ? {
-            credentials: {
-              accessKeyId: env.AWS_ACCESS_KEY_ID,
-              secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-            },
-          }
-        : {}),
-    });
-  }
-  return s3ClientSingleton;
-}
-
-function buildPublicUrl(key: string): string {
-  if (env.S3_UPLOAD_PUBLIC_URL) {
-    return `${env.S3_UPLOAD_PUBLIC_URL.replace(/\/$/, '')}/${key}`;
-  }
-  const region = env.AWS_REGION || 'ap-northeast-2';
-  return `https://${env.S3_UPLOAD_BUCKET}.s3.${region}.amazonaws.com/${key}`;
-}
 
 export const runtime = 'nodejs';
 
@@ -268,7 +243,7 @@ export async function POST(request: NextRequest) {
         ? uploadPayload.arrayBuffer()
         : (uploadPayload as File).arrayBuffer()),
     );
-    await getS3().send(
+    await getS3Client().send(
       new PutObjectCommand({
         Bucket: env.S3_UPLOAD_BUCKET,
         Key: key,

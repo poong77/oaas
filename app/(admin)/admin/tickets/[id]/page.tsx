@@ -207,7 +207,7 @@ export default async function AdminTicketDetailPage({
                   {ticket.attachments.map((a) => (
                     <li key={a.id}>
                       <a
-                        href={a.blobUrl}
+                        href={`/api/attachments/${a.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-sm text-brand-600 hover:underline dark:text-brand-400"
