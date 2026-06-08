@@ -8,24 +8,37 @@
  * 발송 전 확인 다이얼로그. 실제 운영 발송이므로 주의 문구 표시.
  */
 
-import { useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { AlertTriangle, Mail, MessageSquare, Search, Sparkles } from 'lucide-react';
+import {
+  AlertTriangle,
+  Check,
+  Clipboard,
+  History,
+  Mail,
+  MessageSquare,
+  RefreshCw,
+  Search,
+  Sparkles,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
 import { RichEditor } from '@/components/editor/rich-editor';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import {
   aiWriteEmailAction,
   getHotelContactsAction,
+  listMessagingHistoryAction,
   sendBulkEmailAction,
   sendBulkSmsAction,
+  type MessagingHistoryItem,
 } from '@/app/actions/messaging-actions';
 
-type Tab = 'mail' | 'sms';
+type Tab = 'mail' | 'sms' | 'history';
 type HotelHit = { id: string; name: string };
 
 function parseRecipients(raw: string): string[] {
@@ -64,12 +77,17 @@ export function MessagingClient({
         <TabButton active={tab === 'sms'} onClick={() => setTab('sms')} icon={<MessageSquare className="h-4 w-4" />}>
           문자 발송
         </TabButton>
+        <TabButton active={tab === 'history'} onClick={() => setTab('history')} icon={<History className="h-4 w-4" />}>
+          지난 이력
+        </TabButton>
       </div>
 
       {tab === 'mail' ? (
         <MailTab senderEmail={senderEmail} />
-      ) : (
+      ) : tab === 'sms' ? (
         <SmsTab senderPhone={senderPhone} />
+      ) : (
+        <HistoryTab />
       )}
     </div>
   );
@@ -489,6 +507,274 @@ function SmsTab({ senderPhone }: { senderPhone: string }) {
             {pending ? '발송 중…' : '문자 발송'}
           </Button>
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ── 지난 이력 탭 ───────────────────────────────────────────────────
+type HistoryFilter = 'all' | 'email' | 'sms';
+const PAGE_SIZE = 30;
+
+/** 클립보드 복사 (fallback 포함). */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* fallthrough */
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/** 항목 전체 텍스트 (타입·연락처·제목·본문·사유·일시). */
+function buildFullText(item: MessagingHistoryItem): string {
+  const lines = [
+    `[타입] ${item.channel === 'email' ? '메일' : '문자'}`,
+    `[${item.channel === 'email' ? '메일주소' : '연락처'}] ${item.toAddress}`,
+  ];
+  if (item.channel === 'email' && item.subject) lines.push(`[제목] ${item.subject}`);
+  if (item.reason) lines.push(`[사유] ${item.reason}`);
+  lines.push(`[일시] ${formatDateTime(item.createdAt)}`);
+  lines.push('', item.body || '(본문 없음)');
+  return lines.join('\n');
+}
+
+function CopyButton({
+  label,
+  text,
+  disabled,
+}: {
+  label: string;
+  text: string;
+  disabled?: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+  async function onClick() {
+    const ok = await copyText(text);
+    if (!ok) {
+      toast.error('복사에 실패했습니다');
+      return;
+    }
+    setCopied(true);
+    toast.success(`${label} 복사됨`);
+    window.setTimeout(() => setCopied(false), 1500);
+  }
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-brand-950/30 dark:hover:text-brand-300"
+    >
+      {copied ? <Check className="h-3.5 w-3.5" /> : <Clipboard className="h-3.5 w-3.5" />}
+      {label}
+    </button>
+  );
+}
+
+function HistoryCard({ item }: { item: MessagingHistoryItem }) {
+  const isEmail = item.channel === 'email';
+  return (
+    <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <Badge tone={isEmail ? 'brand' : 'slate'}>
+          {isEmail ? (
+            <Mail className="h-3 w-3" />
+          ) : (
+            <MessageSquare className="h-3 w-3" />
+          )}
+          {isEmail ? '메일' : '문자'}
+        </Badge>
+        <Badge tone={item.status === 'sent' ? 'success' : 'danger'}>
+          {item.status === 'sent' ? '성공' : '실패'}
+        </Badge>
+        <span className="font-mono text-xs text-slate-700 dark:text-slate-200">
+          {item.toAddress || '(주소 없음)'}
+        </span>
+        <span className="ml-auto text-[11px] text-slate-400">
+          {formatDateTime(item.createdAt)}
+        </span>
+      </div>
+
+      {isEmail && item.subject && (
+        <p className="mb-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+          {item.subject}
+        </p>
+      )}
+      {item.reason && (
+        <p className="mb-1 text-xs text-slate-500">사유: {item.reason}</p>
+      )}
+
+      <p className="whitespace-pre-wrap break-words text-sm text-slate-600 dark:text-slate-300">
+        {item.body || (
+          <span className="italic text-slate-400">
+            본문이 기록되지 않은 이전 발송입니다.
+          </span>
+        )}
+      </p>
+      {item.errorMessage && (
+        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+          오류: {item.errorMessage}
+        </p>
+      )}
+
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        <CopyButton label="전체 복사" text={buildFullText(item)} />
+        <CopyButton label="본문 복사" text={item.body} disabled={!item.body} />
+        <CopyButton
+          label={isEmail ? '메일주소 복사' : '연락처 복사'}
+          text={item.toAddress}
+          disabled={!item.toAddress}
+        />
+      </div>
+    </div>
+  );
+}
+
+function FilterTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        'rounded-full px-3 py-1 text-xs font-medium transition-colors ' +
+        (active
+          ? 'bg-brand-600 text-white'
+          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700')
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
+function HistoryTab() {
+  const [filter, setFilter] = useState<HistoryFilter>('all');
+  const [items, setItems] = useState<MessagingHistoryItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, startLoading] = useTransition();
+
+  const load = useCallback(
+    (f: HistoryFilter, p: number) => {
+      startLoading(async () => {
+        const res = await listMessagingHistoryAction({
+          channel: f,
+          page: p,
+          pageSize: PAGE_SIZE,
+        });
+        if (!res.ok) {
+          toast.error(res.message ?? '이력 조회 실패');
+          return;
+        }
+        const next = res.items ?? [];
+        setItems((prev) => (p === 1 ? next : [...prev, ...next]));
+        setHasMore(Boolean(res.hasMore));
+        setPage(p);
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    load(filter, 1);
+  }, [filter, load]);
+
+  function changeFilter(f: HistoryFilter) {
+    if (f === filter) return;
+    setItems([]);
+    setHasMore(false);
+    setFilter(f);
+  }
+
+  const empty = !loading && items.length === 0;
+
+  return (
+    <Card>
+      <CardContent className="flex flex-col gap-4 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex gap-1.5">
+            <FilterTab active={filter === 'all'} onClick={() => changeFilter('all')}>
+              전체
+            </FilterTab>
+            <FilterTab active={filter === 'email'} onClick={() => changeFilter('email')}>
+              메일
+            </FilterTab>
+            <FilterTab active={filter === 'sms'} onClick={() => changeFilter('sms')}>
+              문자
+            </FilterTab>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => load(filter, 1)}
+            disabled={loading}
+          >
+            <RefreshCw className={'h-4 w-4 ' + (loading ? 'animate-spin' : '')} />
+            새로고침
+          </Button>
+        </div>
+
+        {empty ? (
+          <EmptyState
+            icon={<History className="h-8 w-8" />}
+            title="발송 이력이 없습니다"
+            description="메일·문자를 발송하면 이곳에 기록됩니다."
+          />
+        ) : (
+          <div className="flex flex-col gap-2">
+            {items.map((item) => (
+              <HistoryCard key={item.id} item={item} />
+            ))}
+            {loading && items.length === 0 && (
+              <p className="py-6 text-center text-sm text-slate-400">불러오는 중…</p>
+            )}
+            {hasMore && (
+              <div className="flex justify-center pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => load(filter, page + 1)}
+                  disabled={loading}
+                >
+                  {loading ? '불러오는 중…' : '더 보기'}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

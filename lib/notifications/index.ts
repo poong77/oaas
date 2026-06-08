@@ -27,6 +27,8 @@ import {
 export type NotifyMeta = {
   eventKey: string;
   ticketId?: string | null;
+  /** 로그 payload에 병합할 추가 필드 (예: 수동 발송 본문). */
+  extraPayload?: Record<string, unknown>;
 };
 
 // ─────────────────────────────────────────────────────────────────────
@@ -80,7 +82,7 @@ export async function notifySms(
     templateEventKey: meta.eventKey,
     channel: 'sms',
     toAddress: input.to,
-    payload: { text: input.text },
+    payload: { text: input.text, ...meta.extraPayload },
     status: result.ok ? 'sent' : 'failed',
     errorMessage: result.ok ? null : result.error,
     relatedTicketId: meta.ticketId ?? null,
@@ -98,7 +100,7 @@ export async function notifyEmail(
     templateEventKey: meta.eventKey,
     channel: 'email',
     toAddress: to,
-    payload: { subject: input.subject },
+    payload: { subject: input.subject, ...meta.extraPayload },
     status: result.ok ? 'sent' : 'failed',
     errorMessage: result.ok ? null : result.error,
     relatedTicketId: meta.ticketId ?? null,

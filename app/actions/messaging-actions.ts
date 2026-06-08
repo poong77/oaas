@@ -9,7 +9,10 @@
  */
 
 import { z } from 'zod';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 
+import { db } from '@/db';
+import { notificationLogs } from '@/db/schema';
 import { requireRole } from '@/lib/permissions';
 import { logActivity } from '@/lib/audit';
 import { notifyEmail, notifySms } from '@/lib/notifications';
@@ -103,7 +106,15 @@ export async function sendBulkEmailAction(input: {
         markdown: parsed.data.markdown,
         from: MAIL_FROM,
       },
-      { eventKey: 'manual.email', ticketId: parsed.data.ticketId ?? null },
+      {
+        eventKey: 'manual.email',
+        ticketId: parsed.data.ticketId ?? null,
+        // 이력 탭에서 본문 조회·복사가 가능하도록 본문/사유를 로그에 보존.
+        extraPayload: {
+          body: parsed.data.markdown,
+          reason: parsed.data.reason ?? null,
+        },
+      },
     );
     if (res.ok) sent += 1;
     else failed += 1;
@@ -160,7 +171,11 @@ export async function sendBulkSmsAction(input: {
   for (const to of valid) {
     const res = await notifySms(
       { to, text: parsed.data.text },
-      { eventKey: 'manual.sms', ticketId: parsed.data.ticketId ?? null },
+      {
+        eventKey: 'manual.sms',
+        ticketId: parsed.data.ticketId ?? null,
+        extraPayload: { reason: parsed.data.reason ?? null },
+      },
     );
     if (res.ok) sent += 1;
     else failed += 1;
@@ -180,6 +195,104 @@ export async function sendBulkSmsAction(input: {
     },
   });
   return { ok: true, sent, failed };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 지난 발송 이력 (메일&문자 툴박스 수동 발송분)
+// ─────────────────────────────────────────────────────────────────────
+
+/** 이력 1건 (UI용 평탄화). */
+export type MessagingHistoryItem = {
+  id: string;
+  channel: 'email' | 'sms';
+  toAddress: string;
+  subject: string | null;
+  body: string;
+  reason: string | null;
+  status: 'sent' | 'failed' | 'retry';
+  errorMessage: string | null;
+  createdAt: string;
+};
+
+const MANUAL_EVENT_KEYS = ['manual.email', 'manual.sms'] as const;
+
+const HistoryQuerySchema = z.object({
+  channel: z.enum(['all', 'email', 'sms']).default('all'),
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(100).default(30),
+});
+
+/** 메일&문자 툴박스에서 발송한 지난 이력 조회 (수동 발송분만, 최신순). */
+export async function listMessagingHistoryAction(input?: {
+  channel?: 'all' | 'email' | 'sms';
+  page?: number;
+  pageSize?: number;
+}): Promise<{
+  ok: boolean;
+  items?: MessagingHistoryItem[];
+  hasMore?: boolean;
+  message?: string;
+}> {
+  await requireRole(['manager', 'admin']);
+  if (!db) return { ok: true, items: [], hasMore: false };
+
+  const q = HistoryQuerySchema.safeParse(input ?? {});
+  if (!q.success) return { ok: false, message: '잘못된 조회 조건' };
+  const { channel, page, pageSize } = q.data;
+
+  const eventFilter =
+    channel === 'email'
+      ? eq(notificationLogs.templateEventKey, 'manual.email')
+      : channel === 'sms'
+        ? eq(notificationLogs.templateEventKey, 'manual.sms')
+        : inArray(notificationLogs.templateEventKey, [...MANUAL_EVENT_KEYS]);
+
+  try {
+    // hasMore 판단을 위해 pageSize + 1건 조회.
+    const rows = await db
+      .select()
+      .from(notificationLogs)
+      .where(and(eventFilter))
+      .orderBy(desc(notificationLogs.createdAt))
+      .limit(pageSize + 1)
+      .offset((page - 1) * pageSize);
+
+    const hasMore = rows.length > pageSize;
+    const items: MessagingHistoryItem[] = rows.slice(0, pageSize).map((r) => {
+      const payload = (r.payload ?? {}) as Record<string, unknown>;
+      const channelKind: 'email' | 'sms' =
+        r.channel === 'email' ? 'email' : 'sms';
+      const subject =
+        typeof payload.subject === 'string' ? payload.subject : null;
+      // 메일: body 우선(과거 로그는 미보존 → '' ), 문자: text.
+      const body =
+        typeof payload.body === 'string'
+          ? payload.body
+          : typeof payload.text === 'string'
+            ? payload.text
+            : '';
+      const reason =
+        typeof payload.reason === 'string' && payload.reason.length > 0
+          ? payload.reason
+          : null;
+      return {
+        id: r.id,
+        channel: channelKind,
+        toAddress: r.toAddress ?? '',
+        subject,
+        body,
+        reason,
+        status: r.status,
+        errorMessage: r.errorMessage ?? null,
+        createdAt: (r.createdAt ?? new Date()).toISOString(),
+      };
+    });
+
+    return { ok: true, items, hasMore };
+  } catch (err) {
+    console.error('[listMessagingHistoryAction] 실패:', err);
+    return { ok: false, message: '이력 조회 실패' };
+  }
 }
 
 /** AI 메일 본문 작성·최적화. */
