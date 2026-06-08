@@ -15,6 +15,8 @@ import {
 import { env } from '@/lib/env';
 import { markdownToHtml } from '@/lib/editor/markdown-to-html';
 import { markdownToPlain } from '@/lib/editor/markdown-to-plain';
+import { extractEditorInlineImages } from '@/lib/notifications/email-images';
+import { buildRawEmail } from '@/lib/notifications/raw-email';
 
 export type SendEmailInput = {
   to: string | string[];
@@ -93,19 +95,42 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
 
   const toAddresses = Array.isArray(input.to) ? input.to : [input.to];
 
-  const params: SendEmailCommandInput = {
-    FromEmailAddress: fromAddress,
-    Destination: { ToAddresses: toAddresses },
-    Content: {
-      Simple: {
-        Subject: { Data: input.subject, Charset: 'UTF-8' },
-        Body: {
-          Html: { Data: html, Charset: 'UTF-8' },
-          ...(text ? { Text: { Data: text, Charset: 'UTF-8' } } : {}),
-        },
-      },
-    },
-  };
+  // 에디터 본문 이미지(`/api/files/view?key=...` 인증 프록시)는 수신자가 비로그인이라
+  // 그대로 보내면 깨진다. → S3에서 받아 CID 인라인 첨부로 동봉하고 본문 src를 cid:로 치환.
+  const { html: inlinedHtml, images } = await extractEditorInlineImages(html);
+
+  // 인라인 이미지가 있으면 raw MIME(multipart/related), 없으면 기존 Simple 발송.
+  const params: SendEmailCommandInput =
+    images.length > 0
+      ? {
+          FromEmailAddress: fromAddress,
+          Destination: { ToAddresses: toAddresses },
+          Content: {
+            Raw: {
+              Data: buildRawEmail({
+                from: fromAddress,
+                to: toAddresses,
+                subject: input.subject,
+                html: inlinedHtml,
+                text,
+                images,
+              }),
+            },
+          },
+        }
+      : {
+          FromEmailAddress: fromAddress,
+          Destination: { ToAddresses: toAddresses },
+          Content: {
+            Simple: {
+              Subject: { Data: input.subject, Charset: 'UTF-8' },
+              Body: {
+                Html: { Data: inlinedHtml, Charset: 'UTF-8' },
+                ...(text ? { Text: { Data: text, Charset: 'UTF-8' } } : {}),
+              },
+            },
+          },
+        };
 
   try {
     const result = await client.send(new SendEmailCommand(params));

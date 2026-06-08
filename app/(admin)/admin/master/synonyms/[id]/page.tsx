@@ -19,7 +19,7 @@ export default async function SynonymsDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
   const { id } = await params;
   const group = await getTermGroupById(id);
   if (!group) notFound();

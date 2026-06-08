@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: '유입 채널 — 마스터DB' };
 
 export default async function MasterTicketChannelsPage() {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
   const items = await listTicketChannels({ includeInactive: true });
   const activeCount = items.filter((i) => i.isActive).length;
 

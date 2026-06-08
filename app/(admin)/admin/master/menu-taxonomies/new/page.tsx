@@ -23,7 +23,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: '새 메뉴 노드 — 마스터' };
 
 export default async function MenuTaxonomyNewPage() {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
 
   const [flat, productCategories] = await Promise.all([
     listMenuTaxonomyFlat({ includeInactive: false }),

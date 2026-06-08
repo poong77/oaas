@@ -22,7 +22,7 @@ export default async function EditTicketChannelPage({
 }: {
   params: Params;
 }) {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
   const { id } = await params;
   const channel = await getTicketChannelById(id);
   if (!channel) notFound();

@@ -36,9 +36,14 @@ export type KnownSettingKey = (typeof KNOWN_SETTING_KEYS)[number];
 // 마스터 메뉴 접근 제어 레지스트리
 //
 // 마스터 하위 개별 메뉴의 단일 소스. `key`는 URL 마지막 세그먼트와 동일.
-//   - hardAdminOnly: true  → 항상 어드민 전용. 매니저 토글 대상 아님(고정 잠금).
+//   - hardAdminOnly: true  → 항상 어드민 전용. 토글 대상 아님(영구 잠금).
+//                            "메뉴 접근 제어"(menu-access) 자신만 해당한다.
 //   - hardAdminOnly: false → 기본은 매니저+어드민. 어드민이 메뉴 접근 제어에서
 //                            매니저 접근을 ON/OFF로 전환 가능.
+//
+// 정책(2026-06): 메뉴 접근 제어를 제외한 마스터DB 전 메뉴는 접근 제어 토글 대상.
+//   토글 ON 시 매니저는 해당 메뉴를 보기+편집 전체 사용(액션 가드도 manager+admin).
+//   신규 메뉴 추가 시 반드시 이 레지스트리에 등록한다.
 //
 // 이 레지스트리는 "메뉴 접근 제어" 페이지(토글 UI)와 접근 가드가 공유한다.
 // system_settings 키 `master_menu_manager_access`에 매니저 OFF 오버라이드만 저장.
@@ -60,6 +65,7 @@ export const MASTER_MENUS: readonly MasterMenuMeta[] = [
   { key: 'categories', label: '카테고리', hardAdminOnly: false },
   { key: 'notification-templates', label: '알림 템플릿', hardAdminOnly: false },
   { key: 'quick-replies', label: '빠른 응대', hardAdminOnly: false },
+  { key: 'hotelier-templates', label: '호텔리어 템플릿', hardAdminOnly: false },
   { key: 'quick-actions', label: '자주 찾는 작업', hardAdminOnly: false },
   { key: 'role-starters', label: '역할별 시작', hardAdminOnly: false },
   { key: 'popular-keywords', label: '인기검색어', hardAdminOnly: false },
@@ -67,12 +73,13 @@ export const MASTER_MENUS: readonly MasterMenuMeta[] = [
   { key: 'form-fields', label: '접수 폼 필드', hardAdminOnly: false },
   { key: 'knowledge-export', label: '지식팩 내보내기', hardAdminOnly: false },
   { key: 'search-quality', label: '검색 골든셋·품질', hardAdminOnly: false },
-  // 고정 어드민 전용 (토글 불가)
-  { key: 'ticket-channels', label: '유입 채널', hardAdminOnly: true },
-  { key: 'business-hours', label: '운영시간', hardAdminOnly: true },
-  { key: 'system-settings', label: '시스템 설정', hardAdminOnly: true },
-  { key: 'synonyms', label: '동의어 사전', hardAdminOnly: true },
-  { key: 'menu-taxonomies', label: '메뉴 구조', hardAdminOnly: true },
+  { key: 'ticket-channels', label: '유입 채널', hardAdminOnly: false },
+  { key: 'business-hours', label: '운영시간', hardAdminOnly: false },
+  { key: 'system-settings', label: '시스템 설정', hardAdminOnly: false },
+  { key: 'synonyms', label: '동의어 사전', hardAdminOnly: false },
+  { key: 'menu-taxonomies', label: '메뉴 구조', hardAdminOnly: false },
+  { key: 'ai-models', label: 'AI 모델', hardAdminOnly: false },
+  // 영구 어드민 전용 (토글 불가) — 메뉴 접근 제어 자신만 해당
   { key: 'menu-access', label: '메뉴 접근 제어', hardAdminOnly: true },
 ] as const;
 

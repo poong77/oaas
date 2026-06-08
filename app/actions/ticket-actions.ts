@@ -35,12 +35,6 @@ import {
   type CreateTicketInput,
 } from '@/lib/services/tickets';
 import { isAgentChannelCodeValid } from '@/lib/services/master-ticket-channels';
-import {
-  getProductTaxonomyTree,
-  type ProductTaxonomyNode,
-} from '@/lib/services/master-categories';
-import { getCategoriesByType } from '@/lib/services/categories';
-import { runClaudeJson } from '@/lib/ai/anthropic-client';
 import type {
   TicketContactMethod,
   TicketFeedbackRating,
@@ -298,81 +292,6 @@ export async function addPublicMessageAction(
     revalidatePath(`/admin/tickets/${parsed.data.ticketId}`);
   }
   return result;
-}
-
-/**
- * AI 분류 — 접수 초안(제목·내용)으로 제품/요청유형 코드를 추론 (IC-01 P6).
- * 후보 코드 목록 안에서만 선택. 불확실 시 etc_general / etc.
- */
-export async function classifyTicketDraftAction(input: {
-  title: string;
-  content: string;
-}): Promise<{
-  ok: boolean;
-  productCode?: string;
-  issueType?: string;
-  message?: string;
-}> {
-  await requireAuth();
-  const title = (input.title ?? '').slice(0, 300).trim();
-  const content = (input.content ?? '').slice(0, 4000).trim();
-  if ((title + content).length < 5) {
-    return { ok: false, message: '제목·내용을 먼저 입력해주세요' };
-  }
-  try {
-    const [tree, issueTypes] = await Promise.all([
-      getProductTaxonomyTree(),
-      getCategoriesByType('issue_type'),
-    ]);
-    const productLines: string[] = [];
-    const validProduct = new Set<string>();
-    const walk = (nodes: ProductTaxonomyNode[], path: string[]) => {
-      for (const n of nodes) {
-        const p = [...path, n.label];
-        validProduct.add(n.code);
-        productLines.push(`${n.code} = ${p.join(' > ')}`);
-        if (n.children.length) walk(n.children, p);
-      }
-    };
-    walk(tree, []);
-    const validIssue = new Set(issueTypes.map((c) => c.code));
-    const issueLines = issueTypes.map((c) => `${c.code} = ${c.label}`);
-
-    const system =
-      '너는 호텔 솔루션 고객지원 티켓 분류기다. 사용자의 문의 제목/내용을 읽고 ' +
-      '가장 적합한 제품 코드(productCode)와 요청유형 코드(issueType)를 고른다. ' +
-      '반드시 주어진 코드 목록에서만 고른다. 확신이 없으면 product는 "etc_general", ' +
-      'issue는 "etc"를 사용한다. 다른 설명 없이 JSON만 출력: {"productCode":"...","issueType":"..."}';
-    const user = [
-      '# 제품 코드 (code = 대분류 > 중분류 > 소분류)',
-      productLines.join('\n'),
-      '',
-      '# 요청유형 코드',
-      issueLines.join('\n'),
-      '',
-      `# 문의 제목\n${title}`,
-      '',
-      `# 문의 내용\n${content}`,
-    ].join('\n');
-
-    const raw = (await runClaudeJson({
-      system,
-      user,
-      bucket: 'ticket-classify',
-      maxTokens: 200,
-    })) as { productCode?: string; issueType?: string } | null;
-
-    const productCode =
-      raw?.productCode && validProduct.has(raw.productCode)
-        ? raw.productCode
-        : 'etc_general';
-    const issueType =
-      raw?.issueType && validIssue.has(raw.issueType) ? raw.issueType : 'etc';
-    return { ok: true, productCode, issueType };
-  } catch (err) {
-    console.error('[classifyTicketDraftAction] 실패:', err);
-    return { ok: false, message: 'AI 분류 중 오류가 발생했습니다' };
-  }
 }
 
 /** 호텔리어 '답변 보완' — 접수 단계 한정. 운영팀 Slack 알림 동반. */

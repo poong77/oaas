@@ -49,7 +49,7 @@ export default async function MasterBusinessHoursPage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
 
   const sp = await searchParams;
   const tab: BusinessHoursTab = VALID_TABS.includes(sp.tab as BusinessHoursTab)

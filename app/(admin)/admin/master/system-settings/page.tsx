@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: '시스템 설정 — 마스터DB' };
 
 export default async function MasterSystemSettingsPage() {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
   const items = await listSystemSettings(true);
 
   return (

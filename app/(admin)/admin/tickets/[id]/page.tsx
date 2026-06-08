@@ -331,6 +331,7 @@ export default async function AdminTicketDetailPage({
               hotelId={ticket.hotelId}
               solutions={hotelSolutions}
               canReveal={user.role === 'admin'}
+              canCopyPassword={user.role === 'admin' || user.role === 'manager'}
             />
           )}
 

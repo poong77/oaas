@@ -3,10 +3,9 @@
 /**
  * 이슈 접수 폼 — IC-01 (major-overhaul P6: 3단계 → 1페이지).
  *
- * 한 화면: 제목 · 자세한 내용(템플릿/AI 분류) · 제품 · 요청유형 · 연락방법 · 첨부.
+ * 한 화면: 제목 · 자세한 내용(템플릿) · 제품 · 요청유형 · 연락방법 · 첨부.
  * - 제품/요청유형: 옵션값, 기본 '미정'(미선택 시 기타>일반 / 기타로 접수).
  * - 긴급도·접수요약 제거. 연락방법 이메일 기본.
- * - AI 분류: 제목·내용으로 제품/유형 자동 추론.
  * - 제품 분류: 호텔리어=대분류만(root-only), 매니저·어드민=대/중/소(cascade) — ProductPicker.
  *
  * URL 쿼리 pre-fill: ?type=, ?product=, ?from=checklist&checklist=&step=
@@ -19,23 +18,17 @@ import {
   AlertCircle,
   ArrowLeft,
   BadgeCheck,
-  FileText,
   Mail,
   MessageSquare,
   Send,
-  Sparkles,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { RichEditor } from '@/components/editor/rich-editor';
-import { HotelierGuideButton } from '@/components/editor/placeholders/hotelier-guide';
 import { toast } from 'sonner';
-import {
-  classifyTicketDraftAction,
-  createTicketAction,
-} from '@/app/actions/ticket-actions';
+import { createTicketAction } from '@/app/actions/ticket-actions';
 import type { ProductTaxonomyNode } from '@/lib/services/master-categories';
 import {
   ProductPicker,
@@ -68,7 +61,8 @@ export type TicketCreateFormProps = {
   /** 호텔리어=대분류만(root-only), 매니저·어드민=대/중/소(cascade). */
   productMode: ProductPickerMode;
   issueTypeCategories: Option[];
-  templates: TemplateItem[];
+  /** 호텔리어 접수 템플릿 — '자세한 내용' 위 버튼으로 노출(마스터DB 편집). */
+  hotelierTemplates: TemplateItem[];
   prefill?: {
     product?: string | null;
     type?: string | null;
@@ -85,10 +79,8 @@ const DEFAULT_ISSUE = 'etc';
 export function TicketCreateForm(props: TicketCreateFormProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [classifying, startClassify] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [templateOpen, setTemplateOpen] = useState(false);
 
   const [productCode, setProductCode] = useState<string>(
     props.prefill?.product ?? '',
@@ -138,25 +130,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
     setContent((prev) =>
       prev.trim().length === 0 ? t.content : `${prev}\n\n${t.content}`,
     );
-    setTemplateOpen(false);
     toast.success(`'${t.title}' 템플릿을 넣었습니다`);
-  }
-
-  function runAiClassify() {
-    if (title.trim().length + content.trim().length < 5) {
-      toast.error('제목·내용을 먼저 입력해주세요');
-      return;
-    }
-    startClassify(async () => {
-      const res = await classifyTicketDraftAction({ title, content });
-      if (!res.ok) {
-        toast.error(res.message ?? 'AI 분류 실패');
-        return;
-      }
-      if (res.productCode) setProductCode(res.productCode);
-      if (res.issueType) setIssueType(res.issueType);
-      toast.success('AI가 제품·유형을 채웠습니다. 확인 후 수정하세요.');
-    });
   }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -208,7 +182,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
     });
   }
 
-  const busy = pending || classifying;
+  const busy = pending;
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -226,50 +200,32 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
             />
           </div>
 
-          {/* 자세한 내용 + 템플릿 */}
+          {/* 자세한 내용 + 호텔리어 템플릿 버튼 */}
           <div>
-            <div className="mb-1.5 flex items-center justify-between gap-2">
-              <SectionLabel required title="자세한 내용" error={fieldErrors.content} />
-              <div className="flex items-center gap-1.5">
-                {props.templates.length > 0 && (
-                  <div className="relative">
+            <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                자세한 내용<span className="ml-1 text-red-500">*</span>
+              </span>
+              {props.hotelierTemplates.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {props.hotelierTemplates.map((t) => (
                     <button
+                      key={t.id}
                       type="button"
-                      onClick={() => setTemplateOpen((v) => !v)}
-                      className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 transition hover:border-brand-300 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                      onClick={() => applyTemplate(t)}
+                      disabled={busy}
+                      className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/30"
                     >
-                      <FileText className="h-3.5 w-3.5" />
-                      템플릿
+                      {t.title}
                     </button>
-                    {templateOpen && (
-                      <div className="absolute right-0 z-20 mt-1 max-h-72 w-64 overflow-auto rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                        {props.templates.map((t) => (
-                          <button
-                            key={t.id}
-                            type="button"
-                            onClick={() => applyTemplate(t)}
-                            className="flex w-full flex-col items-start gap-0.5 rounded px-2 py-1.5 text-left hover:bg-brand-50 dark:hover:bg-brand-950/30"
-                          >
-                            <span className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                              {t.title}
-                            </span>
-                            {t.category && (
-                              <span className="text-[11px] text-slate-400">
-                                {t.category}
-                              </span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-                <HotelierGuideButton
-                  variant="new-ticket"
-                  hidden={!!content.trim()}
-                  onApply={setContent}
-                />
-              </div>
+                  ))}
+                </div>
+              )}
+              {fieldErrors.content && (
+                <span className="ml-auto text-xs text-red-500">
+                  {fieldErrors.content}
+                </span>
+              )}
             </div>
             <RichEditor
               mode="full"
@@ -285,20 +241,11 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
             </div>
           </div>
 
-          {/* 제품 / 요청유형 (옵션, 기본 미정) + AI 분류 */}
+          {/* 제품 / 요청유형 (옵션, 기본 미정) */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <div className="mb-1.5 flex items-center justify-between gap-2">
+              <div className="mb-1.5">
                 <SectionLabel title="제품" />
-                <button
-                  type="button"
-                  onClick={runAiClassify}
-                  disabled={busy}
-                  className="inline-flex items-center gap-1 rounded-md border border-brand-200 bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700 transition hover:bg-brand-100 disabled:opacity-60 dark:border-brand-800 dark:bg-brand-950/40 dark:text-brand-300"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {classifying ? '분류 중...' : 'AI 분류'}
-                </button>
               </div>
               <ProductPicker
                 tree={props.productTree}
@@ -306,7 +253,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
                 onChange={setProductCode}
                 disabled={busy}
                 mode={props.productMode}
-                undefinedLabel="미정 (선택 안 함 · AI 분류 가능)"
+                undefinedLabel="미정 (선택 안 함)"
               />
               {props.productMode === 'cascade' && (
                 <p className="mt-1 text-[11px] text-slate-400">

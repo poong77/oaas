@@ -136,7 +136,7 @@ export async function updateBusinessHoursDefaultAction(
   _prev: BusinessHoursDefaultState | undefined,
   formData: FormData,
 ): Promise<BusinessHoursDefaultState> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
 
   // ARS items: form은 'arsItems' 단일 JSON 문자열로 전달
   let arsItems: { num: string; label: string }[] = [];
@@ -249,7 +249,7 @@ export async function createBusinessHolidayAction(
   _prev: HolidayActionState | undefined,
   formData: FormData,
 ): Promise<HolidayActionState> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
 
   const raw = {
     date: ((formData.get('date') ?? '') as string).trim(),
@@ -341,7 +341,7 @@ export async function createBusinessHoursOverrideAction(
   _prev: OverrideActionState | undefined,
   formData: FormData,
 ): Promise<OverrideActionState> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
 
   const raw = {
     kind: ((formData.get('kind') ?? '') as string).trim(),
@@ -406,7 +406,7 @@ export async function createBusinessHoursOverrideAction(
 export async function shortenActiveOverrideAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string; nowExpired?: boolean }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const id = ((formData.get('id') ?? '') as string).trim();
   const newUntil = ((formData.get('newEffectiveUntil') ?? '') as string).trim();
   if (!id) return { ok: false, message: 'ID 누락' };
@@ -439,7 +439,7 @@ export async function shortenActiveOverrideAction(
 export async function cancelBusinessHoursOverrideAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const id = ((formData.get('id') ?? '') as string).trim();
   if (!id) return { ok: false, message: 'ID 누락' };
 
@@ -469,7 +469,7 @@ export async function cancelBusinessHoursOverrideAction(
 export async function replicateRecurringHolidaysAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string; created?: number; skipped?: number }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const yearRaw = ((formData.get('targetYear') ?? '') as string).trim();
   const targetYear = Number(yearRaw);
   if (!Number.isInteger(targetYear) || targetYear < 2020 || targetYear > 2100) {
@@ -485,7 +485,7 @@ export async function replicateRecurringHolidaysAction(
 export async function deactivateBusinessHolidayAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const id = ((formData.get('id') ?? '') as string).trim();
   if (!id) return { ok: false, message: 'ID 누락' };
 

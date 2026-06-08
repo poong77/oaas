@@ -12,7 +12,7 @@ import { ContactPanel } from '@/components/contact/contact-panel';
 import { requireAuth, isManagerOrAdmin } from '@/lib/permissions';
 import { getCategoriesByType } from '@/lib/services/categories';
 import { getProductTaxonomyTree } from '@/lib/services/master-categories';
-import { listQuickReplies } from '@/lib/services/master-quick-replies';
+import { listHotelierTemplates } from '@/lib/services/master-hotelier-templates';
 import { getHotelById, getUserById } from '@/lib/services/users';
 import { TicketCreateForm } from './_components/ticket-create-form';
 
@@ -38,13 +38,13 @@ export default async function NewTicketPage({
   const [
     productTree,
     issueTypeCategories,
-    templates,
+    hotelierTemplates,
     hotel,
     fullUser,
   ] = await Promise.all([
     getProductTaxonomyTree(),
     getCategoriesByType('issue_type'),
-    listQuickReplies(),
+    listHotelierTemplates(),
     user.hotelId ? getHotelById(user.hotelId) : Promise.resolve(null),
     getUserById(user.id),
   ]);
@@ -82,7 +82,7 @@ export default async function NewTicketPage({
             code: c.code,
             label: c.label,
           }))}
-          templates={templates.map((t) => ({
+          hotelierTemplates={hotelierTemplates.map((t) => ({
             id: t.id,
             title: t.title,
             content: t.content,

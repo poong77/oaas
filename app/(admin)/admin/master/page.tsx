@@ -1,7 +1,9 @@
 /**
  * /admin/master — 어드민 마스터DB 인덱스 (Phase 9).
  *
- * 9개 카테고리 카드. 매니저+어드민 진입. system-settings는 어드민만 노출.
+ * 마스터DB 카테고리 카드. 매니저+어드민 진입.
+ * 카드 노출/‘어드민’ 뱃지는 메뉴 접근 제어(getManagerAccessMap)가 단일 소스.
+ * 메뉴 접근 제어 카드는 영구 어드민 전용(접근 맵에서 항상 차단)이라 매니저에게 숨겨진다.
  */
 
 import Link from 'next/link';
@@ -13,6 +15,7 @@ import {
   Boxes,
   Clock,
   Database,
+  FileText,
   FolderTree,
   Gauge,
   Bot,
@@ -44,7 +47,6 @@ type MasterItem = {
   label: string;
   description: string;
   icon: LucideIcon;
-  adminOnly?: boolean;
   badge?: string;
 };
 
@@ -83,6 +85,14 @@ const ITEMS: MasterItem[] = [
     label: '빠른 응대',
     description: '매니저가 티켓 답변 작성 시 사용할 정형 응대 문구 템플릿.',
     icon: MessageSquare,
+  },
+  {
+    href: '/admin/master/hotelier-templates',
+    label: '호텔리어 템플릿',
+    description:
+      '호텔리어 접수폼 「자세한 내용」 위 버튼으로 본문에 끼워넣는 정형 입력 양식(계정생성/삭제·매출수정·오버부킹 등).',
+    icon: FileText,
+    badge: '접수폼 노출',
   },
   {
     href: '/admin/master/quick-actions',
@@ -124,7 +134,6 @@ const ITEMS: MasterItem[] = [
     description:
       '티켓이 어떤 경로로 들어왔는지 분류 (전화/카카오/이메일 등). 티켓 생성 폼 드롭다운에 노출.',
     icon: Radio,
-    adminOnly: true,
   },
   {
     href: '/admin/master/business-hours',
@@ -132,7 +141,6 @@ const ITEMS: MasterItem[] = [
     description:
       '평일 운영·점심·접수마감·긴급전화·공휴일을 관리합니다. 호텔리어 컨택 패널 실시간 운영상태에 반영.',
     icon: Clock,
-    adminOnly: true,
     badge: '실시간 반영',
   },
   {
@@ -141,7 +149,6 @@ const ITEMS: MasterItem[] = [
     description:
       '업로드 한도·로그인 Rate Limit·Slack 채널 등 key-value. (운영시간은 별도 메뉴로 분리)',
     icon: Settings,
-    adminOnly: true,
   },
   {
     href: '/admin/master/synonyms',
@@ -149,7 +156,6 @@ const ITEMS: MasterItem[] = [
     description:
       '검색 동의어 그룹·이형어 관리. 통합 검색 시 자동 확장 (예: "결제" ↔ "페이먼트").',
     icon: BookA,
-    adminOnly: true,
   },
   {
     href: '/admin/master/menu-taxonomies',
@@ -157,7 +163,6 @@ const ITEMS: MasterItem[] = [
     description:
       '도움말 아티클의 menu_path 정본. 제품별 대/중/소 메뉴 트리 (최대 3단). 아티클 작성 시 cascading select 옵션 소스.',
     icon: FolderTree,
-    adminOnly: true,
   },
   {
     href: '/admin/master/knowledge-export',
@@ -173,7 +178,6 @@ const ITEMS: MasterItem[] = [
     description:
       '티켓 답변 초안 생성에 쓸 AI 모델(Claude·GPT) 목록·기본값·ON/OFF·단가 라벨을 관리. 활성 모델만 매니저 답변 화면 모달에 노출.',
     icon: Bot,
-    adminOnly: true,
     badge: 'AI',
   },
   {
@@ -190,7 +194,6 @@ const ITEMS: MasterItem[] = [
     description:
       '마스터 내 개별 메뉴의 매니저 접근 허용/차단을 ON/OFF 스위치로 결정. 어드민은 항상 전체 접근.',
     icon: ShieldCheck,
-    adminOnly: true,
   },
 ];
 
@@ -201,13 +204,12 @@ function menuKeyOf(href: string): string {
 
 export default async function AdminMasterIndexPage() {
   const user = await requireRole(['manager', 'admin']);
-  // 매니저는 어드민 전용 카드 + 접근 차단된 메뉴를 숨긴다. 어드민은 전체 노출.
-  const accessMap =
-    user.role === 'admin' ? null : await getManagerAccessMap();
+  // 접근 맵(메뉴 접근 제어)이 단일 소스. 어드민은 전체 노출하되 매니저 차단 메뉴엔
+  // '어드민' 뱃지로 표시. 매니저는 접근 허용된 카드만 본다.
+  const accessMap = await getManagerAccessMap();
   const items = ITEMS.filter((it) => {
     if (user.role === 'admin') return true;
-    if (it.adminOnly) return false;
-    return accessMap?.[menuKeyOf(it.href)] === true;
+    return accessMap[menuKeyOf(it.href)] === true;
   });
 
   return (
@@ -223,6 +225,8 @@ export default async function AdminMasterIndexPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((it) => {
               const Icon = it.icon;
+              // 매니저가 현재 접근 불가한 메뉴 → '어드민' 뱃지 (어드민 화면 한정 표시)
+              const managerBlocked = accessMap[menuKeyOf(it.href)] !== true;
               return (
                 <Link
                   key={it.href}
@@ -239,7 +243,7 @@ export default async function AdminMasterIndexPage() {
                           {it.badge}
                         </Badge>
                       )}
-                      {it.adminOnly && (
+                      {managerBlocked && (
                         <Badge tone="warn" className="text-[10px]">
                           어드민
                         </Badge>

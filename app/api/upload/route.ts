@@ -178,13 +178,16 @@ export async function POST(request: NextRequest) {
   const uniq = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   let safeName = sanitizePathSegment(file.name || 'file');
 
-  // ─── Phase 5 D1·D2: editor + image면 sharp 자동 변환 ─────────────────
-  // - max 폭 1920px, PNG→WebP, JPEG q85, EXIF 자동 회전
-  // - 실패 시 원본 그대로 폴백 (호환성 우선)
-  // - ticket purpose나 비이미지(PDF/zip 등)는 변환 안 함
+  // ─── 이미지 자동 최적화 (sharp) — editor·ticket 공통 ──────────────────
+  // - max 폭 1920px, PNG→WebP, JPEG q85(mozjpeg), WebP 재인코딩, EXIF 자동 회전
+  // - GIF/HEIC·비이미지(PDF/zip/log 등)는 변환 안 함 (isProcessableImage에서 제외)
+  // - 최적화 결과가 원본보다 작을 때만 채택 (커지면 원본 유지)
+  // - 변환 실패는 비치명적 — 원본 그대로 폴백 (호환성 우선)
   let uploadPayload: Blob | File = file;
   let uploadContentType: string | undefined = file.type || undefined;
   let finalSizeBytes = file.size;
+  // 변환 채택 시 표시/다운로드 파일명도 새 확장자로 맞춘다 (예: photo.png → photo.webp).
+  let finalOriginalName = file.name;
   let imageMeta: {
     optimized: boolean;
     width?: number;
@@ -197,11 +200,14 @@ export async function POST(request: NextRequest) {
     optimizedSize: file.size,
   };
 
-  if (purpose === 'editor' && isProcessableImage(file.type, file.name)) {
+  if (isProcessableImage(file.type, file.name)) {
     try {
       const arrayBuf = await file.arrayBuffer();
       const processed = await processImage(arrayBuf, file.type, file.name);
-      if (processed.modified) {
+      // 변환이 일어났고 실제로 더 작아진 경우에만 채택 (커지면 원본 유지)
+      const adopt =
+        processed.modified && processed.optimizedSize < processed.originalSize;
+      if (adopt) {
         const newBlob = new Blob([new Uint8Array(processed.buffer)], {
           type: processed.mimeType,
         });
@@ -209,13 +215,14 @@ export async function POST(request: NextRequest) {
         uploadContentType = processed.mimeType;
         finalSizeBytes = processed.optimizedSize;
         safeName = replaceExtension(safeName, processed.ext);
+        finalOriginalName = replaceExtension(file.name, processed.ext);
       }
       imageMeta = {
-        optimized: processed.modified,
+        optimized: adopt,
         width: processed.width,
         height: processed.height,
         originalSize: processed.originalSize,
-        optimizedSize: processed.optimizedSize,
+        optimizedSize: adopt ? processed.optimizedSize : processed.originalSize,
       };
     } catch (err) {
       // 변환 실패는 fatal 아님 — 원본 그대로 업로드
@@ -261,7 +268,7 @@ export async function POST(request: NextRequest) {
       ok: true,
       blobUrl,
       pathname: key,
-      originalName: file.name,
+      originalName: finalOriginalName,
       mimeType: uploadContentType ?? file.type ?? null,
       sizeBytes: finalSizeBytes,
       // Phase 5 메타: 클라이언트가 절감률 표시 가능

@@ -107,7 +107,7 @@ export async function createMenuTaxonomyAction(
   _prev: MenuTaxonomyActionState | undefined,
   formData: FormData,
 ): Promise<MenuTaxonomyActionState> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const parsed = MenuTaxonomySchema.safeParse(extractFromForm(formData));
   if (!parsed.success) {
     return {
@@ -152,7 +152,7 @@ export async function updateMenuTaxonomyAction(
   _prev: MenuTaxonomyActionState | undefined,
   formData: FormData,
 ): Promise<MenuTaxonomyActionState> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const parsed = MenuTaxonomySchema.safeParse(extractFromForm(formData));
   if (!parsed.success) {
     return {
@@ -196,7 +196,7 @@ export async function updateMenuTaxonomyAction(
 export async function toggleMenuTaxonomyAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string; affectedCount?: number }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const id = (formData.get('id') ?? '').toString().trim();
   const action = (formData.get('action') ?? '').toString().trim();
   if (!id) return { ok: false, message: 'ID 누락' };

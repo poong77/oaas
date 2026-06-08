@@ -3,7 +3,7 @@
 /**
  * ai-reply-assist — AI 모델 마스터 어드민 액션 (admin 전용).
  *
- * 목록/기본값/ON·OFF/정렬/라벨 편집. 모든 액션 requireRole(['admin']) + activity_logs.
+ * 목록/기본값/ON·OFF/정렬/라벨 편집. 모든 액션 requireRole(['manager', 'admin']) + activity_logs.
  * 모델 단가 변동·신모델 추가 시 코드 배포 없이 여기서 관리(CLAUDE.md 8번 원칙).
  *
  * @see docs/02-design/features/ai-reply-assist.design.md §7.3 §8
@@ -43,7 +43,7 @@ const createSchema = z.object({
 export async function createAiModelAction(
   input: z.input<typeof createSchema>,
 ): Promise<ActionResult> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const parsed = createSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: '입력값 확인 (provider/code/label 필수)' };
 
@@ -81,7 +81,7 @@ const updateSchema = z.object({
 export async function updateAiModelAction(
   input: z.input<typeof updateSchema>,
 ): Promise<ActionResult> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const parsed = updateSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: '입력값 확인' };
 
@@ -102,7 +102,7 @@ export async function toggleAiModelActiveAction(input: {
   id: string;
   isActive: boolean;
 }): Promise<ActionResult> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   if (!input?.id) return { ok: false, message: 'id 필요' };
   await toggleModelActive(input.id, Boolean(input.isActive));
   logActivity({
@@ -119,7 +119,7 @@ export async function toggleAiModelActiveAction(input: {
 export async function setAiModelDefaultAction(input: {
   id: string;
 }): Promise<ActionResult> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   if (!input?.id) return { ok: false, message: 'id 필요' };
   await setDefaultModel(input.id);
   logActivity({
@@ -135,7 +135,7 @@ export async function setAiModelDefaultAction(input: {
 export async function reorderAiModelsAction(input: {
   order: { id: string; sortOrder: number }[];
 }): Promise<ActionResult> {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
   if (!Array.isArray(input?.order)) return { ok: false, message: 'order 필요' };
   await reorderModels(input.order);
   revalidate();

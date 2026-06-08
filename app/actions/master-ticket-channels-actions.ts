@@ -73,7 +73,7 @@ export async function createTicketChannelAction(
   _prev: ChannelActionState | undefined,
   formData: FormData,
 ): Promise<ChannelActionState> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const parsed = ChannelSchema.safeParse(extractChannelFromForm(formData));
   if (!parsed.success) {
     return {
@@ -114,7 +114,7 @@ export async function updateTicketChannelAction(
   _prev: ChannelActionState | undefined,
   formData: FormData,
 ): Promise<ChannelActionState> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const parsed = ChannelSchema.safeParse(extractChannelFromForm(formData));
   if (!parsed.success) {
     return {
@@ -161,7 +161,7 @@ export async function updateTicketChannelAction(
 export async function toggleTicketChannelAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const id = (formData.get('id') ?? '').toString().trim();
   const action = (formData.get('action') ?? '').toString().trim();
   if (!id) return { ok: false, message: 'ID 누락' };

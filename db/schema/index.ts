@@ -43,6 +43,7 @@ export * from './notices';
 // Phase 9 — 어드민 마스터 데이터
 export * from './notification-templates';
 export * from './quick-reply-templates';
+export * from './hotelier-templates';
 export * from './quick-actions';
 export * from './role-starters';
 export * from './system-settings';

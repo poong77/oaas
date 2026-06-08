@@ -19,6 +19,7 @@ import { CATEGORIES_CACHE_TAG } from '@/lib/services/categories';
 import * as MC from '@/lib/services/master-categories';
 import * as MT from '@/lib/services/master-templates';
 import * as MQR from '@/lib/services/master-quick-replies';
+import * as MHT from '@/lib/services/master-hotelier-templates';
 import * as MQA from '@/lib/services/master-quick-actions';
 import * as MRS from '@/lib/services/master-role-starters';
 import * as MPK from '@/lib/services/master-popular-keywords';
@@ -328,6 +329,75 @@ export async function setQuickReplyActiveAction(
 }
 
 // ─────────────────────────────────────────────────────────────────────
+// 3-b. hotelier_templates (접수폼 본문 템플릿 버튼)
+// ─────────────────────────────────────────────────────────────────────
+
+const HotelierTemplateSchema = z.object({
+  title: z.string().min(1).max(100),
+  content: z.string().min(1),
+  category: z.string().max(50).nullable().optional(),
+  sortOrder: z.number().int().default(0),
+});
+
+export async function upsertHotelierTemplateAction(
+  id: string | null,
+  _prev: ActionResult | undefined,
+  formData: FormData,
+): Promise<ActionResult> {
+  const user = await requireRole(['manager', 'admin']);
+  const raw = {
+    title: getStr(formData, 'title'),
+    content: getStr(formData, 'content'),
+    category: getOptStr(formData, 'category'),
+    sortOrder: getInt(formData, 'sortOrder', 0),
+  };
+  const parsed = HotelierTemplateSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, message: '입력값 확인' };
+  if (id) {
+    const r = await MHT.updateHotelierTemplate(id, parsed.data);
+    if (!r.ok) return { ok: false, message: r.message };
+    logActivity({
+      userId: user.id,
+      action: 'master.hotelier_template.update',
+      targetType: 'hotelier_template',
+      targetId: id,
+    });
+    revalidateAdminMaster('/admin/master/hotelier-templates');
+    return { ok: true, id };
+  }
+  const r = await MHT.createHotelierTemplate(parsed.data);
+  if (!r.ok || !r.id) return { ok: false, message: r.message };
+  logActivity({
+    userId: user.id,
+    action: 'master.hotelier_template.create',
+    targetType: 'hotelier_template',
+    targetId: r.id,
+  });
+  revalidateAdminMaster('/admin/master/hotelier-templates');
+  return { ok: true, id: r.id };
+}
+
+export async function setHotelierTemplateActiveAction(
+  id: string,
+  isActive: boolean,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const r = await MHT.setHotelierTemplateActive(id, isActive);
+  if (r.ok) {
+    logActivity({
+      userId: user.id,
+      action: isActive
+        ? 'master.hotelier_template.restore'
+        : 'master.hotelier_template.archive',
+      targetType: 'hotelier_template',
+      targetId: id,
+    });
+    revalidateAdminMaster('/admin/master/hotelier-templates');
+  }
+  return r;
+}
+
+// ─────────────────────────────────────────────────────────────────────
 // 4. quick_actions (홈 노출)
 // ─────────────────────────────────────────────────────────────────────
 
@@ -584,7 +654,7 @@ export async function upsertSystemSettingAction(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const valueRaw = getStr(formData, 'value');
   const raw = {
     key: getStr(formData, 'key'),
@@ -617,7 +687,7 @@ export async function setSystemSettingActiveAction(
   id: string,
   isActive: boolean,
 ): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const r = await MSS.setSystemSettingActive(id, isActive);
   if (r.ok) {
     logActivity({

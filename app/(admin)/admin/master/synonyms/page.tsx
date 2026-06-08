@@ -30,7 +30,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 export default async function SynonymsIndexPage() {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
   const groups = await listTermGroups({ includeInactive: false });
 
   return (

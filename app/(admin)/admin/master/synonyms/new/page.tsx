@@ -17,7 +17,7 @@ export default async function SynonymsNewPage({
 }: {
   searchParams: Promise<{ canonical?: string }>;
 }) {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
   const { canonical } = await searchParams;
 
   return (

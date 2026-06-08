@@ -17,6 +17,7 @@ export const DRAFT_SCOPES = [
   'faq',
   'checklist-step',
   'quick-reply',
+  'hotelier-template',
   'ticket-message',
   'system-setting',
 ] as const;

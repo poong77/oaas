@@ -30,7 +30,7 @@ export default async function MenuTaxonomyDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
   const { id } = await params;
   const node = await getMenuTaxonomyById(id);
   if (!node) notFound();

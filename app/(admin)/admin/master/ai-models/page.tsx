@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'AI 모델 — 마스터DB' };
 
 export default async function MasterAiModelsPage() {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
   const rows = await listAllModels();
   const models: ManagerModel[] = rows.map((m) => ({
     id: m.id,

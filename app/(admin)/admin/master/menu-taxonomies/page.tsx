@@ -29,7 +29,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: '메뉴 구조 — 마스터' };
 
 export default async function MenuTaxonomyIndexPage() {
-  await requireRole(['admin']);
+  await requireRole(['manager', 'admin']);
 
   const [tree, productCategories] = await Promise.all([
     listMenuTaxonomyTree({ includeInactive: true }),

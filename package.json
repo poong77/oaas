@@ -34,6 +34,7 @@
     "db:backfill-faq-embeddings": "tsx db/backfill-faq-embeddings.ts",
     "db:backfill-ticket-embeddings": "tsx db/backfill-ticket-embeddings.ts",
     "db:seed:ai-models": "tsx db/seed-ai-models.ts",
+    "db:seed:hotelier-templates": "tsx db/seed-hotelier-templates.ts",
     "export:knowledge": "tsx db/export-knowledge.ts",
     "test:e2e": "playwright test --config=e2e/playwright.config.ts",
     "test:e2e:headed": "playwright test --config=e2e/playwright.config.ts --headed",

@@ -30,9 +30,7 @@ export default async function MasterMenuAccessPage() {
   const allowedCount = TOGGLEABLE_MASTER_MENUS.filter(
     (m) => accessMap[m.key] === true,
   ).length;
-  const lockedMenus = MASTER_MENUS.filter(
-    (m) => m.hardAdminOnly && m.key !== 'menu-access',
-  );
+  const lockedMenus = MASTER_MENUS.filter((m) => m.hardAdminOnly);
 
   return (
     <div className="flex flex-col gap-5">
@@ -81,10 +79,11 @@ export default async function MasterMenuAccessPage() {
       <Card>
         <CardContent className="flex flex-col gap-2 p-4">
           <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
-            <Lock className="h-3.5 w-3.5" /> 고정 어드민 전용 (변경 불가)
+            <Lock className="h-3.5 w-3.5" /> 영구 어드민 전용 (토글 불가)
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            아래 메뉴는 보안·구조상 항상 어드민만 접근합니다.
+            아래 메뉴는 항상 어드민만 접근하며 매니저 접근으로 전환할 수 없습니다.
+            그 외 모든 마스터DB 메뉴는 위에서 매니저 접근을 켜고 끌 수 있습니다.
           </p>
           <div className="mt-1 flex flex-wrap gap-2">
             {lockedMenus.map((m) => (

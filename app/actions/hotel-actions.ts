@@ -7,7 +7,8 @@
  * - addHotelSolutionAction          : 이용중 솔루션 추가 (PW는 AES 암호화 저장)
  * - updateHotelSolutionAction       : 솔루션 수정 (PW 빈값=기존 유지)
  * - deleteHotelSolutionAction       : 솔루션 삭제 (soft delete)
- * - revealSolutionPasswordAction    : 솔루션 PW 복호화 (어드민, 감사 로그)
+ * - revealSolutionPasswordAction    : 솔루션 PW 복호화 (어드민, 화면 표시, 감사 로그)
+ * - copySolutionPasswordAction      : 솔루션 PW 복호화 (어드민+매니저, 클립보드 복사용, 감사 로그)
  * - addManagedHotelAction           : 멀티관리 호텔 연결 (양방향)
  * - removeManagedHotelAction        : 멀티관리 호텔 해제 (양방향)
  */
@@ -389,6 +390,48 @@ export const revealSolutionPasswordAction = withAuthorizedAction<
     return { ok: true, data: { password: plain } };
   } catch (err) {
     console.error('[revealSolutionPasswordAction] 실패:', err);
+    return { ok: false, error: '비밀번호 조회 중 오류가 발생했습니다' };
+  }
+});
+
+/**
+ * 솔루션 비밀번호 복호화 — '바로가기' 자동입력(클립보드 복사)용.
+ * reveal과 달리 매니저까지 허용한다 (티켓 처리 중 솔루션 직접 로그인 필요).
+ * 화면에 평문을 그리지 않고 클립보드 복사 목적으로만 사용한다. 감사 로그 기록.
+ */
+export const copySolutionPasswordAction = withAuthorizedAction<
+  FormData,
+  ActionResult<{ password: string }>
+>(['admin', 'manager'], async (ctx, formData) => {
+  if (!db) return { ok: false, error: 'DB 미연결' };
+  const id = (formData.get('id') as string) ?? '';
+  const hotelId = (formData.get('hotelId') as string) ?? '';
+  if (!uuidSchema.safeParse(id).success || !uuidSchema.safeParse(hotelId).success)
+    return { ok: false, error: '잘못된 요청' };
+  try {
+    const rows = await db
+      .select({ passwordEnc: hotelSolutionLinks.passwordEnc })
+      .from(hotelSolutionLinks)
+      .where(
+        and(
+          eq(hotelSolutionLinks.id, id),
+          eq(hotelSolutionLinks.hotelId, hotelId),
+        ),
+      )
+      .limit(1);
+    if (!rows[0]) return { ok: false, error: '대상을 찾을 수 없습니다' };
+    const plain = decryptSecret(rows[0].passwordEnc);
+    if (plain === null) return { ok: false, error: '저장된 비밀번호가 없습니다' };
+    logActivity({
+      userId: ctx.user.id,
+      action: 'hotel.solution.copy_password',
+      targetType: 'hotel',
+      targetId: hotelId,
+      payload: { solutionId: id },
+    });
+    return { ok: true, data: { password: plain } };
+  } catch (err) {
+    console.error('[copySolutionPasswordAction] 실패:', err);
     return { ok: false, error: '비밀번호 조회 중 오류가 발생했습니다' };
   }
 });

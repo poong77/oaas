@@ -1,37 +1,32 @@
-/**
- * /admin/master/ticket-channels/new — 새 유입 채널 추가.
- */
-
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 import { requireRole } from '@/lib/permissions';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChannelForm } from '../_components/channel-form';
+import { HotelierTemplateEditor } from '../_components/hotelier-template-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '새 유입 채널 — 마스터DB' };
+export const metadata = { title: '신규 호텔리어 템플릿 — 마스터DB' };
 
-export default async function NewTicketChannelPage() {
+export default async function NewHotelierTemplatePage() {
   await requireRole(['manager', 'admin']);
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title="새 유입 채널"
-        description="티켓 생성 폼에서 선택할 수 있는 채널을 추가합니다."
+        title="신규 호텔리어 템플릿"
         breadcrumb={
           <Link
-            href="/admin/master/ticket-channels"
+            href="/admin/master/hotelier-templates"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
-            <ArrowLeft className="h-3 w-3" /> 유입 채널
+            <ArrowLeft className="h-3 w-3" /> 호텔리어 템플릿
           </Link>
         }
       />
       <Card>
-        <CardContent className="p-5">
-          <ChannelForm />
+        <CardContent className="p-4">
+          <HotelierTemplateEditor />
         </CardContent>
       </Card>
     </div>

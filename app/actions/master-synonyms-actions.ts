@@ -91,7 +91,7 @@ export async function createTermGroupAction(
   _prev: GroupActionState | undefined,
   formData: FormData,
 ): Promise<GroupActionState> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const parsed = GroupSchema.safeParse(extractGroupFromForm(formData));
   if (!parsed.success) {
     return {
@@ -132,7 +132,7 @@ export async function updateTermGroupAction(
   _prev: GroupActionState | undefined,
   formData: FormData,
 ): Promise<GroupActionState> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const parsed = GroupSchema.safeParse(extractGroupFromForm(formData));
   if (!parsed.success) {
     return {
@@ -172,7 +172,7 @@ export async function updateTermGroupAction(
 export async function toggleTermGroupAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const id = (formData.get('id') ?? '').toString().trim();
   const action = (formData.get('action') ?? '').toString().trim();
   if (!id) return { ok: false, message: 'ID 누락' };
@@ -212,7 +212,7 @@ export async function toggleTermGroupAction(
 export async function addSynonymAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string; synonymId?: string }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const parsed = SynonymSchema.safeParse({
     groupId: (formData.get('groupId') ?? '').toString().trim(),
     term: (formData.get('term') ?? '').toString().trim(),
@@ -250,7 +250,7 @@ export async function addSynonymAction(
 export async function removeSynonymAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const id = (formData.get('id') ?? '').toString().trim();
   const groupId = (formData.get('groupId') ?? '').toString().trim();
   if (!id) return { ok: false, message: 'ID 누락' };
@@ -283,7 +283,7 @@ export async function reorderSynonymsAction(
   groupId: string,
   ordering: { id: string; sortOrder: number }[],
 ): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['manager', 'admin']);
   const parsed = z.array(ReorderItemSchema).safeParse(ordering);
   if (!parsed.success) return { ok: false, message: '입력값 오류' };
   const result = await reorderSynonyms(groupId, parsed.data);
