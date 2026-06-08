@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { LifeBuoy, Lock, User as UserIcon } from 'lucide-react';
+import { Eye, EyeOff, LifeBuoy, Lock, User as UserIcon } from 'lucide-react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ export function LoginForm({
   const router = useRouter();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [pending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(error ?? null);
 
@@ -120,14 +121,28 @@ export function LoginForm({
                 <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="pl-8"
+                  className="pl-8 pr-10"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
+                  aria-pressed={showPassword}
+                  tabIndex={-1}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:text-slate-200"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
               </div>
             </div>
             {formError && (
@@ -138,6 +153,12 @@ export function LoginForm({
             <Button type="submit" disabled={pending}>
               {pending ? '로그인 중...' : '로그인'}
             </Button>
+
+            <div className="rounded-md border border-brand-200 bg-brand-50 p-2.5 text-[11px] leading-relaxed text-brand-800 dark:border-brand-800 dark:bg-brand-900/30 dark:text-brand-200">
+              처음 이용하시나요? <strong>초기 비밀번호는 123456</strong>입니다.
+              로그인 후 <strong>내 프로필</strong>에서 비밀번호를 꼭 변경하고
+              연락처·이메일 등 정보를 입력해주세요.
+            </div>
 
             {devStubEnabled && (
               <div className="mt-2 rounded-md border border-dashed border-slate-300 bg-slate-50 p-2.5 text-[11px] leading-relaxed text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
