@@ -52,7 +52,6 @@ export default async function AdminTicketsQueuePage({
   const status: TicketStatus | 'all' =
     statusRaw === 'received' ||
     statusRaw === 'in_progress' ||
-    statusRaw === 'on_hold' ||
     statusRaw === 'completed' ||
     statusRaw === 'all'
       ? (statusRaw as TicketStatus | 'all')

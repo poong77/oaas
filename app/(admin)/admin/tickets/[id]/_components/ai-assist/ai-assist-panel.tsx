@@ -35,13 +35,11 @@ import { AiModelSelectModal, type DocRef } from './ai-model-select-modal';
 const STATUS_LABEL: Record<string, string> = {
   received: '접수',
   in_progress: '처리중',
-  on_hold: '보류',
   completed: '완료',
 };
 const STATUS_TONE: Record<string, 'slate' | 'brand' | 'warn' | 'success'> = {
   received: 'brand',
   in_progress: 'warn',
-  on_hold: 'slate',
   completed: 'success',
 };
 

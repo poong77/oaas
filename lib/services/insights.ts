@@ -3,7 +3,7 @@
  *
  * 모든 함수 graceful(`if(!db)`) + try/catch. 기간 코호트(created_at) 일관.
  * Dev개입 신호: ticket_messages.metadata.eventKey='ticket.escalated_dev'
- * 접수(착수): status ∈ (in_progress, on_hold, completed)
+ * 접수(착수): status ∈ (in_progress, completed)
  * 완료 시각: status_change metadata.to='completed' 의 max(created_at)
  * 첫 응답: 운영팀(role manager/admin) public 메시지 min(created_at)
  */
@@ -95,7 +95,6 @@ export type ProductAgg = { label: string; count: number };
 export type StatusDist = {
   received: number;
   in_progress: number;
-  on_hold: number;
   completed: number;
 };
 export type TimeMetrics = {
@@ -113,7 +112,6 @@ export type AssigneeRow = {
   name: string;
   completed: number;
   ongoing: number;
-  onHold: number;
   avgResolutionBizDays: number | null;
 };
 
@@ -140,7 +138,7 @@ type RangeTicket = {
   productCode: string;
   issueType: string;
   urgency: string;
-  status: 'received' | 'in_progress' | 'on_hold' | 'completed';
+  status: 'received' | 'in_progress' | 'completed';
   assigneeId: string | null;
   channel: string;
   channels: string[];
@@ -149,8 +147,8 @@ type RangeTicket = {
   updatedAt: Date;
 };
 
-const OPEN_STATUSES = ['received', 'in_progress', 'on_hold'] as const;
-const ACCEPTED_STATUSES = ['in_progress', 'on_hold', 'completed'] as const;
+const OPEN_STATUSES = ['received', 'in_progress'] as const;
+const ACCEPTED_STATUSES = ['in_progress', 'completed'] as const;
 
 // ─────────────────────────────────────────────────────────────────────
 // 단일 진입
@@ -185,7 +183,7 @@ export async function getDashboardData(input: {
     channelDaily: { days: kstDayList(start, end), series: [] },
     byType: [],
     byProduct: [],
-    statusDist: { received: 0, in_progress: 0, on_hold: 0, completed: 0 },
+    statusDist: { received: 0, in_progress: 0, completed: 0 },
     timeMetrics: { avgFirstResponseHours: null, avgResolutionBizDays: null },
     devBacklog: [],
     assignees: [],
@@ -688,7 +686,6 @@ function computeStatusDist(rangeTickets: RangeTicket[]): StatusDist {
   const dist: StatusDist = {
     received: 0,
     in_progress: 0,
-    on_hold: 0,
     completed: 0,
   };
   for (const t of rangeTickets) dist[t.status] += 1;
@@ -735,22 +732,18 @@ function computeAssignees(
   type Acc = {
     completed: number;
     ongoing: number;
-    onHold: number;
     resBiz: number[];
   };
   const map = new Map<string, Acc>();
   for (const t of rangeTickets) {
     if (!t.assigneeId) continue;
     const acc =
-      map.get(t.assigneeId) ??
-      { completed: 0, ongoing: 0, onHold: 0, resBiz: [] };
+      map.get(t.assigneeId) ?? { completed: 0, ongoing: 0, resBiz: [] };
     if (t.status === 'completed') {
       acc.completed += 1;
       // 완료 시각: status_change 없으면 updated_at 폴백 (설계 §4).
       const at = completedAtMap.get(t.id) ?? t.updatedAt;
       acc.resBiz.push(businessDaysBetween(t.createdAt, at, holidays));
-    } else if (t.status === 'on_hold') {
-      acc.onHold += 1;
     } else {
       acc.ongoing += 1;
     }
@@ -762,7 +755,6 @@ function computeAssignees(
       name: nameMap.get(id) ?? '(미상)',
       completed: a.completed,
       ongoing: a.ongoing,
-      onHold: a.onHold,
       avgResolutionBizDays:
         a.resBiz.length > 0
           ? a.resBiz.reduce((s, v) => s + v, 0) / a.resBiz.length

@@ -93,7 +93,7 @@ export default async function InsightDashboardPage({
       <section className="flex flex-col gap-2">
         <SectionLabel>
           완료 처리 유형 — 모수 = 완료건 {completion.completed.toLocaleString()}
-          {' '}(보류·처리중 제외) · 각 비율은 완료건 대비
+          {' '}(처리중 제외) · 각 비율은 완료건 대비
         </SectionLabel>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <RatioCard
@@ -245,7 +245,6 @@ export default async function InsightDashboardPage({
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatusCard label="접수" value={statusDist.received} tone="amber" />
           <StatusCard label="처리중" value={statusDist.in_progress} tone="blue" />
-          <StatusCard label="보류" value={statusDist.on_hold} tone="orange" />
           <StatusCard label="완료" value={statusDist.completed} tone="emerald" />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -351,7 +350,6 @@ export default async function InsightDashboardPage({
                       <th className="pb-2 pr-4 font-semibold">담당자</th>
                       <th className="pb-2 pr-4 text-right font-semibold">완료</th>
                       <th className="pb-2 pr-4 text-right font-semibold">처리중</th>
-                      <th className="pb-2 pr-4 text-right font-semibold">보류</th>
                       <th className="pb-2 text-right font-semibold">평균 해결</th>
                     </tr>
                   </thead>
@@ -369,9 +367,6 @@ export default async function InsightDashboardPage({
                         </td>
                         <td className="py-2.5 pr-4 text-right text-blue-600 dark:text-blue-400">
                           {a.ongoing}
-                        </td>
-                        <td className="py-2.5 pr-4 text-right text-orange-500">
-                          {a.onHold}
                         </td>
                         <td className="py-2.5 text-right text-slate-600 dark:text-slate-300">
                           {a.avgResolutionBizDays != null

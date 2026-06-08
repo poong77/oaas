@@ -30,13 +30,8 @@ import type { TicketStatus } from '@/db/schema';
 import { STATUS_LABEL } from '@/lib/services/tickets-meta';
 import { cn } from '@/lib/utils';
 
-/** 상태 흐름(좌→우). 4단계 모두 노출, 어느 단계든 즉시 선택 가능. */
-const STATUS_FLOW: TicketStatus[] = [
-  'received',
-  'in_progress',
-  'on_hold',
-  'completed',
-];
+/** 상태 흐름(좌→우). 3단계 모두 노출, 어느 단계든 즉시 선택 가능. */
+const STATUS_FLOW: TicketStatus[] = ['received', 'in_progress', 'completed'];
 
 export function AdminTicketActions({
   ticketId,

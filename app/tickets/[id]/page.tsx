@@ -48,7 +48,6 @@ type SearchParams = Promise<{ created?: string }>;
 const STATUS_TONE: Record<TicketStatus, 'slate' | 'brand' | 'warn' | 'success'> = {
   received: 'brand',
   in_progress: 'warn',
-  on_hold: 'slate',
   completed: 'success',
 };
 

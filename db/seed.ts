@@ -758,13 +758,7 @@ async function main() {
         ticketId: created.id,
         authorId: resolveAssigneeId(seed.assignee) ?? managerUserId,
         kind: 'status_change',
-        content: `접수 → ${
-          seed.status === 'in_progress'
-            ? '처리중'
-            : seed.status === 'on_hold'
-              ? '보류'
-              : '완료'
-        }`,
+        content: `접수 → ${seed.status === 'in_progress' ? '처리중' : '완료'}`,
         metadata: { from: 'received', to: seed.status, seed: true },
       });
     }
@@ -839,7 +833,7 @@ async function main() {
         '### 새로운 기능',
         '',
         '- **티켓 카드 칸반뷰** — `/admin/tickets/kanban`',
-        '  - 드래그앤드롭으로 상태 전이 (received → in_progress → on_hold → completed)',
+        '  - 드래그앤드롭으로 상태 전이 (received → in_progress → completed)',
         '- **티켓 피드백 위젯** — 완료된 티켓에 호텔리어가 평가/코멘트 가능',
         '- **자동 알림** — 새 티켓 접수 / 긴급도 P1 / Dev 에스컬레이션 시 Slack 채널 자동 전송',
         '- **첨부 파일 업로드** — 티켓 작성 시 스크린샷/로그 첨부 (Vercel Blob)',

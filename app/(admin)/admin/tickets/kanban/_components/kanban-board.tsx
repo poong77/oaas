@@ -4,7 +4,7 @@
  * IS-04 칸반 보드 (Phase 6).
  *
  * 동작:
- *   - 4개 컬럼 (received / in_progress / on_hold / completed)
+ *   - 3개 컬럼 (received / in_progress / completed)
  *   - HTML5 native DnD API (라이브러리 없음)
  *   - drop 즉시 optimistic update → moveTicketStatusAction → 실패 시 rollback
  *   - 모바일: 가로 스크롤 + 카드 하단 fallback select (터치 DnD 한계 회피)
@@ -151,7 +151,6 @@ export function KanbanBoard({ initial }: { initial: Columns }) {
       const cleaned: Columns = {
         received: prev.received.filter((c) => c.id !== cardId),
         in_progress: prev.in_progress.filter((c) => c.id !== cardId),
-        on_hold: prev.on_hold.filter((c) => c.id !== cardId),
         completed: prev.completed.filter((c) => c.id !== cardId),
       };
       const restored: KanbanCard = { ...card, status: originalStatus };

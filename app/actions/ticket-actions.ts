@@ -356,7 +356,7 @@ export async function addInternalMemoAction(
 
 const StatusSchema = z.object({
   ticketId: z.string().uuid(),
-  nextStatus: z.enum(['received', 'in_progress', 'on_hold', 'completed']),
+  nextStatus: z.enum(['received', 'in_progress', 'completed']),
   /** 'true'면 원콜 해결로 기록 (완료 전환 시에만 의미). */
   oneCallResolved: z.enum(['true', 'false']).optional(),
 });

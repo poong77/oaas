@@ -1,7 +1,7 @@
 /**
  * `/admin/tickets/kanban` — IS-04 칸반뷰 (Phase 6).
  *
- * 매니저+어드민 전용. 4컬럼 (received / in_progress / on_hold / completed).
+ * 매니저+어드민 전용. 3컬럼 (received / in_progress / completed).
  * 드래그앤드롭으로 상태 변경 → moveTicketStatusAction → 호텔리어 자동 알림.
  *
  * 페이지네이션 없음, 검색 없음 (시각화 우선). completed는 최근 30일만.
@@ -59,7 +59,6 @@ export default async function AdminTicketsKanbanPage({
   const initial: Record<keyof typeof columns, KanbanCard[]> = {
     received: columns.received.map(toCard),
     in_progress: columns.in_progress.map(toCard),
-    on_hold: columns.on_hold.map(toCard),
     completed: columns.completed.map(toCard),
   };
 
@@ -122,7 +121,7 @@ function toCard(row: {
   title: string;
   productCode: string;
   urgency: string;
-  status: 'received' | 'in_progress' | 'on_hold' | 'completed';
+  status: 'received' | 'in_progress' | 'completed';
   createdAt: Date | string;
   dueDate: Date | string | null;
   assigneeId: string | null;

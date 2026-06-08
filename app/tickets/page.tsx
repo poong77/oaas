@@ -40,7 +40,6 @@ export default async function MyTicketsPage({
   const status: TicketStatus | 'all' =
     statusRaw === 'received' ||
     statusRaw === 'in_progress' ||
-    statusRaw === 'on_hold' ||
     statusRaw === 'completed' ||
     statusRaw === 'all'
       ? (statusRaw as TicketStatus | 'all')

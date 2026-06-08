@@ -32,7 +32,6 @@ import { users } from './users';
 export const ticketStatusEnum = pgEnum('ticket_status_kind', [
   'received',
   'in_progress',
-  'on_hold',
   'completed',
 ]);
 

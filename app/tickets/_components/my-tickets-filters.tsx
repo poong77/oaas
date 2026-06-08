@@ -13,7 +13,6 @@ const STATUS_TABS = [
   { key: 'all', label: '전체' },
   { key: 'received', label: '접수' },
   { key: 'in_progress', label: '처리중' },
-  { key: 'on_hold', label: '보류' },
   { key: 'completed', label: '완료' },
 ] as const;
 

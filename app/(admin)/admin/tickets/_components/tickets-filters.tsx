@@ -15,7 +15,6 @@ import { cn } from '@/lib/utils';
 const STATUS_TABS = [
   { key: 'received', label: '미처리' },
   { key: 'in_progress', label: '처리중' },
-  { key: 'on_hold', label: '보류' },
   { key: 'completed', label: '완료' },
   { key: 'all', label: '전체' },
 ] as const;

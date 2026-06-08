@@ -16,7 +16,6 @@ import type { TicketStatus, TicketFeedbackRating } from '@/db/schema';
 export const STATUS_LABEL: Record<TicketStatus, string> = {
   received: '접수',
   in_progress: '처리중',
-  on_hold: '보류',
   completed: '완료',
 };
 
@@ -24,7 +23,6 @@ export const STATUS_LABEL: Record<TicketStatus, string> = {
 export const KANBAN_COLUMN_ORDER: TicketStatus[] = [
   'received',
   'in_progress',
-  'on_hold',
   'completed',
 ];
 
@@ -35,7 +33,6 @@ export const KANBAN_COLUMN_TONE: Record<
 > = {
   received: 'brand',
   in_progress: 'warn',
-  on_hold: 'slate',
   completed: 'success',
 };
 

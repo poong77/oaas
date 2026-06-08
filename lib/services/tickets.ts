@@ -1182,7 +1182,7 @@ export async function getTicketQueueSummary(): Promise<{
         and(
           eq(tickets.isActive, true),
           eq(tickets.urgency, 'p1'),
-          inArray(tickets.status, ['received', 'in_progress', 'on_hold']),
+          inArray(tickets.status, ['received', 'in_progress']),
         ),
       );
     const [inProgressRow] = await db
@@ -1266,7 +1266,6 @@ export async function listAllTicketsForKanban(
   const empty: ListKanbanResult = {
     received: [],
     in_progress: [],
-    on_hold: [],
     completed: [],
   };
   if (!db) return empty;
@@ -1328,7 +1327,6 @@ export async function listAllTicketsForKanban(
     const out: ListKanbanResult = {
       received: [],
       in_progress: [],
-      on_hold: [],
       completed: [],
     };
     for (const r of rows) {
