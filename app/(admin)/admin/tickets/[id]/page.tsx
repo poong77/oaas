@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Building2,
   Calendar,
-  ExternalLink,
   Hash,
   Mail,
   MessageSquare,
@@ -38,6 +37,7 @@ import { getChannelDisplay } from '@/lib/ticket-channel-label';
 import { RATING_LABEL, RATING_TONE } from '@/lib/services/tickets-meta';
 import type { TicketStatus } from '@/db/schema';
 import { TicketThread } from '@/app/tickets/[id]/_components/ticket-thread';
+import { AttachmentList } from '@/components/tickets/attachment-list';
 import { AdminTicketActions } from './_components/admin-ticket-actions';
 import { AdminReplyForm } from './_components/admin-reply-form';
 
@@ -78,12 +78,6 @@ function fmtDateTime(d: Date | string | null): string {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 export default async function AdminTicketDetailPage({
@@ -203,25 +197,14 @@ export default async function AdminTicketDetailPage({
                   <Paperclip className="h-3.5 w-3.5" />
                   첨부 {ticket.attachments.length}개
                 </div>
-                <ul className="flex flex-col gap-1.5">
-                  {ticket.attachments.map((a) => (
-                    <li key={a.id}>
-                      <a
-                        href={`/api/attachments/${a.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-sm text-brand-600 hover:underline dark:text-brand-400"
-                      >
-                        <Paperclip className="h-3.5 w-3.5" />
-                        {a.originalName}
-                        <span className="text-xs text-slate-400">
-                          ({formatBytes(a.sizeBytes)})
-                        </span>
-                        <ExternalLink className="h-3 w-3 text-slate-400" />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+                <AttachmentList
+                  attachments={ticket.attachments.map((a) => ({
+                    id: a.id,
+                    originalName: a.originalName,
+                    mimeType: a.mimeType,
+                    sizeBytes: a.sizeBytes,
+                  }))}
+                />
               </CardContent>
             </Card>
           )}
