@@ -127,7 +127,7 @@ export function TicketsFilters({
               type="search"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="제목·티켓번호·내용 검색"
+              placeholder="제목·티켓번호·내용·호텔명 검색"
               className="w-full pl-8 sm:w-64"
             />
           </div>

@@ -686,6 +686,7 @@ export async function listTickets(
       ilike(tickets.title, pattern),
       ilike(tickets.ticketNo, pattern),
       ilike(tickets.content, pattern),
+      ilike(hotels.name, pattern),
     );
     if (search) conditions.push(search);
   }
@@ -780,6 +781,7 @@ export async function listTickets(
     const totalRows = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(tickets)
+      .leftJoin(hotels, eq(tickets.hotelId, hotels.id))
       .where(whereExpr);
     const total = Number(totalRows[0]?.count ?? 0);
 
