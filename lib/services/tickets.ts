@@ -61,6 +61,7 @@ import {
 } from '@/lib/notifications/templates';
 import {
   buildAnswerSupplementBlocks,
+  buildAttachmentBlocks,
   buildSlackImageBlocks,
   buildTicketEscalateBlocks,
   buildTicketNewBlocks,
@@ -70,6 +71,7 @@ import {
 } from '@/lib/notifications/slack';
 import {
   extractEditorImageKeys,
+  presignAttachmentImages,
   presignSlackImages,
   stripEditorImageMarkdown,
 } from '@/lib/notifications/slack-images';
@@ -394,9 +396,16 @@ async function dispatchTicketReceivedNotifications(
       reporterPhone = u[0]?.phone ?? null;
     }
 
-    // 첨부 개수
+    // 첨부 메타 (개수 + Slack 링크/미리보기용)
     const attachmentRows = await db
-      .select({ id: ticketAttachments.id })
+      .select({
+        id: ticketAttachments.id,
+        name: ticketAttachments.originalName,
+        mimeType: ticketAttachments.mimeType,
+        sizeBytes: ticketAttachments.sizeBytes,
+        pathname: ticketAttachments.pathname,
+        blobUrl: ticketAttachments.blobUrl,
+      })
       .from(ticketAttachments)
       .where(eq(ticketAttachments.ticketId, ticketId));
     const attachmentCount = attachmentRows.length;
@@ -478,7 +487,24 @@ async function dispatchTicketReceivedNotifications(
       link: adminTicketUrl,
     };
 
-    const newBlocks = [...buildTicketNewBlocks(summary), ...imageBlocks];
+    // 첨부파일: 코멘트+다운로드 링크 블록 + 이미지 첨부는 presigned 인라인 미리보기
+    const attachmentLinkBlocks = buildAttachmentBlocks(
+      attachmentRows.map((a) => ({
+        id: a.id,
+        name: a.name,
+        sizeBytes: a.sizeBytes,
+      })),
+      baseUrl,
+    );
+    const attachmentImages = await presignAttachmentImages(attachmentRows);
+    const attachmentImageBlocks = buildSlackImageBlocks(attachmentImages);
+
+    const newBlocks = [
+      ...buildTicketNewBlocks(summary),
+      ...imageBlocks,
+      ...attachmentLinkBlocks,
+      ...attachmentImageBlocks,
+    ];
 
     await notifySlack(
       {
@@ -531,7 +557,12 @@ async function dispatchTicketReceivedNotifications(
         {
           channel: 'urgent',
           fallbackText: `[P1 긴급] ${ticketNo} ${ticketRow.title}`,
-          blocks: [...buildTicketUrgentBlocks(summary), ...imageBlocks],
+          blocks: [
+            ...buildTicketUrgentBlocks(summary),
+            ...imageBlocks,
+            ...attachmentLinkBlocks,
+            ...attachmentImageBlocks,
+          ],
         },
         { eventKey: 'ticket.urgent_slack', ticketId },
       );

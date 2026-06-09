@@ -125,6 +125,39 @@ export async function sendSlack(input: SendSlackInput): Promise<SendSlackResult>
 // Block Kit 빌더
 // ─────────────────────────────────────────────────────────────────────
 
+/** 바이트 → 사람이 읽는 크기 (KB/MB). */
+function formatSize(bytes: number): string {
+  if (!bytes || bytes <= 0) return '';
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)}KB`;
+  return `${bytes}B`;
+}
+
+/**
+ * 첨부파일 → Slack 섹션 블록 (코멘트 + 다운로드 링크).
+ * 링크는 인증 프록시(`/api/attachments/[id]`) 절대경로 — 로그인한 운영팀이 클릭 시 조회.
+ */
+export function buildAttachmentBlocks(
+  attachments: { id: string; name: string; sizeBytes: number }[],
+  baseUrl: string,
+): SlackBlock[] {
+  if (!attachments.length) return [];
+  const base = baseUrl.replace(/\/$/, '');
+  const lines = attachments.map((a) => {
+    const size = formatSize(a.sizeBytes);
+    return `• <${base}/api/attachments/${a.id}|${a.name || '첨부파일'}>${size ? `  _(${size})_` : ''}`;
+  });
+  return [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `📎 *첨부파일 ${attachments.length}개* — 클릭하면 열립니다(운영팀 로그인 필요)\n${lines.join('\n')}`,
+      },
+    },
+  ];
+}
+
 /**
  * 본문 이미지 → Slack `image` 블록 (presigned URL 사용).
  * Slack은 게시 시점에 image_url을 가져와 캐시하므로 presign 만료 후에도 표시 유지.
@@ -197,9 +230,7 @@ export function buildTicketNewBlocks(t: TicketSummaryForSlack): SlackBlock[] {
     `*긴급도:* ${t.urgencyLabel}` +
       (t.impactLabel ? `  |  *영향범위:* ${t.impactLabel}` : ''),
   );
-  if (t.attachmentCount > 0) {
-    lines.push(`*첨부:* ${t.attachmentCount}개`);
-  }
+  // 첨부 안내는 buildAttachmentBlocks(코멘트+링크)로 분리 — 여기선 카운트 생략.
 
   return [
     {

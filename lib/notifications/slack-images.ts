@@ -18,7 +18,7 @@ import 'server-only';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '@/lib/env';
-import { getS3Client, isEditorUploadKey } from '@/lib/s3';
+import { getS3Client, isEditorUploadKey, resolveS3Object } from '@/lib/s3';
 
 /** `/api/files/view?key=...`(상대/절대) 프록시 URL에서 key 캡처. */
 const PROXY_URL_RE =
@@ -75,6 +75,42 @@ export async function presignSlackImages(
     } catch {
       // 자격증명/권한 없음 → 이 이미지 건너뜀 (호출부에서 안내 폴백)
     }
+  }
+  return out;
+}
+
+export type AttachmentLite = {
+  id: string;
+  name: string;
+  mimeType: string | null;
+  sizeBytes: number;
+  pathname: string | null;
+  blobUrl: string | null;
+};
+
+/** 이미지 타입 첨부 → presigned S3 URL (Slack 인라인 미리보기용). */
+export async function presignAttachmentImages(
+  attachments: AttachmentLite[],
+  max = 5,
+): Promise<SlackImage[]> {
+  if (!attachments.length || !env.S3_UPLOAD_BUCKET) return [];
+  const client = getS3Client();
+  const out: SlackImage[] = [];
+  for (const a of attachments) {
+    if (!a.mimeType || !a.mimeType.startsWith('image/')) continue;
+    const obj = resolveS3Object({ pathname: a.pathname, blobUrl: a.blobUrl });
+    if (!obj) continue;
+    try {
+      const url = await getSignedUrl(
+        client,
+        new GetObjectCommand({ Bucket: obj.bucket, Key: obj.key }),
+        { expiresIn: 60 * 60 * 24 },
+      );
+      out.push({ url, alt: a.name || '첨부 이미지' });
+    } catch {
+      /* skip */
+    }
+    if (out.length >= max) break;
   }
   return out;
 }
