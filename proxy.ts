@@ -24,7 +24,14 @@ import { authConfig } from '@/lib/auth.config';
 const { auth } = NextAuth(authConfig);
 
 /** 로그인 없이 접근 가능한 페이지 (정확 매칭). */
-const PUBLIC_PATHS = new Set<string>(['/', '/login']);
+const PUBLIC_PATHS = new Set<string>([
+  '/',
+  '/login',
+  // AC-11 셀프 비밀번호 찾기 — 미인증 사용자가 접근해야 하는 공개 플로우.
+  // (이메일 재설정 링크 /reset-password?token=… 도 pathname은 '/reset-password'라 정확 매칭됨)
+  '/forgot-password',
+  '/reset-password',
+]);
 
 // NextAuth의 auth() wrap을 default export(=proxy)로 노출
 export default auth((req) => {
