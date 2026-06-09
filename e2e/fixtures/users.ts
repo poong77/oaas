@@ -5,21 +5,21 @@
  * 프로덕션에서는 절대 사용되지 않는다 (AUTH_DEV_STUB=true일 때만 활성).
  */
 export const TEST_USERS = {
+  // 2026-06: 자체호스팅 dev DB는 reset-passwords-to-default 적용으로
+  // 시드 3종 계정 비밀번호가 모두 123456으로 통일됨 (실제 DB 상태와 정합).
   admin: {
     email: 'admin@oa.local',
-    password: 'oa1234!',
+    password: '123456',
     role: 'admin' as const,
     label: '어드민',
   },
   manager: {
     email: 'manager@oa.local',
-    password: 'oa1234!',
+    password: '123456',
     role: 'manager' as const,
     label: '매니저',
   },
   hotelier: {
-    // 초기 비밀번호 123456 정책으로 hotelier 시드 계정 비번이 재설정됨(2026-06).
-    // admin/manager는 oa1234! 유지, hotelier만 123456.
     email: 'hotelier@oa.local',
     password: '123456',
     role: 'hotelier' as const,

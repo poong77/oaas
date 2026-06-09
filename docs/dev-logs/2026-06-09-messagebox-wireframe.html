@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>메시지함 탭 — 와이어프레임</title>
+<style>
+  :root {
+    --brand: #4f46e5;
+    --brand-50: #eef2ff;
+    --brand-600: #4f46e5;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+    background: #f4f5f7; color: var(--slate-800); line-height: 1.5;
+  }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--slate-500); font-size: 13px; margin-bottom: 24px; }
+  .canvas {
+    max-width: 1080px; margin: 0 auto; background: #fff;
+    border: 1px solid var(--slate-200); border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 24px;
+  }
+  .page-header { margin-bottom: 18px; }
+  .page-header .t { font-size: 18px; font-weight: 700; }
+  .page-header .d { font-size: 12px; color: var(--slate-500); }
+
+  /* tabs */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--slate-200); margin-bottom: 18px; }
+  .tab { padding: 9px 16px; font-size: 14px; font-weight: 600; color: var(--slate-500);
+    border-bottom: 2px solid transparent; cursor: default; }
+  .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+  .badge-new { font-size: 10px; background: var(--brand-50); color: var(--brand);
+    border-radius: 999px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
+
+  /* card */
+  .card { border: 1px solid var(--slate-200); border-radius: 12px; padding: 18px; }
+
+  /* search bar */
+  .search { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; margin-bottom: 16px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; color: var(--slate-500); font-weight: 600; }
+  .ctrl { height: 34px; border: 1px solid var(--slate-300); border-radius: 8px;
+    background: #fff; padding: 0 10px; font-size: 12px; color: var(--slate-700);
+    display: flex; align-items: center; }
+  .ctrl.ph { color: var(--slate-400); }
+  .span2 { grid-column: span 2; }
+  .span3 { grid-column: span 3; }
+  .span-date { grid-column: span 4; }
+  .date-row { display: flex; align-items: center; gap: 6px; }
+  .date-row .ctrl { flex: 1; }
+  .btn { height: 34px; border-radius: 8px; padding: 0 14px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--slate-300); background: #fff; color: var(--slate-700);
+    display: inline-flex; align-items: center; gap: 6px; cursor: default; }
+  .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .btn.ghost { background: transparent; }
+  .search-actions { grid-column: span 12; display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* toolbar above table */
+  .toolbar { display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; font-size: 12px; color: var(--slate-500); }
+  .pagesize { display: flex; align-items: center; gap: 6px; }
+  .seg { display: inline-flex; border: 1px solid var(--slate-300); border-radius: 8px; overflow: hidden; }
+  .seg span { padding: 4px 10px; font-size: 12px; color: var(--slate-500); border-right: 1px solid var(--slate-200); }
+  .seg span:last-child { border-right: 0; }
+  .seg span.on { background: var(--brand); color: #fff; }
+
+  /* table */
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead th { text-align: left; padding: 9px 10px; background: var(--slate-50);
+    color: var(--slate-500); font-weight: 600; border-bottom: 1px solid var(--slate-200);
+    white-space: nowrap; }
+  tbody td { padding: 10px; border-bottom: 1px solid var(--slate-100); vertical-align: middle; }
+  th.num, td.num { text-align: right; }
+  th.center, td.center { text-align: center; }
+  .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600;
+    border-radius: 999px; padding: 2px 8px; white-space: nowrap; flex-shrink: 0; }
+  .pill.mail { background: var(--brand-50); color: var(--brand); }
+  .pill.sms { background: var(--slate-100); color: var(--slate-700); }
+  .pill.lms { background: #fef3c7; color: #b45309; }
+  .pill.mms { background: #dcfce7; color: #15803d; }
+  .pill.sub { font-size: 9px; opacity: .85; margin-left: 2px; }
+  .link { color: var(--brand); font-weight: 600; cursor: default; text-decoration: underline dotted; }
+  .ok { color: var(--green); font-weight: 700; }
+  .fail { color: var(--red); font-weight: 700; }
+  .muted { color: var(--slate-400); }
+  .dt { font-variant-numeric: tabular-nums; color: var(--slate-700); }
+
+  /* pagination */
+  .pager { display: flex; justify-content: center; align-items: center; gap: 6px;
+    margin-top: 16px; font-size: 12px; color: var(--slate-500); }
+  .pager .pg { border: 1px solid var(--slate-300); border-radius: 6px; padding: 4px 9px; }
+  .pager .pg.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+  /* popups */
+  .popups { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 28px; }
+  .pop { border: 1px dashed var(--brand); border-radius: 12px; padding: 0; overflow: hidden; background: #fff; }
+  .pop .cap { font-size: 11px; color: var(--brand); font-weight: 700; padding: 6px 12px; background: var(--brand-50); }
+  .pop .body { padding: 14px; }
+  .pop h3 { font-size: 14px; margin: 0 0 10px; }
+  .reclist { font-size: 12px; }
+  .reclist .row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--slate-100); }
+  .reclist .row .co { color: var(--slate-700); font-weight: 600; }
+  .reclist .row .addr { color: var(--slate-500); font-family: ui-monospace, monospace; }
+  .reclist .row .st-ok { color: var(--green); font-size: 11px; }
+  .reclist .row .st-fail { color: var(--red); font-size: 11px; }
+  .bodybox { font-size: 12.5px; color: var(--slate-700); white-space: pre-wrap;
+    border: 1px solid var(--slate-200); border-radius: 8px; padding: 12px; background: var(--slate-50); }
+  .var { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;
+    border-radius: 4px; padding: 0 3px; font-weight: 600; font-size: 12px; }
+  .params { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .params .lbl { font-size: 11px; color: var(--slate-500); font-weight: 600; }
+  .chip { font-size: 11px; background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;
+    border-radius: 999px; padding: 1px 8px; font-family: ui-monospace, monospace; }
+  .count { display: flex; justify-content: space-between; align-items: center;
+    margin-top: 8px; font-size: 11px; color: var(--slate-500); }
+  .count .right { font-variant-numeric: tabular-nums; }
+  .count b { color: var(--slate-700); }
+  .mmsimg { display: inline-flex; align-items: center; gap: 4px; font-size: 11px;
+    color: #15803d; background: #dcfce7; border-radius: 6px; padding: 2px 8px; margin-top: 8px; }
+  /* 메일 푸터 (본문 하단 자동 추가) */
+  .mailfooter { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--slate-200);
+    font-size: 11.5px; line-height: 1.7; color: var(--slate-500); }
+  .mailfooter .brand { font-weight: 700; color: var(--slate-700); font-size: 12.5px; margin-bottom: 4px; }
+  .mailfooter .brand .en { color: var(--slate-400); font-weight: 600; }
+  .mailfooter .lbl { color: var(--slate-400); }
+  .mailfooter .tel { margin-top: 4px; }
+  .pop .foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+  .note { font-size: 12px; color: var(--slate-500); margin-top: 24px; padding: 14px;
+    background: var(--slate-50); border-radius: 10px; border: 1px solid var(--slate-200); }
+  .note b { color: var(--slate-700); }
+  .note ul { margin: 8px 0 0; padding-left: 18px; }
+  .note li { margin: 3px 0; }
+  @media (max-width: 720px) { .popups { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <h1>메시지함 탭 — 와이어프레임</h1>
+  <div class="sub">어드민 &gt; 메일&amp;문자 · /admin/insights/messaging · (메시지함이 기존 '지난 이력' 탭을 대체)</div>
+
+  <div class="canvas">
+    <div class="page-header">
+      <div class="t">메일&amp;문자</div>
+      <div class="d">호텔·호텔리어에게 메일(SES) 또는 문자(Solapi)를 직접 발송합니다. 발송 이력이 기록됩니다.</div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab">✉️ 메일 발송</div>
+      <div class="tab">💬 문자 발송</div>
+      <div class="tab active">🗂️ 메시지함<span class="badge-new">NEW</span></div>
+    </div>
+
+    <!-- CARD -->
+    <div class="card">
+
+      <!-- SEARCH -->
+      <div class="search">
+        <div class="field span-date">
+          <label>발송일</label>
+          <div class="date-row">
+            <div class="ctrl ph">2026-06-01</div>
+            <span class="muted">~</span>
+            <div class="ctrl ph">2026-06-09</div>
+          </div>
+        </div>
+        <div class="field span2">
+          <label>유형</label>
+          <div class="ctrl">전체 ▾</div>
+        </div>
+        <div class="field span3">
+          <label>업체명</label>
+          <div class="ctrl ph">호텔명 검색…</div>
+        </div>
+        <div class="field span3">
+          <label>메일주소</label>
+          <div class="ctrl ph">email@…</div>
+        </div>
+        <div class="field span3">
+          <label>문자번호</label>
+          <div class="ctrl ph">010…</div>
+        </div>
+        <div class="search-actions">
+          <div class="btn ghost">초기화</div>
+          <div class="btn primary">🔍 검색</div>
+        </div>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div>총 <b>128</b>건 발송 묶음</div>
+        <div class="pagesize">
+          페이지당
+          <div class="seg"><span class="on">20</span><span>50</span><span>100</span></div>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <table>
+        <thead>
+          <tr>
+            <th>발송일시</th>
+            <th class="center">유형</th>
+            <th class="center">총발송</th>
+            <th class="num">성공</th>
+            <th class="num">실패</th>
+            <th class="center">본문</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="dt">2026-06-09 14:32:07</td>
+            <td class="center"><span class="pill mail">✉️ 메일</span></td>
+            <td class="center"><span class="link">12명 ▸</span></td>
+            <td class="num ok">11</td>
+            <td class="num fail">1</td>
+            <td class="center"><span class="link">보기 ▸</span></td>
+          </tr>
+          <tr>
+            <td class="dt">2026-06-09 11:05:41</td>
+            <td class="center"><span class="pill lms">💬 문자<span class="sub">LMS</span></span></td>
+            <td class="center"><span class="link">35명 ▸</span></td>
+            <td class="num ok">35</td>
+            <td class="num muted">0</td>
+            <td class="center"><span class="link">보기 ▸</span></td>
+          </tr>
+          <tr>
+            <td class="dt">2026-06-08 18:20:13</td>
+            <td class="center"><span class="pill sms">💬 문자<span class="sub">SMS</span></span></td>
+            <td class="center"><span class="link">3명 ▸</span></td>
+            <td class="num ok">3</td>
+            <td class="num muted">0</td>
+            <td class="center"><span class="link">보기 ▸</span></td>
+          </tr>
+          <tr>
+            <td class="dt">2026-06-08 09:14:55</td>
+            <td class="center"><span class="pill mms">💬 문자<span class="sub">MMS</span></span></td>
+            <td class="center"><span class="link">8명 ▸</span></td>
+            <td class="num ok">7</td>
+            <td class="num fail">1</td>
+            <td class="center"><span class="link">보기 ▸</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- PAGINATION -->
+      <div class="pager">
+        <span class="pg">‹ 이전</span>
+        <span class="pg on">1</span>
+        <span class="pg">2</span>
+        <span class="pg">3</span>
+        <span class="muted">… 7</span>
+        <span class="pg">다음 ›</span>
+      </div>
+    </div>
+
+    <!-- POPUPS -->
+    <div class="popups">
+      <div class="pop">
+        <div class="cap">팝업 ① — '총발송' 클릭 시 (수신자 목록)</div>
+        <div class="body">
+          <h3>수신자 12명 · 메일 (2026-06-09 14:32)</h3>
+          <div class="reclist">
+            <div class="row"><span class="co">더 페이즈 호텔 <span class="muted">(+1)</span></span><span class="addr">manager@thephase.kr</span><span class="st-ok">성공</span></div>
+            <div class="row"><span class="co">그랜드 워커힐</span><span class="addr">fo@walkerhill.com</span><span class="st-ok">성공</span></div>
+            <div class="row"><span class="co muted">직접입력</span><span class="addr">test@oa.com</span><span class="st-fail">실패</span></div>
+            <div class="row"><span class="co">롯데호텔 제주</span><span class="addr">gm@lotte-jeju.com</span><span class="st-ok">성공</span></div>
+          </div>
+          <div class="foot">
+            <div class="btn ghost">메일주소 전체 복사</div>
+            <div class="btn">닫기</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pop">
+        <div class="cap">팝업 ② — '본문' 클릭 시 (제목 + 본문 + 파라미터 + 글자수)</div>
+        <div class="body">
+          <h3>[정기 점검 안내] 6월 서버 점검 <span class="pill lms" style="font-size:10px;">문자<span class="sub">LMS</span></span></h3>
+          <div class="muted" style="font-size:11px;margin-bottom:8px;">사유: 정기 점검 안내 · 발신: 1666-0000</div>
+          <div class="bodybox"><span class="var">#{업체명}</span> 담당자님, 안녕하세요.
+OA 통합 AS 팀입니다.
+
+6월 정기 서버 점검 일정을 안내드립니다.
+- 일시: 2026-06-12 02:00 ~ 04:00
+- 영향: PMS 일시 접속 불가
+
+문의: <span class="var">#{담당자}</span> (<span class="var">#{연락처}</span>)
+감사합니다.</div>
+
+          <!-- 본문에 사용된 파라미터(치환 변수) -->
+          <div class="params">
+            <span class="lbl">파라미터</span>
+            <span class="chip">#{업체명}</span>
+            <span class="chip">#{담당자}</span>
+            <span class="chip">#{연락처}</span>
+          </div>
+
+          <!-- 본문 아래 글자수 표시 -->
+          <div class="count">
+            <span>한글 2byte · 영문/숫자 1byte 기준</span>
+            <span class="right"><b>156자</b> · <b>284 byte</b> · LMS</span>
+          </div>
+
+          <div class="foot">
+            <div class="btn ghost">본문 복사</div>
+            <div class="btn">닫기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 추가 팝업 예시: MMS (이미지 첨부) -->
+    <div class="popups" style="margin-top:18px;">
+      <div class="pop">
+        <div class="cap">팝업 ②-1 — 문자 MMS 본문 (이미지 첨부 시)</div>
+        <div class="body">
+          <h3>6월 이벤트 안내 <span class="pill mms" style="font-size:10px;">문자<span class="sub">MMS</span></span></h3>
+          <div class="bodybox"><span class="var">#{업체명}</span> 고객님께 드리는 6월 한정 혜택 안내입니다. 자세한 내용은 첨부 이미지를 확인해 주세요.</div>
+          <div class="mmsimg">🖼️ event_june.jpg · 178KB · 1,200×900</div>
+          <div class="params">
+            <span class="lbl">파라미터</span>
+            <span class="chip">#{업체명}</span>
+          </div>
+          <div class="count">
+            <span>이미지 첨부 시 MMS 자동 전환</span>
+            <span class="right"><b>52자</b> · <b>98 byte</b> · MMS</span>
+          </div>
+          <div class="foot">
+            <div class="btn ghost">본문 복사</div>
+            <div class="btn">닫기</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pop" style="border-style:solid;border-color:var(--slate-200);">
+        <div class="cap" style="background:var(--slate-100);color:var(--slate-700);">문자 유형 기준 (SMS / LMS / MMS)</div>
+        <div class="body">
+          <table style="font-size:11.5px;">
+            <thead><tr><th>구분</th><th>기준</th></tr></thead>
+            <tbody>
+              <tr><td><span class="pill sms">SMS</span></td><td>90 byte 이하 · 제목 없음</td></tr>
+              <tr><td><span class="pill lms">LMS</span></td><td>90 byte 초과 또는 제목 입력 시 자동 전환 (최대 2,000 byte)</td></tr>
+              <tr><td><span class="pill mms">MMS</span></td><td>이미지 첨부 시 자동 전환 (JPG·200KB·1,500×1,440px 이하)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>구현 메모 (확정된 설계)</b>
+      <ul>
+        <li><b>발송 묶음</b>: 신규 발송부터 <code>batch_id</code> 부여 → 1발송 = 1행. batch_id 없는 기존 이력은 메시지함에 표시하지 않음.</li>
+        <li><b>업체명</b>: 발송 시점에 수신자별 업체(호텔)명을 batch에 저장(변수 자동 치환과 동일 매핑 사용). 한 수신자가 여러 호텔이면 <code>호텔명(+N)</code>, 직접 입력분은 <code>직접입력</code>.</li>
+        <li><b>총발송/성공/실패</b>: batch_id로 group by, status 집계.</li>
+        <li><b>유형 구분</b>: 메일 / 문자SMS / 문자LMS / 문자MMS. 문자 세부유형(SMS·LMS·MMS)은 발송 시 본문 byte·제목·이미지첨부로 판정해 batch에 저장.</li>
+        <li><b>본문 파라미터</b>: 본문 팝업에 사용된 치환 변수(<code>#{업체명}</code> 등) 칩으로 표시. 본문 아래에 글자수(자/byte)·문자유형 표시.</li>
+        <li><b>검색</b>: 발송일(기간), 유형, 업체명, 메일주소, 문자번호. 업체명 검색은 호텔명→연락처→batch 역추적.</li>
+        <li><b>페이지당</b>: 20 / 50 / 100. 기본 20.</li>
+        <li><b>모바일</b>: 표 대신 카드뷰로 전환(발송일시·유형·총발송·성공/실패·본문보기).</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ 작성 화면 (메일/문자) — 본문 변수 칩 ============ -->
+  <h1 style="margin-top:36px;">메일/문자 작성 화면 — 본문 변수 칩</h1>
+  <div class="sub">'본문' 라벨 옆에 자주 쓰는 변수 칩. 클릭하면 커서 위치(또는 본문 끝)에 <code>#{변수}</code>가 바로 삽입됩니다.</div>
+
+  <div class="canvas">
+    <div class="card">
+      <!-- 발신 (앞부분만 입력 · 도메인 고정) -->
+      <div class="field" style="margin-bottom:14px;">
+        <label>발신자 주소 <span class="badge-new">NEW</span></label>
+        <div style="display:flex;align-items:center;gap:0;max-width:340px;">
+          <div class="ctrl" style="flex:1;border-top-right-radius:0;border-bottom-right-radius:0;font-family:ui-monospace,monospace;">as</div>
+          <div class="ctrl" style="background:var(--slate-100);color:var(--slate-500);border-left:0;border-top-left-radius:0;border-bottom-left-radius:0;font-family:ui-monospace,monospace;">@oapms.com</div>
+        </div>
+        <span style="font-size:11px;color:var(--slate-400);margin-top:4px;">앞부분만 입력하세요. 도메인은 @oapms.com 고정 · SES 프로덕션 검증 완료</span>
+      </div>
+
+      <!-- 수신자 -->
+      <div class="field" style="margin-bottom:14px;">
+        <label>수신자 (이메일) · 12명</label>
+        <div class="ctrl ph" style="height:auto;min-height:56px;align-items:flex-start;padding:8px 10px;">manager@thephase.kr, fo@walkerhill.com, …</div>
+      </div>
+
+      <!-- 제목 -->
+      <div class="field" style="margin-bottom:14px;">
+        <label>제목</label>
+        <div class="ctrl ph">메일 제목</div>
+      </div>
+
+      <!-- 본문 + 변수 칩 -->
+      <div class="field" style="margin-bottom:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <label style="margin:0;">본문</label>
+            <span style="font-size:10px;color:var(--slate-400);">변수 클릭 → 본문에 삽입</span>
+            <span class="chip" style="cursor:pointer;">+ 업체명</span>
+            <span class="chip" style="cursor:pointer;">+ 담당자명</span>
+            <span class="chip" style="cursor:pointer;">+ 연락처</span>
+            <span class="chip" style="cursor:pointer;">+ 호텔명</span>
+          </div>
+          <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;background:var(--brand-50);color:var(--brand);border:1px solid #c7d2fe;border-radius:6px;padding:2px 8px;cursor:pointer;">✨ AI 작성</span>
+        </div>
+      </div>
+      <div class="bodybox" style="min-height:120px;background:#fff;">안녕하세요, <span class="var">#{업체명}</span> <span class="var">#{담당자명}</span>님.
+
+OA 통합 AS 팀입니다.&nbsp;<span style="display:inline-block;width:1px;height:14px;background:var(--brand);vertical-align:middle;">&nbsp;</span>
+
+        <!-- 메일 푸터 (자동 추가, 본문 하단 고정) -->
+        <div class="mailfooter">
+          <div class="brand">(주)오아테크 &nbsp;|&nbsp; <span class="en">OA TECH.inc</span></div>
+          <div><span class="lbl">본사.</span> [35260] 대전광역시 서구 문예로 11, 소천빌딩 2층 (탄방동)</div>
+          <div><span class="lbl">서울오피스.</span> [08513] 서울 금천구 디지털로 178, 퍼블릭가산 B동 712호 (가산동)</div>
+          <div class="tel"><span class="lbl">Tel.</span> 1833-4702 &nbsp;|&nbsp; <span class="lbl">Fax.</span> 0505-300-4702</div>
+        </div>
+      </div>
+
+      <!-- 본문 아래 글자수 -->
+      <div class="count" style="margin-top:6px;">
+        <span class="muted">발송 시 수신자별 값으로 자동 치환 · 푸터 자동 추가</span>
+        <span class="right"><b>38자</b> · <b>68 byte</b></span>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+        <span class="btn primary">✉️ 메일 발송</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>변수 칩 동작 / 구현 메모</b>
+      <ul>
+        <li><b>발신자 주소(메일)</b>: 앞부분(local part)만 입력, 도메인은 <code>@oapms.com</code> 고정. 입력값 정규식 검증(영문·숫자·.-_ 만, 미입력 시 기본 <code>as</code>). 기존 고정 <code>MAIL_FROM</code> → 동적 <code>{local}@oapms.com</code>. SES 프로덕션 모드·도메인 검증 완료라 임의 local part 발송 가능.</li>
+        <li><b>메일 푸터 자동 추가</b>: 발송 시 본문 하단에 회사 푸터((주)오아테크 주소·연락처)를 자동 첨부. 본문 입력 영역에는 미리보기로만 표시(편집 대상 아님), 실제 발송 HTML에 포함. 문자(SMS/LMS/MMS)에는 미적용.</li>
+        <li><b>클릭 삽입</b>: 칩 클릭 시 RichEditor(메일)·textarea(문자)의 커서 위치에 <code>#{변수}</code> 토큰 삽입. 커서 없으면 본문 끝에 추가.</li>
+        <li><b>기본 변수 세트</b>: 업체명, 담당자명, 연락처, 호텔명 (마스터에서 추가·편집 가능하게 확장 여지).</li>
+        <li><b style="color:var(--green);">✅ 발송 시 자동 치환 (확정)</b>: 수신자별로 호텔 마스터·사용자 정보의 실제 값으로 치환. 값이 없으면 빈 문자열.
+          <br>이를 위해 <b>RecipientPicker가 수신자 → {호텔ID·업체명·담당자명·연락처} 매핑을 함께 보관</b>하고, 발송 액션에 구조화된 수신자(<code>{address, hotelId, company, manager, phone}</code>)를 전달. 직접 입력 수신자는 변수 값 없음(빈 문자열).</li>
+        <li><b>메시지함 업체명도 저장값 사용</b>: 자동 치환을 위해 발송 시점에 업체명을 이미 보관하므로, 메시지함 업체명은 '발송 후 역매핑' 대신 <b>저장된 값</b>을 사용(일관성·정확도↑). 직접 입력분은 <code>직접입력</code>.</li>
+        <li><b>메일 vs 문자</b>: 메일은 RichEditor에 삽입, 문자는 byte 수에 영향 → SMS/LMS 자동 전환 표시와 연동.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ 문자 작성 화면 — 제목(선택사항) ============ -->
+  <h1 style="margin-top:36px;">문자 작성 화면 — 제목(선택사항)</h1>
+  <div class="sub">문자 탭에 '제목(선택사항)' 필드 추가. 제목 입력 시 SMS → LMS 자동 전환.</div>
+
+  <div class="canvas">
+    <div class="card">
+      <!-- 발신번호 -->
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;">
+        <span class="pill sms">발신번호</span>
+        <span style="font-family:ui-monospace,monospace;color:var(--slate-700);">1666-0000</span>
+      </div>
+
+      <!-- 수신자 -->
+      <div class="field" style="margin-bottom:14px;">
+        <label>수신자 (전화번호) · 35명</label>
+        <div class="ctrl ph" style="height:auto;min-height:56px;align-items:flex-start;padding:8px 10px;">010-1234-5678, 010-2222-3333, …</div>
+      </div>
+
+      <!-- 제목 (선택사항) — NEW -->
+      <div class="field" style="margin-bottom:14px;">
+        <label>제목 <span style="color:var(--slate-400);font-weight:500;">(선택사항)</span> <span class="badge-new">NEW</span></label>
+        <div class="ctrl ph">제목 입력 시 LMS로 발송됩니다</div>
+      </div>
+
+      <!-- 본문 + 변수 칩 -->
+      <div class="field" style="margin-bottom:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <label style="margin:0;">본문</label>
+            <span style="font-size:10px;color:var(--slate-400);">변수 클릭 → 본문에 삽입</span>
+            <span class="chip" style="cursor:pointer;">+ 업체명</span>
+            <span class="chip" style="cursor:pointer;">+ 담당자명</span>
+            <span class="chip" style="cursor:pointer;">+ 연락처</span>
+          </div>
+          <span class="pill lms">LMS</span>
+        </div>
+      </div>
+      <div class="bodybox" style="min-height:100px;background:#fff;"><span class="var">#{업체명}</span> 담당자님, OA 통합 AS 팀입니다.
+6월 정기 점검 일정을 안내드립니다.</div>
+
+      <!-- 본문 아래 글자수 + SMS/LMS -->
+      <div class="count" style="margin-top:6px;">
+        <span class="muted">한글 2byte · 영문/숫자 1byte 기준 · 제목 입력 시 LMS</span>
+        <span class="right"><b>34자</b> · <b>62 byte</b> · <b>LMS</b> · 35명 · 예상비용 약 1,050원</span>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+        <span class="btn primary">💬 문자 발송</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>제목(선택사항) 동작 / 구현 메모</b>
+      <ul>
+        <li><b>선택 입력</b>: 비워두면 기존처럼 본문만 발송. 제목 입력 시 <b>SMS→LMS 자동 전환</b>(SMS는 제목 미지원).</li>
+        <li><b>유형 판정</b>: 제목 있음 → LMS, 본문 90byte 초과 → LMS, 이미지 첨부 → MMS, 그 외 SMS.</li>
+        <li><b>Solapi 연동</b>: <code>sendBulkSmsAction</code>에 <code>subject</code> 파라미터 추가 → LMS/MMS 발송 시 제목 전달.</li>
+        <li><b>메시지함 기록</b>: payload에 <code>subject</code> 저장 → 본문 팝업 상단에 제목 표시(메일과 동일).</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

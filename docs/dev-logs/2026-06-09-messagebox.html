@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>메시지함 + 메일·문자 개편 — 개발 일지 (2026-06-09)</title>
+<style>
+  :root{--brand:#4f46e5;--brand-50:#eef2ff;--slate-50:#f8fafc;--slate-200:#e2e8f0;--slate-400:#94a3b8;--slate-500:#64748b;--slate-700:#334155;--slate-800:#1e293b;--green:#16a34a;}
+  *{box-sizing:border-box}body{margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo',sans-serif;background:#f4f5f7;color:var(--slate-800);line-height:1.6}
+  .wrap{max-width:980px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}.sub{color:var(--slate-500);font-size:13px;margin-bottom:24px}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .card{background:#fff;border:1px solid var(--slate-200);border-radius:12px;padding:16px;text-align:center}
+  .card .n{font-size:24px;font-weight:800;color:var(--brand)}.card .l{font-size:12px;color:var(--slate-500);margin-top:2px}
+  .sec{background:#fff;border:1px solid var(--slate-200);border-radius:12px;padding:20px;margin-bottom:18px}
+  .sec h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--slate-200);vertical-align:top}
+  th{background:var(--slate-50);color:var(--slate-500);font-weight:600;white-space:nowrap}
+  code{background:var(--slate-50);border:1px solid var(--slate-200);border-radius:4px;padding:1px 5px;font-size:12px}
+  .ok{color:var(--green);font-weight:700}
+  ul{margin:6px 0;padding-left:20px}li{margin:3px 0}
+  .pill{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--brand-50);color:var(--brand)}
+</style>
+</head>
+<body><div class="wrap">
+  <h1>메시지함 + 메일·문자 개편</h1>
+  <div class="sub">2026-06-09 · 어드민 &gt; 메일&amp;문자 (/admin/insights/messaging) · PDCA 풀스택 · Gap 100% · E2E 7/7</div>
+
+  <div class="cards">
+    <div class="card"><div class="n">100%</div><div class="l">설계-구현 Gap</div></div>
+    <div class="card"><div class="n">7/7</div><div class="l">E2E 통과</div></div>
+    <div class="card"><div class="n">12</div><div class="l">Acceptance Criteria</div></div>
+    <div class="card"><div class="n">9</div><div class="l">변경 파일</div></div>
+  </div>
+
+  <div class="sec">
+    <h2>🎯 요구사항</h2>
+    <ul>
+      <li><b>메시지함 탭</b>: 발송 묶음 1행(발송일시초·유형·총발송팝업·성공·실패·본문팝업), 검색 5종, 20/50/100</li>
+      <li><b>문자 SMS/LMS/MMS 구분</b> + 제목(선택) → LMS 전환</li>
+      <li><b>본문 변수 칩</b>(업체명·담당자명·연락처·호텔명) 클릭 삽입 → 발송 시 수신자별 자동 치환</li>
+      <li><b>메일 발신자</b> 앞부분 입력 + <code>@oapms.com</code> 고정</li>
+      <li><b>메일 푸터</b> 자동 첨부((주)오아테크)</li>
+    </ul>
+  </div>
+
+  <div class="sec">
+    <h2>🛠️ 변경 파일</h2>
+    <table>
+      <tr><th>파일</th><th>변경</th></tr>
+      <tr><td><code>db/schema/notification-logs.ts</code></td><td><code>batch_id</code> 컬럼 + 인덱스 추가</td></tr>
+      <tr><td><code>db/migrations/0037_*.sql</code></td><td>마이그레이션 생성 (dev 직접 적용)</td></tr>
+      <tr><td><code>lib/messaging/format.ts</code> <span class="pill">NEW</span></td><td>변수 치환·문자유형 판정·메일 푸터</td></tr>
+      <tr><td><code>lib/notifications/index.ts</code></td><td>batchId 로그 기록</td></tr>
+      <tr><td><code>lib/notifications/solapi.ts</code></td><td>subject(LMS) 지원</td></tr>
+      <tr><td><code>app/actions/messaging-actions.ts</code></td><td>발송 개편 + 메시지함 조회/수신자 액션</td></tr>
+      <tr><td><code>app/(admin)/.../messaging-client.tsx</code></td><td>메시지함 탭·변수칩·발신자·제목·푸터</td></tr>
+      <tr><td><code>app/(admin)/.../messaging/page.tsx</code></td><td>발신자 local prop</td></tr>
+      <tr><td><code>e2e/messaging-messagebox.spec.ts</code> <span class="pill">NEW</span></td><td>E2E 6 시나리오</td></tr>
+    </table>
+  </div>
+
+  <div class="sec">
+    <h2>✅ E2E 결과 (7/7)</h2>
+    <table>
+      <tr><th>ID</th><th>시나리오</th><th>결과</th></tr>
+      <tr><td>setup</td><td>시드 계정 로그인</td><td class="ok">PASS</td></tr>
+      <tr><td>M-01</td><td>탭 3개 + 메시지함 노출</td><td class="ok">PASS</td></tr>
+      <tr><td>M-02</td><td>검색조건 5종 + 20/50/100</td><td class="ok">PASS</td></tr>
+      <tr><td>M-03</td><td>테이블 헤더/빈 상태</td><td class="ok">PASS</td></tr>
+      <tr><td>M-04</td><td>발신자 앞부분+도메인 고정+푸터</td><td class="ok">PASS</td></tr>
+      <tr><td>M-05</td><td>메일 본문 변수 칩 4종</td><td class="ok">PASS</td></tr>
+      <tr><td>M-06</td><td>문자 제목(선택)+변수삽입+LMS</td><td class="ok">PASS</td></tr>
+    </table>
+  </div>
+
+  <div class="sec">
+    <h2>⚠️ 주의 / 후속</h2>
+    <ul>
+      <li><b>프로덕션 마이그레이션</b>: <code>0037</code>은 dev DB에 직접 적용함(저널 불일치). 프로덕션 배포 시 CI <code>db:migrate</code>로 적용 필요.</li>
+      <li><b>E2E 시드 비번</b>: 자체호스팅 dev DB가 모두 <code>123456</code>으로 통일되어 fixture 갱신함.</li>
+      <li><b>MMS</b>: 분류·표시는 지원, 이미지 첨부 발송 UI는 차기.</li>
+      <li><b>기존 이력</b>: batch_id 없는 과거 발송분은 메시지함 미표시(설계 확정).</li>
+    </ul>
+  </div>
+</div></body></html>

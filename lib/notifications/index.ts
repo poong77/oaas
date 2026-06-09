@@ -27,6 +27,8 @@ import {
 export type NotifyMeta = {
   eventKey: string;
   ticketId?: string | null;
+  /** 일괄 발송 묶음 id (메시지함 그룹핑용). 수동 발송에만 지정. */
+  batchId?: string | null;
   /** 로그 payload에 병합할 추가 필드 (예: 수동 발송 본문). */
   extraPayload?: Record<string, unknown>;
 };
@@ -43,6 +45,7 @@ function recordLog(input: {
   status: 'sent' | 'failed';
   errorMessage?: string | null;
   relatedTicketId?: string | null;
+  batchId?: string | null;
 }): void {
   if (!db) {
     console.log('[notification.log STUB]', input);
@@ -58,6 +61,7 @@ function recordLog(input: {
         status: input.status,
         errorMessage: input.errorMessage ?? null,
         relatedTicketId: input.relatedTicketId ?? null,
+        batchId: input.batchId ?? null,
         sentAt: input.status === 'sent' ? new Date() : null,
       });
     })
@@ -86,6 +90,7 @@ export async function notifySms(
     status: result.ok ? 'sent' : 'failed',
     errorMessage: result.ok ? null : result.error,
     relatedTicketId: meta.ticketId ?? null,
+    batchId: meta.batchId ?? null,
   });
   return result;
 }
@@ -104,6 +109,7 @@ export async function notifyEmail(
     status: result.ok ? 'sent' : 'failed',
     errorMessage: result.ok ? null : result.error,
     relatedTicketId: meta.ticketId ?? null,
+    batchId: meta.batchId ?? null,
   });
   return result;
 }

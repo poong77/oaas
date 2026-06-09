@@ -14,6 +14,8 @@ export type SendSmsInput = {
   to: string;
   /** SMS 본문. 마크다운이 섞여 있어도 발송 직전 plain text로 자동 변환됨. */
   text: string;
+  /** 제목(선택). 지정 시 LMS로 발송. */
+  subject?: string;
 };
 
 export type SendSmsResult =
@@ -87,10 +89,17 @@ export async function sendSms(input: SendSmsInput): Promise<SendSmsResult> {
   }
 
   try {
+    // 제목 있거나 본문 90byte 초과 시 LMS. 솔라피는 subject 유무/길이로 자동 분기하나
+    // type을 명시해 의도를 고정한다.
+    let bodyBytes = 0;
+    for (const ch of safeText) bodyBytes += ch.charCodeAt(0) > 0x7f ? 2 : 1;
+    const isLms = Boolean(input.subject?.trim()) || bodyBytes > 90;
     const message = {
       to: input.to,
       from: env.SOLAPI_SENDER,
       text: safeText,
+      ...(isLms ? { type: 'LMS' as const } : {}),
+      ...(input.subject?.trim() ? { subject: input.subject.trim() } : {}),
     };
     // SDK 버전에 따라 send / sendOne 호출 시그니처가 다를 수 있어 안전하게 분기.
     const result = client.send
