@@ -26,7 +26,6 @@ import {
   Link as LinkIcon,
   ListChecks,
   MessageSquare,
-  Settings,
   ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
@@ -90,7 +89,6 @@ const GROUPS: MasterGroup[] = [
     label: '⑤ 시스템·운영',
     items: [
       { href: '/admin/master/business-hours', label: '운영시간', icon: Clock, badge: '실시간' },
-      { href: '/admin/master/system-settings', label: '시스템 설정', icon: Settings },
       { href: '/admin/master/menu-access', label: '메뉴 접근 제어', icon: ShieldCheck },
     ],
   },

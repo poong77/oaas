@@ -338,11 +338,10 @@ editor_drafts (
 | ④ 검색·AI | 지식팩 내보내기 | (조회 전용) | Markdown/JSONL | P1 |
 | ④ 검색·AI | AI 모델 | `ai_models` | 모델 목록·기본값·ON/OFF | P1 |
 | ⑤ 시스템·운영 | 운영시간 마스터 ✅ | `business_hours_*`·`business_holidays` | 현재 운영시간 · 예약 변경 · 공휴일 · 변경 이력 | P1+P2 완료 |
-| ⑤ 시스템·운영 | 시스템 설정 | `system_settings` | 첨부 사이즈 · Rate Limit · 슬랙 채널 | P1 |
 | ⑤ 시스템·운영 | 메뉴 접근 제어 | `system_settings` (access map) | 메뉴별 매니저 접근 ON/OFF (영구 어드민) | P1 |
 | — (외부) | 호텔 마스터 | `hotels` | 호텔명·OA PMS 매핑 (org 그룹, `/admin/hotels`) | P1 |
 
-> **삭제됨 (2026-06-09)**: ~~이슈 접수 폼 필드 `ticket_form_fields`~~ · ~~자주찾는작업 `quick_actions`~~ — DROP TABLE.
+> **삭제됨 (2026-06-09)**: ~~이슈 접수 폼 필드 `ticket_form_fields`~~ · ~~자주찾는작업 `quick_actions`~~ — DROP TABLE. ~~시스템 설정 `/admin/master/system-settings` 편집기~~ — 미배선 사문화로 메뉴·페이지·서비스·액션 제거. 키 `max_upload_mb`(업로드 한도는 upload/route.ts에 하드코딩)·`rate_limit_login_per_min`(rate-limit 호출처 하드코딩)·`slack_channels`(슬랙은 env 기반)는 런타임 미소비 죽은 값이었음. **`system_settings` 테이블은 유지** — `master_menu_manager_access`(메뉴 접근 제어)가 사용. 죽은 3행은 운영 DB에서 삭제.
 
 ---
 
@@ -760,7 +759,7 @@ created_at, is_active
 - [x] ~~자주 찾는 작업 (`quick-actions`)~~ — **삭제 2026-06-09 (홈 미사용 사문화, DROP TABLE)**
 - [x] 역할별 시작 (`role-starters`)
 - [x] 솔루션 링크 프리셋 (`solution-links`)
-- [x] 시스템 설정 (key-value)
+- [x] ~~시스템 설정 (key-value)~~ — **삭제 2026-06-09 (미배선 사문화, 메뉴 제거 · 테이블은 menu-access용 유지)**
 - [x] 동의어 사전 (`synonyms`)
   - [x] **아티클 기반 갭 탐지 (v1.3 Phase A, 2026-06-01)** — `analyzeKeywordGaps()` + `/admin/master/synonyms` "아티클 미등록 키워드" 카드. 읽기 전용 분석, 스키마 변경 없음.
 - [x] 메뉴 구조 (`menu-taxonomies`)

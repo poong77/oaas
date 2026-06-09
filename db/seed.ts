@@ -31,7 +31,6 @@ import {
   roleStarters,
   serviceStatus,
   solutionLinkPresets,
-  systemSettings,
   menuTaxonomies,
   termGroups,
   termSynonyms,
@@ -51,7 +50,6 @@ import {
   type NewRoleStarter,
   type NewServiceStatus,
   type NewSolutionLinkPreset,
-  type NewSystemSetting,
   type NewTicket,
   type NewTicketMessage,
   type NewUser,
@@ -1091,45 +1089,9 @@ async function main() {
     `[seed] role_starters: ${rsCreated}건 신규 / ${seedRoleStarters.length - rsCreated}건 스킵`,
   );
 
-  // ─── 14. system_settings (Phase 9) ──────────────────────────────
-  console.log('[seed] system_settings (Phase 9) 확인...');
-  const seedSettings: Array<NewSystemSetting & { description: string }> = [
-    {
-      key: 'max_upload_mb',
-      value: 50,
-      description: '티켓 첨부 파일 최대 용량(MB)',
-    },
-    {
-      key: 'rate_limit_login_per_min',
-      value: 5,
-      description: '로그인 엔드포인트 분당 시도 제한',
-    },
-    {
-      key: 'slack_channels',
-      value: {
-        tickets_new: '#cs-tickets-new',
-        tickets_p1: '#cs-tickets-p1',
-        dev_escalate: '#cs-dev-escalate',
-      },
-      description: 'Slack Webhook 전송 채널 매핑',
-    },
-    // (제거) business_hours, contact_phone 키 — `business_hours_default` 테이블로 일원화.
-    //   - 운영시간: business_hours_default 컬럼
-    //   - 대표전화/이메일/ARS/Fax/웹: business_hours_default 컬럼 (P3 정리, 2026-05-30)
-    //   - 어드민 편집: /admin/master/business-hours
-  ];
-  let ssCreated = 0;
-  for (const s of seedSettings) {
-    const ret = await db
-      .insert(systemSettings)
-      .values(s)
-      .onConflictDoNothing({ target: systemSettings.key })
-      .returning({ id: systemSettings.id });
-    if (ret.length > 0) ssCreated++;
-  }
-  console.log(
-    `[seed] system_settings: ${ssCreated}건 신규 / ${seedSettings.length - ssCreated}건 스킵`,
-  );
+  // ─── 14. (삭제됨 2026-06-09) system_settings 시드 — 미배선 키(max_upload_mb·
+  //     rate_limit_login_per_min·slack_channels)는 사문화. 시스템 설정 메뉴 제거됨.
+  //     system_settings 테이블은 유지(메뉴 접근 제어 master_menu_manager_access 런타임 저장).
 
   // ─── 15. quick_reply_templates (Phase 9) ────────────────────────
   console.log('[seed] quick_reply_templates (Phase 9) 확인...');

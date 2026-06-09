@@ -23,7 +23,6 @@ import * as MHT from '@/lib/services/master-hotelier-templates';
 import * as MRS from '@/lib/services/master-role-starters';
 import * as MPK from '@/lib/services/master-popular-keywords';
 import * as MSL from '@/lib/services/master-solution-links';
-import * as MSS from '@/lib/services/master-system-settings';
 import { setManagerMenuAccess } from '@/lib/services/master-menu-access';
 
 export type ActionResult = {
@@ -558,77 +557,9 @@ export async function setSolutionLinkActiveAction(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// 7. system_settings (어드민 only)
+// 7. (삭제됨 2026-06-09) system_settings 편집기 — 미배선 사문화로 메뉴 제거.
+//    system_settings 테이블은 유지(메뉴 접근 제어 master_menu_manager_access 사용).
 // ─────────────────────────────────────────────────────────────────────
-
-const SystemSettingSchema = z.object({
-  key: z.string().min(1).max(80),
-  value: z.unknown(),
-  description: z.string().max(500).nullable().optional(),
-});
-
-/** value는 JSON 문자열로 전달받아 파싱 시도. 실패 시 raw string으로 저장. */
-function parseJsonOrString(s: string): unknown {
-  if (!s) return null;
-  try {
-    return JSON.parse(s);
-  } catch {
-    return s;
-  }
-}
-
-export async function upsertSystemSettingAction(
-  _prev: ActionResult | undefined,
-  formData: FormData,
-): Promise<ActionResult> {
-  const user = await requireRole(['manager', 'admin']);
-  const valueRaw = getStr(formData, 'value');
-  const raw = {
-    key: getStr(formData, 'key'),
-    value: parseJsonOrString(valueRaw),
-    description: getOptStr(formData, 'description'),
-  };
-  const parsed = SystemSettingSchema.safeParse(raw);
-  if (!parsed.success) return { ok: false, message: '입력값 확인 (key 필수)' };
-  const r = await MSS.upsertSystemSetting(
-    {
-      key: parsed.data.key,
-      value: parsed.data.value ?? null,
-      description: parsed.data.description,
-    },
-    user.id,
-  );
-  if (!r.ok || !r.id) return { ok: false, message: r.message };
-  logActivity({
-    userId: user.id,
-    action: 'master.system_setting.upsert',
-    targetType: 'system_setting',
-    targetId: r.id,
-    payload: { key: parsed.data.key },
-  });
-  revalidateAdminMaster('/admin/master/system-settings');
-  return { ok: true, id: r.id };
-}
-
-export async function setSystemSettingActiveAction(
-  id: string,
-  isActive: boolean,
-): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireRole(['manager', 'admin']);
-  const r = await MSS.setSystemSettingActive(id, isActive);
-  if (r.ok) {
-    logActivity({
-      userId: user.id,
-      action: isActive
-        ? 'master.system_setting.restore'
-        : 'master.system_setting.archive',
-      targetType: 'system_setting',
-      targetId: id,
-    });
-    revalidateAdminMaster('/admin/master/system-settings');
-  }
-  return r;
-}
 
 // ─────────────────────────────────────────────────────────────────────
 // 8. (삭제됨 2026-06-09) ticket_form_fields — 접수폼 미연결 미완성 기능으로 DROP

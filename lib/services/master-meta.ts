@@ -23,14 +23,6 @@ export const KNOWN_ROLE_KEYS = [
 ] as const;
 export type KnownRoleKey = (typeof KNOWN_ROLE_KEYS)[number];
 
-export const KNOWN_SETTING_KEYS = [
-  'max_upload_mb',
-  'rate_limit_login_per_min',
-  'slack_channels',
-  'business_hours',
-  'contact_phone',
-] as const;
-export type KnownSettingKey = (typeof KNOWN_SETTING_KEYS)[number];
 
 // ─────────────────────────────────────────────────────────────────────
 // 마스터 메뉴 접근 제어 레지스트리
@@ -84,7 +76,6 @@ export const MASTER_MENUS: readonly MasterMenuMeta[] = [
   { key: 'ai-models', label: 'AI 모델', hardAdminOnly: false },
   // ⑤ 시스템·운영
   { key: 'business-hours', label: '운영시간', hardAdminOnly: false },
-  { key: 'system-settings', label: '시스템 설정', hardAdminOnly: false },
   // 영구 어드민 전용 (토글 불가) — 메뉴 접근 제어 자신만 해당
   { key: 'menu-access', label: '메뉴 접근 제어', hardAdminOnly: true },
 ] as const;
