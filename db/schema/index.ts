@@ -28,6 +28,8 @@ export * from './solution-links';
 export * from './hotel-managed-links';
 export * from './activity-logs';
 export * from './service-status';
+// AC-11 — 셀프 비밀번호 찾기 토큰/코드
+export * from './password-reset-tokens';
 export * from './articles';
 export * from './article-feedback';
 export * from './faqs';

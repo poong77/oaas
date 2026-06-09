@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -153,6 +154,15 @@ export function LoginForm({
             <Button type="submit" disabled={pending}>
               {pending ? '로그인 중...' : '로그인'}
             </Button>
+
+            <div className="text-center">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-slate-500 underline-offset-2 hover:text-brand-600 hover:underline dark:text-slate-400"
+              >
+                비밀번호를 잊으셨나요?
+              </Link>
+            </div>
 
             <div className="rounded-md border border-brand-200 bg-brand-50 p-2.5 text-[11px] leading-relaxed text-brand-800 dark:border-brand-800 dark:bg-brand-900/30 dark:text-brand-200">
               처음 이용하시나요? <strong>초기 비밀번호는 123456</strong>입니다.

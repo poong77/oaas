@@ -26,6 +26,25 @@ export type PasswordResetVars = {
   loginUrl: string;
 };
 
+/** AC-11: 셀프 비밀번호 찾기 — 이메일 재설정 링크. */
+export type PasswordResetLinkVars = {
+  name: string;
+  resetUrl: string;
+  expiresMinutes: number;
+};
+
+/** AC-11: 셀프 비밀번호 찾기 — 문자 인증코드. */
+export type PasswordResetCodeVars = {
+  name: string;
+  code: string;
+  expiresMinutes: number;
+};
+
+/** AC-11: 비밀번호 변경 완료 알림. */
+export type PasswordChangedVars = {
+  name: string;
+};
+
 /** Phase 5: 신규 티켓 접수확인 (호텔리어 대상). */
 export type TicketReceivedVars = {
   reporterName: string;
@@ -102,6 +121,71 @@ export function buildPasswordReset(vars: PasswordResetVars) {
   );
   const text = `${vars.name}님 비밀번호가 초기화됐습니다.\n임시 비밀번호: ${vars.tempPassword}\n로그인: ${vars.loginUrl}\n로그인 후 즉시 변경해주세요.`;
   const sms = `[${BRAND}] 비밀번호가 초기화됐어요. 임시비번: ${vars.tempPassword} 로그인 후 즉시 변경 ${vars.loginUrl}`;
+  return { subject, html, text, sms };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AC-11 — 셀프 비밀번호 찾기 (OTP/토큰 방식)
+// ─────────────────────────────────────────────────────────────────────
+
+export function buildPasswordResetLink(vars: PasswordResetLinkVars) {
+  const subject = `[${BRAND}] 비밀번호 재설정 안내`;
+  const html = htmlWrap(
+    '비밀번호 재설정',
+    `
+    <p style="font-size:14px;color:#334155;line-height:1.7;">
+      ${vars.name}님, 비밀번호 재설정을 요청하셨습니다.<br/>
+      아래 버튼을 눌러 ${vars.expiresMinutes}분 이내에 새 비밀번호를 설정해주세요.
+    </p>
+    <p style="margin:24px 0;">
+      <a href="${vars.resetUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">새 비밀번호 설정하기</a>
+    </p>
+    <p style="font-size:12px;color:#64748b;line-height:1.6;">
+      버튼이 동작하지 않으면 아래 링크를 복사해 브라우저에 붙여넣으세요.<br/>
+      <span style="word-break:break-all;color:#475569;">${vars.resetUrl}</span>
+    </p>
+    <p style="font-size:13px;color:#b91c1c;margin-top:16px;">
+      본인이 요청하지 않았다면 이 메일을 무시하셔도 됩니다. 비밀번호는 변경되지 않습니다.
+    </p>
+  `,
+  );
+  const text = `${vars.name}님, ${BRAND} 비밀번호 재설정 링크입니다.\n${vars.expiresMinutes}분 이내에 접속해 새 비밀번호를 설정해주세요.\n${vars.resetUrl}\n\n본인이 요청하지 않았다면 무시하세요.`;
+  const sms = `[${BRAND}] 비밀번호 재설정 링크: ${vars.resetUrl} (${vars.expiresMinutes}분 유효)`;
+  return { subject, html, text, sms };
+}
+
+export function buildPasswordResetCode(vars: PasswordResetCodeVars) {
+  const subject = `[${BRAND}] 비밀번호 재설정 인증코드`;
+  const html = htmlWrap(
+    '인증코드 안내',
+    `
+    <p style="font-size:14px;color:#334155;line-height:1.7;">${vars.name}님, 아래 인증코드를 입력해주세요.</p>
+    <p style="margin:20px 0;text-align:center;">
+      <span style="display:inline-block;font-size:28px;letter-spacing:8px;font-weight:700;color:#4338ca;background:#eef2ff;padding:12px 20px;border-radius:10px;">${vars.code}</span>
+    </p>
+    <p style="font-size:13px;color:#64748b;">${vars.expiresMinutes}분 이내에 입력해주세요. 코드는 1회만 사용할 수 있습니다.</p>
+  `,
+  );
+  const text = `${vars.name}님, ${BRAND} 인증코드: ${vars.code} (${vars.expiresMinutes}분 유효)`;
+  const sms = `[${BRAND}] 비밀번호 재설정 인증코드: ${vars.code}\n${vars.expiresMinutes}분 이내 입력. 타인에게 알려주지 마세요.`;
+  return { subject, html, text, sms };
+}
+
+export function buildPasswordChanged(vars: PasswordChangedVars) {
+  const subject = `[${BRAND}] 비밀번호가 변경되었습니다`;
+  const html = htmlWrap(
+    '비밀번호 변경 완료',
+    `
+    <p style="font-size:14px;color:#334155;line-height:1.7;">
+      ${vars.name}님, 비밀번호가 정상적으로 변경되었습니다.
+    </p>
+    <p style="font-size:13px;color:#b91c1c;margin-top:12px;">
+      본인이 변경한 것이 아니라면 즉시 관리자에게 문의해주세요.
+    </p>
+  `,
+  );
+  const text = `${vars.name}님, ${BRAND} 비밀번호가 변경되었습니다.\n본인이 변경한 것이 아니라면 즉시 관리자에게 문의해주세요.`;
+  const sms = `[${BRAND}] 비밀번호가 변경되었습니다. 본인이 아니라면 즉시 관리자에게 문의하세요.`;
   return { subject, html, text, sms };
 }
 

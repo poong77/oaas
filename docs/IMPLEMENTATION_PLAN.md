@@ -184,6 +184,18 @@
 | AC-08 | 사용자 계정 편집 | 호텔 매핑·권한·직책·연락처. 권한 변경 시 확인 팝업 | 어드민 | P1 |
 | AC-09 | 비밀번호 초기화 | 임시 비번 SMS/이메일 자동 발송. 첫 로그인 시 변경 강제 | 어드민 | P1 |
 | AC-10 | 계정 활성·비활성 | 비활성 시 로그인 차단. 이력·메모 보존. 완전 삭제 불가 | 어드민 | P1 |
+| AC-11 | 셀프 비밀번호 찾기 | 로그인 화면 → 호텔 검색(국문/영문/띄어쓰기 무시) → 본인 계정 선택(마스킹) → 이메일(재설정 링크)/문자(인증코드) 선택 → 검증 후 새 비밀번호 직접 설정 | 미인증(공개) | P1 |
+
+> **AC-11 보안 설계 (임시비번 대신 OTP/토큰 방식 채택)**
+> - 임시비밀번호를 "유효한 로그인 자격"으로 발급하지 않는다 — 가로채기/잔존 위험 제거.
+> - **이메일 = 일회용 재설정 링크**(opaque 토큰, 30분 만료, 1회용), **문자 = 6자리 인증코드**(10분 만료, 5회 시도 제한, 1회용).
+> - 토큰/코드는 평문 저장 금지 → `sha256` 해시로 `password_reset_tokens`에 저장.
+> - 호텔 검색으로 마스킹 연락처를 노출하는 enumeration 위험은 **IP·계정별 rate limit + 강한 마스킹 + 감사 로그**로 완화 (호텔리어가 로그인 ID를 모르는 현실 UX 우선).
+> - **공개 목록(미인증) 마스킹 최소화**: 계정 목록·채널 선택 단계는 직책 미노출 + 이메일 도메인 숨김(`ma***@***`) + 전화 끝 2자리(`010-****-**78`)로 피싱 재료 최소화. 발송 후 "○○로 보냈습니다" 확인 문구는 본인이 발송을 트리거한 뒤라 끝 4자리/도메인 유지(본인 식별용).
+> - 완료 시 `must_change_password=false` + 동일 사용자의 다른 활성 재설정 토큰 일괄 무효화 + 변경완료 알림 + `user.password_self_reset` 감사 로그.
+> - `token_hash`는 **UNIQUE 인덱스** (opaque 토큰은 32바이트 난수 → 충돌 불가, 조회 정합성 보장).
+> - **발급 IP↔검증 IP 대조는 의도적 미적용**: 모바일 사용자가 셀룰러↔Wi-Fi 전환 시 IP가 바뀌어 정상 흐름이 깨짐. 대신 토큰 만료·1회용·시도제한·rate limit으로 방어.
+> - 후속(P2): 비밀번호 변경 시 기존 NextAuth 세션 무효화(토큰 버전) — 계정 탈취 시나리오 대비.
 
 ---
 
@@ -458,6 +470,23 @@ event_key (unique, e.g. 'ticket.received', 'ticket.completed', 'user.password_re
 subject (email), body text (with {{변수}} 치환),
 created_at, updated_at, is_active
 ```
+
+#### `password_reset_tokens` (AC-11 셀프 비밀번호 찾기)
+```ts
+id, user_id (FK users, cascade),
+channel enum('email' | 'sms'),
+token_hash (sha256, 링크 토큰 또는 세션 참조용 — 평문 저장 금지, UNIQUE),
+code_hash (sha256, sms 6자리 인증코드. email은 null),
+expires_at,            // email 30분 / sms 10분
+used_at (nullable),    // 1회용 — 사용 시 기록
+code_verified_at (nullable),  // sms 코드 검증 통과 시각 (reset 페이지 접근 게이트)
+attempts integer default 0,   // sms 코드 오입력 횟수 (5회 초과 시 무효)
+ip (nullable),
+created_at, updated_at, is_active
+```
+- **이메일**: opaque 토큰을 링크로 발송 → `/reset-password?token=…` GET에서 검증 후 폼 노출.
+- **문자**: opaque 토큰은 요청 브라우저만 보유(참조), 6자리 코드는 SMS로 발송(비밀) → 2요소.
+- 완료/만료/오입력 한도 초과 시 `is_active=false`. 동일 사용자 신규 발급 시 기존 활성 토큰 무효화.
 
 #### `notification_logs` (발송 이력)
 ```ts
