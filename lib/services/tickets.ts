@@ -31,6 +31,7 @@ import {
 import { db } from '@/db';
 import {
   hotels,
+  hotelSlackChannels,
   tickets,
   ticketMessages,
   ticketAttachments,
@@ -51,7 +52,7 @@ import {
   type NewTicketAttachment,
   type NewTicketFeedback,
 } from '@/db/schema';
-import { getPublicBaseUrl } from '@/lib/env';
+import { env, getPublicBaseUrl } from '@/lib/env';
 import { notifyEmail, notifySlack, notifySms } from '@/lib/notifications';
 import {
   buildTicketCompleted,
@@ -458,6 +459,43 @@ async function dispatchTicketReceivedNotifications(
       },
       { eventKey: 'ticket.new_slack', ticketId },
     );
+
+    // ── 호텔별 연동 채널 추가 발송 (병행) ─────────────────────────
+    // 이 호텔에 연동된 채널 중 봇 참여(bot_joined=true) 채널 전체로 동일 알림.
+    // 기본 채널(SLACK_CHANNEL_NEW/URGENT)과 중복되는 ID는 제외.
+    if (ticketRow.hotelId) {
+      try {
+        const presetIds = new Set(
+          [env.SLACK_CHANNEL_NEW, env.SLACK_CHANNEL_URGENT].filter(Boolean),
+        );
+        const hotelChannels = await db
+          .select({ channelId: hotelSlackChannels.channelId })
+          .from(hotelSlackChannels)
+          .where(
+            and(
+              eq(hotelSlackChannels.hotelId, ticketRow.hotelId),
+              eq(hotelSlackChannels.isActive, true),
+              eq(hotelSlackChannels.botJoined, true),
+            ),
+          );
+        for (const ch of hotelChannels) {
+          if (presetIds.has(ch.channelId)) continue;
+          await notifySlack(
+            {
+              channel: { rawId: ch.channelId },
+              fallbackText: `[새 티켓] ${ticketNo} ${ticketRow.title}`,
+              blocks: buildTicketNewBlocks(summary),
+            },
+            { eventKey: 'ticket.hotel_slack', ticketId },
+          );
+        }
+      } catch (e) {
+        console.warn(
+          '[tickets] 호텔 연동 채널 발송 실패:',
+          e instanceof Error ? e.message : e,
+        );
+      }
+    }
 
     if (ticketRow.urgency === 'p1') {
       await notifySlack(

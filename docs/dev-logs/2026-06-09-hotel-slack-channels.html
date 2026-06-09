@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개발 일지 · 호텔 슬랙 채널 연동 (N:N)</title>
+<style>
+  :root{--ink:#1f2328;--sub:#6b7280;--line:#e3e6ea;--bg:#f5f6f8;--card:#fff;
+    --slack:#4A154B;--green:#1a7f37;--green-bg:#e8f5ec;--amber:#9a6700;--amber-bg:#fff4d6;--brand:#2563eb;--radius:12px}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6}
+  .wrap{max-width:920px;margin:0 auto;padding:30px 18px 80px}
+  header.hd{background:linear-gradient(120deg,#4A154B,#6d2a72);color:#fff;border-radius:var(--radius);
+    padding:24px 26px;margin-bottom:20px}
+  header.hd .tag{font-size:11px;font-weight:700;letter-spacing:.05em;background:rgba(255,255,255,.18);
+    border-radius:999px;padding:4px 11px;display:inline-block}
+  header.hd h1{margin:10px 0 4px;font-size:22px}
+  header.hd p{margin:0;opacity:.85;font-size:13px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .stat .n{font-size:24px;font-weight:800}
+  .stat .l{font-size:12px;color:var(--sub);margin-top:2px}
+  .stat .n.green{color:var(--green)}
+  section{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:16px}
+  section h2{margin:0 0 14px;font-size:16px;display:flex;align-items:center;gap:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--sub);font-weight:600;font-size:11.5px}
+  td code{background:#f3f4f6;border-radius:4px;padding:1px 5px;font-size:11.5px}
+  .b{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px}
+  .b.ok{color:var(--green);background:var(--green-bg)}
+  .b.warn{color:var(--amber);background:var(--amber-bg)}
+  ul.flow{margin:0;padding-left:18px}
+  ul.flow li{margin:6px 0;font-size:13.5px}
+  .note{font-size:12.5px;color:var(--amber);background:var(--amber-bg);border:1px solid #f0e2b6;
+    border-radius:8px;padding:11px 13px;margin-top:6px}
+  .note code{background:#fff;border:1px solid #eadfb0;border-radius:4px;padding:0 4px}
+  .files{font-size:12.5px;color:#3b4047}
+  .files .grp{font-weight:700;color:var(--ink);margin:10px 0 4px}
+  .files code{font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hd">
+    <span class="tag">DEV LOG · 2026-06-09</span>
+    <h1>호텔 ↔ 슬랙 채널 연동 (N:N)</h1>
+    <p>어드민 호텔 상세에서 슬랙 채널을 연동하고, 접수 발생 시 해당 채널로 알림을 병행 발송</p>
+  </header>
+
+  <div class="cards">
+    <div class="stat"><div class="n green">100%</div><div class="l">갭 분석 (기능 갭 0)</div></div>
+    <div class="stat"><div class="n green">4/4</div><div class="l">E2E 통과</div></div>
+    <div class="stat"><div class="n green">0</div><div class="l">타입·빌드 에러</div></div>
+    <div class="stat"><div class="n">14</div><div class="l">변경/신규 파일</div></div>
+  </div>
+
+  <section>
+    <h2>🎯 기능 요약</h2>
+    <ul class="flow">
+      <li><b>채널 검색</b> — 채널명(부분일치) 또는 채널ID(<code>C…/G…</code>) 둘 다. <code>conversations.list</code> / <code>conversations.info</code> 자동 분기</li>
+      <li><b>봇 초대</b> — 공개 채널은 <code>conversations.join</code>으로 자동입장 → 연동 완료 첫 메시지 자동 게시</li>
+      <li><b>로고 회색↔컬러</b> — 봇 참여(<code>bot_joined=true</code>) 채널 1개 이상이면 슬랙 로고 컬러</li>
+      <li><b>비공개 채널</b> — 저장하되 <span class="b warn">봇 미초대</span> 표시 + <code>/invite @봇</code> 안내 + [상태 새로고침]</li>
+      <li><b>N:N · 연동해제(soft delete) · 테스트 발송</b> 지원</li>
+      <li><b>접수 알림 병행</b> — 접수 시 <code>bot_joined=true</code> 채널 전체로 발송 (기존 <code>#support_new</code> 병행, 기본채널 중복 skip)</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>🗄️ 스키마 — <code>hotel_slack_channels</code> (마이그레이션 0040)</h2>
+    <table>
+      <tr><th>컬럼</th><th>설명</th></tr>
+      <tr><td><code>hotel_id</code></td><td>FK → hotels (cascade)</td></tr>
+      <tr><td><code>channel_id</code></td><td>Slack 채널 ID (C…/G…)</td></tr>
+      <tr><td><code>channel_name</code></td><td>연동 시점 채널명 캐시</td></tr>
+      <tr><td><code>channel_is_private</code></td><td>비공개 여부</td></tr>
+      <tr><td><code>bot_joined</code></td><td>봇 참여 = 연동 성공 판정</td></tr>
+      <tr><td><code>linked_by_user_id</code></td><td>연동 수행 어드민 (감사)</td></tr>
+      <tr><td colspan="2"><code>unique(hotel_id, channel_id)</code> · 공통컬럼(id/created_at/updated_at/is_active)</td></tr>
+    </table>
+    <p style="font-size:12.5px;color:var(--sub);margin:10px 0 0">기존 <code>hotels.slack_id</code> 단일 필드는 UI/액션 제거, 컬럼은 <span class="b">@deprecated</span> 주석으로 이력 보존.</p>
+  </section>
+
+  <section>
+    <h2>✅ 검증 결과</h2>
+    <table>
+      <tr><th>항목</th><th>결과</th><th>비고</th></tr>
+      <tr><td>타입체크 <code>tsc --noEmit</code></td><td><span class="b ok">PASS</span></td><td>EXIT 0</td></tr>
+      <tr><td>프로덕션 빌드 <code>next build</code></td><td><span class="b ok">PASS</span></td><td>새 라우트 <code>/api/admin/slack/channels</code> 등록</td></tr>
+      <tr><td>갭 분석 (gap-detector)</td><td><span class="b ok">100%</span></td><td>권한가드·중복차단·soft delete·기본채널 skip·stub·에러핸들 견고</td></tr>
+      <tr><td>E2E (Playwright)</td><td><span class="b ok">4/4</span></td><td>섹션 렌더 · 검색 콤보박스 · 연동 상태 표시</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>⚠️ 운영 선행 작업 (코드 외)</h2>
+    <div class="note">
+      Slack 앱에 OAuth 스코프 <code>channels:read</code> · <code>groups:read</code> · <code>channels:join</code> 추가 후 <b>재설치</b> 필요.
+      현재 <code>chat:write</code>만 있으면 채널 검색·자동입장이 동작하지 않음(토큰 미설정 시 graceful stub).
+    </div>
+  </section>
+
+  <section>
+    <h2>📁 변경 파일</h2>
+    <div class="files">
+      <div class="grp">신규</div>
+      <code>db/schema/hotel-slack-channels.ts</code> · <code>db/migrations/0040_*.sql</code> · <code>lib/notifications/slack-admin.ts</code> ·
+      <code>app/api/admin/slack/channels/route.ts</code> · <code>components/ui/slack-channel-combobox.tsx</code> ·
+      <code>app/(admin)/admin/hotels/[id]/_components/hotel-slack-channels.tsx</code> · <code>e2e/hotel-slack-channels.spec.ts</code>
+      <div class="grp">수정</div>
+      <code>db/schema/index.ts · hotels.ts</code> · <code>lib/notifications/slack.ts · index.ts</code> ·
+      <code>lib/services/hotels.ts · tickets.ts</code> · <code>app/actions/hotel-actions.ts</code> ·
+      <code>app/(admin)/admin/hotels/[id]/page.tsx · _components/hotel-profile-form.tsx</code> · <code>docs/IMPLEMENTATION_PLAN.md</code>
+    </div>
+  </section>
+</div>
+</body>
+</html>

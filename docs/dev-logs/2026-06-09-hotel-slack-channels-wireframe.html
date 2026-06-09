@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>와이어프레임 · 호텔 슬랙 채널 연동</title>
+<style>
+  :root{
+    --ink:#1f2328; --sub:#6b7280; --line:#d6dae0; --line2:#e7eaef;
+    --bg:#f4f5f7; --card:#ffffff; --slack:#4A154B; --green:#1a7f37;
+    --green-bg:#e8f5ec; --amber:#9a6700; --amber-bg:#fff4d6; --blue:#0a66c2;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Pretendard",
+    "Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink);
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:28px 18px 80px}
+
+  /* 와이어프레임 헤더 배너 */
+  .wf-banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#fff;border:1px dashed #b9bfc8;border-radius:var(--radius);
+    padding:14px 16px;margin-bottom:8px}
+  .wf-tag{font-size:11px;font-weight:700;letter-spacing:.04em;color:#fff;
+    background:#3b3f46;border-radius:999px;padding:3px 9px}
+  .wf-banner h1{font-size:15px;margin:0;font-weight:700}
+  .wf-banner .meta{font-size:12px;color:var(--sub);margin-left:auto}
+
+  .crumb{font-size:12.5px;color:var(--sub);margin:18px 2px 10px}
+  .crumb b{color:var(--ink)}
+
+  .state-label{font-size:12px;font-weight:700;color:var(--blue);
+    background:#eaf3fc;border:1px solid #cfe3f7;border-radius:6px;
+    display:inline-block;padding:3px 9px;margin:26px 0 10px}
+
+  /* 카드 */
+  .card{background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden}
+  .card + .card{margin-top:14px}
+  .card-head{display:flex;align-items:center;gap:11px;padding:15px 17px;
+    border-bottom:1px solid var(--line2)}
+  .slack-logo{width:26px;height:26px;border-radius:6px;flex:0 0 auto;
+    display:grid;place-items:center;font-weight:800;font-size:14px}
+  .slack-logo.on{background:var(--slack);color:#fff}
+  .slack-logo.off{background:#e4e6ea;color:#aeb3bb}
+  .card-head .ttl{font-size:14.5px;font-weight:700}
+  .card-head .ttl small{display:block;font-weight:500;font-size:11.5px;
+    color:var(--sub);margin-top:2px}
+  .status-pill{font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px}
+  .status-pill.on{color:var(--green);background:var(--green-bg)}
+  .status-pill.off{color:var(--sub);background:#eef0f3}
+  .btn{font-size:12.5px;font-weight:600;border:1px solid var(--line);
+    background:#fff;color:var(--ink);border-radius:7px;padding:7px 12px;
+    cursor:pointer;white-space:nowrap}
+  .btn.primary{background:var(--slack);border-color:var(--slack);color:#fff}
+  .btn.ghost{color:var(--sub)}
+  .btn.sm{font-size:11.5px;padding:5px 9px}
+  .ml-auto{margin-left:auto}
+  .card-body{padding:8px 17px 17px}
+
+  /* 채널 행 */
+  .ch{display:flex;align-items:center;gap:11px;padding:12px 2px;
+    border-bottom:1px solid var(--line2)}
+  .ch:last-child{border-bottom:0}
+  .ch-ic{width:30px;height:30px;border-radius:7px;background:#f0eef3;
+    color:var(--slack);display:grid;place-items:center;font-weight:800;
+    font-size:13px;flex:0 0 auto}
+  .ch-main{min-width:0;flex:1}
+  .ch-name{font-size:13.5px;font-weight:700;display:flex;align-items:center;
+    gap:8px;flex-wrap:wrap}
+  .ch-id{font-size:11px;color:var(--sub);font-family:ui-monospace,Menlo,monospace;
+    background:#f3f4f6;border-radius:5px;padding:1px 6px}
+  .ch-sub{font-size:11.5px;color:var(--sub);margin-top:3px}
+  .badge{font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 8px}
+  .badge.ok{color:var(--green);background:var(--green-bg)}
+  .badge.warn{color:var(--amber);background:var(--amber-bg)}
+  .ch-acts{display:flex;gap:6px;flex:0 0 auto}
+
+  .hint{font-size:11.5px;color:var(--amber);background:var(--amber-bg);
+    border:1px solid #f0e2b6;border-radius:7px;padding:8px 11px;margin:8px 0 2px}
+  .hint code{background:#fff;border:1px solid #eadfb0;border-radius:4px;
+    padding:0 4px;font-size:11px}
+
+  /* 빈 상태 */
+  .empty{text-align:center;padding:26px 12px;color:var(--sub)}
+  .empty .em-ic{font-size:26px;opacity:.5}
+  .empty p{margin:8px 0 14px;font-size:12.5px}
+
+  /* 검색 콤보박스 */
+  .search-wrap{position:relative;margin-top:4px}
+  .search-in{display:flex;align-items:center;gap:8px;border:1.5px solid var(--slack);
+    border-radius:8px;padding:9px 12px;background:#fff}
+  .search-in input{border:0;outline:0;font-size:13px;flex:1;background:transparent}
+  .dropdown{border:1px solid var(--line);border-radius:9px;margin-top:6px;
+    background:#fff;box-shadow:0 8px 24px rgba(20,20,40,.10);overflow:hidden}
+  .dd-head{font-size:11px;color:var(--sub);padding:8px 13px;border-bottom:1px solid var(--line2)}
+  .dd-item{display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;
+    border-bottom:1px solid var(--line2)}
+  .dd-item:last-child{border-bottom:0}
+  .dd-item:hover{background:#faf8fb}
+  .dd-item .ch-ic{width:26px;height:26px;font-size:12px}
+  .dd-name{font-size:13px;font-weight:600;flex:1}
+  .dd-name .lock{color:var(--sub);font-weight:500;font-size:11px;margin-left:5px}
+  .dd-tag{font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 7px}
+  .dd-tag.member{color:var(--green);background:var(--green-bg)}
+  .dd-tag.join{color:var(--blue);background:#eaf3fc}
+  .dd-tag.priv{color:var(--amber);background:var(--amber-bg)}
+
+  /* 토스트 mock */
+  .toast{display:flex;align-items:center;gap:9px;background:#10331f;color:#dffae9;
+    border-radius:9px;padding:11px 14px;font-size:12.5px;max-width:340px;
+    margin-top:14px;border:1px solid #1d5236}
+  .toast.fail{background:#3a1620;color:#ffd9e0;border-color:#5e2233}
+
+  /* 주석 */
+  .note{display:flex;gap:9px;font-size:12px;color:var(--sub);margin:9px 2px 0;
+    line-height:1.55}
+  .note b{color:var(--ink)}
+  .note .n{flex:0 0 auto;width:17px;height:17px;border-radius:50%;background:#3b3f46;
+    color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+
+  .legend{margin-top:34px;background:#fff;border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px 18px}
+  .legend h3{margin:0 0 10px;font-size:13px}
+  .legend ul{margin:0;padding-left:18px}
+  .legend li{font-size:12.5px;color:#3b4047;margin:5px 0}
+  .legend code{background:#f3f4f6;border-radius:4px;padding:0 5px;font-size:11.5px}
+
+  @media(max-width:560px){
+    .ch{flex-wrap:wrap}
+    .ch-acts{width:100%;padding-left:41px}
+    .card-head{flex-wrap:wrap}
+    .card-head .ml-auto{width:100%;margin-left:41px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="wf-banner">
+    <span class="wf-tag">WIREFRAME</span>
+    <h1>호텔 상세 · 슬랙 채널 연동 (N:N)</h1>
+    <span class="meta">support.oapms.com · 2026-06-09</span>
+  </div>
+  <div class="crumb">어드민 › 호텔 › <b>오아 호텔 &amp; 리조트</b> › 상세 — <span style="color:#9aa0a8">기본정보 · 솔루션 · 이용자계정 · 멀티관리 · <b style="color:var(--slack)">슬랙 채널 연동</b></span></div>
+
+  <!-- ───────── 상태 A : 연동됨 (로고 컬러) ───────── -->
+  <div class="state-label">상태 A — 연동된 채널 있음 (로고 컬러)</div>
+  <div class="card">
+    <div class="card-head">
+      <div class="slack-logo on">#</div>
+      <div class="ttl">슬랙 채널 연동
+        <small>이 호텔 접수 발생 시 연동된 채널로 알림 (기존 #support_new 병행)</small>
+      </div>
+      <span class="status-pill on ml-auto">연동됨 · 2</span>
+      <button class="btn primary sm">＋ 채널 연동</button>
+    </div>
+    <div class="card-body">
+      <!-- 정상 연동 채널 -->
+      <div class="ch">
+        <div class="ch-ic">#</div>
+        <div class="ch-main">
+          <div class="ch-name">support-oa-hotel <span class="badge ok">연동됨</span></div>
+          <div class="ch-sub"><span class="ch-id">C01ABC23</span> · 공개 채널 · 봇 참여중</div>
+        </div>
+        <div class="ch-acts">
+          <button class="btn sm">테스트 발송</button>
+          <button class="btn sm ghost">연동해제</button>
+        </div>
+      </div>
+      <!-- 비공개 / 봇 미초대 -->
+      <div class="ch">
+        <div class="ch-ic">🔒</div>
+        <div class="ch-main">
+          <div class="ch-name">vip-ops-oa <span class="badge warn">봇 미초대</span></div>
+          <div class="ch-sub"><span class="ch-id">C05PRIV9</span> · 비공개 채널 · 봇 자동입장 불가</div>
+          <div class="hint">비공개 채널은 자동 초대가 안 됩니다. 채널에서 <code>/invite @OA봇</code> 실행 후 <b>상태 새로고침</b>을 눌러주세요.</div>
+        </div>
+        <div class="ch-acts">
+          <button class="btn sm">상태 새로고침</button>
+          <button class="btn sm ghost">연동해제</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note"><span class="n">1</span><div><b>로고 색</b> — 활성 + 봇참여(botJoined=true) 채널이 1개 이상이면 슬랙 로고가 <b style="color:var(--slack)">컬러</b>, 없으면 회색.</div></div>
+  <div class="note"><span class="n">2</span><div><b>N:N</b> — 한 호텔에 여러 채널, 한 채널을 여러 호텔에 동시 연동 가능. junction 테이블 <code style="font-size:11px">hotel_slack_channels</code>.</div></div>
+
+  <!-- ───────── 상태 B : 채널 연동 (채널명 검색) ───────── -->
+  <div class="state-label">상태 B — ‘채널 연동’ 클릭 → 채널명으로 검색 (실시간)</div>
+  <div class="card">
+    <div class="card-head">
+      <div class="slack-logo on">#</div>
+      <div class="ttl">슬랙 채널 연동 <small>채널명 또는 채널ID로 검색하세요</small></div>
+      <button class="btn ghost sm ml-auto">취소</button>
+    </div>
+    <div class="card-body">
+      <div class="search-wrap">
+        <div class="search-in">
+          <span style="color:var(--sub)">🔍</span>
+          <input value="oa-" placeholder="채널명(oa-hotel) 또는 채널ID(C01ABC23)" >
+        </div>
+        <div class="dropdown">
+          <div class="dd-head">채널명·채널ID 동시 검색 · conversations.list 결과 · 3건</div>
+          <div class="dd-item">
+            <div class="ch-ic">#</div>
+            <div class="dd-name">oa-hotel-notice <span class="lock">· C01ABC23</span></div>
+            <span class="dd-tag member">봇 참여중</span>
+          </div>
+          <div class="dd-item">
+            <div class="ch-ic">#</div>
+            <div class="dd-name">oa-resort-cs <span class="lock">· C03RSRT1</span></div>
+            <span class="dd-tag join">연동 시 봇 자동입장</span>
+          </div>
+          <div class="dd-item">
+            <div class="ch-ic">🔒</div>
+            <div class="dd-name">oa-internal <span class="lock">· C07PRV2 · 비공개</span></div>
+            <span class="dd-tag priv">수동 초대 필요</span>
+          </div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:12px"><span class="n">3</span><div><b>선택 시 흐름</b> — 공개 채널이면 <code style="font-size:11px">conversations.join</code>으로 봇 자동입장 → 연동 행 저장 → <b>연동 완료 첫 메시지</b> 자동 게시.</div></div>
+    </div>
+  </div>
+
+  <!-- ───────── 상태 B-2 : 채널ID 직접 입력 ───────── -->
+  <div class="state-label">상태 B-2 — 채널ID 직접 입력 (C…/G… 형식 자동 인식)</div>
+  <div class="card">
+    <div class="card-head">
+      <div class="slack-logo on">#</div>
+      <div class="ttl">슬랙 채널 연동 <small>채널명 또는 채널ID로 검색하세요</small></div>
+      <button class="btn ghost sm ml-auto">취소</button>
+    </div>
+    <div class="card-body">
+      <div class="search-wrap">
+        <div class="search-in">
+          <span style="color:var(--sub)">🔍</span>
+          <input value="C09XYZ88" placeholder="채널명(oa-hotel) 또는 채널ID(C01ABC23)" >
+        </div>
+        <div class="dropdown">
+          <div class="dd-head">채널ID 형식 감지 → conversations.info 직접 조회 · 1건</div>
+          <div class="dd-item">
+            <div class="ch-ic">#</div>
+            <div class="dd-name">vip-oa-resort <span class="lock">· C09XYZ88</span></div>
+            <span class="dd-tag join">연동 시 봇 자동입장</span>
+          </div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:12px"><span class="n">4</span><div><b>ID 직접 입력</b> — 입력값이 <code style="font-size:11px">C…/G…</code> 채널ID 패턴이면 목록 검색 대신 <code style="font-size:11px">conversations.info</code>로 해당 채널을 바로 해석해 채널명을 표시. 목록에 안 잡히는 비공개 채널도 ID로 연동 가능.</div></div>
+    </div>
+  </div>
+
+  <!-- ───────── 상태 C : 빈 상태 (로고 회색) ───────── -->
+  <div class="state-label">상태 C — 연동된 채널 없음 (로고 회색)</div>
+  <div class="card">
+    <div class="card-head">
+      <div class="slack-logo off">#</div>
+      <div class="ttl">슬랙 채널 연동
+        <small>이 호텔 접수 발생 시 연동된 채널로 알림 (기존 #support_new 병행)</small>
+      </div>
+      <span class="status-pill off ml-auto">미연동</span>
+      <button class="btn primary sm">＋ 채널 연동</button>
+    </div>
+    <div class="card-body">
+      <div class="empty">
+        <div class="em-ic">💬</div>
+        <p>아직 연동된 슬랙 채널이 없습니다.<br>‘채널 연동’으로 이 호텔 전용 알림 채널을 추가하세요.</p>
+        <button class="btn primary">＋ 채널 연동</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── 토스트 mock ───────── -->
+  <div class="state-label">테스트 발송 결과 (토스트)</div>
+  <div class="toast">✅ <b>#support-oa-hotel</b> 으로 테스트 메시지를 보냈습니다.</div>
+  <div class="toast fail">⚠️ 발송 실패: <b>not_in_channel</b> — 봇이 채널에 없습니다. /invite 후 다시 시도하세요.</div>
+
+  <!-- ───────── 동작 설명 ───────── -->
+  <div class="legend">
+    <h3>📋 동작 정의 (와이어프레임 기준)</h3>
+    <ul>
+      <li><b>채널 검색</b>: <b>채널명·채널ID 모두</b> 입력 가능. 일반어는 <code>conversations.list</code> 필터, <code>C…/G…</code> 패턴이면 <code>conversations.info</code>로 직접 해석(비공개·미목록 채널도 ID로 연동 가능)</li>
+      <li><b>순서</b>: ① 채널명/ID로 찾기 → ② 봇 초대(공개채널 <code>conversations.join</code>) → ③ 첫 메시지 자동 발송 → ④ 로고 회색→컬러</li>
+      <li><b>기본정보 변경</b>: 기존 [기본정보 › Slack ID] 단일 필드 <b>제거</b> → 이 ‘슬랙 채널 연동’ 섹션으로 일원화 (DB <code>hotels.slack_id</code> 컬럼은 폐기·미사용)</li>
+      <li><b>연동 성공 판정</b>: <code>botJoined=true</code> (봇이 채널 멤버) — 이 값이 로고 색과 배지를 결정</li>
+      <li><b>비공개 채널</b>: 매핑 저장 O, 봇 자동입장 X → ‘봇 미초대’ 표시 + <code>/invite @봇</code> 안내 + [상태 새로고침]</li>
+      <li><b>연동해제</b>: soft delete (<code>is_active=false</code>), 이력 보존</li>
+      <li><b>중복연동(N:N)</b>: 호텔↔여러 채널, 채널↔여러 호텔. <code>unique(hotelId, channelId)</code>로 동일쌍만 차단</li>
+      <li><b>접수 알림</b>: 접수 발생 시 botJoined 채널 전체로 <code>buildTicketNewBlocks</code> 발송 (기존 #support_new 병행)</li>
+      <li><b>선행 필수</b>: Slack 앱 스코프 <code>channels:read · groups:read · channels:join</code> 추가 + 재설치</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

@@ -12,6 +12,7 @@ import { and, asc, desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import {
   hotelManagedLinks,
+  hotelSlackChannels,
   hotelSolutionLinks,
   hotels,
   solutionLinkPresets,
@@ -96,6 +97,44 @@ export async function listSolutionPresets(): Promise<SolutionPresetOption[]> {
     }));
   } catch (err) {
     console.error('[hotels.listSolutionPresets] 실패:', err);
+    return [];
+  }
+}
+
+/** 호텔에 연동된 Slack 채널 (어드민 상세 표시용). */
+export type HotelSlackChannelView = {
+  id: string;
+  channelId: string;
+  channelName: string | null;
+  channelIsPrivate: boolean;
+  botJoined: boolean;
+};
+
+/** 호텔의 활성 연동 채널 목록 (생성순). */
+export async function listHotelSlackChannels(
+  hotelId: string,
+): Promise<HotelSlackChannelView[]> {
+  if (!db) return [];
+  try {
+    const rows = await db
+      .select({
+        id: hotelSlackChannels.id,
+        channelId: hotelSlackChannels.channelId,
+        channelName: hotelSlackChannels.channelName,
+        channelIsPrivate: hotelSlackChannels.channelIsPrivate,
+        botJoined: hotelSlackChannels.botJoined,
+      })
+      .from(hotelSlackChannels)
+      .where(
+        and(
+          eq(hotelSlackChannels.hotelId, hotelId),
+          eq(hotelSlackChannels.isActive, true),
+        ),
+      )
+      .orderBy(asc(hotelSlackChannels.createdAt));
+    return rows;
+  } catch (err) {
+    console.error('[hotels.listHotelSlackChannels] 실패:', err);
     return [];
   }
 }

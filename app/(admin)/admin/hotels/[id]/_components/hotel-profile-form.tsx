@@ -122,9 +122,6 @@ export function HotelProfileForm({ hotel }: { hotel: Hotel }) {
               <Field label="대표 연락처" error={errors.phone}>
                 <Input name="phone" type="tel" defaultValue={hotel.phone ?? ''} aria-invalid={!!errors.phone} />
               </Field>
-              <Field label="Slack ID" error={errors.slackId} hint="이 호텔 접수건 알림을 받을 Slack 멤버 ID (예: U01ABC23)">
-                <Input name="slackId" defaultValue={hotel.slackId ?? ''} placeholder="U01ABC23" />
-              </Field>
             </div>
 
             {/* 추가 연락처 */}

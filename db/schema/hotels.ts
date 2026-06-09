@@ -47,7 +47,8 @@ export const hotels = pgTable(
     /** 호텔 측 주 담당자 (display only). 실제 계정은 users 테이블. */
     managerName: text('manager_name'),
     /**
-     * 이 호텔 접수건 관련 알림을 바로 보낼 Slack 멤버 ID (예: `U01ABC23`).
+     * @deprecated 폐기·미사용 (2026-06-09). 슬랙 알림 연동은 `hotel_slack_channels`
+     * (N:N)로 일원화됨. 컬럼은 이력 보존 차원에서 유지하되 읽기/쓰기 하지 않음.
      */
     slackId: text('slack_id'),
     /** 추가 연락처 목록 (이름 + 연락처). */

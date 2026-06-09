@@ -122,7 +122,9 @@ export async function notifySlack(
   recordLog({
     templateEventKey: meta.eventKey,
     channel: 'slack',
-    toAddress: input.channel,
+    // 프리셋 키(new/urgent/dev) 또는 raw 채널 ID 문자열.
+    toAddress:
+      typeof input.channel === 'string' ? input.channel : input.channel.rawId,
     payload: { fallbackText: input.fallbackText },
     status: result.ok ? 'sent' : 'failed',
     errorMessage: result.ok ? null : result.error,

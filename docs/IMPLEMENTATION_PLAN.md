@@ -358,7 +358,24 @@ editor_drafts (
 id, name, oa_pms_hotel_id (unique, nullable),
 business_no, address, phone, manager_name,
 note, created_at, updated_at, is_active
+// slack_id (text) — 폐기·미사용 (2026-06-09). 슬랙 연동은 hotel_slack_channels로 일원화
 ```
+
+#### `hotel_slack_channels` (호텔 ↔ 슬랙 채널 연동, N:N — 2026-06-09)
+```ts
+id, hotel_id (FK hotels, cascade),
+channel_id (text)        // Slack 채널 ID (C…/G…)
+channel_name (text)      // 연동 시점 채널명 캐시 (표시용)
+channel_is_private (bool default false)
+bot_joined (bool default false)   // 봇 참여 여부 = 연동 성공 판정 (로고 회색↔컬러)
+linked_by_user_id (uuid, nullable)
+created_at, updated_at, is_active
+// unique(hotel_id, channel_id) — 같은 호텔에 같은 채널 중복 차단
+```
+> **기능**: 어드민 호텔 상세 `슬랙 채널 연동` 섹션. ① 채널명·채널ID 실시간 검색(`conversations.list`/`conversations.info`) → ② 공개채널 봇 자동입장(`conversations.join`) → ③ 연동 완료 첫 메시지 자동 발송 → ④ 로고 회색→컬러. 비공개 채널은 저장하되 `bot_joined=false`('봇 미초대' 표시, 수동 `/invite` 후 상태 새로고침). 연동해제(soft delete)·N:N 중복연동·테스트 메시지 발송 지원.
+> **접수 알림 연결**: 접수 발생(`dispatchTicketReceivedNotifications`) 시 해당 호텔의 `bot_joined=true` 채널 전체로 `buildTicketNewBlocks` 발송(기존 `#support_new` 병행, eventKey `ticket.hotel_slack`).
+> **선행(코드 외)**: Slack 앱 OAuth 스코프 `channels:read · groups:read · channels:join` 추가 + 재설치 필요.
+> **API/액션**: `GET /api/admin/slack/channels?q=`(검색), `link/unlink/test/refresh` Server Action(어드민 전용).
 
 #### `users` (계정)
 ```ts

@@ -27,6 +27,8 @@ export * from './users';
 export * from './categories';
 export * from './solution-links';
 export * from './hotel-managed-links';
+// 호텔 ↔ Slack 채널 연동 (N:N) — 접수 알림 병행 발송
+export * from './hotel-slack-channels';
 export * from './activity-logs';
 export * from './service-status';
 // AC-11 — 셀프 비밀번호 찾기 토큰/코드

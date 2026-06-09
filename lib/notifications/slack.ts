@@ -20,10 +20,17 @@ const SLACK_POST_MESSAGE_URL = 'https://slack.com/api/chat.postMessage';
 
 export type SlackChannelKey = 'new' | 'urgent' | 'dev';
 
+/**
+ * 발송 대상 채널.
+ * - 프리셋 키(`new`/`urgent`/`dev`) → env의 고정 채널 ID로 매핑.
+ * - `{ rawId }` → 임의의 채널 ID(`C…`/`G…`)로 직접 발송 (호텔별 연동 채널 등).
+ */
+export type SlackChannelTarget = SlackChannelKey | { rawId: string };
+
 export type SlackBlock = Record<string, unknown>;
 
 export type SendSlackInput = {
-  channel: SlackChannelKey;
+  channel: SlackChannelTarget;
   /** Block Kit 메시지. */
   blocks: SlackBlock[];
   /** 알림(요약) 텍스트 — 모바일 push에 표시됨. */
@@ -31,12 +38,13 @@ export type SendSlackInput = {
 };
 
 export type SendSlackResult =
-  | { ok: true; channel: SlackChannelKey; stub?: boolean; ts?: string }
-  | { ok: false; channel: SlackChannelKey; error: string };
+  | { ok: true; channel: string; stub?: boolean; ts?: string }
+  | { ok: false; channel: string; error: string };
 
-/** 채널 키 → Slack 채널 ID. */
-function channelId(channel: SlackChannelKey): string {
-  switch (channel) {
+/** 발송 대상 → 실제 Slack 채널 ID. */
+function resolveChannelId(target: SlackChannelTarget): string {
+  if (typeof target !== 'string') return target.rawId.trim();
+  switch (target) {
     case 'new':
       return env.SLACK_CHANNEL_NEW;
     case 'urgent':
@@ -46,14 +54,20 @@ function channelId(channel: SlackChannelKey): string {
   }
 }
 
+/** 로그/결과 식별용 채널 라벨 (프리셋은 키, raw는 채널 ID). */
+function channelLabel(target: SlackChannelTarget): string {
+  return typeof target === 'string' ? target : target.rawId.trim();
+}
+
 export async function sendSlack(input: SendSlackInput): Promise<SendSlackResult> {
   const token = env.SLACK_BOT_TOKEN;
-  const channel = channelId(input.channel);
+  const channel = resolveChannelId(input.channel);
+  const label = channelLabel(input.channel);
 
   // 토큰 또는 채널 ID 미설정 → stub. 프로덕션이면 경고를 남겨 누락을 표면화.
   if (!token || !channel) {
     const detail = {
-      channel: input.channel,
+      channel: label,
       hasToken: Boolean(token),
       hasChannelId: Boolean(channel),
       text: input.fallbackText,
@@ -66,7 +80,7 @@ export async function sendSlack(input: SendSlackInput): Promise<SendSlackResult>
     } else {
       console.log('[SLACK STUB]', detail);
     }
-    return { ok: true, channel: input.channel, stub: true };
+    return { ok: true, channel: label, stub: true };
   }
 
   try {
@@ -93,15 +107,15 @@ export async function sendSlack(input: SendSlackInput): Promise<SendSlackResult>
       const error = data?.error
         ? `Slack chat.postMessage 실패: ${data.error}`
         : `Slack chat.postMessage HTTP ${res.status}`;
-      console.warn('[SLACK 발송 실패]', { channel: input.channel, error });
-      return { ok: false, channel: input.channel, error };
+      console.warn('[SLACK 발송 실패]', { channel: label, error });
+      return { ok: false, channel: label, error };
     }
 
-    return { ok: true, channel: input.channel, ts: data.ts };
+    return { ok: true, channel: label, ts: data.ts };
   } catch (err) {
     return {
       ok: false,
-      channel: input.channel,
+      channel: label,
       error: err instanceof Error ? err.message : 'unknown slack error',
     };
   }
@@ -110,6 +124,34 @@ export async function sendSlack(input: SendSlackInput): Promise<SendSlackResult>
 // ─────────────────────────────────────────────────────────────────────
 // Block Kit 빌더
 // ─────────────────────────────────────────────────────────────────────
+
+/** 호텔 채널 연동 완료 시 채널에 자동 게시되는 첫 메시지. */
+export function buildHotelSlackLinkedBlocks(hotelName: string): SlackBlock[] {
+  return [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text:
+          `✅ *${hotelName}* 접수 알림이 이 채널에 연동되었습니다.\n` +
+          `앞으로 이 호텔의 신규 접수가 발생하면 여기로도 알림이 전송됩니다.`,
+      },
+    },
+  ];
+}
+
+/** 연동 채널 테스트 메시지. */
+export function buildHotelSlackTestBlocks(hotelName: string): SlackBlock[] {
+  return [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `🔔 *${hotelName}* 연동 테스트 메시지입니다. 정상 수신되면 연동이 완료된 것입니다.`,
+      },
+    },
+  ];
+}
 
 export type TicketSummaryForSlack = {
   ticketNo: string;

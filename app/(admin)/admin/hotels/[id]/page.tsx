@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowUpRight, Users } from 'lucide-react';
 import { requireRole } from '@/lib/permissions';
 import { getHotelById } from '@/lib/services/users';
 import {
+  listHotelSlackChannels,
   listHotelSolutions,
   listManagedHotels,
   listMappedUsers,
@@ -22,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { HotelProfileForm } from './_components/hotel-profile-form';
 import { HotelSolutions } from './_components/hotel-solutions';
 import { HotelManaged } from './_components/hotel-managed';
+import { HotelSlackChannels } from './_components/hotel-slack-channels';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,12 +53,14 @@ export default async function HotelDetailPage({
   const hotel = await getHotelById(id);
   if (!hotel) notFound();
 
-  const [solutions, presets, managed, mappedUsers] = await Promise.all([
-    listHotelSolutions(id),
-    listSolutionPresets(),
-    listManagedHotels(id),
-    listMappedUsers(id),
-  ]);
+  const [solutions, presets, managed, mappedUsers, slackChannels] =
+    await Promise.all([
+      listHotelSolutions(id),
+      listSolutionPresets(),
+      listManagedHotels(id),
+      listMappedUsers(id),
+      listHotelSlackChannels(id),
+    ]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -87,6 +91,9 @@ export default async function HotelDetailPage({
 
       {/* 이용중 솔루션 */}
       <HotelSolutions hotelId={id} solutions={solutions} presets={presets} />
+
+      {/* 슬랙 채널 연동 (N:N — 접수 알림 병행) */}
+      <HotelSlackChannels hotelId={id} channels={slackChannels} />
 
       {/* 매핑된 이용자 계정 (읽기 전용) */}
       <Card>
