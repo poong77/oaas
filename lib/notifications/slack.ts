@@ -125,6 +125,20 @@ export async function sendSlack(input: SendSlackInput): Promise<SendSlackResult>
 // Block Kit 빌더
 // ─────────────────────────────────────────────────────────────────────
 
+/**
+ * 본문 이미지 → Slack `image` 블록 (presigned URL 사용).
+ * Slack은 게시 시점에 image_url을 가져와 캐시하므로 presign 만료 후에도 표시 유지.
+ */
+export function buildSlackImageBlocks(
+  images: { url: string; alt: string }[],
+): SlackBlock[] {
+  return images.slice(0, 10).map((im) => ({
+    type: 'image',
+    image_url: im.url,
+    alt_text: (im.alt || '첨부 이미지').slice(0, 1900),
+  }));
+}
+
 /** 호텔 채널 연동 완료 시 채널에 자동 게시되는 첫 메시지. */
 export function buildHotelSlackLinkedBlocks(hotelName: string): SlackBlock[] {
   return [

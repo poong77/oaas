@@ -61,11 +61,18 @@ import {
 } from '@/lib/notifications/templates';
 import {
   buildAnswerSupplementBlocks,
+  buildSlackImageBlocks,
   buildTicketEscalateBlocks,
   buildTicketNewBlocks,
   buildTicketUrgentBlocks,
+  type SlackBlock,
   type TicketSummaryForSlack,
 } from '@/lib/notifications/slack';
+import {
+  extractEditorImageKeys,
+  presignSlackImages,
+  stripEditorImageMarkdown,
+} from '@/lib/notifications/slack-images';
 import {
   embedText,
   buildTicketEmbeddingInput,
@@ -435,6 +442,26 @@ async function dispatchTicketReceivedNotifications(
     }
 
     // ── Slack 알림 ──────────────────────────────────────────────
+    // 본문 이미지: 에디터 임베드 이미지를 presigned S3 URL로 만들어 Slack image 블록에
+    // 첨부(비공개 버킷이라도 Slack이 게시 시 가져와 캐시). 텍스트에선 깨진 이미지 마크다운 제거.
+    const imageKeys = extractEditorImageKeys(ticketRow.content);
+    const slackImages = await presignSlackImages(imageKeys);
+    const imageBlocks: SlackBlock[] = slackImages.length
+      ? buildSlackImageBlocks(slackImages)
+      : imageKeys.length
+        ? [
+            {
+              type: 'context',
+              elements: [
+                {
+                  type: 'mrkdwn',
+                  text: `🖼 본문 이미지 ${imageKeys.length}개 — '큐에서 열기'로 확인`,
+                },
+              ],
+            },
+          ]
+        : [];
+
     const summary: TicketSummaryForSlack = {
       ticketNo,
       title: ticketRow.title,
@@ -446,16 +473,18 @@ async function dispatchTicketReceivedNotifications(
       reporterName,
       reporterEmail,
       reporterPhone,
-      contentExcerpt: ticketRow.content.slice(0, 400),
+      contentExcerpt: stripEditorImageMarkdown(ticketRow.content).slice(0, 400),
       attachmentCount,
       link: adminTicketUrl,
     };
+
+    const newBlocks = [...buildTicketNewBlocks(summary), ...imageBlocks];
 
     await notifySlack(
       {
         channel: 'new',
         fallbackText: `[새 티켓] ${ticketNo} ${ticketRow.title}`,
-        blocks: buildTicketNewBlocks(summary),
+        blocks: newBlocks,
       },
       { eventKey: 'ticket.new_slack', ticketId },
     );
@@ -484,7 +513,7 @@ async function dispatchTicketReceivedNotifications(
             {
               channel: { rawId: ch.channelId },
               fallbackText: `[새 티켓] ${ticketNo} ${ticketRow.title}`,
-              blocks: buildTicketNewBlocks(summary),
+              blocks: newBlocks,
             },
             { eventKey: 'ticket.hotel_slack', ticketId },
           );
@@ -502,7 +531,7 @@ async function dispatchTicketReceivedNotifications(
         {
           channel: 'urgent',
           fallbackText: `[P1 긴급] ${ticketNo} ${ticketRow.title}`,
-          blocks: buildTicketUrgentBlocks(summary),
+          blocks: [...buildTicketUrgentBlocks(summary), ...imageBlocks],
         },
         { eventKey: 'ticket.urgent_slack', ticketId },
       );
