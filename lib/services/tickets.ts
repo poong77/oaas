@@ -531,6 +531,7 @@ async function dispatchTicketReceivedNotifications(
               eq(hotelSlackChannels.hotelId, ticketRow.hotelId),
               eq(hotelSlackChannels.isActive, true),
               eq(hotelSlackChannels.botJoined, true),
+              eq(hotelSlackChannels.notifyEnabled, true),
             ),
           );
         for (const ch of hotelChannels) {

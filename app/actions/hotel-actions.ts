@@ -13,6 +13,7 @@
  * - removeManagedHotelAction        : 멀티관리 호텔 해제 (양방향)
  * - linkHotelSlackChannelAction     : 슬랙 채널 연동 (공개채널 봇 자동입장 + 첫 메시지)
  * - unlinkHotelSlackChannelAction   : 슬랙 채널 연동 해제 (soft delete)
+ * - toggleHotelSlackChannelNotifyAction : 채널별 접수 알림 발송 on/off 토글
  * - sendTestHotelSlackChannelAction : 연동 채널 테스트 메시지 발송
  * - refreshHotelSlackChannelAction  : 채널 봇 참여 상태·채널명 재조회 갱신
  */
@@ -617,6 +618,8 @@ export const linkHotelSlackChannelAction = withAuthorizedAction<
           channelName,
           channelIsPrivate,
           botJoined,
+          // 재연동(해제 후 다시 연동) 시 알림은 기본 재개 상태로 복귀.
+          notifyEnabled: true,
           linkedByUserId: ctx.user.id,
           updatedAt: new Date(),
         },
@@ -684,6 +687,45 @@ export const unlinkHotelSlackChannelAction = withAuthorizedAction<
   } catch (err) {
     console.error('[unlinkHotelSlackChannelAction] 실패:', err);
     return { ok: false, error: '연동 해제 중 오류가 발생했습니다' };
+  }
+});
+
+/**
+ * 연동 채널의 신규 접수 알림 발송 on/off 토글.
+ * 연동(매핑)은 유지한 채 알림만 일시 정지/재개한다 (테스트 발송은 영향 없음).
+ */
+export const toggleHotelSlackChannelNotifyAction = withAuthorizedAction<
+  FormData,
+  ActionResult<{ notifyEnabled: boolean }>
+>(['admin'], async (ctx, formData) => {
+  if (!db) return { ok: false, error: 'DB 미연결' };
+  const hotelId = (formData.get('hotelId') as string) ?? '';
+  const channelId = ((formData.get('channelId') as string) ?? '').trim();
+  const enabled = (formData.get('enabled') as string) === '1';
+  if (!uuidSchema.safeParse(hotelId).success || !channelId)
+    return { ok: false, error: '잘못된 요청' };
+  try {
+    await db
+      .update(hotelSlackChannels)
+      .set({ notifyEnabled: enabled, updatedAt: new Date() })
+      .where(
+        and(
+          eq(hotelSlackChannels.hotelId, hotelId),
+          eq(hotelSlackChannels.channelId, channelId),
+        ),
+      );
+    logActivity({
+      userId: ctx.user.id,
+      action: 'hotel.slack.notify_toggle',
+      targetType: 'hotel',
+      targetId: hotelId,
+      payload: { channelId, notifyEnabled: enabled },
+    });
+    revalidatePath(`/admin/hotels/${hotelId}`);
+    return { ok: true, data: { notifyEnabled: enabled } };
+  } catch (err) {
+    console.error('[toggleHotelSlackChannelNotifyAction] 실패:', err);
+    return { ok: false, error: '알림 설정 변경 중 오류가 발생했습니다' };
   }
 });
 

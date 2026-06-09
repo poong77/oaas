@@ -1,0 +1,1 @@
+ALTER TABLE "hotel_slack_channels" ADD COLUMN "notify_enabled" boolean DEFAULT true NOT NULL;

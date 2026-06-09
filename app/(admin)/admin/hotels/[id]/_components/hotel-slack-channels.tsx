@@ -10,7 +10,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Hash, Lock, RefreshCw, Send, Slack, X } from 'lucide-react';
+import { Bell, BellOff, Hash, Lock, RefreshCw, Send, Slack, X } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -29,6 +29,7 @@ import {
   unlinkHotelSlackChannelAction,
   sendTestHotelSlackChannelAction,
   refreshHotelSlackChannelAction,
+  toggleHotelSlackChannelNotifyAction,
 } from '@/app/actions/hotel-actions';
 import type { HotelSlackChannelView } from '@/lib/services/hotels';
 import { cn } from '@/lib/utils';
@@ -96,6 +97,27 @@ export function HotelSlackChannels({
         const data = res.data as { botJoined: boolean } | undefined;
         toast.success(
           data?.botJoined ? '봇 참여 확인 — 연동 완료' : '상태 갱신됨 (아직 봇 미참여)',
+        );
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  function handleToggleNotify(c: HotelSlackChannelView) {
+    const next = !c.notifyEnabled;
+    const fd = new FormData();
+    fd.set('hotelId', hotelId);
+    fd.set('channelId', c.channelId);
+    fd.set('enabled', next ? '1' : '0');
+    startTransition(async () => {
+      const res = await toggleHotelSlackChannelNotifyAction(fd);
+      if (res.ok) {
+        toast.success(
+          next
+            ? `#${c.channelName ?? c.channelId} 접수 알림을 재개했습니다`
+            : `#${c.channelName ?? c.channelId} 접수 알림을 정지했습니다`,
         );
         router.refresh();
       } else {
@@ -187,6 +209,9 @@ export function HotelSlackChannels({
                     ) : (
                       <Badge tone="warn">봇 미초대</Badge>
                     )}
+                    {c.botJoined && !c.notifyEnabled && (
+                      <Badge tone="slate">알림 정지</Badge>
+                    )}
                   </div>
                   <div className="mt-0.5 font-mono text-xs text-slate-400">
                     {c.channelId}
@@ -207,6 +232,32 @@ export function HotelSlackChannels({
                       className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                     >
                       <RefreshCw className="h-3.5 w-3.5" />상태 새로고침
+                    </button>
+                  )}
+                  {c.botJoined && (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotify(c)}
+                      disabled={pending}
+                      aria-label={
+                        c.notifyEnabled ? '접수 알림 정지' : '접수 알림 재개'
+                      }
+                      className={cn(
+                        'inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-xs font-medium disabled:opacity-50',
+                        c.notifyEnabled
+                          ? 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
+                          : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400',
+                      )}
+                    >
+                      {c.notifyEnabled ? (
+                        <>
+                          <BellOff className="h-3.5 w-3.5" />알림 정지
+                        </>
+                      ) : (
+                        <>
+                          <Bell className="h-3.5 w-3.5" />알림 재개
+                        </>
+                      )}
                     </button>
                   )}
                   <button

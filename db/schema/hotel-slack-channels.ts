@@ -34,6 +34,11 @@ export const hotelSlackChannels = pgTable(
     channelIsPrivate: boolean('channel_is_private').notNull().default(false),
     /** 봇이 채널 멤버인지 = 연동 성공 판정 (로고 회색↔컬러). */
     botJoined: boolean('bot_joined').notNull().default(false),
+    /**
+     * 신규 접수 알림 발송 on/off (연동은 유지한 채 알림만 일시 정지).
+     * false면 이 채널로는 접수 알림을 보내지 않는다 (테스트 발송은 가능).
+     */
+    notifyEnabled: boolean('notify_enabled').notNull().default(true),
     /** 연동을 수행한 어드민 (감사). */
     linkedByUserId: uuid('linked_by_user_id'),
   },

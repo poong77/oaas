@@ -108,6 +108,7 @@ export type HotelSlackChannelView = {
   channelName: string | null;
   channelIsPrivate: boolean;
   botJoined: boolean;
+  notifyEnabled: boolean;
 };
 
 /** 호텔의 활성 연동 채널 목록 (생성순). */
@@ -123,6 +124,7 @@ export async function listHotelSlackChannels(
         channelName: hotelSlackChannels.channelName,
         channelIsPrivate: hotelSlackChannels.channelIsPrivate,
         botJoined: hotelSlackChannels.botJoined,
+        notifyEnabled: hotelSlackChannels.notifyEnabled,
       })
       .from(hotelSlackChannels)
       .where(
