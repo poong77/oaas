@@ -39,6 +39,8 @@ import {
 // 상수
 // ─────────────────────────────────────────────────────────────────────
 
+/** 호텔 검색 최소 글자 수 (collapseSpacing 후 기준). 클라이언트 MIN_QUERY_LEN과 동일. */
+const MIN_SEARCH_LEN = 3;
 const EMAIL_TOKEN_TTL_MIN = 30;
 const SMS_CODE_TTL_MIN = 10;
 const MAX_CODE_ATTEMPTS = 5;
@@ -142,9 +144,9 @@ export async function searchHotelsForReset(
 ): Promise<ResetHotelMatch[]> {
   if (!db) return [];
   const raw = q.trim();
-  if (raw.length < 1) return [];
   const collapsed = collapseSpacing(raw);
-  if (collapsed.length < 1) return [];
+  // 너무 짧은 검색어는 전체 노출/스크래핑 방지 차원에서 차단 (공백·기호 제외 3글자 이상).
+  if (collapsed.length < MIN_SEARCH_LEN) return [];
 
   // 호텔명·법인명을 띄어쓰기·하이픈·점 무시하고 매칭.
   const pattern = `%${collapsed}%`;

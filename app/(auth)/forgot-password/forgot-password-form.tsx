@@ -42,6 +42,13 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** 호텔 검색 최소 글자 수 (공백·하이픈·점 제외 기준). */
+const MIN_QUERY_LEN = 3;
+/** 공백·하이픈·언더스코어·점·가운뎃점 제외 글자 수 (서버 collapseSpacing과 동일 기준). */
+function meaningfulLen(s: string): number {
+  return s.replace(/[\s\-_.·]/g, '').length;
+}
+
 export function ForgotPasswordForm() {
   const router = useRouter();
   const [step, setStep] = useState<Step>('hotel');
@@ -64,7 +71,7 @@ export function ForgotPasswordForm() {
 
   function searchHotels(e: React.FormEvent) {
     e.preventDefault();
-    if (!query.trim()) return;
+    if (meaningfulLen(query) < MIN_QUERY_LEN) return;
     startTransition(async () => {
       const data = await postJson<{ ok: boolean; hotels?: HotelMatch[] }>(
         '/api/auth/password-reset/search-hotels',
@@ -192,13 +199,22 @@ export function ForgotPasswordForm() {
                     autoFocus
                   />
                 </div>
-                <Button type="submit" disabled={pending || !query.trim()}>
+                <Button
+                  type="submit"
+                  disabled={pending || meaningfulLen(query) < MIN_QUERY_LEN}
+                >
                   검색
                 </Button>
               </div>
-              <p className="text-[11px] text-slate-400">
-                띄어쓰기·영문/국문 구분 없이 검색됩니다.
-              </p>
+              {query.trim() && meaningfulLen(query) < MIN_QUERY_LEN ? (
+                <p className="text-[11px] text-amber-600 dark:text-amber-500">
+                  호텔명을 3글자 이상 입력해주세요.
+                </p>
+              ) : (
+                <p className="text-[11px] text-slate-400">
+                  3글자 이상 · 띄어쓰기·영문/국문 구분 없이 검색됩니다.
+                </p>
+              )}
             </form>
 
             {hotels !== null && (

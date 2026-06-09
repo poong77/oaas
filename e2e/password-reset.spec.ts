@@ -78,9 +78,24 @@ test.describe('AC-11 비밀번호 찾기 — 공개 플로우(안전)', () => {
     await page.goto('/forgot-password');
     await expect(page.locator('#hotel-q')).toBeVisible();
     await expect(page.getByRole('button', { name: '검색' })).toBeVisible();
+    await expect(page.getByText('3글자 이상', { exact: false })).toBeVisible();
+  });
+
+  test('S-02b 3글자 미만이면 검색 버튼 비활성 + 안내 노출', async ({ page }) => {
+    await page.goto('/forgot-password');
+    const searchBtn = page.getByRole('button', { name: '검색' });
+    // 2글자 입력 → 버튼 disabled + 안내문구
+    await page.locator('#hotel-q').fill('더파');
+    await expect(searchBtn).toBeDisabled();
     await expect(
-      page.getByText('띄어쓰기·영문/국문 구분 없이 검색됩니다.'),
+      page.getByText('호텔명을 3글자 이상 입력해주세요.'),
     ).toBeVisible();
+    // 공백 포함 "더 파" (의미 글자 2) 도 비활성
+    await page.locator('#hotel-q').fill('더 파');
+    await expect(searchBtn).toBeDisabled();
+    // 3글자 채우면 활성화
+    await page.locator('#hotel-q').fill('더파인');
+    await expect(searchBtn).toBeEnabled();
   });
 
   test('S-03 존재하지 않는 호텔 검색 → 결과 없음 안내', async ({ page }) => {
@@ -104,8 +119,9 @@ test.describe('AC-11 비밀번호 찾기 — 공개 플로우(안전)', () => {
     const { hotel, accounts } = found!;
 
     await page.goto('/forgot-password');
-    // 호텔명 일부로 검색 (앞 3글자)
-    await page.locator('#hotel-q').fill(hotel.hotelName.slice(0, 3));
+    // 호텔명 일부로 검색 — 공백 제외 3글자 이상이어야 검색 가능 (MIN_QUERY_LEN=3)
+    const term = hotel.hotelName.replace(/\s/g, '').slice(0, 3);
+    await page.locator('#hotel-q').fill(term);
     await page.getByRole('button', { name: '검색' }).click();
 
     // 결과에서 해당 호텔 선택
