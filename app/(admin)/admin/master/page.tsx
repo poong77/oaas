@@ -1,35 +1,33 @@
 /**
- * /admin/master — 어드민 마스터DB 인덱스 (Phase 9).
+ * /admin/master — 어드민 마스터DB 인덱스 (Phase 9 · 재구성 2026-06-09).
  *
- * 마스터DB 카테고리 카드. 매니저+어드민 진입.
+ * 5개 섹션 헤더 + 한 줄 4개 그리드 + 제목만 타일.
  * 카드 노출/‘어드민’ 뱃지는 메뉴 접근 제어(getManagerAccessMap)가 단일 소스.
- * 메뉴 접근 제어 카드는 영구 어드민 전용(접근 맵에서 항상 차단)이라 매니저에게 숨겨진다.
+ * 통합: 문의 분류(categories+ticket_channels) · 메시지 템플릿(notification+quick-replies).
+ * 삭제: 자주 찾는 작업(quick_actions) · 접수 폼 필드(ticket_form_fields).
  */
 
 import Link from 'next/link';
 import {
   Activity,
   ArrowRight,
-  Bell,
   BookA,
   Boxes,
+  Bot,
   Clock,
+  Compass,
+  Cpu,
   Database,
   FileText,
   FolderTree,
   Gauge,
-  Bot,
   Hash,
   HelpCircle,
-  Layers,
   Link as LinkIcon,
   ListChecks,
   MessageSquare,
-  Radio,
   Settings,
   ShieldCheck,
-  Sparkles,
-  Wrench,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -45,155 +43,56 @@ export const metadata = { title: '마스터DB — OA 통합 AS 어드민' };
 type MasterItem = {
   href: string;
   label: string;
-  description: string;
   icon: LucideIcon;
   badge?: string;
 };
 
-const ITEMS: MasterItem[] = [
+type MasterGroup = {
+  label: string;
+  items: MasterItem[];
+};
+
+const GROUPS: MasterGroup[] = [
   {
-    href: '/admin/master/service-status',
-    label: '서비스 상태',
-    description:
-      '홈/긴급 배너에 노출되는 서비스 상태를 관리합니다. 변경 시 모든 사용자에게 즉시 반영됩니다.',
-    icon: Activity,
-    badge: '실시간 반영',
+    label: '① 분류·구조',
+    items: [
+      { href: '/admin/master/product-categories', label: '제품 카테고리', icon: Boxes },
+      { href: '/admin/master/menu-taxonomies', label: '아티클 메뉴 트리', icon: FolderTree },
+      { href: '/admin/master/inquiry-classification', label: '문의 분류', icon: Compass, badge: '통합' },
+    ],
   },
   {
-    href: '/admin/master/product-categories',
-    label: '제품 분류',
-    description:
-      '제품 대/중/소 3단계 + 메모 트리. 접수폼은 호텔리어=대분류만, 매니저·어드민=대중소 선택.',
-    icon: Boxes,
+    label: '② 접수·응대',
+    items: [
+      { href: '/admin/master/hotelier-templates', label: '호텔리어 템플릿', icon: FileText, badge: '접수폼 노출' },
+      { href: '/admin/master/solution-links', label: '솔루션 링크 프리셋', icon: LinkIcon },
+      { href: '/admin/master/message-templates', label: '메시지 템플릿', icon: MessageSquare, badge: '통합' },
+    ],
   },
   {
-    href: '/admin/master/categories',
-    label: '카테고리',
-    description:
-      '이슈 유형 / 긴급도 / 영향 범위 3종을 편집합니다. (제품 분류는 별도 메뉴)',
-    icon: Layers,
+    label: '③ 랜딩페이지',
+    items: [
+      { href: '/admin/master/service-status', label: '서비스 상태', icon: Activity, badge: '실시간' },
+      { href: '/admin/master/role-starters', label: '역할별 시작', icon: ListChecks, badge: '노출' },
+      { href: '/admin/master/popular-keywords', label: '인기검색어', icon: Hash, badge: '노출' },
+    ],
   },
   {
-    href: '/admin/master/notification-templates',
-    label: '알림 템플릿',
-    description:
-      'SMS/이메일 알림 본문 템플릿. 티켓 상태 전환·계정 초대·비밀번호 초기화.',
-    icon: Bell,
+    label: '④ 검색·AI',
+    items: [
+      { href: '/admin/master/synonyms', label: '동의어 사전', icon: BookA },
+      { href: '/admin/master/search-quality', label: '검색 골든셋·품질', icon: Gauge, badge: '품질' },
+      { href: '/admin/master/knowledge-export', label: '지식팩 내보내기', icon: Bot, badge: 'AI 지식' },
+      { href: '/admin/master/ai-models', label: 'AI 모델', icon: Cpu, badge: 'AI' },
+    ],
   },
   {
-    href: '/admin/master/quick-replies',
-    label: '빠른 응대',
-    description: '매니저가 티켓 답변 작성 시 사용할 정형 응대 문구 템플릿.',
-    icon: MessageSquare,
-  },
-  {
-    href: '/admin/master/hotelier-templates',
-    label: '호텔리어 템플릿',
-    description:
-      '호텔리어 접수폼 「자세한 내용」 위 버튼으로 본문에 끼워넣는 정형 입력 양식(계정생성/삭제·매출수정·오버부킹 등).',
-    icon: FileText,
-    badge: '접수폼 노출',
-  },
-  {
-    href: '/admin/master/quick-actions',
-    label: '자주 찾는 작업',
-    description: '홈 ④ 카드. 비밀번호 초기화 등 단축 메뉴. 즉시 홈에 반영.',
-    icon: Sparkles,
-    badge: '홈 노출',
-  },
-  {
-    href: '/admin/master/role-starters',
-    label: '역할별 시작',
-    description: '홈 ⑤ 카드. 프론트/예약/하우스키핑/관리자/신규오픈 5종.',
-    icon: ListChecks,
-    badge: '홈 노출',
-  },
-  {
-    href: '/admin/master/popular-keywords',
-    label: '인기검색어',
-    description:
-      '홈·검색 화면의 # 키워드 칩. 검색로그 자동집계 + 고정(pin)/제외(block) 큐레이션.',
-    icon: Hash,
-    badge: '홈 노출',
-  },
-  {
-    href: '/admin/master/solution-links',
-    label: '솔루션 링크 프리셋',
-    description: '호텔 프로필에서 사용자가 추가할 솔루션 링크 후보.',
-    icon: LinkIcon,
-  },
-  {
-    href: '/admin/master/form-fields',
-    label: '접수 폼 필드',
-    description: '제품별 동적 접수 폼 필드 정의. NULL이면 전 제품 공통.',
-    icon: Wrench,
-  },
-  {
-    href: '/admin/master/ticket-channels',
-    label: '유입 채널',
-    description:
-      '티켓이 어떤 경로로 들어왔는지 분류 (전화/카카오/이메일 등). 티켓 생성 폼 드롭다운에 노출.',
-    icon: Radio,
-  },
-  {
-    href: '/admin/master/business-hours',
-    label: '운영시간',
-    description:
-      '평일 운영·점심·접수마감·긴급전화·공휴일을 관리합니다. 호텔리어 컨택 패널 실시간 운영상태에 반영.',
-    icon: Clock,
-    badge: '실시간 반영',
-  },
-  {
-    href: '/admin/master/system-settings',
-    label: '시스템 설정',
-    description:
-      '업로드 한도·로그인 Rate Limit·Slack 채널 등 key-value. (운영시간은 별도 메뉴로 분리)',
-    icon: Settings,
-  },
-  {
-    href: '/admin/master/synonyms',
-    label: '동의어 사전',
-    description:
-      '검색 동의어 그룹·이형어 관리. 통합 검색 시 자동 확장 (예: "결제" ↔ "페이먼트").',
-    icon: BookA,
-  },
-  {
-    href: '/admin/master/menu-taxonomies',
-    label: '메뉴 구조',
-    description:
-      '도움말 아티클의 menu_path 정본. 제품별 대/중/소 메뉴 트리 (최대 3단). 아티클 작성 시 cascading select 옵션 소스.',
-    icon: FolderTree,
-  },
-  {
-    href: '/admin/master/knowledge-export',
-    label: '지식팩 내보내기',
-    description:
-      '발행 아티클·FAQ·동의어를 챗봇(GPT-4o mini) 최적 포맷(Markdown/JSONL)으로 가공해 다운로드. 본문 정규화 + 용어 사전 인라인 + AI 사용 지침.',
-    icon: Bot,
-    badge: 'AI 지식',
-  },
-  {
-    href: '/admin/master/ai-models',
-    label: 'AI 모델',
-    description:
-      '티켓 답변 초안 생성에 쓸 AI 모델(Claude·GPT) 목록·기본값·ON/OFF·단가 라벨을 관리. 활성 모델만 매니저 답변 화면 모달에 노출.',
-    icon: Bot,
-    badge: 'AI',
-  },
-  {
-    href: '/admin/master/search-quality',
-    label: '검색 골든셋·품질',
-    description:
-      '자주 묻는 질문(정답셋)을 검색에 돌려 순위 측정 (Hit@k·버킷). AI 추천·실사용 퍼널(노출→클릭→접수)까지.',
-    icon: Gauge,
-    badge: '품질 측정',
-  },
-  {
-    href: '/admin/master/menu-access',
-    label: '메뉴 접근 제어',
-    description:
-      '마스터 내 개별 메뉴의 매니저 접근 허용/차단을 ON/OFF 스위치로 결정. 어드민은 항상 전체 접근.',
-    icon: ShieldCheck,
+    label: '⑤ 시스템·운영',
+    items: [
+      { href: '/admin/master/business-hours', label: '운영시간', icon: Clock, badge: '실시간' },
+      { href: '/admin/master/system-settings', label: '시스템 설정', icon: Settings },
+      { href: '/admin/master/menu-access', label: '메뉴 접근 제어', icon: ShieldCheck },
+    ],
   },
 ];
 
@@ -207,10 +106,13 @@ export default async function AdminMasterIndexPage() {
   // 접근 맵(메뉴 접근 제어)이 단일 소스. 어드민은 전체 노출하되 매니저 차단 메뉴엔
   // '어드민' 뱃지로 표시. 매니저는 접근 허용된 카드만 본다.
   const accessMap = await getManagerAccessMap();
-  const items = ITEMS.filter((it) => {
-    if (user.role === 'admin') return true;
-    return accessMap[menuKeyOf(it.href)] === true;
-  });
+  const canSee = (href: string) =>
+    user.role === 'admin' || accessMap[menuKeyOf(href)] === true;
+
+  const visibleGroups = GROUPS.map((g) => ({
+    label: g.label,
+    items: g.items.filter((it) => canSee(it.href)),
+  })).filter((g) => g.items.length > 0);
 
   return (
     <div className="flex flex-col gap-5">
@@ -221,48 +123,55 @@ export default async function AdminMasterIndexPage() {
       />
 
       <Card>
-        <CardContent className="p-5">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((it) => {
-              const Icon = it.icon;
-              // 매니저가 현재 접근 불가한 메뉴 → '어드민' 뱃지 (어드민 화면 한정 표시)
-              const managerBlocked = accessMap[menuKeyOf(it.href)] !== true;
-              return (
-                <Link
-                  key={it.href}
-                  href={it.href}
-                  className="group hover:border-brand-300 dark:hover:border-brand-700 flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="bg-brand-50 text-brand-600 group-hover:bg-brand-600 dark:bg-brand-950/40 dark:text-brand-300 flex h-10 w-10 items-center justify-center rounded-md group-hover:text-white">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <div className="flex items-center gap-1">
-                      {it.badge && (
-                        <Badge tone="brand" className="text-[10px]">
-                          {it.badge}
-                        </Badge>
-                      )}
-                      {managerBlocked && (
-                        <Badge tone="warn" className="text-[10px]">
-                          어드민
-                        </Badge>
-                      )}
-                      <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      {it.label}
-                    </span>
-                    <span className="text-xs leading-snug text-slate-500 dark:text-slate-400">
-                      {it.description}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+        <CardContent className="flex flex-col gap-6 p-5">
+          {visibleGroups.map((group) => (
+            <section key={group.label} className="flex flex-col gap-2.5">
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-1.5 dark:border-slate-800">
+                <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  {group.label}
+                </h2>
+                <span className="text-[11px] text-slate-400">
+                  {group.items.length}
+                </span>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {group.items.map((it) => {
+                  const Icon = it.icon;
+                  // 매니저가 현재 접근 불가한 메뉴 → '어드민' 뱃지 (어드민 화면 한정)
+                  const managerBlocked = accessMap[menuKeyOf(it.href)] !== true;
+                  return (
+                    <Link
+                      key={it.href}
+                      href={it.href}
+                      className="group hover:border-brand-300 dark:hover:border-brand-700 flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="bg-brand-50 text-brand-600 group-hover:bg-brand-600 dark:bg-brand-950/40 dark:text-brand-300 flex h-10 w-10 items-center justify-center rounded-md group-hover:text-white">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {it.badge && (
+                            <Badge tone="brand" className="text-[10px]">
+                              {it.badge}
+                            </Badge>
+                          )}
+                          {managerBlocked && (
+                            <Badge tone="warn" className="text-[10px]">
+                              어드민
+                            </Badge>
+                          )}
+                          <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+                        </div>
+                      </div>
+                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {it.label}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </CardContent>
       </Card>
 

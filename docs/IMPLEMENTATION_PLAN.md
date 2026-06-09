@@ -314,19 +314,35 @@ editor_drafts (
 
 > 핵심 요구사항: **대부분의 DB 항목을 어드민이 별도 메뉴와 세부 탭에서 편집 가능**.
 
-| 메뉴 | 편집 대상 (테이블) | 세부 탭 | 우선순위 |
-|:-|:-|:-|:-:|
-| 카테고리 관리 | `categories` | 제품(PMS/CMS/Keyless/키오스크/웹서비스/설정) · 문제유형(오류/장애/기능문의/기능개발/데이터수정/기타) · 영향범위 · 긴급도 | P1 |
-| 이슈 접수 폼 필드 | `ticket_form_fields` | 제품별 동적 필드 (JSONB), 표시순서, 필수여부 | P1 |
-| 알림 템플릿 | `notification_templates` | SMS 템플릿 / 이메일 템플릿 / 이벤트별(접수/처리중/완료/초대/비번초기화) | P1 |
-| 빠른 응대 템플릿 | `quick_reply_templates` | 매니저 수동 발송용 텍스트 (카테고리별) | P2 |
-| 자주찾는작업 | `quick_actions` | 홈 상단 8개 버튼 (라벨·아이콘·링크·순서·노출여부) | P2 |
-| 역할별 시작하기 | `role_starters` | 프론트·예약/판매·하우스키핑·관리자·신규오픈 → 가이드 매핑 | P2 |
-| 인기검색어 | `popular_keywords` | 자동 집계 + 수동 큐레이션 + ON/OFF | P2 |
-| 솔루션 링크 마스터 | `solution_link_presets` | 호텔 프로필 기본값 (Keyless·홈페이지 등) | P2 |
-| 시스템 설정 | `system_settings` | 첨부 사이즈 · Rate Limit · SSO · 외부키 마스킹 · 슬랙 채널 | P1 |
-| 호텔 마스터 | `hotels` | 호텔명·OA PMS 매핑 ID (어드민만 편집) | P1 |
-| **운영시간 마스터** ✅ | `business_hours_default` · `business_hours_overrides` · `business_holidays` | ① 현재 운영시간 (점심·접수마감·긴급전화 안내문구) · ② 예약 변경 (기간/시간 일시적 오버라이드, cron 자동 활성화/만료) · ③ 공휴일 관리 · ④ 변경 이력 (`activity_logs` 필터) | **P1+P2 완료 2026-05-29** |
+> **마스터DB 재구성 (2026-06-09)** — 20개 평면 카드 → **5개 섹션 헤더 + 4열 그리드 + 제목만 타일**로 정리. 인덱스(`/admin/master`)는 `ITEMS[].group`(① 분류·구조 / ② 접수·응대 / ③ 랜딩페이지 / ④ 검색·AI / ⑤ 시스템·운영)으로 그룹 렌더.
+> - **통합 2건 (탭 라우트)**:
+>   - **문의 분류** `/admin/master/inquiry-classification` — `categories`(이슈유형/긴급도/영향범위) + `ticket_channels`(유입 채널)를 `?tab=issue_type|urgency|impact|channels` 단일 페이지 탭으로 통합. 구 `/admin/master/categories`·`/admin/master/ticket-channels`는 redirect, 채널 `new/[id]` 편집 라우트는 기존 경로 유지(가드 키만 `inquiry-classification`).
+>   - **메시지 템플릿** `/admin/master/message-templates` — `notification_templates`(알림) + `quick_reply_templates`(빠른 응대)를 `?tab=notification|quick-reply` 탭으로 통합. 구 list 라우트 redirect, `new/[id]` 유지(가드 키 `message-templates`).
+> - **삭제 2건 (DROP TABLE)**: `quick_actions`(자주 찾는 작업 — 홈 미사용 사문화) · `ticket_form_fields`(접수 폼 필드 — 접수폼 미연결 미완성 기능). 관련 스키마·서비스·UI·시드·상수·서버액션 전부 제거. `tickets.custom_fields`(체크리스트/챗봇 컨텍스트)는 form-fields와 무관하므로 **보존**.
+> - **라벨 변경**: `product-categories` "제품 분류 → **제품 카테고리**", `menu-taxonomies` "메뉴 구조 → **아티클 메뉴 트리**"(권한 메뉴 혼동 방지).
+> - **접근 맵**: `MASTER_MENUS` 레지스트리에서 삭제 2 + 통합 4→2개 키 정리. `resolveManagerAccess`는 미등록 키를 무시하므로 stale 오버라이드는 무해, 통합 신규 키는 기본 허용(필요 시 메뉴 접근 제어에서 재차단).
+
+| 섹션 | 메뉴 | 편집 대상 (테이블) | 세부 탭 | 우선순위 |
+|:-|:-|:-|:-|:-:|
+| ① 분류·구조 | 제품 카테고리 | `categories` (type=product) | 제품 대/중/소 트리 | P1 |
+| ① 분류·구조 | 아티클 메뉴 트리 | `menu_taxonomies` | 제품별 menu_path 3단 트리 | P1 |
+| ① 분류·구조 | **문의 분류** (통합) | `categories` + `ticket_channels` | 이슈 유형 · 긴급도 · 영향 범위 · 유입 채널 | P1 |
+| ② 접수·응대 | 호텔리어 템플릿 | `hotelier_templates` | 접수폼 본문 끼워넣기 양식 | P1 |
+| ② 접수·응대 | 솔루션 링크 프리셋 | `solution_link_presets` | 호텔 프로필 기본값 | P2 |
+| ② 접수·응대 | **메시지 템플릿** (통합) | `notification_templates` + `quick_reply_templates` | 알림(SMS/이메일) · 빠른 응대 | P1 |
+| ③ 랜딩페이지 | 서비스 상태 | `service_status` | 홈/긴급 배너 | P1 |
+| ③ 랜딩페이지 | 역할별 시작 | `role_starters` | 프론트·예약·하우스키핑·관리자·신규오픈 | P2 |
+| ③ 랜딩페이지 | 인기검색어 | `popular_keywords` | 자동 집계 + 수동 큐레이션 | P2 |
+| ④ 검색·AI | 동의어 사전 | `term_groups`·`term_synonyms` | 그룹·이형어 | P1 |
+| ④ 검색·AI | 검색 골든셋·품질 | `search_eval_*`·`search_logs` | Hit@k·퍼널 | P1 |
+| ④ 검색·AI | 지식팩 내보내기 | (조회 전용) | Markdown/JSONL | P1 |
+| ④ 검색·AI | AI 모델 | `ai_models` | 모델 목록·기본값·ON/OFF | P1 |
+| ⑤ 시스템·운영 | 운영시간 마스터 ✅ | `business_hours_*`·`business_holidays` | 현재 운영시간 · 예약 변경 · 공휴일 · 변경 이력 | P1+P2 완료 |
+| ⑤ 시스템·운영 | 시스템 설정 | `system_settings` | 첨부 사이즈 · Rate Limit · 슬랙 채널 | P1 |
+| ⑤ 시스템·운영 | 메뉴 접근 제어 | `system_settings` (access map) | 메뉴별 매니저 접근 ON/OFF (영구 어드민) | P1 |
+| — (외부) | 호텔 마스터 | `hotels` | 호텔명·OA PMS 매핑 (org 그룹, `/admin/hotels`) | P1 |
+
+> **삭제됨 (2026-06-09)**: ~~이슈 접수 폼 필드 `ticket_form_fields`~~ · ~~자주찾는작업 `quick_actions`~~ — DROP TABLE.
 
 ---
 
@@ -719,12 +735,12 @@ created_at, is_active
 - [x] 장애 시 fallback (`OACHAT_EMBED_URL` 비어있으면 "문의 접수" 안내 카드)
 
 ### Phase 9 — 어드민 마스터 데이터 (3~4일) — **완료 2026-05-30**
-- [x] `/admin/master` 라우트 그룹 (인덱스 카드 그리드)
-- [x] 카테고리 관리 (제품/유형/긴급도/영향범위 탭)
-- [x] 이슈 접수 폼 필드 (`form-fields`, 제품별 동적 필드)
-- [x] 알림 템플릿 (SMS/이메일, 이벤트별)
-- [x] 빠른 응대 (`quick-replies`)
-- [x] 자주 찾는 작업 (`quick-actions`)
+- [x] `/admin/master` 라우트 그룹 (인덱스 카드 그리드) — **재구성 2026-06-09: 5섹션·4열·제목만**
+- [x] 카테고리 관리 (제품/유형/긴급도/영향범위 탭) — **2026-06-09: 제품=`제품 카테고리`, 유형/긴급도/영향범위는 `문의 분류` 탭으로 통합**
+- [x] ~~이슈 접수 폼 필드 (`form-fields`)~~ — **삭제 2026-06-09 (접수폼 미연결 미완성 기능, DROP TABLE)**
+- [x] 알림 템플릿 (SMS/이메일, 이벤트별) — **2026-06-09: `메시지 템플릿` 탭으로 통합**
+- [x] 빠른 응대 (`quick-replies`) — **2026-06-09: `메시지 템플릿` 탭으로 통합**
+- [x] ~~자주 찾는 작업 (`quick-actions`)~~ — **삭제 2026-06-09 (홈 미사용 사문화, DROP TABLE)**
 - [x] 역할별 시작 (`role-starters`)
 - [x] 솔루션 링크 프리셋 (`solution-links`)
 - [x] 시스템 설정 (key-value)

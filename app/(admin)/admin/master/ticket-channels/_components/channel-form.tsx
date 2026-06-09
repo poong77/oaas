@@ -205,7 +205,9 @@ export function ChannelForm({ channel }: Props) {
         <Button
           type="button"
           variant="ghost"
-          onClick={() => router.push('/admin/master/ticket-channels')}
+          onClick={() =>
+            router.push('/admin/master/inquiry-classification?tab=channels')
+          }
           disabled={pending}
         >
           취소

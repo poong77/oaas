@@ -22,7 +22,7 @@ export default async function NewTicketChannelPage() {
         description="티켓 생성 폼에서 선택할 수 있는 채널을 추가합니다."
         breadcrumb={
           <Link
-            href="/admin/master/ticket-channels"
+            href="/admin/master/inquiry-classification?tab=channels"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
             <ArrowLeft className="h-3 w-3" /> 유입 채널

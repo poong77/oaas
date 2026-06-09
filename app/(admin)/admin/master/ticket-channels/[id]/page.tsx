@@ -38,7 +38,7 @@ export default async function EditTicketChannelPage({
         }
         breadcrumb={
           <Link
-            href="/admin/master/ticket-channels"
+            href="/admin/master/inquiry-classification?tab=channels"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
             <ArrowLeft className="h-3 w-3" /> 유입 채널

@@ -27,7 +27,6 @@ import {
   hotels,
   notices,
   notificationTemplates,
-  quickActions,
   quickReplyTemplates,
   roleStarters,
   serviceStatus,
@@ -48,7 +47,6 @@ import {
   type NewHotel,
   type NewNotice,
   type NewNotificationTemplate,
-  type NewQuickAction,
   type NewQuickReplyTemplate,
   type NewRoleStarter,
   type NewServiceStatus,
@@ -1038,92 +1036,7 @@ async function main() {
     `[seed] notification_templates: ${tplCreated}건 신규 / ${seedTemplates.length - tplCreated}건 스킵`,
   );
 
-  // ─── 12. quick_actions (Phase 9) ────────────────────────────────
-  console.log('[seed] quick_actions (Phase 9) 확인...');
-  type SeedQA = {
-    label: string;
-    description: string;
-    icon: string;
-    linkUrl: string;
-    sortOrder: number;
-  };
-  const seedQuickActions: SeedQA[] = [
-    {
-      label: '비밀번호 초기화',
-      description: '로그인 비밀번호를 초기화합니다.',
-      icon: 'KeyRound',
-      linkUrl: '/profile',
-      sortOrder: 10,
-    },
-    {
-      label: '솔루션 링크 변경',
-      description: 'PMS·Keyless 등 솔루션 링크를 관리합니다.',
-      icon: 'Wrench',
-      linkUrl: '/profile',
-      sortOrder: 20,
-    },
-    {
-      label: '직원 추가',
-      description: '본인 숙소 직원 계정을 추가합니다.',
-      icon: 'Users',
-      linkUrl: '/profile/staff',
-      sortOrder: 30,
-    },
-    {
-      label: '문의 접수',
-      description: '오류·기능문의를 새 티켓으로 접수합니다.',
-      icon: 'HelpCircle',
-      linkUrl: '/tickets/new',
-      sortOrder: 40,
-    },
-    {
-      label: '처리 상태 확인',
-      description: '내가 접수한 문의의 처리 상태를 확인합니다.',
-      icon: 'ListChecks',
-      linkUrl: '/tickets',
-      sortOrder: 50,
-    },
-    {
-      label: '서비스 상태',
-      description: '현재 서비스 상태와 장애 이력을 확인합니다.',
-      icon: 'Activity',
-      linkUrl: '/status',
-      sortOrder: 60,
-    },
-    {
-      label: '공지/업데이트',
-      description: '최근 공지·릴리즈노트·장애 이력.',
-      icon: 'Megaphone',
-      linkUrl: '/notices',
-      sortOrder: 70,
-    },
-    {
-      label: '통합 검색',
-      description: '아티클·FAQ·공지를 한 번에 검색합니다.',
-      icon: 'Search',
-      linkUrl: '/search',
-      sortOrder: 80,
-    },
-  ];
-  let qaCreated = 0;
-  let qaSkipped = 0;
-  for (const qa of seedQuickActions) {
-    const existing = await db
-      .select({ id: quickActions.id })
-      .from(quickActions)
-      .where(sql`${quickActions.label} = ${qa.label}`)
-      .limit(1);
-    if (existing.length > 0) {
-      qaSkipped++;
-      continue;
-    }
-    const row: NewQuickAction = { ...qa, visible: true };
-    await db.insert(quickActions).values(row);
-    qaCreated++;
-  }
-  console.log(
-    `[seed] quick_actions: ${qaCreated}건 신규 / ${qaSkipped}건 스킵`,
-  );
+  // ─── 12. (삭제됨 2026-06-09) quick_actions — 마스터DB 재구성으로 DROP ───
 
   // ─── 13. role_starters (Phase 9) ────────────────────────────────
   console.log('[seed] role_starters (Phase 9) 확인...');

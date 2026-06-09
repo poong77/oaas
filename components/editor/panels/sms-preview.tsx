@@ -93,7 +93,7 @@ export function SmsPreview({ source, defaultOpen = false, className }: SmsPrevie
             </pre>
           )}
           <p className="mt-2 text-[10px] text-slate-500 dark:text-slate-400">
-            ⚠ 실제 SMS는 알림 템플릿(`/admin/master/notification-templates`) 기반으로 발송됩니다. 본 미리보기는 본문 길이·내용 참고용입니다.
+            ⚠ 실제 SMS는 메시지 템플릿(`/admin/master/message-templates`) 기반으로 발송됩니다. 본 미리보기는 본문 길이·내용 참고용입니다.
           </p>
         </div>
       )}

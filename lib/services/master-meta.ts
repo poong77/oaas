@@ -59,26 +59,32 @@ export type MasterMenuMeta = {
   hardAdminOnly: boolean;
 };
 
+// 2026-06-09 재구성: 인덱스 5개 섹션 순서와 동기화.
+//   삭제: quick-actions, form-fields (DROP TABLE)
+//   통합: categories + ticket-channels → inquiry-classification
+//         notification-templates + quick-replies → message-templates
+//   라벨: 제품 분류→제품 카테고리, 메뉴 구조→아티클 메뉴 트리
 export const MASTER_MENUS: readonly MasterMenuMeta[] = [
-  { key: 'service-status', label: '서비스 상태', hardAdminOnly: false },
-  { key: 'product-categories', label: '제품 분류', hardAdminOnly: false },
-  { key: 'categories', label: '카테고리', hardAdminOnly: false },
-  { key: 'notification-templates', label: '알림 템플릿', hardAdminOnly: false },
-  { key: 'quick-replies', label: '빠른 응대', hardAdminOnly: false },
+  // ① 분류·구조
+  { key: 'product-categories', label: '제품 카테고리', hardAdminOnly: false },
+  { key: 'menu-taxonomies', label: '아티클 메뉴 트리', hardAdminOnly: false },
+  { key: 'inquiry-classification', label: '문의 분류', hardAdminOnly: false },
+  // ② 접수·응대
   { key: 'hotelier-templates', label: '호텔리어 템플릿', hardAdminOnly: false },
-  { key: 'quick-actions', label: '자주 찾는 작업', hardAdminOnly: false },
+  { key: 'solution-links', label: '솔루션 링크 프리셋', hardAdminOnly: false },
+  { key: 'message-templates', label: '메시지 템플릿', hardAdminOnly: false },
+  // ③ 랜딩페이지
+  { key: 'service-status', label: '서비스 상태', hardAdminOnly: false },
   { key: 'role-starters', label: '역할별 시작', hardAdminOnly: false },
   { key: 'popular-keywords', label: '인기검색어', hardAdminOnly: false },
-  { key: 'solution-links', label: '솔루션 링크 프리셋', hardAdminOnly: false },
-  { key: 'form-fields', label: '접수 폼 필드', hardAdminOnly: false },
-  { key: 'knowledge-export', label: '지식팩 내보내기', hardAdminOnly: false },
+  // ④ 검색·AI
+  { key: 'synonyms', label: '동의어 사전', hardAdminOnly: false },
   { key: 'search-quality', label: '검색 골든셋·품질', hardAdminOnly: false },
-  { key: 'ticket-channels', label: '유입 채널', hardAdminOnly: false },
+  { key: 'knowledge-export', label: '지식팩 내보내기', hardAdminOnly: false },
+  { key: 'ai-models', label: 'AI 모델', hardAdminOnly: false },
+  // ⑤ 시스템·운영
   { key: 'business-hours', label: '운영시간', hardAdminOnly: false },
   { key: 'system-settings', label: '시스템 설정', hardAdminOnly: false },
-  { key: 'synonyms', label: '동의어 사전', hardAdminOnly: false },
-  { key: 'menu-taxonomies', label: '메뉴 구조', hardAdminOnly: false },
-  { key: 'ai-models', label: 'AI 모델', hardAdminOnly: false },
   // 영구 어드민 전용 (토글 불가) — 메뉴 접근 제어 자신만 해당
   { key: 'menu-access', label: '메뉴 접근 제어', hardAdminOnly: true },
 ] as const;

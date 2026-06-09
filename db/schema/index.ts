@@ -6,12 +6,13 @@
  *   - service_status (Phase 2)
  *   - articles, article_feedback (Phase 3)
  *   - faqs, checklists, checklist_steps (Phase 4)
- *   - tickets, ticket_messages, ticket_attachments, ticket_form_fields,
+ *   - tickets, ticket_messages, ticket_attachments,
  *     notification_logs (Phase 5)
  *   - ticket_feedback (Phase 6)
  *   - notices (Phase 7)
- *   - notification_templates, quick_reply_templates, quick_actions,
+ *   - notification_templates, quick_reply_templates,
  *     role_starters, system_settings (Phase 9 — 어드민 마스터 데이터)
+ *   - 삭제됨 2026-06-09: ticket_form_fields, quick_actions (마스터DB 재구성)
  *   - popular_keywords (SS-04 — 인기검색어 하이브리드 큐레이션)
  *
  * 다음 Phase에서 추가될 예정:
@@ -37,7 +38,6 @@ export * from './checklists';
 export * from './tickets';
 export * from './ticket-messages';
 export * from './ticket-attachments';
-export * from './ticket-form-fields';
 export * from './notification-logs';
 export * from './ticket-feedback';
 export * from './ticket-channels';
@@ -46,7 +46,6 @@ export * from './notices';
 export * from './notification-templates';
 export * from './quick-reply-templates';
 export * from './hotelier-templates';
-export * from './quick-actions';
 export * from './role-starters';
 export * from './system-settings';
 export * from './popular-keywords';

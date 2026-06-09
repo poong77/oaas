@@ -136,7 +136,7 @@ export function AdminEditorHelpContent() {
           <h2 className="mb-2 text-lg font-semibold">매니저 빠른답변 사용법</h2>
           <ol className="ml-5 list-decimal space-y-2 text-sm">
             <li>
-              <strong>마스터 등록</strong>: <a href="/admin/master/quick-replies" className="text-brand-700 underline">/admin/master/quick-replies</a>에서 템플릿 추가.
+              <strong>마스터 등록</strong>: <a href="/admin/master/message-templates?tab=quick-reply" className="text-brand-700 underline">메시지 템플릿 &gt; 빠른 응대</a>에서 템플릿 추가.
             </li>
             <li>
               <strong>변수 치환</strong>: 본문에 <code className={code}>{`{{호텔명}}`}</code>, <code className={code}>{`{{호텔리어명}}`}</code>, <code className={code}>{`{{티켓번호}}`}</code>, <code className={code}>{`{{매니저명}}`}</code> 사용 시 매니저 발송 시점에 자동 치환.

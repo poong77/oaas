@@ -20,12 +20,10 @@ import * as MC from '@/lib/services/master-categories';
 import * as MT from '@/lib/services/master-templates';
 import * as MQR from '@/lib/services/master-quick-replies';
 import * as MHT from '@/lib/services/master-hotelier-templates';
-import * as MQA from '@/lib/services/master-quick-actions';
 import * as MRS from '@/lib/services/master-role-starters';
 import * as MPK from '@/lib/services/master-popular-keywords';
 import * as MSL from '@/lib/services/master-solution-links';
 import * as MSS from '@/lib/services/master-system-settings';
-import * as MFF from '@/lib/services/master-form-fields';
 import { setManagerMenuAccess } from '@/lib/services/master-menu-access';
 
 export type ActionResult = {
@@ -61,8 +59,6 @@ function revalidateAdminMaster(...subPaths: string[]) {
     // 무효화된다. 해당 도메인 변경 시 캐시 태그도 함께 만료시킨다.
     if (p === '/admin/master/categories') {
       revalidateTag(CATEGORIES_CACHE_TAG, 'default');
-    } else if (p === '/admin/master/quick-actions') {
-      revalidateTag(MQA.QUICK_ACTIONS_CACHE_TAG, 'default');
     } else if (p === '/admin/master/role-starters') {
       revalidateTag(MRS.ROLE_STARTERS_CACHE_TAG, 'default');
     } else if (p === '/admin/master/popular-keywords') {
@@ -398,77 +394,8 @@ export async function setHotelierTemplateActiveAction(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// 4. quick_actions (홈 노출)
+// 4. (삭제됨 2026-06-09) quick_actions — 홈 미사용 사문화로 DROP
 // ─────────────────────────────────────────────────────────────────────
-
-const QuickActionSchema = z.object({
-  label: z.string().min(1).max(50),
-  description: z.string().max(200).nullable().optional(),
-  icon: z.string().max(50).nullable().optional(),
-  linkUrl: z.string().min(1).max(500),
-  sortOrder: z.number().int().default(0),
-  visible: z.boolean().default(true),
-});
-
-export async function upsertQuickActionAction(
-  id: string | null,
-  _prev: ActionResult | undefined,
-  formData: FormData,
-): Promise<ActionResult> {
-  const user = await requireRole(['manager', 'admin']);
-  const raw = {
-    label: getStr(formData, 'label'),
-    description: getOptStr(formData, 'description'),
-    icon: getOptStr(formData, 'icon'),
-    linkUrl: getStr(formData, 'linkUrl'),
-    sortOrder: getInt(formData, 'sortOrder', 0),
-    visible: getBool(formData, 'visible'),
-  };
-  const parsed = QuickActionSchema.safeParse(raw);
-  if (!parsed.success) return { ok: false, message: '입력값 확인' };
-  if (id) {
-    const r = await MQA.updateQuickAction(id, parsed.data);
-    if (!r.ok) return { ok: false, message: r.message };
-    logActivity({
-      userId: user.id,
-      action: 'master.quick_action.update',
-      targetType: 'quick_action',
-      targetId: id,
-    });
-    revalidateAdminMaster('/admin/master/quick-actions', '/');
-    return { ok: true, id };
-  }
-  const r = await MQA.createQuickAction(parsed.data);
-  if (!r.ok || !r.id) return { ok: false, message: r.message };
-  logActivity({
-    userId: user.id,
-    action: 'master.quick_action.create',
-    targetType: 'quick_action',
-    targetId: r.id,
-  });
-  revalidateAdminMaster('/admin/master/quick-actions', '/');
-  return { ok: true, id: r.id };
-}
-
-export async function setQuickActionActiveAction(
-  id: string,
-  isActive: boolean,
-): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireRole(['manager', 'admin']);
-  const r = await MQA.setQuickActionActive(id, isActive);
-  if (r.ok) {
-    logActivity({
-      userId: user.id,
-      action: isActive
-        ? 'master.quick_action.restore'
-        : 'master.quick_action.archive',
-      targetType: 'quick_action',
-      targetId: id,
-    });
-    revalidateAdminMaster('/admin/master/quick-actions', '/');
-  }
-  return r;
-}
 
 // ─────────────────────────────────────────────────────────────────────
 // 5. role_starters (홈 노출)
@@ -704,109 +631,8 @@ export async function setSystemSettingActiveAction(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// 8. ticket_form_fields
+// 8. (삭제됨 2026-06-09) ticket_form_fields — 접수폼 미연결 미완성 기능으로 DROP
 // ─────────────────────────────────────────────────────────────────────
-
-const FormFieldSchema = z.object({
-  productCode: z.string().max(50).nullable().optional(),
-  fieldKey: z.string().min(1).max(50),
-  label: z.string().min(1).max(100),
-  inputType: z.enum(['text', 'textarea', 'select', 'number', 'date', 'file']),
-  required: z.boolean().default(false),
-  sortOrder: z.number().int().default(0),
-  helpText: z.string().max(300).nullable().optional(),
-});
-
-/** options는 JSON 텍스트로 입력받음 ([{value, label}, ...]). */
-function parseFormFieldOptions(
-  s: string,
-): Array<{ value: string; label: string }> {
-  if (!s.trim()) return [];
-  try {
-    const parsed = JSON.parse(s);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (it: unknown): it is { value: string; label: string } =>
-          typeof it === 'object' &&
-          it !== null &&
-          'value' in it &&
-          'label' in it,
-      )
-      .map((it) => ({ value: String(it.value), label: String(it.label) }));
-  } catch {
-    return [];
-  }
-}
-
-export async function upsertFormFieldAction(
-  id: string | null,
-  _prev: ActionResult | undefined,
-  formData: FormData,
-): Promise<ActionResult> {
-  const user = await requireRole(['manager', 'admin']);
-  const raw = {
-    productCode: getOptStr(formData, 'productCode'),
-    fieldKey: getStr(formData, 'fieldKey'),
-    label: getStr(formData, 'label'),
-    inputType: getStr(formData, 'inputType') || 'text',
-    required: getBool(formData, 'required'),
-    sortOrder: getInt(formData, 'sortOrder', 0),
-    helpText: getOptStr(formData, 'helpText'),
-  };
-  const parsed = FormFieldSchema.safeParse(raw);
-  if (!parsed.success) return { ok: false, message: '입력값 확인' };
-  const options =
-    parsed.data.inputType === 'select'
-      ? parseFormFieldOptions(getStr(formData, 'optionsJson'))
-      : [];
-  if (id) {
-    const r = await MFF.updateFormField(id, { ...parsed.data, options });
-    if (!r.ok) return { ok: false, message: r.message };
-    logActivity({
-      userId: user.id,
-      action: 'master.form_field.update',
-      targetType: 'ticket_form_field',
-      targetId: id,
-    });
-    revalidateAdminMaster('/admin/master/form-fields');
-    return { ok: true, id };
-  }
-  const r = await MFF.createFormField({ ...parsed.data, options });
-  if (!r.ok || !r.id) return { ok: false, message: r.message };
-  logActivity({
-    userId: user.id,
-    action: 'master.form_field.create',
-    targetType: 'ticket_form_field',
-    targetId: r.id,
-    payload: {
-      productCode: parsed.data.productCode ?? null,
-      fieldKey: parsed.data.fieldKey,
-    },
-  });
-  revalidateAdminMaster('/admin/master/form-fields');
-  return { ok: true, id: r.id };
-}
-
-export async function setFormFieldActiveAction(
-  id: string,
-  isActive: boolean,
-): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireRole(['manager', 'admin']);
-  const r = await MFF.setFormFieldActive(id, isActive);
-  if (r.ok) {
-    logActivity({
-      userId: user.id,
-      action: isActive
-        ? 'master.form_field.restore'
-        : 'master.form_field.archive',
-      targetType: 'ticket_form_field',
-      targetId: id,
-    });
-    revalidateAdminMaster('/admin/master/form-fields');
-  }
-  return r;
-}
 
 // ─────────────────────────────────────────────────────────────────────
 // 9. popular_keywords (인기검색어 하이브리드 — pin/block)

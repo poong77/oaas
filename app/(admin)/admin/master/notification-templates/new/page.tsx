@@ -24,7 +24,7 @@ export default async function NewTemplatePage() {
         description="채널과 이벤트 키를 지정하고 본문을 작성하세요. {{변수}} 치환자를 사용할 수 있습니다."
         breadcrumb={
           <Link
-            href="/admin/master/notification-templates"
+            href="/admin/master/message-templates?tab=notification"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
             <ArrowLeft className="h-3 w-3" /> 알림 템플릿

@@ -28,7 +28,7 @@ export default async function QuickReplyEditPage({
         title={`빠른 응대 편집 — ${item.title}`}
         breadcrumb={
           <Link
-            href="/admin/master/quick-replies"
+            href="/admin/master/message-templates?tab=quick-reply"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
             <ArrowLeft className="h-3 w-3" /> 빠른 응대

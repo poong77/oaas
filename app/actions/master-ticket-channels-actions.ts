@@ -101,8 +101,8 @@ export async function createTicketChannelAction(
     payload: parsed.data,
   });
   revalidateTag('ticket-channels', 'default');
-  revalidatePath('/admin/master/ticket-channels');
-  redirect('/admin/master/ticket-channels');
+  revalidatePath('/admin/master/inquiry-classification');
+  redirect('/admin/master/inquiry-classification?tab=channels');
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ export async function updateTicketChannelAction(
     payload: parsed.data,
   });
   revalidateTag('ticket-channels', 'default');
-  revalidatePath('/admin/master/ticket-channels');
+  revalidatePath('/admin/master/inquiry-classification');
   revalidatePath(`/admin/master/ticket-channels/${channelId}`);
   return { ok: true };
 }
@@ -199,6 +199,6 @@ export async function toggleTicketChannelAction(
   }
 
   revalidateTag('ticket-channels', 'default');
-  revalidatePath('/admin/master/ticket-channels');
+  revalidatePath('/admin/master/inquiry-classification');
   return { ok: true };
 }

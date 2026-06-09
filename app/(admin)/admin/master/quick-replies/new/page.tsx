@@ -17,7 +17,7 @@ export default async function NewQuickReplyPage() {
         title="신규 빠른 응대"
         breadcrumb={
           <Link
-            href="/admin/master/quick-replies"
+            href="/admin/master/message-templates?tab=quick-reply"
             className="inline-flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200"
           >
             <ArrowLeft className="h-3 w-3" /> 빠른 응대

@@ -1,9 +1,9 @@
 /**
- * 'ticket-channels' 마스터 메뉴 접근 가드.
+ * 'inquiry-classification' 마스터 메뉴 접근 가드 (구 ticket-channels 라우트).
  *
- * 인덱스/new/[id] 등 이 메뉴 하위 전 경로를 한 번에 보호한다.
- * 매니저가 메뉴 접근 제어에서 차단된 경우 notFound(). 어드민은 항상 통과.
- * @see app/(admin)/admin/master/menu-access
+ * 2026-06-09: 유입 채널이 '문의 분류'로 통합됨. 목록은 ../inquiry-classification로
+ * 리다이렉트하되 채널 new/[id] 편집 라우트는 이 폴더에 유지되므로, 통합 키로 가드한다.
+ * @see app/(admin)/admin/master/inquiry-classification
  */
 
 import type { ReactNode } from 'react';
@@ -14,6 +14,6 @@ export default async function MasterMenuLayout({
 }: {
   children: ReactNode;
 }) {
-  await requireMasterMenuAccess('ticket-channels');
+  await requireMasterMenuAccess('inquiry-classification');
   return <>{children}</>;
 }

@@ -109,10 +109,10 @@ export default async function MasterProductCategoriesPage() {
               숨겨지지만 기존 티켓의 제품 참조는 유지됩니다. 코드(code)는 티켓·아티클이
               참조하므로 가급적 변경하지 마세요. 이슈 유형 · 긴급도 · 영향 범위는{' '}
               <Link
-                href="/admin/master/categories"
+                href="/admin/master/inquiry-classification?tab=issue_type"
                 className="text-brand-600 underline"
               >
-                카테고리 메뉴
+                문의 분류 메뉴
               </Link>
               에서 편집합니다.
             </p>
