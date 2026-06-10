@@ -55,7 +55,7 @@ export async function listRoleStarters(
 /** 홈 페이지용 — 활성만 (1시간 캐시 + 태그 무효화). */
 const _listActiveRoleStartersCached = unstable_cache(
   async (): Promise<RoleStarter[]> => listRoleStarters(false),
-  ['role-starters:active:v1'],
+  ['role-starters:active:v2'],
   { revalidate: 3600, tags: [ROLE_STARTERS_CACHE_TAG] },
 );
 

@@ -82,7 +82,7 @@ const _getProductCategoriesCached = unstable_cache(
       return FALLBACK_PRODUCT_CATEGORIES.map(({ fallback: _f, ...rest }) => rest);
     }
   },
-  ['product-categories:v3-roots-iconimg'],
+  ['product-categories:v4-roots-iconimg'],
   { revalidate: 3600, tags: [CATEGORIES_CACHE_TAG] },
 );
 
