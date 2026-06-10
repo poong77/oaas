@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>로그인 와이어프레임 — OA서포트</title>
+<style>
+  :root{--brand:#00A36B;--brand-d:#008A59;--ink:#1A1C20;--sub:#555D6D;--line:#DCDEE3;--ph:#B0B3BA;--bg:#F3F4F5}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{width:100%;max-width:436px;background:#fff;border-radius:16px;padding:40px 32px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  h1{font-size:24px;font-weight:800;text-align:center;margin:0 0 24px}
+  .inp{width:100%;height:52px;border:1px solid var(--line);border-radius:10px;padding:0 16px;font-size:16px;margin-bottom:12px;color:var(--ink)}
+  .inp::placeholder{color:var(--ph)}
+  .pw{position:relative}
+  .pw .eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#868B94;font-size:18px;cursor:pointer}
+  .btn{width:100%;height:52px;border:0;border-radius:10px;background:var(--brand);color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:4px}
+  .btn:hover{background:var(--brand-d)}
+  .forgot{display:block;text-align:center;margin-top:14px;color:var(--sub);font-size:13px;text-decoration:none}
+  .forgot:hover{color:var(--brand-d)}
+  .cap{position:fixed;top:14px;left:0;right:0;text-align:center;color:#9aa0ac;font-size:12px}
+  .note{max-width:436px;margin:18px auto 0;font-size:12px;color:#8a94a6;text-align:center;line-height:1.6}
+  del{color:#c0271f}
+</style>
+</head>
+<body>
+  <div class="cap">로그인 와이어프레임 (배포 전 검토) — 안내 박스 삭제 반영</div>
+  <div>
+    <div class="card">
+      <h1>로그인</h1>
+      <input class="inp" placeholder="이메일 주소 또는 아이디" />
+      <div class="pw">
+        <input class="inp" type="password" placeholder="비밀번호" style="padding-right:48px" />
+        <span class="eye">👁</span>
+      </div>
+      <button class="btn">로그인</button>
+      <a class="forgot" href="#">비밀번호를 잊으셨나요?</a>
+    </div>
+    <p class="note">
+      변경점: 아이콘·부제 제거(미니멀 “로그인”) · 라벨 sr-only(시안 룩) ·
+      <del>초기 비밀번호 안내 박스 삭제</del>
+    </p>
+  </div>
+</body>
+</html>

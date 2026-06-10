@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Eye, EyeOff, LifeBuoy } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,16 +75,8 @@ export function LoginForm({
 
   return (
     <Card className="w-full max-w-md p-2 sm:p-4">
-      <CardHeader className="items-center gap-2 text-center">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white">
-          <LifeBuoy className="h-6 w-6" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">로그인</h1>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            OA서포트 · support.oapms.com
-          </p>
-        </div>
+      <CardHeader className="items-center pb-2 text-center">
+        <h1 className="text-2xl font-bold text-black dark:text-white">로그인</h1>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {!credentialsEnabled && !ssoEnabled && (
@@ -101,7 +93,9 @@ export function LoginForm({
         {credentialsEnabled && (
           <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="identifier">이메일 또는 아이디</Label>
+              <Label htmlFor="identifier" className="sr-only">
+                이메일 또는 아이디
+              </Label>
               <Input
                 id="identifier"
                 type="text"
@@ -114,7 +108,9 @@ export function LoginForm({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password">비밀번호</Label>
+              <Label htmlFor="password" className="sr-only">
+                비밀번호
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -158,12 +154,6 @@ export function LoginForm({
               >
                 비밀번호를 잊으셨나요?
               </Link>
-            </div>
-
-            <div className="rounded-md border border-brand-200 bg-brand-50 p-2.5 text-[11px] leading-relaxed text-brand-800 dark:border-brand-800 dark:bg-brand-900/30 dark:text-brand-200">
-              처음 이용하시나요? <strong>초기 비밀번호는 123456</strong>입니다.
-              로그인 후 <strong>내 프로필</strong>에서 비밀번호를 꼭 변경하고
-              연락처·이메일 등 정보를 입력해주세요.
             </div>
 
             {devStubEnabled && (
