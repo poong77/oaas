@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GNB 운영 상태 시안 — OA서포트</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --gnb-bg: rgba(20, 22, 28, 0.85);
+    --gnb-border: rgba(255, 255, 255, 0.08);
+    --txt: #e7e9ee;
+    --txt-dim: #9aa0ac;
+    --brand: #2f6df6;
+    --tip-bg: #1b1d23;
+    --tip-border: rgba(255, 255, 255, 0.07);
+
+    /* status accents */
+    --live: #2bd4a0;
+    --lunch: #4aa3ff;
+    --closed: #e0b341;
+    --off: #c9ccd3;
+  }
+
+  /* ===== Light theme overrides ===== */
+  body[data-theme="light"] {
+    --bg: #f4f6fa;
+    --gnb-bg: rgba(255, 255, 255, 0.85);
+    --gnb-border: rgba(12, 18, 32, 0.08);
+    --txt: #1a1d24;
+    --txt-dim: #5b6473;
+    --tip-bg: #ffffff;
+    --tip-border: rgba(12, 18, 32, 0.10);
+  }
+  body[data-theme="light"] {
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(47,109,246,0.10), transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, rgba(43,212,160,0.08), transparent 55%),
+      var(--bg);
+  }
+  body[data-theme="light"] .nav a:hover { background: rgba(12,18,32,.05); }
+  body[data-theme="light"] .status-pill {
+    background: #ffffff; border-color: rgba(12,18,32,.08);
+    box-shadow: 0 2px 10px rgba(12,18,32,.10);
+  }
+  body[data-theme="light"] .tooltip { box-shadow: 0 18px 50px rgba(20,30,55,.18); }
+  body[data-theme="light"] .card { background: rgba(255,255,255,.7); }
+  body[data-theme="light"] .pill-static { box-shadow: 0 2px 10px rgba(12,18,32,.10); }
+  body[data-theme="light"] .controls button { background: rgba(12,18,32,.03); }
+  body[data-theme="light"] .controls button:hover { border-color: rgba(12,18,32,.2); }
+  body[data-theme="light"] .tip-emergency .icon,
+  body[data-theme="light"] .tip-emergency .num { color: #e0463f; }
+  body[data-theme="light"] .tip-head[data-state="off"] { background: rgba(12,18,32,.06); color:#5b6473; }
+  body[data-theme="light"] .status-pill[data-state="off"] .dot { background:#8b93a1; }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", system-ui, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(47,109,246,0.18), transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, rgba(43,212,160,0.10), transparent 55%),
+      var(--bg);
+    color: var(--txt);
+    min-height: 100vh;
+  }
+
+  svg { display: block; }
+  .icon { width: 17px; height: 17px; stroke-width: 2; }
+
+  /* ===== GNB ===== */
+  .gnb {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 24px;
+    height: 60px; padding: 0 24px;
+    background: var(--gnb-bg);
+    backdrop-filter: saturate(140%) blur(14px);
+    border-bottom: 1px solid var(--gnb-border);
+  }
+  .logo { display: flex; align-items: center; gap: 9px; font-weight: 800; letter-spacing: -0.02em; }
+  .logo .mark {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--brand), #6f9bff);
+    display: grid; place-items: center; font-size: 14px; color: #fff; font-weight: 900;
+  }
+  .nav { display: flex; gap: 4px; margin-left: 8px; }
+  .nav a {
+    color: var(--txt-dim); text-decoration: none; font-size: 14px; font-weight: 600;
+    padding: 8px 12px; border-radius: 8px; transition: .15s;
+  }
+  .nav a:hover { color: var(--txt); background: rgba(255,255,255,.05); }
+  .nav a.active { color: var(--txt); }
+  .spacer { flex: 1; }
+
+  .theme-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 999px;
+    border: 1px solid var(--gnb-border); background: rgba(255,255,255,.04);
+    color: var(--txt-dim); cursor: pointer; transition: .15s;
+  }
+  .theme-toggle:hover { color: var(--txt); border-color: rgba(255,255,255,.2); }
+  body[data-theme="light"] .theme-toggle { background: rgba(12,18,32,.03); }
+  body[data-theme="light"] .theme-toggle:hover { border-color: rgba(12,18,32,.2); }
+
+  /* ===== Status pill (in GNB) ===== */
+  .status-wrap { position: relative; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 36px; padding: 0 14px; border-radius: 999px;
+    background: #fff; color: #1a1c22;
+    font-size: 13.5px; font-weight: 700; cursor: default;
+    box-shadow: 0 2px 10px rgba(0,0,0,.25);
+    border: 1px solid rgba(0,0,0,.04);
+    transition: transform .12s ease;
+  }
+  .status-wrap:hover .status-pill { transform: translateY(-1px); }
+  .status-pill .ico { display: inline-flex; }
+  .status-pill .ico .icon { width: 16px; height: 16px; }
+  .status-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .status-pill[data-state="live"]   { color:#0c7a59; }
+  .status-pill[data-state="lunch"]  { color:#1763c4; }
+  .status-pill[data-state="closed"] { color:#9a7110; }
+  .status-pill[data-state="off"]    { color:#3a3d45; }
+  .status-pill[data-state="live"]   .dot { background: var(--live);  box-shadow: 0 0 0 4px rgba(43,212,160,.18); animation: pulse 1.8s infinite; }
+  .status-pill[data-state="lunch"]  .dot { background: var(--lunch); }
+  .status-pill[data-state="closed"] .dot { background: var(--closed); }
+  .status-pill[data-state="off"]    .dot { background: #b8bcc4; }
+
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(43,212,160,.35); }
+    70%  { box-shadow: 0 0 0 7px rgba(43,212,160,0); }
+    100% { box-shadow: 0 0 0 0 rgba(43,212,160,0); }
+  }
+
+  /* ===== Tooltip (full) ===== */
+  .tooltip {
+    position: absolute; top: calc(100% + 12px); right: 0;
+    width: 268px; padding: 16px 18px 18px;
+    background: var(--tip-bg);
+    border: 1px solid var(--tip-border);
+    border-radius: 16px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.5);
+    opacity: 0; transform: translateY(-6px) scale(.98);
+    pointer-events: none; transition: .18s ease;
+  }
+  .status-wrap:hover .tooltip { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+  .tooltip::before {
+    content: ""; position: absolute; top: -7px; right: 24px;
+    width: 14px; height: 14px; background: var(--tip-bg);
+    border-left: 1px solid var(--tip-border); border-top: 1px solid var(--tip-border);
+    transform: rotate(45deg);
+  }
+  .tip-head {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .tip-head .icon { width: 15px; height: 15px; }
+  .tip-head[data-state="live"]   { background: rgba(43,212,160,.12); color: var(--live); }
+  .tip-head[data-state="lunch"]  { background: rgba(74,163,255,.14); color: var(--lunch); }
+  .tip-head[data-state="closed"] { background: rgba(224,179,65,.14); color: var(--closed); }
+  .tip-head[data-state="off"]    { background: rgba(255,255,255,.08); color: var(--off); }
+
+  .tip-title { font-size: 16px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 6px; }
+  .tip-sub { font-size: 13px; color: var(--txt-dim); line-height: 1.55; }
+  .tip-sub b.live   { color: var(--live); }
+  .tip-sub b.lunch  { color: var(--lunch); }
+  .tip-sub b.closed { color: var(--closed); }
+  .tip-emergency {
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.07);
+    font-size: 13px; line-height: 1.6;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .tip-emergency .icon { width: 15px; height: 15px; color: #ff8a8a; flex: none; margin-top: 2px; }
+  .tip-emergency .num { color: #ff8a8a; font-weight: 800; }
+  .tip-emergency .note { color: var(--txt-dim); font-size: 11.5px; }
+
+  /* ===== Demo page body ===== */
+  .stage { max-width: 980px; margin: 0 auto; padding: 56px 24px 100px; }
+  .stage h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; }
+  .stage p.lead { color: var(--txt-dim); margin: 0 0 32px; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 40px; }
+  .controls button {
+    border: 1px solid var(--gnb-border); background: rgba(255,255,255,.04);
+    color: var(--txt-dim); font-size: 13px; font-weight: 700;
+    padding: 9px 15px; border-radius: 10px; cursor: pointer; transition: .15s;
+  }
+  .controls button:hover { color: var(--txt); border-color: rgba(255,255,255,.2); }
+  .controls button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+  /* ===== Spec gallery (all 4 at once) ===== */
+  .gallery {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px;
+  }
+  .card {
+    background: rgba(255,255,255,.025); border: 1px solid var(--gnb-border);
+    border-radius: 16px; padding: 20px; text-align: center;
+  }
+  .card .cap { font-size: 12px; color: var(--txt-dim); margin-bottom: 14px; font-weight: 600; }
+  .card .pill-static {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 34px; padding: 0 14px; border-radius: 999px; background:#fff;
+    font-size: 13px; font-weight: 700; box-shadow: 0 2px 10px rgba(0,0,0,.25);
+  }
+  .pill-static .icon { width: 15px; height: 15px; }
+  .card .tip-static {
+    margin-top: 16px; text-align: left;
+    background: var(--tip-bg); border: 1px solid var(--tip-border);
+    border-radius: 14px; padding: 14px 16px;
+  }
+  .tip-static .tip-title { font-size: 14.5px; }
+  .tip-static .tip-sub { font-size: 12.5px; }
+
+  @media (max-width: 560px) {
+    .nav { display: none; }
+    .tooltip { right: -8px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===== SVG icon sprite (Lucide-style line icons) ===== -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <!-- headset -->
+      <symbol id="ic-headset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 14v-2a9 9 0 0 1 18 0v2"/>
+        <path d="M21 16a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3z"/>
+        <path d="M3 16a2 2 0 0 0 2 2h1a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H3z"/>
+        <path d="M21 18a4 4 0 0 1-4 4h-2"/>
+      </symbol>
+      <!-- utensils (lunch) -->
+      <symbol id="ic-lunch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 2v7a3 3 0 0 0 3 3 3 3 0 0 0 3-3V2"/>
+        <path d="M6 2v20"/>
+        <path d="M18 2c-1.66 0-3 2-3 5s1.34 5 3 5"/>
+        <path d="M18 12v10"/>
+      </symbol>
+      <!-- clock (closed) -->
+      <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 7v5l3 2"/>
+      </symbol>
+      <!-- ban (off) -->
+      <symbol id="ic-ban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M5.6 5.6 18.4 18.4"/>
+      </symbol>
+      <!-- siren (emergency) -->
+      <symbol id="ic-siren" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 18v-6a5 5 0 0 1 10 0v6"/>
+        <path d="M5 21h14"/>
+        <path d="M21 12h1M2 12h1M12 2v1M18.3 5.7l.7-.7M5 5l.7.7"/>
+      </symbol>
+      <!-- sun -->
+      <symbol id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+      </symbol>
+      <!-- moon -->
+      <symbol id="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ============ GNB ============ -->
+  <header class="gnb">
+    <div class="logo"><span class="mark">OA</span> OA서포트</div>
+    <nav class="nav">
+      <a class="active" href="#">셀프 가이드</a>
+      <a href="#">자주 찾는 작업</a>
+      <a href="#">이슈 접수</a>
+      <a href="#">내 문의</a>
+    </nav>
+    <div class="spacer"></div>
+
+    <button class="theme-toggle" id="themeToggle" title="테마 전환" aria-label="테마 전환">
+      <svg class="icon"><use href="#ic-moon"/></svg>
+    </button>
+
+    <!-- 운영 상태 (호버 시 풀 툴팁) -->
+    <div class="status-wrap">
+      <div class="status-pill" id="livePill" data-state="live">
+        <span class="dot"></span>
+        <span class="ico"><svg class="icon"><use href="#ic-headset"/></svg></span>
+        <span class="label">운영 중</span>
+      </div>
+
+      <div class="tooltip" id="liveTip">
+        <span class="tip-head" data-state="live"><svg class="icon"><use href="#ic-headset"/></svg> 운영 중</span>
+        <div class="tip-title">운영 시간 10:00~18:40</div>
+        <div class="tip-sub">마감까지 <b class="live">2시간 14분</b> 남음</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ Demo stage ============ -->
+  <main class="stage">
+    <h1>GNB 운영 상태 표시</h1>
+    <p class="lead">우측 상단 상태 칩에 마우스를 올리면 풀 툴팁이 뜹니다. 아래 버튼으로 상태를 전환해 미리보세요.</p>
+
+    <div class="controls">
+      <button class="on" data-set="live">운영 중</button>
+      <button data-set="lunch">점심시간</button>
+      <button data-set="closed">접수마감</button>
+      <button data-set="off">운영종료</button>
+    </div>
+
+    <!-- 4종 한눈에 -->
+    <section class="gallery">
+      <div class="card">
+        <div class="cap">운영 중</div>
+        <div class="pill-static" style="color:#0c7a59">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 0 4px rgba(43,212,160,.18)"></span>
+          <svg class="icon"><use href="#ic-headset"/></svg> 운영 중
+        </div>
+        <div class="tip-static">
+          <span class="tip-head" data-state="live"><svg class="icon"><use href="#ic-headset"/></svg> 운영 중</span>
+          <div class="tip-title">운영 시간 10:00~18:40</div>
+          <div class="tip-sub">마감까지 <b class="live">2시간 14분</b> 남음</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cap">점심시간</div>
+        <div class="pill-static" style="color:#1763c4">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--lunch)"></span>
+          <svg class="icon"><use href="#ic-lunch"/></svg> 점심 시간
+        </div>
+        <div class="tip-static">
+          <span class="tip-head" data-state="lunch"><svg class="icon"><use href="#ic-lunch"/></svg> 점심 시간</span>
+          <div class="tip-title">점심시간 12:00~13:00</div>
+          <div class="tip-sub">점심시간에는 <b class="lunch">상담이 잠시 쉬어갑니다</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cap">접수마감</div>
+        <div class="pill-static" style="color:#9a7110">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--closed)"></span>
+          <svg class="icon"><use href="#ic-clock"/></svg> 접수마감
+        </div>
+        <div class="tip-static">
+          <span class="tip-head" data-state="closed"><svg class="icon"><use href="#ic-clock"/></svg> 접수마감</span>
+          <div class="tip-title">운영 시간 10:00~18:40</div>
+          <div class="tip-sub">당일 <b class="closed">접수 마감중</b> 입니다</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cap">운영종료</div>
+        <div class="pill-static" style="color:#3a3d45">
+          <span style="width:8px;height:8px;border-radius:50%;background:#b8bcc4"></span>
+          <svg class="icon"><use href="#ic-ban"/></svg> 운영 종료
+        </div>
+        <div class="tip-static">
+          <span class="tip-head" data-state="off"><svg class="icon"><use href="#ic-ban"/></svg> 운영 종료</span>
+          <div class="tip-title">상담 운영이 종료되었습니다.</div>
+          <div class="tip-emergency">
+            <svg class="icon"><use href="#ic-siren"/></svg>
+            <div>긴급 장애 신고: <span class="num">070-8028-0919</span><br/>
+            <span class="note">(단순 문의 및 금액 정정 제외)</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+<script>
+  const ICON = id => '<svg class="icon"><use href="#'+id+'"/></svg>';
+
+  const STATES = {
+    live: {
+      state: 'live', icon: 'ic-headset', label: '운영 중',
+      title: '운영 시간 10:00~18:40',
+      sub: '마감까지 <b class="live">2시간 14분</b> 남음',
+      emergency: ''
+    },
+    lunch: {
+      state: 'lunch', icon: 'ic-lunch', label: '점심 시간',
+      title: '점심시간 12:00~13:00',
+      sub: '점심시간에는 <b class="lunch">상담이 잠시 쉬어갑니다</b>',
+      emergency: ''
+    },
+    closed: {
+      state: 'closed', icon: 'ic-clock', label: '접수마감',
+      title: '운영 시간 10:00~18:40',
+      sub: '당일 <b class="closed">접수 마감중</b> 입니다',
+      emergency: ''
+    },
+    off: {
+      state: 'off', icon: 'ic-ban', label: '운영 종료',
+      title: '상담 운영이 종료되었습니다.',
+      sub: '',
+      emergency: ICON('ic-siren') + '<div>긴급 장애 신고: <span class="num">070-8028-0919</span><br/><span class="note">(단순 문의 및 금액 정정 제외)</span></div>'
+    }
+  };
+
+  const pill = document.getElementById('livePill');
+  const tip  = document.getElementById('liveTip');
+
+  function apply(key) {
+    const s = STATES[key];
+    pill.dataset.state = s.state;
+    pill.querySelector('.ico').innerHTML = ICON(s.icon);
+    pill.querySelector('.label').textContent = s.label;
+
+    let html = '<span class="tip-head" data-state="'+s.state+'">'+ICON(s.icon)+' '+s.label+'</span>'
+             + '<div class="tip-title">'+s.title+'</div>';
+    if (s.sub) html += '<div class="tip-sub">'+s.sub+'</div>';
+    if (s.emergency) html += '<div class="tip-emergency">'+s.emergency+'</div>';
+    tip.innerHTML = html;
+  }
+
+  // theme toggle
+  const themeBtn = document.getElementById('themeToggle');
+  themeBtn.addEventListener('click', () => {
+    const light = document.body.getAttribute('data-theme') === 'light';
+    document.body.setAttribute('data-theme', light ? 'dark' : 'light');
+    themeBtn.querySelector('use').setAttribute('href', light ? '#ic-moon' : '#ic-sun');
+  });
+
+  document.querySelectorAll('.controls button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.controls button').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      apply(btn.dataset.set);
+    });
+  });
+</script>
+</body>
+</html>
