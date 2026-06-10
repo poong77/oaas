@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Eye, EyeOff, LifeBuoy, Lock, User as UserIcon } from 'lucide-react';
+import { Eye, EyeOff, LifeBuoy } from 'lucide-react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,15 +74,15 @@ export function LoginForm({
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader className="items-center gap-3 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-white">
-          <LifeBuoy className="h-5 w-5" />
+    <Card className="w-full max-w-md p-2 sm:p-4">
+      <CardHeader className="items-center gap-2 text-center">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white">
+          <LifeBuoy className="h-6 w-6" />
         </div>
         <div>
-          <h1 className="text-lg font-bold">OA 통합 AS 로그인</h1>
+          <h1 className="text-2xl font-bold">로그인</h1>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            support.oapms.com
+            OA서포트 · support.oapms.com
           </p>
         </div>
       </CardHeader>
@@ -102,24 +102,20 @@ export function LoginForm({
           <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="identifier">이메일 또는 아이디</Label>
-              <div className="relative">
-                <UserIcon className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  id="identifier"
-                  type="text"
-                  required
-                  autoComplete="username"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="이메일 주소 또는 아이디"
-                  className="pl-8"
-                />
-              </div>
+              <Input
+                id="identifier"
+                type="text"
+                required
+                autoComplete="username"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="이메일 주소 또는 아이디"
+                className="h-[52px] text-base"
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="password">비밀번호</Label>
               <div className="relative">
-                <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -127,8 +123,8 @@ export function LoginForm({
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="pl-8 pr-10"
+                  placeholder="비밀번호"
+                  className="h-[52px] pr-12 text-base"
                 />
                 <button
                   type="button"
@@ -136,12 +132,12 @@ export function LoginForm({
                   aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
                   aria-pressed={showPassword}
                   tabIndex={-1}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:text-slate-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:text-slate-200"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-5 w-5" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-5 w-5" />
                   )}
                 </button>
               </div>
@@ -151,7 +147,7 @@ export function LoginForm({
                 {formError}
               </div>
             )}
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" disabled={pending} className="h-12 w-full text-base">
               {pending ? '로그인 중...' : '로그인'}
             </Button>
 

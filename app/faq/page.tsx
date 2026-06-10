@@ -34,7 +34,7 @@ import { ContactPanel } from '@/components/contact/contact-panel';
 import { FaqFilters } from './_components/faq-filters';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '빠른 해결 — OA 통합 AS' };
+export const metadata = { title: '빠른 해결 — OA서포트' };
 
 type SearchParams = Promise<{
   q?: string;

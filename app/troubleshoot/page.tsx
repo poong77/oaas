@@ -26,7 +26,7 @@ import { ContactPanel } from '@/components/contact/contact-panel';
 import { TroubleshootFilters } from './_components/troubleshoot-filters';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '트러블슈팅 — OA 통합 AS' };
+export const metadata = { title: '트러블슈팅 — OA서포트' };
 
 type SearchParams = Promise<{
   q?: string;

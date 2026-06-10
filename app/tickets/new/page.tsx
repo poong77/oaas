@@ -7,8 +7,6 @@
  */
 
 import { Suspense } from 'react';
-import { PageHeader } from '@/components/ui/page-header';
-import { ContactPanel } from '@/components/contact/contact-panel';
 import { requireAuth, isManagerOrAdmin } from '@/lib/permissions';
 import { getCategoriesByType } from '@/lib/services/categories';
 import { getProductTaxonomyTree } from '@/lib/services/master-categories';
@@ -16,7 +14,7 @@ import { listHotelierTemplates } from '@/lib/services/master-hotelier-templates'
 import { getHotelById, getUserById } from '@/lib/services/users';
 import { TicketCreateForm } from './_components/ticket-create-form';
 
-export const metadata = { title: '문의 접수 — OA 통합 AS' };
+export const metadata = { title: '문의 접수 — OA서포트' };
 export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{
@@ -49,24 +47,8 @@ export default async function NewTicketPage({
     getUserById(user.id),
   ]);
 
-  const description =
-    params.type === 'error'
-      ? '발생한 오류·장애를 빠르게 접수합니다. 한 화면에서 1분이면 완료됩니다.'
-      : params.from === 'checklist'
-        ? '셀프 픽스로 해결되지 않은 이슈입니다. 진단 내용이 자동 첨부됩니다.'
-        : params.from === 'chatbot'
-          ? '챗봇으로 해결되지 않은 문의를 접수합니다. 챗봇 대화 내용을 함께 적어주시면 더 빠른 처리가 가능합니다.'
-          : '오류 · 기능문의 · 기능개발 · 데이터수정 등 모든 유형의 문의를 접수합니다.';
-
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
-        <div className="flex flex-col gap-5">
-      <PageHeader
-        title={params.type === 'error' ? '오류 접수' : '문의 접수'}
-        description={description}
-      />
-
+    <div className="mx-auto w-full max-w-[860px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <Suspense fallback={null}>
         <TicketCreateForm
           viewer={{
@@ -97,9 +79,6 @@ export default async function NewTicketPage({
           }}
         />
       </Suspense>
-        </div>
-        <ContactPanel variant="sidebar" />
-      </div>
     </div>
   );
 }

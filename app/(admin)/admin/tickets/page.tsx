@@ -24,7 +24,7 @@ import { TicketsListClient } from './_components/tickets-list-client';
 import { TicketsSummaryCards } from './_components/tickets-summary-cards';
 import { ListKanbanToggle } from './_components/list-kanban-toggle';
 
-export const metadata = { title: '문의 관리 — OA 통합 AS' };
+export const metadata = { title: '문의 관리 — OA서포트' };
 export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{

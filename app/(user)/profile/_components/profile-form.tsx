@@ -10,6 +10,7 @@ import { updateProfileAction } from '@/app/actions/profile-actions';
 
 type Initial = {
   name: string;
+  loginId: string;
   title: string;
   phone: string;
   email: string;
@@ -50,6 +51,14 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       <form onSubmit={handleSubmit}>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Field label="이름" name="name" defaultValue={initial.name} required error={errors.name} />
+          <Field
+            label="로그인 ID"
+            name="loginId"
+            defaultValue={initial.loginId || '-'}
+            disabled
+            mono
+            helper="로그인은 이메일 또는 ID로 가능합니다 (ID 변경 불가)"
+          />
           <Field label="직책" name="title" defaultValue={initial.title} error={errors.title} placeholder="예: 프론트, 매니저" />
           <Field label="이메일" name="email" type="email" defaultValue={initial.email} required error={errors.email} />
           <Field label="연락처" name="phone" type="tel" defaultValue={initial.phone} placeholder="010-0000-0000" error={errors.phone} />
@@ -88,6 +97,9 @@ function Field({
   required,
   error,
   placeholder,
+  disabled,
+  helper,
+  mono,
 }: {
   label: string;
   name: string;
@@ -96,6 +108,9 @@ function Field({
   required?: boolean;
   error?: string;
   placeholder?: string;
+  disabled?: boolean;
+  helper?: string;
+  mono?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -110,8 +125,11 @@ function Field({
         defaultValue={defaultValue}
         required={required}
         placeholder={placeholder}
+        disabled={disabled}
         aria-invalid={!!error}
+        className={`${disabled ? 'bg-slate-100 text-slate-500 dark:bg-slate-800' : ''} ${mono ? 'font-mono text-sm' : ''}`}
       />
+      {helper && <p className="text-xs text-slate-400">{helper}</p>}
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );

@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ResetPasswordForm } from './reset-password-form';
 
-export const metadata = { title: '새 비밀번호 설정 — OA 통합 AS' };
+export const metadata = { title: '새 비밀번호 설정 — OA서포트' };
 export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{ token?: string }>;

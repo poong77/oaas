@@ -11,8 +11,8 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 
 export const metadata = {
-  title: '이용약관 — OA 통합 AS',
-  description: 'OA 통합 AS 플랫폼 이용약관 안내.',
+  title: '이용약관 — OA서포트',
+  description: 'OA서포트 이용약관 안내.',
 };
 
 export default function TermsPage() {
@@ -25,7 +25,7 @@ export default function TermsPage() {
           </Link>
         }
         title="이용약관"
-        description="OA 통합 AS 플랫폼(support.oapms.com) 서비스 이용에 관한 약관입니다."
+        description="OA서포트(support.oapms.com) 서비스 이용에 관한 약관입니다."
       />
 
       <Card>

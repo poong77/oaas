@@ -16,7 +16,7 @@ import { ChecklistMetaForm } from '../_components/checklist-meta-form';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
-  title: '새 체크리스트 — OA 통합 AS 어드민',
+  title: '새 체크리스트 — OA서포트 어드민',
 };
 
 export default async function NewChecklistPage() {

@@ -22,7 +22,7 @@ import { ListKanbanToggle } from '../_components/list-kanban-toggle';
 import { KanbanFilters } from './_components/kanban-filters';
 import { KanbanBoard, type KanbanCard } from './_components/kanban-board';
 
-export const metadata = { title: '문의 관리 (칸반) — OA 통합 AS' };
+export const metadata = { title: '문의 관리 (칸반) — OA서포트' };
 export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{

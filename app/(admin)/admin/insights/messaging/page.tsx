@@ -10,7 +10,7 @@ import { env } from '@/lib/env';
 import { MessagingClient } from './_components/messaging-client';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '메일&문자 — OA 통합 AS' };
+export const metadata = { title: '메일&문자 — OA서포트' };
 
 export default async function MessagingPage() {
   await requireRole(['manager', 'admin']);

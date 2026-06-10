@@ -145,7 +145,7 @@ export function ChatbotFab({ embedUrl }: { embedUrl: string }) {
               className="font-medium text-brand-600 hover:underline dark:text-brand-400"
               onClick={() => setOpen(false)}
             >
-              문의 접수
+              문의하기
             </Link>
             를 이용해주세요.
           </div>
@@ -171,7 +171,7 @@ function ChatbotFallback() {
         href="/tickets/new?from=chatbot"
         className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-500"
       >
-        문의 접수하기
+        문의하기
         <ArrowUpRight className="h-4 w-4" />
       </Link>
       <ul className="mt-2 text-left text-xs text-slate-500 dark:text-slate-400">

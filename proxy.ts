@@ -31,6 +31,8 @@ const PUBLIC_PATHS = new Set<string>([
   // (이메일 재설정 링크 /reset-password?token=… 도 pathname은 '/reset-password'라 정확 매칭됨)
   '/forgot-password',
   '/reset-password',
+  // Figma 시안 — 로그인 전 통합 홈 신규 디자인 (미인증 공개)
+  '/landing',
 ]);
 
 // NextAuth의 auth() wrap을 default export(=proxy)로 노출
@@ -45,7 +47,9 @@ export default auth((req) => {
   // /api/* 는 자체 인증 — 게이트 제외 (단 x-pathname은 유지)
   if (pathname.startsWith('/api')) return pass;
 
-  const isPublic = PUBLIC_PATHS.has(pathname);
+  // /landing 시안 영역(하위 포함)은 전부 미인증 공개
+  const isLandingPreview = pathname === '/landing' || pathname.startsWith('/landing/');
+  const isPublic = PUBLIC_PATHS.has(pathname) || isLandingPreview;
   if (isPublic || req.auth) return pass;
 
   // 보호 경로 비로그인 접근 → 로그인 화면으로 (복귀 경로 부착)

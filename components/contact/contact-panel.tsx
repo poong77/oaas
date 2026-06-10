@@ -16,7 +16,15 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { Calendar, Coffee, Mail, MessageCircle, Phone } from 'lucide-react';
+import {
+  Calendar,
+  Mail,
+  MessageCircle,
+  Phone,
+  Clock,
+  Monitor,
+  AlertTriangle,
+} from 'lucide-react';
 import { useBusinessStatus } from '@/lib/hooks/use-business-status';
 import type {
   BusinessHoursInput,
@@ -57,14 +65,7 @@ export function ContactPanel({
     );
   }
 
-  return (
-    <FooterPanel
-      status={status}
-      hours={hours}
-      onChatbotOpen={onChatbotOpen}
-      intakeHref={intakeHref}
-    />
-  );
+  return <FooterPanel status={status} hours={hours} />;
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -207,16 +208,13 @@ function SidebarPanel({
 function FooterPanel({
   status,
   hours,
-  onChatbotOpen,
-  intakeHref,
 }: {
   status: BusinessStatusResult | null;
   hours: BusinessHoursInput;
-  onChatbotOpen?: () => void;
-  intakeHref: string;
 }) {
   const contact = status?.contact ?? extractContactFallback(hours);
   const emergencyPhone = status?.emergencyPhone ?? hours.emergencyPhone;
+  const emergencyNote = status?.emergencyNote ?? hours.emergencyNote;
   const highlightRef = useRef<HTMLDivElement>(null);
 
   /*
@@ -265,102 +263,135 @@ function FooterPanel({
   }, []);
 
   return (
-    <footer
+    <section
       id="contact"
-      className="scroll-mt-20 border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950"
+      ref={highlightRef}
+      className="scroll-mt-20 bg-slate-50 px-4 py-12 dark:bg-slate-900/40 sm:px-6 lg:px-8"
     >
-      <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
-        {/* 운영상태 — 헤더 배지 클릭 시 강조 효과 (.contact-highlight-active 클래스, globals.css) */}
-        <div ref={highlightRef} className="flex flex-col gap-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            운영 상태
-          </h3>
-          <BusinessStatusBadge size="md" linkTo="#contact" />
-        </div>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <h2 className="text-xl font-bold tracking-tight sm:text-2xl">고객센터</h2>
 
-        {/* 대표전화 + ARS */}
-        {(contact.mainPhone || contact.arsItems.length > 0) && (
-          <div className="flex flex-col gap-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              대표전화
-            </h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {/* 고객센터 전화 + ARS */}
+          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2">
+              <Phone className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+              <span className="text-base font-semibold">고객센터</span>
+            </div>
             {contact.mainPhone && (
               <a
                 href={`tel:${contact.mainPhone.replace(/-/g, '')}`}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-50"
+                className="text-2xl font-bold text-brand-600 dark:text-brand-400"
               >
-                <Phone className="h-4 w-4" />
                 {contact.mainPhone}
               </a>
             )}
             {contact.arsItems.length > 0 && (
-              <ul className="text-xs text-slate-600 dark:text-slate-300">
-                {contact.arsItems.map((a) => (
-                  <li key={a.num}>
-                    {a.num}번 — {a.label}
-                  </li>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-700 dark:text-slate-200">
+                {contact.arsItems.map((a, i) => (
+                  <span key={a.num} className="inline-flex items-center gap-2">
+                    {i > 0 && <span className="text-slate-300">·</span>}
+                    <span>
+                      <b className="font-semibold">{a.num}번</b> {a.label}
+                    </span>
+                  </span>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
+
+          {/* 상담시간 */}
+          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+              <span className="text-base font-semibold">상담시간</span>
+            </div>
+            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-300">
+              <span className="text-slate-800 dark:text-slate-100">평일</span>
+              <span>
+                {toHHMM(hours.weekdayOpen)}~{toHHMM(hours.weekdayClose)}
+              </span>
+              {hours.lunchStart && hours.lunchEnd && (
+                <>
+                  <span className="text-slate-800 dark:text-slate-100">점심시간</span>
+                  <span>
+                    {toHHMM(hours.lunchStart)}~{toHHMM(hours.lunchEnd)}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 이메일 및 팩스 */}
+          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+              <span className="text-base font-semibold">이메일 및 팩스</span>
+            </div>
+            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-300">
+              {contact.mainEmail && (
+                <>
+                  <span className="text-slate-800 dark:text-slate-100">이메일</span>
+                  <a href={`mailto:${contact.mainEmail}`} className="truncate hover:underline">
+                    {contact.mainEmail}
+                  </a>
+                </>
+              )}
+              {contact.faxNumber && (
+                <>
+                  <span className="text-slate-800 dark:text-slate-100">팩스</span>
+                  <span>{contact.faxNumber}</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 야간/휴일 긴급 장애 신고 */}
+          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <span className="text-base font-semibold">
+                야간/휴일 <span className="text-red-500">긴급 장애 신고</span>
+              </span>
+            </div>
+            {emergencyPhone && (
+              <a
+                href={`tel:${emergencyPhone.replace(/-/g, '')}`}
+                className="text-xl font-bold text-slate-900 dark:text-white"
+              >
+                {emergencyPhone}
+              </a>
+            )}
+            {emergencyNote && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">{emergencyNote}</p>
+            )}
+          </div>
+        </div>
+
+        {/* PC 원격 연결 서비스 */}
+        {contact.websiteUrl && (
+          <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <Monitor className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+                <span className="text-base font-semibold">PC 원격 연결 서비스</span>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                원활한 문제 해결이 필요하신가요? 파트너의 안내에 따라 원격지원 연결하기 버튼을 눌러주세요.
+              </p>
+            </div>
+            <a
+              href={contact.websiteUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 rounded-lg bg-brand-50 px-5 py-2.5 text-sm font-medium text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-300 dark:hover:bg-brand-900/50"
+            >
+              원격지원 연결하기
+            </a>
+          </div>
         )}
-
-        {/* 이메일 + 긴급 */}
-        <div className="flex flex-col gap-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            이메일·긴급
-          </h3>
-          {contact.mainEmail && (
-            <a
-              href={`mailto:${contact.mainEmail}`}
-              className="inline-flex items-center gap-2 text-sm text-slate-700 hover:underline dark:text-slate-200"
-            >
-              <Mail className="h-4 w-4" />
-              {contact.mainEmail}
-            </a>
-          )}
-          {emergencyPhone && (
-            <a
-              href={`tel:${emergencyPhone.replace(/-/g, '')}`}
-              className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
-            >
-              <Phone className="h-4 w-4 text-amber-600" />
-              <span className="font-semibold">{emergencyPhone}</span>
-              <span className="text-xs text-slate-500">운영 외 긴급</span>
-            </a>
-          )}
-        </div>
-
-        {/* 셀프 해결 */}
-        <div className="flex flex-col gap-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            빠른 해결
-          </h3>
-          {onChatbotOpen && (
-            <button
-              type="button"
-              onClick={onChatbotOpen}
-              className="inline-flex w-fit items-center gap-1.5 rounded-md bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-500"
-            >
-              <MessageCircle className="h-3.5 w-3.5" />
-              챗봇 열기
-            </button>
-          )}
-          <a
-            href={intakeHref}
-            className="inline-flex w-fit items-center gap-1.5 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
-          >
-            <Calendar className="h-3.5 w-3.5" />
-            이슈 접수
-          </a>
-        </div>
       </div>
-      <div className="border-t border-slate-200 px-4 py-3 text-center text-[11px] text-slate-400 dark:border-slate-800 lg:px-8">
-        {summarizeOperationLine(hours)}
-        {contact.faxNumber && ` · Fax ${contact.faxNumber}`}
-        {contact.websiteUrl && ` · ${contact.websiteUrl}`}
-      </div>
-    </footer>
+    </section>
   );
 }
 
@@ -395,17 +426,3 @@ function extractContactFallback(
   };
 }
 
-/** "평일 10:00–18:40 · 점심 12:00–13:00 · 토·일·공휴일 휴무" 형식 동적 생성. */
-function summarizeOperationLine(hours: BusinessHoursInput): string {
-  const parts: string[] = [];
-  parts.push(`평일 ${toHHMM(hours.weekdayOpen)}–${toHHMM(hours.weekdayClose)}`);
-  if (hours.lunchStart && hours.lunchEnd) {
-    parts.push(`점심 ${toHHMM(hours.lunchStart)}–${toHHMM(hours.lunchEnd)}`);
-  }
-  const closedDays: string[] = [];
-  if (hours.saturdayClosed) closedDays.push('토');
-  if (hours.sundayClosed) closedDays.push('일');
-  if (hours.holidaysClosed) closedDays.push('공휴일');
-  if (closedDays.length > 0) parts.push(`${closedDays.join('·')} 휴무`);
-  return parts.join(' · ');
-}

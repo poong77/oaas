@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UX 개선안 와이어프레임 — OA서포트</title>
+<style>
+  :root{
+    --brand:#00A36B; --brand-d:#008A59; --brand-50:#E6F7F0;
+    --ink:#1A1C20; --sub:#555D6D; --mut:#868B94; --line:#E5E7EB; --bg:#F5F6F8;
+    --red:#FA342C; --amber:#B45309; --blue:#217CF9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+  h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 4px}
+  .lead{color:var(--sub);margin:0 0 24px;font-size:14px}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+  .tag{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px}
+  .crit{background:#FEECEC;color:#c0271f} .high{background:#FFF4E2;color:#9a6300} .keep{background:#eef0f2;color:#5b6473}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .card h2{font-size:16px;font-weight:800;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+  .card .why{font-size:13px;color:var(--sub);margin:0 0 16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.grid2{grid-template-columns:1fr}}
+  .pane{border:1px dashed var(--line);border-radius:12px;padding:14px;background:#fff}
+  .pane.before{background:#fbfbfc}
+  .pane h3{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin:0 0 10px;font-weight:800}
+  .pane.before h3{color:#c0271f}.pane.after h3{color:var(--brand-d)}
+
+  /* generic UI atoms */
+  .lab{font-size:12px;font-weight:600;color:var(--ink);display:block;margin-bottom:5px}
+  .inp{width:100%;height:42px;border:1px solid #DCDEE3;border-radius:9px;padding:0 12px;font-size:14px;background:#fff}
+  .inp.ph{color:#B0B3BA}
+  .row{display:flex;gap:8px;align-items:center}
+  .btn{height:40px;padding:0 16px;border-radius:9px;border:0;font-weight:700;font-size:14px;cursor:pointer}
+  .btn.pri{background:var(--brand);color:#fff}
+  .btn.ghost{background:transparent;color:var(--sub)}
+  .btn.out{background:#fff;border:1px solid #DCDEE3;color:var(--ink)}
+  .btn.danger{background:#fff;border:1px solid #f3c2bf;color:var(--red)}
+  .btn.sm{height:32px;padding:0 12px;font-size:13px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(0,0,0,.08);background:#fff;color:var(--ink);border-radius:9px;padding:8px 14px;font-size:14px;font-weight:600}
+  .chip.sel{border-color:var(--brand);background:var(--brand-50);color:var(--brand-d)}
+  .chip.sm{padding:6px 11px;font-size:13px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .check{width:16px;height:16px;border-radius:50%;background:var(--brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px}
+  .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700}
+  .pill.notice{background:#EFF6FF;color:#1763c4}.pill.inc{background:#FEF2F2;color:#c0271f}.pill.rel{background:#F4F1FE;color:#6d3fd0}
+  .help{font-size:12px;color:var(--mut);margin-top:6px}
+  .ok{color:var(--brand-d);font-weight:700}.no{color:var(--red);font-weight:700}
+  .note{font-size:12px;color:var(--sub);background:#F7F8F9;border-left:3px solid var(--brand);padding:8px 12px;border-radius:0 8px 8px 0;margin-top:12px}
+
+  /* modal mock */
+  .modal{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.12)}
+  .modal .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .modal .mh b{font-size:15px}
+  .fld{margin-bottom:12px}
+  .modal .foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .disabled{background:#F3F4F5;color:#868B94}
+
+  /* gnb tooltip */
+  .gnb{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;justify-content:flex-end}
+  .status{display:inline-flex;align-items:center;gap:6px;background:var(--brand-50);color:var(--brand-d);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--brand)}
+  .sheet{margin-top:10px;border:1px solid var(--line);border-radius:16px 16px 0 0;padding:16px;background:#fff;box-shadow:0 -8px 24px rgba(0,0,0,.08)}
+  .sheet .grab{width:36px;height:4px;border-radius:2px;background:#e3e6ea;margin:0 auto 12px}
+  .tip-emg{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}
+  .num{color:var(--red);font-weight:800}
+  .small{font-size:12px;color:var(--mut)}
+  .x{color:var(--mut);cursor:pointer;font-size:18px;line-height:1}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid #eef0f2;white-space:nowrap}
+  th{font-size:11px;text-transform:uppercase;color:var(--mut)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>UX 개선안 와이어프레임</h1>
+  <p class="lead">Critical·High 항목의 적용 후(After) 모습입니다. 실제 색/폰트는 brand 토큰을 따릅니다(여기선 그린 예시). 빌드 전 시안 검토용.</p>
+  <div class="legend">
+    <span class="tag crit">CRITICAL</span><span class="tag high">HIGH</span><span class="tag keep">충돌→보존</span>
+  </div>
+
+  <!-- 1 -->
+  <div class="card">
+    <h2><span class="tag crit">C1</span> 직원 비활성화 — 수정 모달 안으로 복원</h2>
+    <p class="why">리스트 작업 컬럼은 ✏️만 유지(깔끔), 비활성화는 <b>수정 모달 하단</b>으로 이동해 오프보딩(보안)을 보존.</p>
+    <div class="grid2">
+      <div class="pane before"><h3>Before — 기능 없음</h3>
+        <table><tr><th>이름</th><th>ID</th><th>작업</th></tr>
+        <tr><td>김호진</td><td class="mono">khj</td><td>✏️</td></tr></table>
+        <p class="help" style="color:var(--red)">→ 퇴사자 계정을 막을 방법이 UI에 없음</p>
+      </div>
+      <div class="pane after"><h3>After — 모달 하단 비활성화</h3>
+        <div class="modal" style="box-shadow:none;border-style:solid">
+          <div class="mh"><b>직원 정보 수정</b><span class="x">×</span></div>
+          <div class="fld"><span class="lab">이름</span><input class="inp" value="김호진"></div>
+          <div class="fld"><span class="lab">로그인 ID</span><input class="inp disabled mono" value="khj" disabled></div>
+          <div class="foot">
+            <button class="btn danger sm">계정 비활성화</button>
+            <span class="row"><button class="btn ghost sm">취소</button><button class="btn pri sm">저장</button></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="card">
+    <h2><span class="tag crit">C2</span> 임시 비밀번호 노출 제거 — 초대 채널로만 전달</h2>
+    <p class="why">자동 소멸 토스트에 비밀번호 노출 + 구두 전달 구조를 제거. 화면엔 ID·발송결과만, 비번은 이메일/SMS로.</p>
+    <div class="grid2">
+      <div class="pane before"><h3>Before</h3>
+        <div class="modal" style="box-shadow:none">김호진님 추가됨 · 로그인 ID khj · <b style="color:var(--red)">임시비번 a8x2k9</b> (이메일 발송 / SMS 발송)</div>
+        <p class="help" style="color:var(--red)">10초 후 사라짐 · 비번 화면 노출 · 전달 책임 모호</p>
+      </div>
+      <div class="pane after"><h3>After</h3>
+        <div class="modal" style="box-shadow:none">
+          <div class="row" style="gap:8px"><span class="check">✓</span><b>김호진님을 초대했습니다</b></div>
+          <div class="help">로그인 ID <b class="mono">khj</b> <button class="btn out sm" style="height:24px;padding:0 8px">복사</button></div>
+          <div class="help">임시 비밀번호는 <b>이메일·SMS로 발송</b>되었습니다.</div>
+        </div>
+        <p class="note">초대 발송이 모두 실패한 경우에만, 복사 버튼이 달린 비밀번호를 수동-닫기 카드로 노출.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="card">
+    <h2><span class="tag crit">C3</span> 로그인 ID — 자동 제안 + 실시간 중복 체크</h2>
+    <p class="why">ID 수기 입력 마찰·충돌 에러 제거. 이메일/이름 기반 추천값을 미리 채우고(수정 가능), 입력 중 ✓/✗ 표시.</p>
+    <div class="grid2">
+      <div class="pane before"><h3>Before</h3>
+        <span class="lab">로그인 ID *</span><input class="inp ph" value="(직접 고민해서 입력)">
+        <p class="help" style="color:var(--red)">제출 후에야 "이미 사용 중" 에러로 되돌아감</p>
+      </div>
+      <div class="pane after"><h3>After</h3>
+        <span class="lab">로그인 ID *</span>
+        <div class="row"><input class="inp mono" value="khj" style="flex:1"><span class="ok">✓ 사용 가능</span></div>
+        <p class="help">이메일/이름에서 자동 제안 · 수정 가능</p>
+        <div class="row" style="margin-top:8px"><input class="inp mono" value="lsj" style="flex:1"><span class="no">✗ 이미 사용 중</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="card">
+    <h2><span class="tag crit">C4</span> 입력 라벨 가시화 (로그인·비번찾기)</h2>
+    <p class="why">placeholder-only는 입력 시작하면 라벨이 사라짐(WCAG 3.3.2). 상단 고정 라벨로 인지부하 감소.</p>
+    <div class="grid2">
+      <div class="pane before"><h3>Before</h3>
+        <input class="inp ph" value="이메일 주소 또는 아이디" style="margin-bottom:8px">
+        <input class="inp ph" value="비밀번호">
+        <p class="help" style="color:var(--red)">입력 중 무슨 칸인지 사라짐</p>
+      </div>
+      <div class="pane after"><h3>After</h3>
+        <span class="lab">이메일 또는 아이디</span><input class="inp" value="hotelier@oa.local" style="margin-bottom:10px">
+        <span class="lab">비밀번호</span><input class="inp" type="password" value="******">
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 + 8 -->
+  <div class="card">
+    <h2><span class="tag crit">C5</span><span class="tag high">H8</span> 칩 — 선택 시 체크(색맹 대응) + 크기 축소</h2>
+    <p class="why">선택 상태를 색만으로 구분하지 않도록 체크 아이콘 추가. 14개 칩이 화면을 길게 점유 → 한 단계 축소.</p>
+    <div class="grid2">
+      <div class="pane before"><h3>Before</h3>
+        <div class="chips">
+          <span class="chip">PMS</span><span class="chip sel">CMS</span><span class="chip">Keyless</span><span class="chip">키오스크</span>
+        </div>
+        <p class="help" style="color:var(--red)">선택=색상 단독 · 칩이 큼</p>
+      </div>
+      <div class="pane after"><h3>After</h3>
+        <div class="chips">
+          <span class="chip sm">PMS</span>
+          <span class="chip sm sel"><span class="check">✓</span>CMS</span>
+          <span class="chip sm">Keyless</span><span class="chip sm">키오스크</span><span class="chip sm">기타</span>
+        </div>
+        <div style="margin-top:8px"><span class="pill notice">● 공지사항</span> <span class="pill inc">▲ 서비스 장애</span> <span class="pill rel">◆ 릴리즈</span></div>
+        <p class="help">배지에도 형태(● ▲ ◆) 보조</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="card">
+    <h2><span class="tag high">H6</span> GNB 운영중 — 모바일은 탭 → 바텀시트</h2>
+    <p class="why">hover 전용 풀 툴팁은 터치 기기에서 영영 안 보임. 모바일은 배지 탭으로 바텀시트 노출.</p>
+    <div class="grid2">
+      <div class="pane before"><h3>Before (mobile)</h3>
+        <div class="gnb"><span class="status"><span class="dot"></span>운영 중</span></div>
+        <p class="help" style="color:var(--red)">탭해도 정보 없음(hover만 동작)</p>
+      </div>
+      <div class="pane after"><h3>After (mobile, 탭)</h3>
+        <div class="gnb"><span class="status"><span class="dot"></span>운영 중</span></div>
+        <div class="sheet"><div class="grab"></div>
+          <span class="status" style="margin-bottom:8px">운영 중</span>
+          <div style="font-weight:800;margin-bottom:4px">운영 시간 10:00~18:40</div>
+          <div class="small">마감까지 <b class="ok">2시간 14분</b> 남음</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="card">
+    <h2><span class="tag high">H10</span> 연락 방법 — 미등록 수단 처리</h2>
+    <p class="why">이메일 미등록인데 이메일이 선택+비활성으로 보이는 혼란 제거. 등록된 수단만 기본 선택, 없으면 프로필 등록 유도.</p>
+    <div class="grid2">
+      <div class="pane before"><h3>Before</h3>
+        <span class="chip sel" style="opacity:.5">✉️ 이메일 (선택+비활성)</span>
+        <p class="help" style="color:var(--red)">"선택했는데 왜 못 쓰지?"</p>
+      </div>
+      <div class="pane after"><h3>After</h3>
+        <span class="chip sel"><span class="check">✓</span>📱 SMS · 010-1234-1234</span>
+        <p class="note">이메일 미등록 → <b>프로필에서 등록</b> 안내 링크 우선 노출. 등록된 수단(SMS)만 기본 선택.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7 (정책 변경) -->
+  <div class="card">
+    <h2><span class="tag high">H7</span> 문의 분류 — 기본 미선택 + 필수 해제</h2>
+    <p class="why">'기타' 미리 선택을 제거. 프로그램·상세유형 모두 <b>선택(필수 아님)</b>, 미입력으로 제출하면 서버에서 <b>'기타'로 분류</b>. → 미분류 양산 방지 + 의식적 선택 유도.</p>
+    <div class="grid2">
+      <div class="pane before"><h3>Before</h3>
+        <span class="lab">문의 프로그램 <b style="color:var(--red)">*</b></span>
+        <div class="chips"><span class="chip sm sel">기타</span><span class="chip sm">PMS</span><span class="chip sm">CMS</span></div>
+        <p class="help" style="color:var(--red)">기타가 미리 선택 → 그대로 제출되어 미분류 누적</p>
+      </div>
+      <div class="pane after"><h3>After</h3>
+        <span class="lab">문의 프로그램 <span class="small" style="font-weight:400">선택 (미선택 시 기타)</span></span>
+        <div class="chips"><span class="chip sm">PMS</span><span class="chip sm">CMS</span><span class="chip sm">Keyless</span><span class="chip sm">기타</span></div>
+        <p class="help">아무것도 선택 안 함이 기본. 제출 시 미선택이면 자동 '기타' 분류.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 15 마이크로카피 -->
+  <div class="card">
+    <h2><span class="tag high">H15</span> 마이크로카피 통일 — “문의하기”</h2>
+    <p class="why">같은 행동의 라벨이 화면마다 달라 일관성↓. CTA·버튼·제목 라벨을 <b>“문의하기”</b>로 통일. (문장 속 서술은 문법상 유지)</p>
+    <div class="grid2">
+      <div class="pane before"><h3>Before (제각각)</h3>
+        <div class="chips" style="gap:6px">
+          <span class="chip sm">1:1 문의하기</span><span class="chip sm">1:1 문의 접수</span>
+          <span class="chip sm">문의 접수하기</span><span class="chip sm">문의 접수</span>
+        </div>
+      </div>
+      <div class="pane after"><h3>After (통일)</h3>
+        <div class="chips" style="gap:6px">
+          <span class="chip sm sel"><span class="check">✓</span>문의하기</span>
+          <span class="chip sm sel"><span class="check">✓</span>문의하기</span>
+          <span class="chip sm sel"><span class="check">✓</span>문의하기</span>
+        </div>
+        <p class="help">유지: 본문 서술("…문의를 접수합니다"), 조회 메뉴 "문의내역/문의 현황"</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 보존 -->
+  <div class="card" style="background:#fbfbfc">
+    <h2><span class="tag keep">보존</span> 직접 지시와 충돌하여 유지</h2>
+    <p class="why" style="margin-bottom:8px">아래 2건은 사용자 결정 사항이라 변경하지 않습니다.</p>
+    <ul style="font-size:13px;color:var(--sub);margin:0;padding-left:18px">
+      <li><b>상세 내용 평문 textarea</b> — "시안대로 평문" 선택 → 유지(원하면 경량 에디터 복원)</li>
+      <li><b>브랜드 컬러 단일화(그린)</b> — 전역 토큰 변경이라 색 방향 확정 후 별도 진행</li>
+    </ul>
+  </div>
+
+  <p class="small" style="text-align:center;margin-top:24px">© OA서포트 · UX 개선안 와이어프레임 (검토용)</p>
+</div>
+</body>
+</html>

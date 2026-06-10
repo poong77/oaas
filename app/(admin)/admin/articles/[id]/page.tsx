@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   const article = await getArticleById(id);
   return {
     title: article
-      ? `${article.title} 편집 — OA 통합 AS 어드민`
-      : '아티클 편집 — OA 통합 AS 어드민',
+      ? `${article.title} 편집 — OA서포트 어드민`
+      : '아티클 편집 — OA서포트 어드민',
   };
 }
 

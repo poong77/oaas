@@ -48,7 +48,7 @@ import { SearchBox } from './_components/search-box';
 import { resolvePopularKeywords } from '@/lib/services/master-popular-keywords';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '검색 — OA 통합 AS' };
+export const metadata = { title: '검색 — OA서포트' };
 
 type SearchParams = Promise<{
   q?: string;

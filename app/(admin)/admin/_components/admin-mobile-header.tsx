@@ -107,7 +107,7 @@ export function AdminMobileHeader({ userRole, className }: AdminMobileHeaderProp
         </Sheet>
 
         <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          통합 AS
+          OA서포트
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
           <Shield className="h-2.5 w-2.5" aria-hidden />

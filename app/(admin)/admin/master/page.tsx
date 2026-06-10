@@ -37,7 +37,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '마스터DB — OA 통합 AS 어드민' };
+export const metadata = { title: '마스터DB — OA서포트 어드민' };
 
 type MasterItem = {
   href: string;

@@ -68,6 +68,29 @@ export function buildEditorProxyUrl(key: string): string {
 }
 
 /**
+ * 마스터 아이콘 이미지(`master-icons/` prefix) 키인지 검사.
+ *
+ * 비공개 버킷이지만 이 아이콘은 공개 홈(비로그인)에 노출돼야 하므로
+ * 인증 없는 공개 프록시(`/api/files/master-icon`)가 **이 prefix의 객체만** 스트리밍한다.
+ * (브랜드 아이콘은 민감도 없음 + 키 추측 어려움)
+ */
+export function isMasterIconKey(key: string): boolean {
+  const p = normalizedUploadPrefix();
+  const expected = p ? `${p}/master-icons/` : 'master-icons/';
+  return key.startsWith(expected);
+}
+
+/**
+ * 마스터 아이콘용 **공개 프록시 URL**.
+ *
+ * 버킷이 비공개라 원본 S3 URL은 AccessDenied. 공개 홈에서도 보이도록
+ * `/api/files/master-icon?key=...` 상대 경로로 라우팅(인증 없음·장기 캐시).
+ */
+export function buildMasterIconProxyUrl(key: string): string {
+  return `/api/files/master-icon?key=${encodeURIComponent(key)}`;
+}
+
+/**
  * 첨부 레코드(pathname/blobUrl)에서 실제 GetObject 대상 { bucket, key } 도출.
  *
  * - key: `pathname`이 URL이 아니면 그대로(앞 슬래시 제거). URL이거나 비어있으면 `blobUrl`에서 path 추출.

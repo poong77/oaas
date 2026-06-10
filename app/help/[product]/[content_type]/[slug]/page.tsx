@@ -66,9 +66,9 @@ function isValidContentType(v: string): v is ArticleContentType {
 export async function generateMetadata({ params }: { params: RouteParams }) {
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
-  if (!article) return { title: '도움말 — OA 통합 AS' };
+  if (!article) return { title: '도움말 — OA서포트' };
   return {
-    title: `${article.title} — OA 통합 AS`,
+    title: `${article.title} — OA서포트`,
     description: article.summary ?? article.summary30s ?? undefined,
   };
 }

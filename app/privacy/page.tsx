@@ -10,8 +10,8 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 
 export const metadata = {
-  title: '개인정보 처리방침 — OA 통합 AS',
-  description: 'OA 통합 AS 플랫폼 개인정보 처리방침 안내.',
+  title: '개인정보 처리방침 — OA서포트',
+  description: 'OA서포트 개인정보 처리방침 안내.',
 };
 
 export default function PrivacyPage() {
@@ -24,7 +24,7 @@ export default function PrivacyPage() {
           </Link>
         }
         title="개인정보 처리방침"
-        description="OA 통합 AS 플랫폼이 수집·이용하는 개인정보에 대한 안내입니다."
+        description="OA서포트이 수집·이용하는 개인정보에 대한 안내입니다."
       />
 
       <Card>

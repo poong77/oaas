@@ -27,7 +27,7 @@ import {
 } from './_components/dashboard-charts';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '운영 인사이트 — OA 통합 AS 어드민' };
+export const metadata = { title: '운영 인사이트 — OA서포트 어드민' };
 
 function pct(n: number, d: number): string {
   if (d <= 0) return '—';

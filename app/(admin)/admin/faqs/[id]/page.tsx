@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   const { id } = await params;
   const f = await getFaqById(id);
   return {
-    title: f ? `${f.question.slice(0, 30)} 편집` : 'FAQ 편집 — OA 통합 AS 어드민',
+    title: f ? `${f.question.slice(0, 30)} 편집` : 'FAQ 편집 — OA서포트 어드민',
   };
 }
 

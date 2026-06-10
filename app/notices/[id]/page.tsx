@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   return {
     title: notice
       ? `${notice.title} — 공지/업데이트`
-      : '공지 — OA 통합 AS',
+      : '공지 — OA서포트',
     description: notice
       ? notice.bodyMarkdown.slice(0, 120)
       : '서비스 변경 사항·점검·장애·릴리즈 노트',

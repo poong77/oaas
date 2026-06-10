@@ -23,6 +23,8 @@ export const categories = pgTable(
     code: text('code').notNull(),
     label: text('label').notNull(),
     icon: text('icon'),
+    /** 업로드 아이콘 이미지 표시 URL(공개 프록시). 있으면 프론트에서 lucide(icon)보다 우선. */
+    iconImageUrl: text('icon_image_url'),
     sortOrder: integer('sort_order').notNull().default(0),
     /**
      * 계층(대/중/소) 부모. NULL이면 대분류(root). 같은 type 내 self 참조.

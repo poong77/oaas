@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   const cats = await getProductCategories();
   const current = cats.find((c) => c.code === product);
   return {
-    title: `${current?.label ?? product} 가이드 — OA 통합 AS`,
+    title: `${current?.label ?? product} 가이드 — OA서포트`,
   };
 }
 
@@ -176,7 +176,7 @@ export default async function HelpProductPage({
                   action={
                     <Button asChild size="sm">
                       <Link href={`/tickets/new?product=${current.code}`}>
-                        {current.label} 문의 접수
+                        {current.label} 문의하기
                       </Link>
                     </Button>
                   }

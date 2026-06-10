@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { MasterIconUpload } from '../../_components/master-icon-upload';
 import {
   createCategoryAction,
   updateCategoryAction,
@@ -164,7 +165,16 @@ function TreeNode({ node }: { node: ProductCategoryAdminNode }) {
                 : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
           }`}
         >
-          <Icon className="h-3.5 w-3.5" />
+          {node.depth === 0 && node.iconImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={node.iconImageUrl}
+              alt=""
+              className="h-full w-full rounded-md object-contain p-0.5"
+            />
+          ) : (
+            <Icon className="h-3.5 w-3.5" />
+          )}
         </span>
 
         <span className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
@@ -297,7 +307,10 @@ function EditForm({
       <FieldLabel defaultValue={node.label} depth={node.depth} />
       <FieldMemo defaultValue={node.memo ?? ''} />
       {node.depth === 0 && (
-        <FieldIcon defaultValue={node.icon ?? ''} idSuffix={node.id} />
+        <>
+          <FieldIcon defaultValue={node.icon ?? ''} idSuffix={node.id} />
+          <MasterIconUpload defaultUrl={node.iconImageUrl} label="아이콘 이미지" />
+        </>
       )}
       <FieldSort defaultValue={node.sortOrder} />
       <div className="flex items-center gap-1">
@@ -359,7 +372,12 @@ function AddChildForm({
       <FieldCode placeholder={depth === 0 ? '예: pms' : '예: pms_webpos'} />
       <FieldLabel placeholder="예: WebPOS" depth={depth} />
       <FieldMemo placeholder="예: 웹포스 / 결제" />
-      {depth === 0 && <FieldIcon placeholder="Building2" />}
+      {depth === 0 && (
+        <>
+          <FieldIcon placeholder="Building2" />
+          <MasterIconUpload label="아이콘 이미지" />
+        </>
+      )}
       <FieldSort defaultValue={100} />
       <div className="flex items-center gap-1">
         <Button type="submit" size="sm" disabled={pending}>

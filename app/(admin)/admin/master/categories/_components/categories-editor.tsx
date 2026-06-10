@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
+import { MasterIconUpload } from '../../_components/master-icon-upload';
 import {
   createCategoryAction,
   updateCategoryAction,
@@ -139,8 +140,13 @@ function CategoryRow({
       }`}
     >
       <input type="hidden" name="type" value={type} />
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300">
-        <Icon className="h-4 w-4" />
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300">
+        {item.iconImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.iconImageUrl} alt="" className="h-full w-full object-contain" />
+        ) : (
+          <Icon className="h-4 w-4" />
+        )}
       </div>
       <div className="flex w-32 flex-col gap-1">
         <Label className="text-[10px]">코드</Label>
@@ -174,6 +180,9 @@ function CategoryRow({
           ))}
         </datalist>
       </div>
+      {type === 'product' && !item.parentId && (
+        <MasterIconUpload defaultUrl={item.iconImageUrl} label="아이콘 이미지(대분류)" />
+      )}
       <div className="flex w-20 flex-col gap-1">
         <Label className="text-[10px]">정렬</Label>
         <Input
@@ -292,6 +301,9 @@ function CreateRow({
           ))}
         </datalist>
       </div>
+      {type === 'product' && (
+        <MasterIconUpload label="아이콘 이미지(대분류)" />
+      )}
       <div className="flex w-20 flex-col gap-1">
         <Label className="text-[10px]">정렬</Label>
         <Input

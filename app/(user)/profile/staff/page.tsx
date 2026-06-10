@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { StaffManager } from './_components/staff-manager';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '직원 관리 — OA 통합 AS' };
+export const metadata = { title: '직원 관리 — OA서포트' };
 
 export default async function StaffPage() {
   const user = await requireAuth('/profile/staff');

@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   });
   return {
     title: notice
-      ? `${notice.title} 편집 — OA 통합 AS 어드민`
-      : '공지 편집 — OA 통합 AS 어드민',
+      ? `${notice.title} 편집 — OA서포트 어드민`
+      : '공지 편집 — OA서포트 어드민',
   };
 }
 

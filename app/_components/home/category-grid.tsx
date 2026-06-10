@@ -46,8 +46,17 @@ export function CategoryGrid({
                 href={`/help/${cat.code}`}
                 className="group flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700 sm:p-5"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-100 text-brand-600 transition-colors group-hover:bg-brand-600 group-hover:text-white dark:bg-brand-900/40 dark:text-brand-300 dark:group-hover:bg-brand-500 dark:group-hover:text-white sm:h-12 sm:w-12">
-                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-brand-100 text-brand-600 transition-colors group-hover:bg-brand-600 group-hover:text-white dark:bg-brand-900/40 dark:text-brand-300 dark:group-hover:bg-brand-500 dark:group-hover:text-white sm:h-12 sm:w-12">
+                  {cat.iconImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={cat.iconImageUrl}
+                      alt=""
+                      className="h-6 w-6 object-contain sm:h-7 sm:w-7"
+                    />
+                  ) : (
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                  )}
                 </span>
                 <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                   {cat.label}

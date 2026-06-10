@@ -28,7 +28,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
-  title: '서비스 상태 — OA 통합 AS',
+  title: '서비스 상태 — OA서포트',
   description: '실시간 서비스 상태와 최근 이력을 확인하세요.',
 };
 

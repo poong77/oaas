@@ -4,9 +4,9 @@ import { RoleScope } from '@/components/layout/role-scope';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: '통합 AS 플랫폼 — support.oapms.com',
+  title: 'OA서포트 — support.oapms.com',
   description: 'OA 솔루션 호텔리어를 위한 통합 셀프 서비스 + AS 티켓 허브',
-  applicationName: '통합 AS 플랫폼',
+  applicationName: 'OA서포트',
   // 로그인 기반 비공개 서비스 — 검색 엔진 색인/크롤링 전면 차단
   robots: {
     index: false,

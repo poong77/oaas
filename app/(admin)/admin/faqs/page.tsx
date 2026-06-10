@@ -25,7 +25,7 @@ import { FaqsFilters } from './_components/faqs-filters';
 import { FaqsListClient } from './_components/faqs-list-client';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'FAQ 관리 — OA 통합 AS 어드민' };
+export const metadata = { title: 'FAQ 관리 — OA서포트 어드민' };
 
 type SearchParams = Promise<{
   q?: string;

@@ -18,7 +18,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ExportControls } from './_components/export-controls';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '지식팩 내보내기 — OA 통합 AS 어드민' };
+export const metadata = { title: '지식팩 내보내기 — OA서포트 어드민' };
 
 type SearchParams = Promise<{ product?: string }>;
 

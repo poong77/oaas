@@ -134,7 +134,7 @@ export function TemplateEditor({
           <Input
             name="subject"
             defaultValue={template?.subject ?? ''}
-            placeholder="[OA 통합 AS] 접수 완료 — {{ticket_no}}"
+            placeholder="[OA서포트] 접수 완료 — {{ticket_no}}"
           />
         </div>
       )}

@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { defaultLandingFor } from '@/lib/auth-landing';
 import { LoginForm } from './login-form';
 
-export const metadata = { title: '로그인 — OA 통합 AS' };
+export const metadata = { title: '로그인 — OA서포트' };
 export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{ callbackUrl?: string; error?: string }>;

@@ -15,7 +15,7 @@ import { getProductTaxonomyTree } from '@/lib/services/master-categories';
 import { listAgentSelectableChannels } from '@/lib/services/master-ticket-channels';
 import { PhoneTicketForm } from './_components/phone-ticket-form';
 
-export const metadata = { title: '티켓 생성 — OA 통합 AS' };
+export const metadata = { title: '티켓 생성 — OA서포트' };
 export const dynamic = 'force-dynamic';
 
 export default async function PhoneTicketPage() {

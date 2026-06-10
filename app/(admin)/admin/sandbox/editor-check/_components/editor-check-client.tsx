@@ -5,7 +5,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
 
-const INITIAL_MARKDOWN = `# 통합AS 리치 에디터 호환성 검증
+const INITIAL_MARKDOWN = `# OA서포트 리치 에디터 호환성 검증
 
 이건 **Tiptap v3** + *tiptap-markdown* 마운트 테스트입니다.
 

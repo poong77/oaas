@@ -44,13 +44,27 @@ export function HomeHero({
 
   return (
     <section className="relative overflow-hidden border-b border-slate-200/70 bg-gradient-to-b from-brand-50/60 via-white to-white pb-10 pt-10 dark:border-slate-800 dark:from-brand-950/30 dark:via-slate-950 dark:to-slate-950 sm:pt-14">
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8">
-        {/* 좌측: 검색 영역 (lg:col-span-7) */}
-        <div className="flex flex-col items-center gap-6 text-center lg:col-span-7 lg:items-start lg:text-left">
+      <div
+        className={`mx-auto grid w-full gap-8 px-4 sm:px-6 lg:gap-10 lg:px-8 ${
+          sidebar ? 'max-w-6xl lg:grid-cols-12' : 'max-w-3xl'
+        }`}
+      >
+        {/* 검색 영역 — sidebar 있으면 좌측 7칸, 없으면 중앙 정렬 */}
+        <div
+          className={`flex flex-col gap-6 ${
+            sidebar
+              ? 'items-center text-center lg:col-span-7 lg:items-start lg:text-left'
+              : 'items-center text-center'
+          }`}
+        >
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 text-xs font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
             <Sparkles className="h-3.5 w-3.5" />
             모든 OA 솔루션
           </span>
+
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-[36px]">
+            무엇을 도와드릴까요?
+          </h1>
 
           <form role="search" onSubmit={handleSubmit} className="w-full">
             <div className="relative flex w-full items-center">

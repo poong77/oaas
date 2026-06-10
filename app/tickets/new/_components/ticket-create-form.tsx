@@ -1,12 +1,11 @@
 'use client';
 
 /**
- * 이슈 접수 폼 — IC-01 (major-overhaul P6: 3단계 → 1페이지).
+ * 이슈 접수 폼 — IC-01 (시안 스타일 적용, 2026-06-10).
  *
- * 한 화면: 제목 · 자세한 내용(템플릿) · 제품 · 요청유형 · 연락방법 · 첨부.
- * - 제품/요청유형: 옵션값, 기본 '미정'(미선택 시 기타>일반 / 기타로 접수).
- * - 긴급도·접수요약 제거. 연락방법 이메일 기본.
- * - 제품 분류: 호텔리어=대분류만(root-only), 매니저·어드민=대/중/소(cascade) — ProductPicker.
+ * 시안대로: 섹션 카드(문제분류 / 상세 내용 / 연락 방법) + 칩 선택 + 큰 입력.
+ * 로직은 보존 — createTicketAction·AttachmentUploader(실 S3)·검증·연락수단·템플릿.
+ * 제품/요청유형은 실데이터(productTree 대분류 / issueTypeCategories)를 칩으로 렌더.
  *
  * URL 쿼리 pre-fill: ?type=, ?product=, ?from=checklist&checklist=&step=
  */
@@ -14,26 +13,10 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition, type FormEvent } from 'react';
-import {
-  AlertCircle,
-  ArrowLeft,
-  BadgeCheck,
-  Mail,
-  MessageSquare,
-  Send,
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
-import { RichEditor } from '@/components/editor/rich-editor';
+import { AlertCircle, Mail, MessageSquare, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { createTicketAction } from '@/app/actions/ticket-actions';
 import type { ProductTaxonomyNode } from '@/lib/services/master-categories';
-import {
-  ProductPicker,
-  type ProductPickerMode,
-} from '@/components/forms/product-picker';
 import {
   AttachmentUploader,
   type UploadedAttachment,
@@ -58,10 +41,9 @@ type Viewer = {
 export type TicketCreateFormProps = {
   viewer: Viewer;
   productTree: ProductTaxonomyNode[];
-  /** 호텔리어=대분류만(root-only), 매니저·어드민=대/중/소(cascade). */
-  productMode: ProductPickerMode;
+  /** 호텔리어=대분류만(root-only), 매니저·어드민=대/중/소 — 시안에선 대분류 칩으로 단순화. */
+  productMode: 'root-only' | 'cascade';
   issueTypeCategories: Option[];
-  /** 호텔리어 접수 템플릿 — '자세한 내용' 위 버튼으로 노출(마스터DB 편집). */
   hotelierTemplates: TemplateItem[];
   prefill?: {
     product?: string | null;
@@ -72,9 +54,9 @@ export type TicketCreateFormProps = {
   };
 };
 
-/** 미선택 시 기본 코드 (기타 > 일반 / 기타). */
 const DEFAULT_PRODUCT = 'etc_general';
 const DEFAULT_ISSUE = 'etc';
+const MAX_CONTENT = 20000;
 
 export function TicketCreateForm(props: TicketCreateFormProps) {
   const router = useRouter();
@@ -82,28 +64,36 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  // 대분류 칩 목록 (실데이터)
+  const products: Option[] = props.productTree.map((n) => ({
+    code: n.code,
+    label: n.label,
+  }));
+  // 프로그램/상세유형: 기본 미선택 · 필수 아님. 미선택 제출 시 액션에서 '기타'로 분류.
   const [productCode, setProductCode] = useState<string>(
     props.prefill?.product ?? '',
   );
-  const [issueType, setIssueType] = useState<string>(props.prefill?.type ?? '');
+  const [issueType, setIssueType] = useState<string>(
+    props.prefill?.type ?? '',
+  );
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<UploadedAttachment[]>([]);
+  // 발송 방법 — 등록된 수단 기준 기본 선택(이메일 우선). 둘 다 없으면 이메일.
   const [contactMethods, setContactMethods] = useState<Array<'sms' | 'email'>>(
-    () => {
-      const init: Array<'sms' | 'email'> = [];
-      if (props.viewer.email) init.push('email'); // 이메일 기본
-      if (props.viewer.phone) init.push('sms');
-      return init.length > 0 ? init : ['email'];
-    },
+    () =>
+      props.viewer.email
+        ? ['email']
+        : props.viewer.phone
+          ? ['sms']
+          : ['email'],
   );
 
-  // 체크리스트/챗봇 → 컨텍스트 자동 prepend
   useEffect(() => {
     if (props.prefill?.from === 'checklist' && props.prefill.checklist) {
       const ctx = [
         '## 사전 진단 정보',
-        `- 체크리스트 ID: \`${props.prefill.checklist}\``,
+        `- 체크리스트 ID: ${props.prefill.checklist}`,
         props.prefill.step ? `- 분기 단계: ${props.prefill.step}` : null,
         '',
         '---',
@@ -127,10 +117,19 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
   }, []);
 
   function applyTemplate(t: TemplateItem) {
+    const clean = toPlainText(t.content);
     setContent((prev) =>
-      prev.trim().length === 0 ? t.content : `${prev}\n\n${t.content}`,
+      prev.trim().length === 0
+        ? clean
+        : `${prev}\n\n${clean}`.slice(0, MAX_CONTENT),
     );
     toast.success(`'${t.title}' 템플릿을 넣었습니다`);
+  }
+
+  function toggleContact(m: 'sms' | 'email') {
+    setContactMethods((cur) =>
+      cur.includes(m) ? cur.filter((v) => v !== m) : [...cur, m],
+    );
   }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -152,7 +151,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
     const fd = new FormData();
     fd.append('productCode', productCode || DEFAULT_PRODUCT);
     fd.append('issueType', issueType || DEFAULT_ISSUE);
-    fd.append('urgency', 'p2'); // 긴급도 UI 제거 — 기본 P2 (어드민이 추후 조정)
+    fd.append('urgency', 'p2');
     fd.append('title', title.trim());
     fd.append('content', content.trim());
     for (const m of contactMethods) fd.append('contactMethods', m);
@@ -183,246 +182,300 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
   }
 
   const busy = pending;
+  const sectionCls =
+    'flex flex-col gap-6 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 sm:p-8';
+  const labelCls =
+    'flex items-center gap-0.5 text-base font-medium text-slate-800 dark:text-slate-100';
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <Card>
-        <CardContent className="flex flex-col gap-5 p-5 sm:p-6">
-          {/* 제목 */}
-          <div>
-            <SectionLabel required title="제목" error={fieldErrors.title} />
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              maxLength={200}
-              placeholder="문제를 한 줄로 요약해주세요"
-              disabled={busy}
-            />
-          </div>
+    <form
+      onSubmit={handleSubmit}
+      className="mx-auto flex w-full max-w-[820px] flex-col gap-8"
+    >
+      <h1 className="text-center text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-[36px]">
+        문의하기
+      </h1>
 
-          {/* 자세한 내용 + 호텔리어 템플릿 버튼 */}
-          <div>
-            <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                자세한 내용<span className="ml-1 text-red-500">*</span>
-              </span>
-              {props.hotelierTemplates.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {props.hotelierTemplates.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => applyTemplate(t)}
-                      disabled={busy}
-                      className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/30"
-                    >
-                      {t.title}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {fieldErrors.content && (
-                <span className="ml-auto text-xs text-red-500">
-                  {fieldErrors.content}
-                </span>
-              )}
-            </div>
-            <RichEditor
-              mode="full"
-              value={content}
-              onChange={setContent}
-              minHeight={240}
-              placeholder="언제부터 발생했나요? 재현 단계, 기대 결과, 시도해본 조치를 적어주세요."
-              disabled={busy}
-              autoSave={{ scope: 'ticket-message', targetId: null }}
-            />
-            <div className="mt-1 text-[11px] text-slate-400">
-              발생 시각·재현 단계·기대 결과를 적어주시면 처리가 빨라집니다.
-            </div>
-          </div>
+      {/* ① 문제분류 */}
+      <section className={sectionCls}>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+          문제분류
+        </h2>
 
-          {/* 제품 / 요청유형 (옵션, 기본 미정) */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <div className="mb-1.5">
-                <SectionLabel title="제품" />
-              </div>
-              <ProductPicker
-                tree={props.productTree}
-                value={productCode}
-                onChange={setProductCode}
+        <div className="flex flex-col gap-2">
+          <span className={labelCls}>
+            문의 프로그램
+            <span className="ml-1 text-xs font-normal text-slate-400">선택 (미선택 시 기타)</span>
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {products.map((p) => (
+              <Chip
+                key={p.code}
+                label={p.label}
+                selected={productCode === p.code}
+                onClick={() => setProductCode(p.code)}
                 disabled={busy}
-                mode={props.productMode}
-                undefinedLabel="미정 (선택 안 함)"
               />
-              {props.productMode === 'cascade' && (
-                <p className="mt-1 text-[11px] text-slate-400">
-                  대분류 선택 후 중·소분류가 있으면 추가로 지정할 수 있습니다.
-                </p>
-              )}
-            </div>
-            <div>
-              <SectionLabel title="요청유형" />
-              <Select
-                value={issueType}
-                onChange={(e) => setIssueType(e.target.value)}
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <span className={labelCls}>
+            상세 유형
+            <span className="ml-1 text-xs font-normal text-slate-400">선택 (미선택 시 기타)</span>
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {props.issueTypeCategories.map((d) => (
+              <Chip
+                key={d.code}
+                label={d.label}
+                selected={issueType === d.code}
+                onClick={() => setIssueType(d.code)}
                 disabled={busy}
-              >
-                <option value="">미정</option>
-                {props.issueTypeCategories.map((o) => (
-                  <option key={o.code} value={o.code}>
-                    {o.label}
-                  </option>
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ② 상세 내용 */}
+      <section className={sectionCls}>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+          상세 내용
+        </h2>
+
+        <div className="flex flex-col gap-2">
+          <span className={labelCls}>
+            제목 <Req />
+          </span>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={200}
+            disabled={busy}
+            placeholder="문제를 한 줄로 요약해주세요"
+            className="h-[52px] w-full rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+          />
+          {fieldErrors.title && (
+            <span className="text-xs text-red-500">{fieldErrors.title}</span>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className={labelCls}>
+              상세 내용 <Req />
+            </span>
+            {props.hotelierTemplates.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {props.hotelierTemplates.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => applyTemplate(t)}
+                    disabled={busy}
+                    title={`'${t.title}' 템플릿 채우기`}
+                    className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  >
+                    {t.title}
+                  </button>
                 ))}
-              </Select>
-            </div>
+              </div>
+            )}
           </div>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value.slice(0, MAX_CONTENT))}
+            disabled={busy}
+            placeholder="언제부터 발생했나요? 재현 단계, 기대 결과, 시도해본 조치를 적어주세요."
+            className="h-[320px] w-full resize-none rounded-lg border border-slate-300 bg-white p-4 text-base leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+          />
+          <div className="flex items-center justify-between">
+            {fieldErrors.content ? (
+              <span className="text-xs text-red-500">{fieldErrors.content}</span>
+            ) : (
+              <span className="text-xs text-slate-400">
+                발생 시각·재현 단계·기대 결과를 적어주시면 처리가 빨라집니다.
+              </span>
+            )}
+            <span className="text-sm text-slate-400">
+              {content.length.toLocaleString()} / {MAX_CONTENT.toLocaleString()}
+            </span>
+          </div>
+        </div>
 
-          {/* 연락 방법 */}
-          <div>
-            <SectionLabel
-              required
-              title="연락 방법"
-              error={fieldErrors.contactMethods}
+        <div className="flex flex-col gap-2">
+          <span className={labelCls}>첨부 파일</span>
+          <AttachmentUploader
+            attachments={attachments}
+            onChange={setAttachments}
+            disabled={busy}
+          />
+        </div>
+      </section>
+
+      {/* ③ 연락 방법 */}
+      <section className={sectionCls}>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+          연락 방법
+        </h2>
+        <div className="flex flex-col gap-2">
+          <span className={labelCls}>
+            발송 방법 <Req />
+          </span>
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <ContactOption
+              Icon={Mail}
+              label="이메일"
+              value={props.viewer.email ?? '이메일 미등록'}
+              selected={contactMethods.includes('email')}
+              onClick={() => toggleContact('email')}
+              disabled={!props.viewer.email || busy}
             />
-            <div className="grid gap-2 sm:grid-cols-2">
-              <ContactToggle
-                selected={contactMethods.includes('email')}
-                onToggle={() => toggleContact('email', contactMethods, setContactMethods)}
-                icon={<Mail className="h-4 w-4" />}
-                label="이메일"
-                detail={props.viewer.email ?? '이메일 미등록'}
-                disabled={!props.viewer.email || busy}
-              />
-              <ContactToggle
-                selected={contactMethods.includes('sms')}
-                onToggle={() => toggleContact('sms', contactMethods, setContactMethods)}
-                icon={<MessageSquare className="h-4 w-4" />}
-                label="SMS"
-                detail={props.viewer.phone ?? '연락처 미등록'}
-                disabled={!props.viewer.phone || busy}
-              />
-            </div>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            <ContactOption
+              Icon={MessageSquare}
+              label="SMS"
+              value={props.viewer.phone ?? '연락처 미등록'}
+              selected={contactMethods.includes('sms')}
+              onClick={() => toggleContact('sms')}
+              disabled={!props.viewer.phone || busy}
+            />
+          </div>
+          {fieldErrors.contactMethods ? (
+            <span className="text-xs text-red-500">
+              {fieldErrors.contactMethods}
+            </span>
+          ) : (
+            <span className="text-sm text-slate-500 dark:text-slate-400">
               접수 확인·처리 상태가 선택한 방법으로 발송됩니다. 정보가 비어있다면{' '}
               <Link href="/profile" className="text-brand-600 underline">
                 프로필
               </Link>
               에서 먼저 등록해주세요.
-            </p>
-          </div>
-
-          {/* 첨부 */}
-          <div>
-            <SectionLabel title="첨부 (선택)" />
-            <AttachmentUploader
-              attachments={attachments}
-              onChange={setAttachments}
-              disabled={busy}
-            />
-          </div>
-
-          {serverError && (
-            <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{serverError}</span>
-            </div>
+            </span>
           )}
+        </div>
+      </section>
 
-          <div className="flex items-center justify-between gap-2">
-            <Link
-              href="/help"
-              className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              제품별 가이드
-            </Link>
-            <Button type="submit" size="lg" disabled={busy}>
-              {pending ? '접수 중...' : '접수하기'}
-              {!pending && <Send className="h-4 w-4" />}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {serverError && (
+        <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{serverError}</span>
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={busy}
+        className="w-full rounded-lg bg-brand-600 py-3.5 text-base font-semibold text-white transition-colors hover:bg-brand-500 disabled:opacity-60"
+      >
+        {pending ? '접수 중...' : '접수하기'}
+      </button>
     </form>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────
 
-function SectionLabel({
-  title,
-  required,
-  error,
-}: {
-  title: string;
-  required?: boolean;
-  error?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-        {title}
-        {required && <span className="ml-1 text-red-500">*</span>}
-      </span>
-      {error && <span className="text-xs text-red-500">{error}</span>}
-    </div>
-  );
+/** 템플릿(마크다운)을 plain textarea에서 읽기 좋게 평문으로 정리. */
+function toPlainText(md: string): string {
+  return md
+    .replace(/\*\*(.*?)\*\*/g, '$1') // **굵게** → 굵게
+    .replace(/\*(.*?)\*/g, '$1') // *기울임* → 기울임
+    .replace(/`([^`]*)`/g, '$1') // `코드` → 코드
+    .replace(/^#{1,6}\s+/gm, '') // 헤딩 마커 제거
+    .replace(/^\s*[-*]\s+/gm, '· ') // 불릿 → ·
+    .replace(/[ \t]*\\$/gm, '') // 줄 끝 하드브레이크 백슬래시 제거
+    .replace(/\n{3,}/g, '\n\n') // 과도한 빈 줄 축소
+    .trim();
 }
 
-function ContactToggle({
-  selected,
-  onToggle,
-  icon,
+function Req() {
+  return <span className="text-red-500">*</span>;
+}
+
+function Chip({
   label,
-  detail,
+  selected,
+  onClick,
   disabled,
 }: {
-  selected: boolean;
-  onToggle: () => void;
-  icon: React.ReactNode;
   label: string;
-  detail: string;
+  selected: boolean;
+  onClick: () => void;
   disabled?: boolean;
 }) {
   return (
     <button
       type="button"
-      onClick={onToggle}
+      onClick={onClick}
       disabled={disabled}
+      aria-pressed={selected}
       className={cn(
-        'flex items-start gap-3 rounded-md border px-3 py-2 text-left text-sm transition-colors',
+        'inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors disabled:opacity-50',
         selected
-          ? 'border-brand-400 bg-brand-50 ring-2 ring-brand-300 dark:border-brand-700 dark:bg-brand-950/40 dark:ring-brand-700'
-          : 'border-slate-200 bg-white hover:border-brand-300 hover:bg-brand-50/30 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-700 dark:hover:bg-brand-950/20',
-        disabled && 'cursor-not-allowed opacity-50',
+          ? 'border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-600 dark:bg-brand-950/40 dark:text-brand-300'
+          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
       )}
     >
-      <div
-        className={cn(
-          'mt-0.5 rounded-md p-1.5',
-          selected
-            ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300'
-            : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
-        )}
-      >
-        {icon}
-      </div>
-      <div className="flex-1">
-        <div className="font-medium text-slate-800 dark:text-slate-100">
-          {label}
-        </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400">{detail}</div>
-      </div>
-      {selected && <BadgeCheck className="h-4 w-4 text-brand-500" />}
+      {selected && <Check className="h-3.5 w-3.5 shrink-0" />}
+      {label}
     </button>
   );
 }
 
-function toggleContact(
-  m: 'sms' | 'email',
-  current: Array<'sms' | 'email'>,
-  set: (next: Array<'sms' | 'email'>) => void,
-) {
-  set(current.includes(m) ? current.filter((v) => v !== m) : [...current, m]);
+function ContactOption({
+  Icon,
+  label,
+  value,
+  selected,
+  onClick,
+  disabled,
+}: {
+  Icon: typeof Mail;
+  label: string;
+  value: string;
+  selected: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={selected}
+      className={cn(
+        'flex flex-1 items-center gap-3 rounded-lg border px-5 py-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        selected
+          ? 'border-brand-500 bg-brand-50 dark:border-brand-600 dark:bg-brand-950/40'
+          : 'border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800',
+      )}
+    >
+      <Icon
+        className={cn(
+          'h-6 w-6 shrink-0',
+          selected ? 'text-brand-600 dark:text-brand-300' : 'text-slate-400',
+        )}
+      />
+      <span className="flex flex-1 flex-col">
+        <span className="text-base font-medium text-slate-900 dark:text-white">
+          {label}
+        </span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          {value}
+        </span>
+      </span>
+      <span
+        className={cn(
+          'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors',
+          selected ? 'border-brand-600 bg-brand-600' : 'border-slate-300',
+        )}
+      >
+        {selected && <Check className="h-3.5 w-3.5 text-white" />}
+      </span>
+    </button>
+  );
 }

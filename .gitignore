@@ -76,3 +76,7 @@ oa-knowledge-*.jsonl
 # 내부 데이터 덤프 (코드 미참조 · 로컬 작업 산출물)
 docs/hotel-names-*.txt
 
+
+# 민감/대용량 (운영 자격·원본 데이터) — 커밋 금지
+deploy/iam/
+db/sources/

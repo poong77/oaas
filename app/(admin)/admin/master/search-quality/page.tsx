@@ -30,7 +30,7 @@ import { FunnelSection } from './_components/funnel-section';
 import { ZeroQueriesCard } from './_components/zero-queries-card';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '검색 골든셋·품질 — OA 통합 AS 어드민' };
+export const metadata = { title: '검색 골든셋·품질 — OA서포트 어드민' };
 
 export default async function MasterSearchQualityPage() {
   const user = await requireRole(['manager', 'admin']);

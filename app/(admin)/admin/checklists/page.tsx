@@ -19,7 +19,7 @@ import { ChecklistsFilters } from './_components/checklists-filters';
 import { ChecklistsListClient } from './_components/checklists-list-client';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '체크리스트 관리 — OA 통합 AS 어드민' };
+export const metadata = { title: '체크리스트 관리 — OA서포트 어드민' };
 
 type SearchParams = Promise<{
   q?: string;

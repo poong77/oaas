@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserCreateForm } from './_components/user-create-form';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '사용자 추가 — OA 통합 AS 어드민' };
+export const metadata = { title: '사용자 추가 — OA서포트 어드민' };
 
 export default async function NewUserPage() {
   await requireRole(['admin']);

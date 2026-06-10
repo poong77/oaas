@@ -23,7 +23,7 @@ import { HelpHeroSearch } from './_components/help-hero-search';
 import { PopularArticleList } from './_components/popular-article-list';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '제품별 가이드 — OA 통합 AS' };
+export const metadata = { title: '제품별 가이드 — OA서포트' };
 
 export default async function HelpIndexPage() {
   const [categories, counts, popular] = await Promise.all([

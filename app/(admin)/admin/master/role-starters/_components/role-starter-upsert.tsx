@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { KNOWN_ICON_NAMES } from '@/components/icon-resolver';
+import { MasterIconUpload } from '../../_components/master-icon-upload';
 import {
   upsertRoleStarterAction,
   setRoleStarterActiveAction,
@@ -155,6 +156,9 @@ export function RoleStarterUpsert({
           />
         </div>
       </div>
+
+      <MasterIconUpload defaultUrl={item?.iconImageUrl ?? null} />
+
 
       {/* D3 — 매핑 (편집 모드에서만; 신규는 먼저 업서트 후 편집으로) */}
       {isEdit && (

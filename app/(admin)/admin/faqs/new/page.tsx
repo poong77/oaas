@@ -13,7 +13,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { FaqEditor } from '../_components/faq-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '새 FAQ — OA 통합 AS 어드민' };
+export const metadata = { title: '새 FAQ — OA서포트 어드민' };
 
 export default async function NewFaqPage({
   searchParams,

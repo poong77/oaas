@@ -18,7 +18,7 @@ import type { TicketStatus } from '@/db/schema';
 import { MyTicketsList } from './_components/my-tickets-list';
 import { MyTicketsFilters } from './_components/my-tickets-filters';
 
-export const metadata = { title: '내 문의 — OA 통합 AS' };
+export const metadata = { title: '내 문의 — OA서포트' };
 export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{

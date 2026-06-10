@@ -15,7 +15,7 @@ import { PreviewRenderer } from './_preview-renderer';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'DRAFT 미리보기 — OA 통합 AS',
+  title: 'DRAFT 미리보기 — OA서포트',
   robots: { index: false, follow: false },
 };
 

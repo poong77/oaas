@@ -179,7 +179,7 @@ export function toMarkdown(pack: KnowledgePack): string {
     : '전체 제품';
 
   // 헤더
-  out.push('# OA 통합 AS 지식베이스 — AI 지식팩');
+  out.push('# OA서포트 지식베이스 — AI 지식팩');
   out.push('');
   out.push(`> 생성: ${formatDateKst(pack.generatedAt)} (KST)`);
   out.push(`> 범위: ${scopeLabel}`);

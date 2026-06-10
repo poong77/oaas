@@ -224,7 +224,7 @@ export async function changePasswordAction(
     if (current.phone) {
       void sendSms({
         to: current.phone,
-        text: `[OA 통합 AS] ${current.name}님, 비밀번호가 변경되었습니다. 본인이 아니라면 관리자에게 즉시 알려주세요.`,
+        text: `[OA서포트] ${current.name}님, 비밀번호가 변경되었습니다. 본인이 아니라면 관리자에게 즉시 알려주세요.`,
       });
     }
 
@@ -390,7 +390,7 @@ export async function _sendTestNotification(to: string): Promise<ActionResult> {
   }
   const result = await sendEmail({
     to,
-    subject: '[OA 통합 AS] 발송 테스트',
+    subject: '[OA서포트] 발송 테스트',
     html: '<p>발송 테스트 메일입니다. 정상 수신되면 SES 연동이 동작 중입니다.</p>',
     text: '발송 테스트 메일입니다.',
   });

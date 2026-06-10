@@ -23,16 +23,16 @@ export const CATEGORIES_CACHE_TAG = 'master:categories';
 
 /** DB 미연결 시 fallback. 시드와 동일한 6개 product. */
 const FALLBACK_PRODUCT_CATEGORIES: Array<
-  Pick<Category, 'id' | 'code' | 'label' | 'icon' | 'sortOrder'> & {
+  Pick<Category, 'id' | 'code' | 'label' | 'icon' | 'iconImageUrl' | 'sortOrder'> & {
     fallback: true;
   }
 > = [
-  { id: 'fallback-pms', code: 'pms', label: 'PMS', icon: 'Building2', sortOrder: 10, fallback: true },
-  { id: 'fallback-cms', code: 'cms', label: 'CMS', icon: 'Layers', sortOrder: 20, fallback: true },
-  { id: 'fallback-keyless', code: 'keyless', label: 'Keyless', icon: 'KeyRound', sortOrder: 30, fallback: true },
-  { id: 'fallback-kiosk', code: 'kiosk', label: '키오스크', icon: 'Monitor', sortOrder: 40, fallback: true },
-  { id: 'fallback-web', code: 'web', label: '웹서비스', icon: 'Globe', sortOrder: 50, fallback: true },
-  { id: 'fallback-config', code: 'config', label: '설정', icon: 'Settings', sortOrder: 60, fallback: true },
+  { id: 'fallback-pms', code: 'pms', label: 'PMS', icon: 'Building2', iconImageUrl: null, sortOrder: 10, fallback: true },
+  { id: 'fallback-cms', code: 'cms', label: 'CMS', icon: 'Layers', iconImageUrl: null, sortOrder: 20, fallback: true },
+  { id: 'fallback-keyless', code: 'keyless', label: 'Keyless', icon: 'KeyRound', iconImageUrl: null, sortOrder: 30, fallback: true },
+  { id: 'fallback-kiosk', code: 'kiosk', label: '키오스크', icon: 'Monitor', iconImageUrl: null, sortOrder: 40, fallback: true },
+  { id: 'fallback-web', code: 'web', label: '웹서비스', icon: 'Globe', iconImageUrl: null, sortOrder: 50, fallback: true },
+  { id: 'fallback-config', code: 'config', label: '설정', icon: 'Settings', iconImageUrl: null, sortOrder: 60, fallback: true },
 ];
 
 export type ProductCategoryView = {
@@ -40,6 +40,7 @@ export type ProductCategoryView = {
   code: string;
   label: string;
   icon: string | null;
+  iconImageUrl: string | null;
   sortOrder: number;
 };
 
@@ -55,6 +56,7 @@ const _getProductCategoriesCached = unstable_cache(
           code: categories.code,
           label: categories.label,
           icon: categories.icon,
+          iconImageUrl: categories.iconImageUrl,
           sortOrder: categories.sortOrder,
         })
         .from(categories)
@@ -80,7 +82,7 @@ const _getProductCategoriesCached = unstable_cache(
       return FALLBACK_PRODUCT_CATEGORIES.map(({ fallback: _f, ...rest }) => rest);
     }
   },
-  ['product-categories:v2-roots'],
+  ['product-categories:v3-roots-iconimg'],
   { revalidate: 3600, tags: [CATEGORIES_CACHE_TAG] },
 );
 
@@ -103,7 +105,7 @@ const _getCategoriesByTypeCached = unstable_cache(
       return [];
     }
   },
-  ['categories-by-type:v1'],
+  ['categories-by-type:v2'],
   { revalidate: 3600, tags: [CATEGORIES_CACHE_TAG] },
 );
 

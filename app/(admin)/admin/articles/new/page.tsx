@@ -12,7 +12,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { ArticleEditor } from '../_components/article-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '새 아티클 — OA 통합 AS 어드민' };
+export const metadata = { title: '새 아티클 — OA서포트 어드민' };
 
 export default async function NewArticlePage() {
   await requireRole(['manager', 'admin']);

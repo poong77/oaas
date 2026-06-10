@@ -10,7 +10,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { NoticeEditor } from '../_components/notice-editor';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '새 공지 — OA 통합 AS 어드민' };
+export const metadata = { title: '새 공지 — OA서포트 어드민' };
 
 export default async function NewNoticePage() {
   await requireRole(['manager', 'admin']);

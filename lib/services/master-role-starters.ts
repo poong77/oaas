@@ -192,6 +192,8 @@ export type RoleStarterWriteInput = {
   label: string;
   description?: string | null;
   icon?: string | null;
+  /** 업로드 아이콘 이미지 URL (공개 프록시). 있으면 프론트에서 lucide 우선. */
+  iconImageUrl?: string | null;
   articleIds?: string[];
   faqIds?: string[];
   sortOrder?: number;
@@ -207,6 +209,7 @@ export async function upsertRoleStarter(
       label: input.label,
       description: input.description ?? null,
       icon: input.icon ?? null,
+      iconImageUrl: input.iconImageUrl ?? null,
       articleIds: input.articleIds ?? [],
       faqIds: input.faqIds ?? [],
       sortOrder: input.sortOrder ?? 0,
@@ -220,6 +223,7 @@ export async function upsertRoleStarter(
           label: row.label,
           description: row.description,
           icon: row.icon,
+          iconImageUrl: row.iconImageUrl,
           articleIds: row.articleIds,
           faqIds: row.faqIds,
           sortOrder: row.sortOrder,
@@ -248,6 +252,9 @@ export async function updateRoleStarterById(
           ? { description: input.description }
           : {}),
         ...(input.icon !== undefined ? { icon: input.icon } : {}),
+        ...(input.iconImageUrl !== undefined
+          ? { iconImageUrl: input.iconImageUrl }
+          : {}),
         ...(input.articleIds !== undefined
           ? { articleIds: input.articleIds }
           : {}),

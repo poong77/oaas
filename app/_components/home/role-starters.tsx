@@ -16,6 +16,7 @@ type RoleStarterView = {
   label: string;
   description: string | null;
   icon: string | null;
+  iconImageUrl: string | null;
 };
 
 function fromDbRow(r: RoleStarter): RoleStarterView {
@@ -25,6 +26,7 @@ function fromDbRow(r: RoleStarter): RoleStarterView {
     label: r.label,
     description: r.description,
     icon: r.icon,
+    iconImageUrl: r.iconImageUrl ?? null,
   };
 }
 
@@ -44,6 +46,7 @@ function fromFallback(): RoleStarterView[] {
     label: rs.label,
     description: rs.description,
     icon: FALLBACK_ROLE_ICON_NAMES[rs.key] ?? null,
+    iconImageUrl: null,
   }));
 }
 
@@ -74,8 +77,17 @@ export function RoleStarters({ items }: { items?: RoleStarter[] }) {
                 href={`/role/${role.roleKey}`}
                 className="group flex h-full flex-col gap-2 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-md bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white dark:bg-brand-950/40 dark:text-brand-300 dark:group-hover:bg-brand-500 dark:group-hover:text-white">
-                  <Icon className="h-4 w-4" />
+                <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-md bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white dark:bg-brand-950/40 dark:text-brand-300 dark:group-hover:bg-brand-500 dark:group-hover:text-white">
+                  {role.iconImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={role.iconImageUrl}
+                      alt=""
+                      className="h-5 w-5 object-contain"
+                    />
+                  ) : (
+                    <Icon className="h-4 w-4" />
+                  )}
                 </span>
                 <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                   {role.label}

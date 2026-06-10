@@ -28,8 +28,8 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   const staticRole = ROLE_STARTERS.find((r) => r.key === key);
   return {
     title: staticRole
-      ? `${staticRole.label} 시작하기 — OA 통합 AS`
-      : '역할별 시작하기 — OA 통합 AS',
+      ? `${staticRole.label} 시작하기 — OA서포트`
+      : '역할별 시작하기 — OA서포트',
   };
 }
 

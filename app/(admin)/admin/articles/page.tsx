@@ -19,7 +19,7 @@ import { ArticlesFilters } from './_components/articles-filters';
 import { ArticlesListClient } from './_components/articles-list-client';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '아티클 관리 — OA 통합 AS 어드민' };
+export const metadata = { title: '아티클 관리 — OA서포트 어드민' };
 
 type SearchParams = Promise<{
   q?: string;

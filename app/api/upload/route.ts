@@ -25,7 +25,12 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getCurrentUser } from '@/lib/permissions';
 import { env } from '@/lib/env';
-import { getS3Client, buildPublicUrl, buildEditorProxyUrl } from '@/lib/s3';
+import {
+  getS3Client,
+  buildPublicUrl,
+  buildEditorProxyUrl,
+  buildMasterIconProxyUrl,
+} from '@/lib/s3';
 import { checkRateLimit } from '@/lib/rate-limit';
 import {
   isProcessableImage,
@@ -36,10 +41,10 @@ import {
 export const runtime = 'nodejs';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-/** Rate Limit: editor 분당 30회 / ticket 첨부 분당 20회 */
-const RATE_LIMIT_PER_MINUTE = { editor: 30, ticket: 20 } as const;
+/** Rate Limit: editor 분당 30회 / ticket 첨부 분당 20회 / 마스터 아이콘 분당 15회 */
+const RATE_LIMIT_PER_MINUTE = { editor: 30, ticket: 20, mastericon: 15 } as const;
 /** purpose 화이트리스트 — pathname 분기에 사용 */
-const ALLOWED_PURPOSES = new Set(['ticket', 'editor']);
+const ALLOWED_PURPOSES = new Set(['ticket', 'editor', 'mastericon']);
 
 const ALLOWED_MIME_PREFIX = [
   'image/', // jpg, png, gif, webp, heic
@@ -158,9 +163,19 @@ export async function POST(request: NextRequest) {
   const rawPurpose = (formData.get('purpose')?.toString() ?? 'ticket')
     .replace(/[^a-z]/gi, '')
     .toLowerCase();
-  const purpose: 'ticket' | 'editor' = ALLOWED_PURPOSES.has(rawPurpose)
-    ? (rawPurpose as 'ticket' | 'editor')
+  const purpose: 'ticket' | 'editor' | 'mastericon' = ALLOWED_PURPOSES.has(
+    rawPurpose,
+  )
+    ? (rawPurpose as 'ticket' | 'editor' | 'mastericon')
     : 'ticket';
+
+  // 마스터 아이콘은 이미지 파일만 허용 (브랜드 아이콘 표시용)
+  if (purpose === 'mastericon' && !file.type.startsWith('image/')) {
+    return NextResponse.json(
+      { ok: false, message: '아이콘은 이미지 파일만 업로드할 수 있습니다' },
+      { status: 415 },
+    );
+  }
 
   // Rate Limit (사용자별) — editor는 분당 30회, ticket 첨부는 분당 20회
   const rlMax = RATE_LIMIT_PER_MINUTE[purpose];
@@ -236,10 +251,13 @@ export async function POST(request: NextRequest) {
   // purpose별 pathname 분기:
   //   - 'editor' → editor/{userId}/{uniq}-{name}     (본문 임베드 이미지·PDF)
   //   - 'ticket' → tickets/_staging/{purpose}/{userId}/{uniq}-{name}  (티켓 첨부)
+  //   - 'mastericon' → master-icons/{userId}/{uniq}-{name}  (공개 프록시로 표시)
   const basePathname =
     purpose === 'editor'
       ? `editor/${user.id}/${uniq}-${safeName}`
-      : `tickets/_staging/${purpose}/${user.id}/${uniq}-${safeName}`;
+      : purpose === 'mastericon'
+        ? `master-icons/${user.id}/${uniq}-${safeName}`
+        : `tickets/_staging/${purpose}/${user.id}/${uniq}-${safeName}`;
   const key = env.S3_UPLOAD_PREFIX
     ? `${env.S3_UPLOAD_PREFIX.replace(/^\/+|\/+$/g, '')}/${basePathname}`
     : basePathname;
@@ -263,7 +281,11 @@ export async function POST(request: NextRequest) {
     //   - editor: `/api/files/view?key=...` (본문에 그대로 임베드 → 로그인 게이트 통과 후 표시)
     //   - ticket: 원본 S3 URL (ticket_attachments에 저장, /api/attachments/[id]가 서버측에서 해석)
     const blobUrl =
-      purpose === 'editor' ? buildEditorProxyUrl(key) : buildPublicUrl(key);
+      purpose === 'editor'
+        ? buildEditorProxyUrl(key)
+        : purpose === 'mastericon'
+          ? buildMasterIconProxyUrl(key)
+          : buildPublicUrl(key);
     return NextResponse.json({
       ok: true,
       blobUrl,

@@ -18,6 +18,8 @@ export const roleStarters = pgTable(
     label: text('label').notNull(),
     description: text('description'),
     icon: text('icon'),
+    /** 업로드 아이콘 이미지 표시 URL(공개 프록시). 있으면 프론트에서 lucide(icon)보다 우선. */
+    iconImageUrl: text('icon_image_url'),
     /** articles.id 배열. uuid[] (FK 없음 — articles 변경 유연성) */
     articleIds: uuid('article_ids').array().notNull().default([]),
     /** faqs.id 배열. uuid[] (FK 없음 — faqs 변경 유연성) */

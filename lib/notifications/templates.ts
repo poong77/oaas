@@ -67,7 +67,7 @@ export type TicketStatusChangedVars = {
   managerName?: string | null;
 };
 
-const BRAND = 'OA 통합 AS';
+const BRAND = 'OA서포트';
 
 function htmlWrap(title: string, body: string) {
   return `<!doctype html><html><body style="font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f8fafc;padding:24px;">

@@ -32,11 +32,14 @@ export async function RoleScope({ children }: { children: React.ReactNode }) {
 
   const pathname = hdrs.get('x-pathname') ?? '';
   const isAdminArea = pathname === '/admin' || pathname.startsWith('/admin/');
+  // /landing — 자체 헤더/푸터를 가진 독립 시안. 전역 크롬 중복 노출 방지.
+  const isLandingArea = pathname === '/landing' || pathname.startsWith('/landing/');
+  const isStandaloneShell = isAdminArea || isLandingArea;
 
-  // Header는 어드민 워크스페이스(/admin/*) 외 전 영역에서 노출
-  const showHeader = !isAdminArea;
+  // Header는 어드민 워크스페이스(/admin/*)·랜딩 시안 외 전 영역에서 노출
+  const showHeader = !isStandaloneShell;
   // EmergencyBanner·ChatbotFab은 호텔리어 모드 전용
-  const showHotelierExtras = isHotelier && !isAdminArea;
+  const showHotelierExtras = isHotelier && !isStandaloneShell;
 
   const chatbotEmbedUrl = showHotelierExtras ? getChatbotEmbedUrl() : '';
 

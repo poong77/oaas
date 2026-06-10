@@ -20,7 +20,7 @@ import { NoticesAdminFilters } from './_components/notices-admin-filters';
 import { NoticesListClient } from './_components/notices-list-client';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '공지 — OA 통합 AS 어드민' };
+export const metadata = { title: '공지 — OA서포트 어드민' };
 
 type SearchParams = Promise<{
   q?: string;

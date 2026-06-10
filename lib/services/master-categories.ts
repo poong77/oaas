@@ -55,6 +55,8 @@ export type CategoryWriteInput = {
   code: string;
   label: string;
   icon?: string | null;
+  /** 업로드 아이콘 이미지 URL (공개 프록시). 대분류 표시용. */
+  iconImageUrl?: string | null;
   sortOrder?: number;
   /** 계층(대/중/소) 부모 id. null이면 대분류. */
   parentId?: string | null;
@@ -118,6 +120,7 @@ export type ProductCategoryAdminNode = {
   label: string;
   memo: string | null;
   icon: string | null;
+  iconImageUrl: string | null;
   sortOrder: number;
   isActive: boolean;
   /** 0=대분류 · 1=중분류 · 2=소분류 */
@@ -150,6 +153,7 @@ export async function listProductCategoryAdminTree(): Promise<
         label: r.label,
         memo: r.memo,
         icon: r.icon,
+        iconImageUrl: r.iconImageUrl ?? null,
         sortOrder: r.sortOrder,
         isActive: r.isActive,
         depth: 0,
@@ -172,6 +176,8 @@ export async function listProductCategoryAdminTree(): Promise<
       for (const child of node.children) assignDepth(child, depth + 1);
     };
     for (const root of roots) assignDepth(root, 0);
+    // 비활성 대분류는 트리 최하단으로 (active 먼저, 안정 정렬로 그룹 내 sortOrder→label 순서 보존)
+    roots.sort((a, b) => Number(b.isActive) - Number(a.isActive));
     return roots;
   } catch (err) {
     console.error('[master-categories.listProductCategoryAdminTree] 실패:', err);
@@ -189,6 +195,7 @@ export async function createCategory(
       code: input.code,
       label: input.label,
       icon: input.icon ?? null,
+      iconImageUrl: input.iconImageUrl ?? null,
       sortOrder: input.sortOrder ?? 0,
       parentId: input.parentId ?? null,
       memo: input.memo ?? null,
@@ -220,6 +227,9 @@ export async function updateCategory(
         ...(input.code !== undefined ? { code: input.code } : {}),
         ...(input.label !== undefined ? { label: input.label } : {}),
         ...(input.icon !== undefined ? { icon: input.icon } : {}),
+        ...(input.iconImageUrl !== undefined
+          ? { iconImageUrl: input.iconImageUrl }
+          : {}),
         ...(input.sortOrder !== undefined
           ? { sortOrder: input.sortOrder }
           : {}),
