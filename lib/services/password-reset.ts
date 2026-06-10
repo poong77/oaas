@@ -224,6 +224,70 @@ export async function listAccountsForReset(
 }
 
 // ─────────────────────────────────────────────────────────────────────
+// 2-b. 이메일로 재설정 가능 계정 조회 (마스킹)
+// ─────────────────────────────────────────────────────────────────────
+
+export type ResetAccountByEmail = ResetAccount & {
+  hotelId: string | null;
+  hotelName: string | null;
+};
+
+/**
+ * 입력한 이메일과 정확히 일치하는 활성 계정 목록 (대소문자 무시).
+ * users.email은 비유니크이므로 같은 이메일이 여러 호텔 계정에 걸릴 수 있다.
+ * 미인증 노출이므로 이름은 마스킹하고, 호텔명은 본인 계정 식별을 위해 노출한다.
+ */
+export async function lookupAccountsByEmail(
+  email: string,
+): Promise<ResetAccountByEmail[]> {
+  if (!db) return [];
+  const normalized = email.trim().toLowerCase();
+  if (!isUsableEmail(normalized)) return [];
+
+  try {
+    const rows = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        phone: users.phone,
+        hotelId: hotels.id,
+        hotelName: hotels.name,
+      })
+      .from(users)
+      .leftJoin(hotels, eq(users.hotelId, hotels.id))
+      .where(
+        and(
+          eq(users.isActive, true),
+          sql`lower(${users.email}) = ${normalized}`,
+        ),
+      )
+      .orderBy(hotels.name, users.name);
+
+    return rows
+      .map((r) => {
+        const hasEmail: boolean = isUsableEmail(r.email);
+        const hasPhone = isUsablePhone(r.phone);
+        if (!hasEmail) return null; // 이메일로 찾았으므로 이메일 채널은 항상 가용
+        return {
+          userId: r.id,
+          maskedName: maskName(r.name),
+          hasEmail,
+          maskedEmail: maskEmailLight(r.email),
+          hasPhone,
+          maskedPhone: hasPhone ? maskPhoneLight(r.phone!) : null,
+          hotelId: r.hotelId,
+          hotelName: r.hotelName,
+        } satisfies ResetAccountByEmail;
+      })
+      .filter((x) => x !== null) as ResetAccountByEmail[];
+  } catch (err) {
+    console.error('[password-reset.lookupAccountsByEmail] 실패:', err);
+    return [];
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
 // 3. 재설정 요청 발급·발송
 // ─────────────────────────────────────────────────────────────────────
 
