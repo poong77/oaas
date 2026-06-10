@@ -102,8 +102,9 @@ export function RoleStarterUpsert({
             defaultValue={item?.roleKey ?? ''}
             list="role-keys"
             required
-            disabled={isEdit}
-            className="font-mono text-xs"
+            // 편집 시 변경 불가 — 단, disabled면 FormData에 미전송되어 저장 실패하므로 readOnly 사용
+            readOnly={isEdit}
+            className={`font-mono text-xs ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-800' : ''}`}
             placeholder="front"
           />
           <datalist id="role-keys">
