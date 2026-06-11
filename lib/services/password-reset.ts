@@ -87,7 +87,8 @@ export function maskName(name: string): string {
 }
 
 /** 이메일 마스킹: marclee@gmail.com → ma***@g***.com */
-export function maskEmail(email: string): string {
+export function maskEmail(email: string | null | undefined): string {
+  if (!email) return '';
   const at = email.lastIndexOf('@');
   const local = email.slice(0, at);
   const domain = email.slice(at + 1);
@@ -113,7 +114,8 @@ export function maskPhone(phone: string): string {
  * 공개 목록(미인증 노출)용 강한 마스킹 — 어뷰징/피싱 재료 최소화.
  * 이메일 도메인 숨김: marclee@gmail.com → ma***@***
  */
-export function maskEmailLight(email: string): string {
+export function maskEmailLight(email: string | null | undefined): string {
+  if (!email) return '';
   const at = email.lastIndexOf('@');
   const local = at > 0 ? email.slice(0, at) : email;
   const head = local.slice(0, Math.min(2, local.length)) || '*';
@@ -362,7 +364,7 @@ export async function createResetRequest(
         expiresMinutes: EMAIL_TOKEN_TTL_MIN,
       });
       await sendEmail({
-        to: user.email,
+        to: user.email!, // 위 isUsableEmail 가드로 non-null 보장
         subject: tpl.subject,
         html: tpl.html,
         text: tpl.text,

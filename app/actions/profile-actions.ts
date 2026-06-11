@@ -11,7 +11,7 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { hotels, hotelSolutionLinks, users } from '@/db/schema';
+import { hotelSolutionLinks, users } from '@/db/schema';
 import { getCurrentUser } from '@/lib/permissions';
 import { logActivity } from '@/lib/audit';
 import {
@@ -44,11 +44,10 @@ const UpdateProfileSchema = z.object({
       (v) => !v || phoneRegex.test(v),
       '올바른 연락처 형식이 아닙니다',
     ),
-  // email은 본인 변경 가능. 어드민이 변경하는 케이스는 admin actions에.
-  email: z.string().email('올바른 이메일이 아닙니다').max(200),
-  hotelName: z.string().max(200).optional(),
-  hotelPhone: z.string().max(30).optional(),
-  hotelAddress: z.string().max(500).optional(),
+  // email은 본인 변경 가능(선택값). 미입력 시 NULL. 어드민 변경은 admin actions에.
+  email: z
+    .union([z.string().email('올바른 이메일이 아닙니다').max(200), z.literal('')])
+    .optional(),
 });
 
 export async function updateProfileAction(
@@ -62,10 +61,7 @@ export async function updateProfileAction(
     name: formData.get('name'),
     title: formData.get('title') ?? '',
     phone: formData.get('phone') ?? '',
-    email: formData.get('email'),
-    hotelName: formData.get('hotelName') ?? '',
-    hotelPhone: formData.get('hotelPhone') ?? '',
-    hotelAddress: formData.get('hotelAddress') ?? '',
+    email: formData.get('email') ?? '',
   });
   if (!parsed.success) {
     const flat = parsed.error.flatten();
@@ -79,18 +75,22 @@ export async function updateProfileAction(
   }
 
   try {
-    // 이메일 중복 확인 (본인 제외)
-    const existing = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.email, parsed.data.email))
-      .limit(1);
-    if (existing[0] && existing[0].id !== user.id) {
-      return {
-        ok: false,
-        error: '이미 사용 중인 이메일입니다',
-        fields: { email: '이미 사용 중인 이메일입니다' },
-      };
+    const newEmail = parsed.data.email?.trim() || null;
+
+    // 이메일 중복 확인 (본인 제외). 미입력(NULL)이면 검사 생략.
+    if (newEmail) {
+      const existing = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, newEmail))
+        .limit(1);
+      if (existing[0] && existing[0].id !== user.id) {
+        return {
+          ok: false,
+          error: '이미 사용 중인 이메일입니다',
+          fields: { email: '이미 사용 중인 이메일입니다' },
+        };
+      }
     }
 
     await db
@@ -99,21 +99,9 @@ export async function updateProfileAction(
         name: parsed.data.name,
         title: parsed.data.title || null,
         phone: parsed.data.phone || null,
-        email: parsed.data.email,
+        email: newEmail,
       })
       .where(eq(users.id, user.id));
-
-    // 호텔리어이고 hotel이 있으면 일부 호텔 정보 업데이트 권한 부여
-    if (user.role === 'hotelier' && user.hotelId) {
-      await db
-        .update(hotels)
-        .set({
-          name: parsed.data.hotelName || undefined,
-          phone: parsed.data.hotelPhone || null,
-          address: parsed.data.hotelAddress || null,
-        })
-        .where(eq(hotels.id, user.hotelId));
-    }
 
     logActivity({
       userId: user.id,

@@ -27,7 +27,9 @@ export const users = pgTable(
     hotelId: uuid('hotel_id').references(() => hotels.id, {
       onDelete: 'set null',
     }),
-    email: text('email').notNull(),
+    // 이메일은 선택값. 미입력 시 NULL 저장(더미 이메일 자동생성 금지).
+    // 로그인 식별은 username 우선, 이메일은 보조.
+    email: text('email'),
     /**
      * 로그인 아이디 (이메일과 별개). AS 이관 사용자의 기존 ID 보존.
      * 로그인 시 이메일 또는 아이디로 식별. SSO/신규 가입자는 null 가능.

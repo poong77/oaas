@@ -14,10 +14,6 @@ type Initial = {
   title: string;
   phone: string;
   email: string;
-  hotelName: string;
-  hotelPhone: string;
-  hotelAddress: string;
-  hasHotel: boolean;
 };
 
 export function ProfileForm({ initial }: { initial: Initial }) {
@@ -60,24 +56,8 @@ export function ProfileForm({ initial }: { initial: Initial }) {
             helper="로그인은 이메일 또는 ID로 가능합니다 (ID 변경 불가)"
           />
           <Field label="직책" name="title" defaultValue={initial.title} error={errors.title} placeholder="예: 프론트, 매니저" />
-          <Field label="이메일" name="email" type="email" defaultValue={initial.email} required error={errors.email} />
+          <Field label="이메일" name="email" type="email" defaultValue={initial.email} error={errors.email} placeholder="email@example.com (선택)" />
           <Field label="연락처" name="phone" type="tel" defaultValue={initial.phone} placeholder="010-0000-0000" error={errors.phone} />
-
-          {initial.hasHotel && (
-            <>
-              <div className="col-span-full mt-2 border-t border-slate-200 pt-4 dark:border-slate-800">
-                <h3 className="text-sm font-semibold">호텔 정보</h3>
-                <p className="mt-1 text-xs text-slate-500">
-                  호텔 기본 정보. OA PMS 매핑 ID는 어드민만 변경 가능합니다.
-                </p>
-              </div>
-              <Field label="호텔명" name="hotelName" defaultValue={initial.hotelName} />
-              <Field label="호텔 전화번호" name="hotelPhone" defaultValue={initial.hotelPhone} placeholder="02-0000-0000" />
-              <div className="col-span-full">
-                <Field label="주소" name="hotelAddress" defaultValue={initial.hotelAddress} />
-              </div>
-            </>
-          )}
         </CardContent>
         <CardFooter>
           <Button type="submit" disabled={pending}>

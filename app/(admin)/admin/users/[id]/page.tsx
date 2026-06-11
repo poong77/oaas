@@ -52,7 +52,7 @@ export default async function AdminUserDetailPage({
           name: target.name,
           title: target.title,
           phone: target.phone,
-          email: target.email,
+          email: target.email ?? '',
           username: target.username,
           role: target.role,
           hotelId: target.hotelId,
@@ -65,7 +65,7 @@ export default async function AdminUserDetailPage({
         target={{
           id: target.id,
           name: target.name,
-          email: target.email,
+          email: target.email ?? '',
           isActive: target.isActive,
         }}
         meId={me.id}

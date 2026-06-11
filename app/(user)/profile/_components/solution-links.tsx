@@ -6,7 +6,6 @@ import { ExternalLink, Plus, Trash2, Pencil } from 'lucide-react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -21,7 +20,7 @@ import {
 } from '@/app/actions/profile-actions';
 import type { HotelSolutionLink } from '@/db/schema';
 
-const MAX_LINKS = 5;
+const MAX_LINKS = 50;
 
 export function SolutionLinks({
   links,
@@ -41,9 +40,6 @@ export function SolutionLinks({
       <Card>
         <CardHeader>
           <CardTitle>솔루션 링크</CardTitle>
-          <CardDescription>
-            호텔이 매핑되지 않은 계정은 솔루션 링크를 추가할 수 없습니다.
-          </CardDescription>
         </CardHeader>
       </Card>
     );
@@ -94,10 +90,6 @@ export function SolutionLinks({
             ({links.length} / {MAX_LINKS})
           </span>
         </CardTitle>
-        <CardDescription>
-          자주 사용하는 솔루션의 바로가기를 최대 {MAX_LINKS}개까지 등록할 수
-          있습니다. (예: PMS, Keyless, 홈페이지)
-        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {links.length === 0 && !showNew && (

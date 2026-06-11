@@ -66,13 +66,13 @@ async function main() {
     if (!emails || emails.length === 0) continue; // 미매칭 호텔
     const targetEmail = emails[0]!;
     // 이미 그 이메일을 가진 유저가 호텔에 있으면 완료된 것 → 스킵 (멱등)
-    if (us.some((u) => u.em.toLowerCase() === targetEmail.toLowerCase())) {
+    if (us.some((u) => (u.em ?? '').toLowerCase() === targetEmail.toLowerCase())) {
       skipExisting++;
       continue;
     }
     // 더미 보유 유저 중 username 정렬 첫번째 1명에게만 부여
     const dummies = us
-      .filter((u) => u.em.endsWith('@as.local'))
+      .filter((u) => (u.em ?? '').endsWith('@as.local'))
       .sort((a, b) => (a.un ?? '').localeCompare(b.un ?? ''));
     if (dummies.length === 0) { skipNoDummy++; continue; }
     const u = dummies[0]!;

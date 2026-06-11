@@ -181,7 +181,7 @@ export type MappedUserView = {
   id: string;
   name: string;
   username: string | null;
-  email: string;
+  email: string | null;
   role: string;
   isActive: boolean;
 };

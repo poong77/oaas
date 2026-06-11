@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { Plus, Pencil, UserPlus2, X, Check, Loader2 } from 'lucide-react';
+import { Plus, UserPlus2, X, Check, Loader2 } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -22,12 +22,6 @@ import {
   checkUsernameAvailableAction,
 } from '@/app/actions/staff-actions';
 import type { User } from '@/db/schema';
-
-/** 연락처만 등록한 직원의 플레이스홀더 이메일은 화면엔 '-'로. */
-function displayEmail(email: string | null): string {
-  if (!email || email.endsWith('@noemail.oapms.local')) return '-';
-  return email;
-}
 
 /** 이메일/이름에서 로그인 ID 추천값 도출(영문/숫자만). */
 function suggestUsername(seed: string): string {
@@ -281,89 +275,54 @@ export function StaffManager({
           </form>
         )}
 
-        {/* 데스크탑 테이블 */}
-        <div className="hidden overflow-x-auto rounded-md border border-slate-200 dark:border-slate-800 md:block">
-          <table className="w-full text-sm">
+        {/* 직원 리스트 — 한 사람당 한 줄, 길면 말줄임(가로 스크롤 없음). 행 클릭 → 팝업 */}
+        <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-800">
+          <table className="w-full table-fixed text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
               <tr>
-                <th className="px-3 py-2 text-left">이름</th>
-                <th className="px-3 py-2 text-left">ID</th>
-                <th className="px-3 py-2 text-left">직책</th>
-                <th className="px-3 py-2 text-left">이메일</th>
-                <th className="px-3 py-2 text-left">연락처</th>
-                <th className="px-3 py-2 text-left">상태</th>
-                <th className="px-3 py-2 text-right">작업</th>
+                <th className="w-[44%] px-3 py-2 text-left font-medium">이름</th>
+                <th className="w-[36%] px-3 py-2 text-left font-medium">직책</th>
+                <th className="w-[20%] px-3 py-2 text-left font-medium">상태</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {initialStaff.map((s) => (
-                <tr key={s.id} className={s.isActive ? '' : 'opacity-60'}>
-                  <td className="whitespace-nowrap px-3 py-2 font-medium">
-                    {s.name}
-                    {s.id === myUserId && (
-                      <span className="ml-1 text-xs text-brand-600">(나)</span>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-slate-600 dark:text-slate-300">
-                    {s.username ?? '-'}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{s.title ?? '-'}</td>
-                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{displayEmail(s.email)}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{s.phone ?? '-'}</td>
-                  <td className="px-3 py-2">
-                    {s.isActive ? <Badge tone="success">활성</Badge> : <Badge tone="slate">비활성</Badge>}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-right">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setEditing(s)}
-                      disabled={s.id === myUserId}
-                      aria-label="수정"
-                      title="수정"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {initialStaff.map((s) => {
+                const isSelf = s.id === myUserId;
+                return (
+                  <tr
+                    key={s.id}
+                    onClick={isSelf ? undefined : () => setEditing(s)}
+                    className={`${s.isActive ? '' : 'opacity-60'} ${
+                      isSelf
+                        ? ''
+                        : 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <td className="truncate px-3 py-2.5 font-medium">
+                      {s.name}
+                      {isSelf && (
+                        <span className="ml-1 text-xs text-brand-600">(나)</span>
+                      )}
+                    </td>
+                    <td className="truncate px-3 py-2.5 text-slate-600 dark:text-slate-300">
+                      {s.title ?? '-'}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {s.isActive ? (
+                        <Badge tone="success">활성</Badge>
+                      ) : (
+                        <Badge tone="slate">비활성</Badge>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-
-        {/* 모바일 카드뷰 */}
-        <div className="flex flex-col gap-2 md:hidden">
-          {initialStaff.map((s) => (
-            <div
-              key={s.id}
-              className={`rounded-md border border-slate-200 p-3 dark:border-slate-800 ${s.isActive ? '' : 'opacity-60'}`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="text-sm font-semibold">
-                    {s.name}
-                    {s.id === myUserId && (
-                      <span className="ml-1 text-xs text-brand-600">(나)</span>
-                    )}
-                  </div>
-                  <div className="font-mono text-xs text-slate-500">ID {s.username ?? '-'}</div>
-                  <div className="text-xs text-slate-500">{s.title ?? '-'}</div>
-                </div>
-                {s.isActive ? <Badge tone="success">활성</Badge> : <Badge tone="slate">비활성</Badge>}
-              </div>
-              <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
-                <div>{displayEmail(s.email)}</div>
-                <div>{s.phone ?? '-'}</div>
-              </div>
-              <div className="mt-2 flex gap-1">
-                <Button type="button" size="sm" variant="outline" onClick={() => setEditing(s)} disabled={s.id === myUserId} className="flex-1">
-                  <Pencil className="h-3.5 w-3.5" />수정
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="text-xs text-slate-400">
+          직원을 누르면 상세 정보 조회·수정 및 활성화 여부를 변경할 수 있습니다.
+        </p>
       </CardContent>
 
       {/* 수정 모달 */}

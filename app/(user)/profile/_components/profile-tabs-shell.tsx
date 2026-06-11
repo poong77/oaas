@@ -3,22 +3,23 @@
 /**
  * ProfileTabsShell — 마이페이지 좌측 탭 내비 셸 (시안 스타일, 2026-06-10).
  *
- * 탭: 내 정보 / 비밀번호 변경 / 직원 관리.
- * 각 탭 콘텐츠(실제 폼)는 서버에서 렌더해 ReactNode로 주입받는다.
- * 전역 RoleScope 크롬 안에서 brand-* 토큰 사용.
+ * 탭 구성은 page.tsx에서 배열로 주입한다(탭 유지 + 메뉴 추가 정책, 2026-06-11):
+ *   내 정보 / 비밀번호 변경 / 호텔 & 솔루션 / 직원 목록 / 변경이력
+ * 마지막 탭(변경이력)은 데스크톱에서 하단으로 밀어 배치(footer 영역).
  */
 
 import { useState } from 'react';
-import { User, KeyRound, Users } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-type Tab = 'profile' | 'password' | 'staff';
-
-const NAV: { key: Tab; label: string; Icon: typeof User }[] = [
-  { key: 'profile', label: '내 정보', Icon: User },
-  { key: 'password', label: '비밀번호 변경', Icon: KeyRound },
-  { key: 'staff', label: '직원 관리', Icon: Users },
-];
+export type ProfileTab = {
+  key: string;
+  label: string;
+  Icon: LucideIcon;
+  node: ReactNode;
+  /** true면 데스크톱 세로 내비에서 하단(footer)으로 분리 배치 */
+  footer?: boolean;
+};
 
 type UserCard = {
   name: string;
@@ -30,29 +31,43 @@ type UserCard = {
 
 export function ProfileTabsShell({
   user,
-  profile,
-  password,
-  staff,
+  tabs,
 }: {
   user: UserCard;
-  profile: ReactNode;
-  password: ReactNode;
-  staff: ReactNode;
+  tabs: ProfileTab[];
 }) {
-  const [tab, setTab] = useState<Tab>('profile');
+  const [active, setActive] = useState(tabs[0]?.key ?? '');
 
   const subline = [user.hotelName, user.title].filter(Boolean).join(' · ');
+  const mainTabs = tabs.filter((t) => !t.footer);
+  const footerTabs = tabs.filter((t) => t.footer);
+
+  function NavButton({ tab }: { tab: ProfileTab }) {
+    const isActive = tab.key === active;
+    const { Icon } = tab;
+    return (
+      <button
+        type="button"
+        onClick={() => setActive(tab.key)}
+        className={`flex shrink-0 items-center gap-2.5 rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors ${
+          isActive
+            ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300'
+            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+        }`}
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        {tab.label}
+      </button>
+    );
+  }
 
   return (
     <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
       {/* 좌측: 사용자 카드 + 탭 내비 */}
       <aside className="flex flex-col gap-4">
-        {/* 사용자 요약 카드 */}
         <div className="rounded-xl bg-slate-200/70 px-4 py-3.5 dark:bg-slate-800">
           {subline && (
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {subline}
-            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{subline}</p>
           )}
           <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">
             {user.name || '이름 미등록'}
@@ -64,34 +79,33 @@ export function ProfileTabsShell({
         </div>
 
         <nav className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-0.5">
-          {NAV.map(({ key, label, Icon }) => {
-            const active = key === tab;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setTab(key)}
-                className={`flex shrink-0 items-center gap-2.5 rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors ${
-                  active
-                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
-                }`}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                {label}
-              </button>
-            );
-          })}
+          {mainTabs.map((tab) => (
+            <NavButton key={tab.key} tab={tab} />
+          ))}
+          {footerTabs.length > 0 && (
+            <>
+              {/* 데스크톱에서만 하단 분리 (모바일은 가로 스크롤로 이어붙임) */}
+              <div className="hidden lg:mt-2 lg:block lg:border-t lg:border-slate-200 lg:pt-2 lg:dark:border-slate-800" />
+              {footerTabs.map((tab) => (
+                <NavButton key={tab.key} tab={tab} />
+              ))}
+            </>
+          )}
         </nav>
       </aside>
 
       {/* 콘텐츠 */}
       <div className="min-w-0">
-        <div className={tab === 'profile' ? 'flex flex-col gap-6' : 'hidden'}>
-          {profile}
-        </div>
-        <div className={tab === 'password' ? 'block' : 'hidden'}>{password}</div>
-        <div className={tab === 'staff' ? 'block' : 'hidden'}>{staff}</div>
+        {tabs.map((tab) => (
+          <div
+            key={tab.key}
+            className={
+              tab.key === active ? 'flex flex-col gap-6' : 'hidden'
+            }
+          >
+            {tab.node}
+          </div>
+        ))}
       </div>
     </div>
   );

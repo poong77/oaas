@@ -352,7 +352,7 @@ export async function getHotelById(id: string): Promise<Hotel | null> {
 // 솔루션 링크 (AC-02)
 // ─────────────────────────────────────────────────────────────────────
 
-export const MAX_SOLUTION_LINKS_PER_HOTEL = 5;
+export const MAX_SOLUTION_LINKS_PER_HOTEL = 50;
 
 export async function listSolutionLinksByHotel(hotelId: string) {
   if (!db) return [];

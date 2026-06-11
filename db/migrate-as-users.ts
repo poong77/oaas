@@ -82,7 +82,9 @@ async function main() {
   const existingUsernames = new Set(
     existing.map((e) => e.username).filter(Boolean) as string[],
   );
-  const usedEmails = new Set(existing.map((e) => e.email.toLowerCase()));
+  const usedEmails = new Set(
+    existing.map((e) => (e.email ?? '').toLowerCase()).filter(Boolean),
+  );
 
   const before = await db.execute<{ n: number }>(
     sql`SELECT count(*)::int AS n FROM users`,

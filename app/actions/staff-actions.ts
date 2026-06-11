@@ -149,8 +149,8 @@ export async function createStaffAction(
       };
     }
 
-    // email 컬럼은 NOT NULL — 이메일 미입력(연락처만)이면 비발송용 플레이스홀더 저장.
-    const emailToStore = realEmail ?? `${username}@noemail.oapms.local`;
+    // 이메일 미입력(연락처만)이면 NULL 저장. 더미 플레이스홀더 생성 금지.
+    const emailToStore = realEmail;
 
     const tempPassword = generateTempPassword();
     const passwordHash = await hashPassword(tempPassword);

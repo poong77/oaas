@@ -125,14 +125,10 @@ export const createUserAdminAction = withAuthorizedAction<
     };
   }
 
-  // 이메일 결정: 입력값(실이메일) 우선 → 없으면 아이디 기반.
+  // 이메일은 선택값. 미입력 시 NULL 저장(더미 @as.local 자동생성 금지).
   const rawEmail = (parsed.data.email ?? '').trim().toLowerCase();
   const hasRealEmail = !!rawEmail;
-  const email = hasRealEmail
-    ? rawEmail
-    : username.includes('@')
-      ? username.toLowerCase()
-      : `${username.toLowerCase()}@as.local`;
+  const email = hasRealEmail ? rawEmail : null;
 
   try {
     const tempPassword = DEFAULT_INITIAL_PASSWORD;
@@ -166,13 +162,13 @@ export const createUserAdminAction = withAuthorizedAction<
     const loginUrl = getPublicBaseUrl() + '/login';
     const tpl = buildAccountInvite({
       name: parsed.data.name,
-      email,
+      email: email ?? '',
       tempPassword,
       loginUrl,
       invitedByName: ctx.user.name ?? undefined,
     });
     let emailSent = false;
-    if (hasRealEmail) {
+    if (hasRealEmail && email) {
       const r = await sendEmail({
         to: email,
         subject: tpl.subject,
@@ -428,12 +424,14 @@ export const resetUserPasswordAdminAction = withAuthorizedAction<
       tempPassword,
       loginUrl,
     });
-    const emailResult = await sendEmail({
-      to: rows[0].email,
-      subject: tpl.subject,
-      html: tpl.html,
-      text: tpl.text,
-    });
+    const emailResult = rows[0].email
+      ? await sendEmail({
+          to: rows[0].email,
+          subject: tpl.subject,
+          html: tpl.html,
+          text: tpl.text,
+        })
+      : { ok: false as const, error: 'no email' };
     const smsResult = rows[0].phone
       ? await sendSms({ to: rows[0].phone, text: tpl.sms })
       : { ok: false as const, error: 'no phone' };

@@ -96,12 +96,14 @@ export async function POST(req: Request, ctx: Ctx) {
       tempPassword,
       loginUrl,
     });
-    const emailResult = await sendEmail({
-      to: rows[0].email,
-      subject: tpl.subject,
-      html: tpl.html,
-      text: tpl.text,
-    });
+    const emailResult = rows[0].email
+      ? await sendEmail({
+          to: rows[0].email,
+          subject: tpl.subject,
+          html: tpl.html,
+          text: tpl.text,
+        })
+      : { ok: false as const, error: 'no email' };
     const smsResult = rows[0].phone
       ? await sendSms({ to: rows[0].phone, text: tpl.sms })
       : { ok: false as const, error: 'no phone' };
