@@ -12,7 +12,13 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useTransition,
+  type FormEvent,
+} from 'react';
 import { AlertCircle, Mail, MessageSquare, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { createTicketAction } from '@/app/actions/ticket-actions';
@@ -21,6 +27,12 @@ import {
   AttachmentUploader,
   type UploadedAttachment,
 } from './attachment-uploader';
+import { RichEditor } from '@/components/editor/rich-editor';
+import {
+  SaveIndicator,
+  type SaveStatus,
+} from '@/components/editor/panels/save-indicator';
+import { generateDraftNonce, makeDraftKey } from '@/lib/editor/draft-key';
 import { cn } from '@/lib/utils';
 
 type Option = { code: string; label: string };
@@ -58,6 +70,50 @@ const DEFAULT_PRODUCT = 'etc_general';
 const DEFAULT_ISSUE = 'etc';
 const MAX_CONTENT = 20000;
 
+// 신규 접수는 targetId(UUID)가 없어 nonce 기반 draft를 쓴다.
+// nonce를 localStorage에 고정해 새로고침/실수 이탈 후 재진입 시에도 복구되게 한다.
+const NEW_TICKET_NONCE_LS_KEY = 'ticket-new:nonce';
+const DRAFT_LS_PREFIX = 'editor-draft:';
+
+function readOrCreateNewTicketNonce(): string {
+  if (typeof window === 'undefined') return generateDraftNonce();
+  try {
+    const existing = localStorage.getItem(NEW_TICKET_NONCE_LS_KEY);
+    if (existing && /^[a-zA-Z0-9]{6,24}$/.test(existing)) return existing;
+    const n = generateDraftNonce();
+    localStorage.setItem(NEW_TICKET_NONCE_LS_KEY, n);
+    return n;
+  } catch {
+    return generateDraftNonce();
+  }
+}
+
+/** 발행 성공 후 신규 접수 draft 정리 (localStorage + 서버 + nonce 키). best-effort. */
+async function clearNewTicketDraft(nonce: string): Promise<void> {
+  let key: string;
+  try {
+    key = makeDraftKey('ticket-message', null, nonce);
+  } catch {
+    return;
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(`${DRAFT_LS_PREFIX}${key}`);
+      localStorage.removeItem(NEW_TICKET_NONCE_LS_KEY);
+    } catch {
+      /* noop */
+    }
+  }
+  try {
+    await fetch(`/api/drafts?key=${encodeURIComponent(key)}`, {
+      method: 'DELETE',
+      cache: 'no-store',
+    });
+  } catch {
+    /* noop — 30일 cron으로 정리됨 */
+  }
+}
+
 export function TicketCreateForm(props: TicketCreateFormProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -65,6 +121,18 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   // 접수 성공 시 안내 팝업 노출 (시안 반영). 닫으면 내 문의 목록으로.
   const [submitted, setSubmitted] = useState(false);
+
+  // 작성 중 자동저장 상태
+  const [draftNonce] = useState(readOrCreateNewTicketNonce);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const handleAutosaveStatus = useCallback(
+    (status: SaveStatus, lastSavedAt: number | null) => {
+      setSaveStatus(status);
+      setSavedAt(lastSavedAt);
+    },
+    [],
+  );
 
   // 대분류 칩 목록 (실데이터)
   const products: Option[] = props.productTree.map((n) => ({
@@ -143,6 +211,8 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
     if (title.trim().length < 2) errs.title = '제목을 2자 이상 입력하세요';
     if (content.trim().length < 10)
       errs.content = '내용을 10자 이상 자세히 적어주세요';
+    else if (content.trim().length > MAX_CONTENT)
+      errs.content = `내용이 너무 깁니다 (최대 ${MAX_CONTENT.toLocaleString()}자)`;
     if (contactMethods.length === 0)
       errs.contactMethods = '최소 한 가지 연락수단을 선택하세요';
     if (Object.keys(errs).length > 0) {
@@ -177,6 +247,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
         return;
       }
       if (result.ticketId) {
+        void clearNewTicketDraft(draftNonce);
         setSubmitted(true);
       }
     });
@@ -287,12 +358,19 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
               </div>
             )}
           </div>
-          <textarea
+          <RichEditor
+            mode="lite"
             value={content}
-            onChange={(e) => setContent(e.target.value.slice(0, MAX_CONTENT))}
+            onChange={setContent}
             disabled={busy}
+            minHeight={300}
             placeholder="언제부터 발생했나요? 재현 단계, 기대 결과, 시도해본 조치를 적어주세요."
-            className="h-[320px] w-full resize-none rounded-lg border border-slate-300 bg-white p-4 text-base leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+            autoSave={{
+              scope: 'ticket-message',
+              targetId: null,
+              nonce: draftNonce,
+            }}
+            onAutosaveStatusChange={handleAutosaveStatus}
           />
           <div className="flex items-center justify-between">
             {fieldErrors.content ? (
@@ -302,9 +380,13 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
                 발생 시각·재현 단계·기대 결과를 적어주시면 처리가 빨라집니다.
               </span>
             )}
-            <span className="text-sm text-slate-400">
-              {content.length.toLocaleString()} / {MAX_CONTENT.toLocaleString()}
-            </span>
+            <div className="flex items-center gap-3">
+              <SaveIndicator status={saveStatus} lastSavedAt={savedAt} />
+              <span className="text-sm text-slate-400">
+                {content.length.toLocaleString()} /{' '}
+                {MAX_CONTENT.toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
 

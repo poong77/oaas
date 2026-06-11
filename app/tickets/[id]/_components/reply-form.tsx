@@ -91,7 +91,7 @@ export function ReplyForm({ ticketId }: { ticketId: string }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
       <RichEditor
-        mode="full"
+        mode="lite"
         value={content}
         onChange={setContent}
         minHeight={180}
