@@ -18,8 +18,7 @@ interface SaveIndicatorProps {
 
 function formatRelativeTime(ms: number): string {
   const diffSec = Math.floor((Date.now() - ms) / 1000);
-  if (diffSec < 5) return '방금 전';
-  if (diffSec < 60) return `${diffSec}초 전`;
+  if (diffSec < 60) return '방금 전';
   const min = Math.floor(diffSec / 60);
   if (min < 60) return `${min}분 전`;
   const hr = Math.floor(min / 60);

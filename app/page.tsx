@@ -13,19 +13,54 @@
  * DB 호출이 있으므로 force-dynamic.
  */
 
-import { getProductCategories } from '@/lib/services/categories';
+import {
+  getProductCategories,
+  getCategoriesByType,
+} from '@/lib/services/categories';
 import { listActiveRoleStarters } from '@/lib/services/master-role-starters';
 import { resolvePopularKeywords } from '@/lib/services/master-popular-keywords';
 import {
   listActivePopupNotices,
   listRecentPublishedNotices,
 } from '@/lib/services/notices';
+import { listTickets } from '@/lib/services/tickets';
+import type { TicketStatus, UserRole } from '@/db/schema';
 import { getCurrentUser, isManagerOrAdmin } from '@/lib/permissions';
 import { HomePopupBanner } from '@/components/notices/home-popup-banner';
 import { HomeHero } from './_components/home/home-hero';
 import { CategoryTabs } from './_components/home/category-tabs';
 import { HomeNoticeList } from './_components/home/home-notice-list';
 import { HomeHelpCta } from './_components/home/home-help-cta';
+import { HomeMyTickets } from './_components/home/home-my-tickets';
+
+/** 로그인 사용자의 '내 문의' 데이터(상태 요약 + 최근 5건). */
+async function loadMyTickets(user: {
+  id: string;
+  role: UserRole;
+  hotelId: string | null;
+}) {
+  const filter =
+    user.role === 'hotelier' && user.hotelId
+      ? { hotelId: user.hotelId }
+      : { reporterId: user.id };
+  const viewer = { id: user.id, role: user.role, hotelId: user.hotelId };
+  const [recent, rc, ip, cp, productCats, issueCats] = await Promise.all([
+    listTickets({ ...filter, sortBy: 'created_at', sortOrder: 'desc', pageSize: 5 }, viewer),
+    listTickets({ ...filter, status: 'received', pageSize: 5 }, viewer),
+    listTickets({ ...filter, status: 'in_progress', pageSize: 5 }, viewer),
+    listTickets({ ...filter, status: 'completed', pageSize: 5 }, viewer),
+    getCategoriesByType('product'),
+    getCategoriesByType('issue_type'),
+  ]);
+  const counts = {
+    received: rc.total,
+    in_progress: ip.total,
+    completed: cp.total,
+  } as Record<TicketStatus, number>;
+  const productMap = Object.fromEntries(productCats.map((c) => [c.code, c.label]));
+  const issueMap = Object.fromEntries(issueCats.map((c) => [c.code, c.label]));
+  return { counts, items: recent.items, productMap, issueMap };
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -53,12 +88,30 @@ export default async function HomePage() {
   ]);
   const canManageKeywords = !!currentUser && isManagerOrAdmin(currentUser.role);
 
+  // 로그인 사용자 — 내 문의 섹션 데이터
+  const myTickets = currentUser
+    ? await loadMyTickets({
+        id: currentUser.id,
+        role: currentUser.role,
+        hotelId: currentUser.hotelId ?? null,
+      })
+    : null;
+
   return (
     <>
       <HomePopupBanner notices={popupNotices} />
       <HomeHero keywords={keywords} canManage={canManageKeywords} />
       <CategoryTabs categories={categories} roles={roleStarters} />
-      <HomeHelpCta />
+      {myTickets && (
+        <HomeMyTickets
+          counts={myTickets.counts}
+          items={myTickets.items}
+          productMap={myTickets.productMap}
+          issueMap={myTickets.issueMap}
+        />
+      )}
+      {/* 도움말 CTA 배너는 비로그인 사용자에게만 노출 (로그인 시 '내 문의'로 대체) */}
+      {!currentUser && <HomeHelpCta />}
       <HomeNoticeList items={recentNotices} />
     </>
   );

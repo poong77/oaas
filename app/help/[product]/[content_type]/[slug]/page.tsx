@@ -18,14 +18,7 @@
 
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
-import {
-  ArrowLeft,
-  CalendarDays,
-  Eye,
-  Pencil,
-  ThumbsUp,
-  User as UserIcon,
-} from 'lucide-react';
+import { ArrowLeft, MessageCircle, Pencil, ThumbsUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,7 +34,6 @@ import {
 } from '@/lib/services/articles';
 import { getCurrentUser } from '@/lib/permissions';
 import { getProductCategories } from '@/lib/services/categories';
-import { formatDateKst } from '@/lib/business-hours/format';
 import { CONTENT_TYPE_LABEL } from '@/lib/articles/zod-schemas';
 import type { ArticleContentType } from '@/db/schema';
 
@@ -146,9 +138,7 @@ export default async function HelpArticlePage({
         </Link>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="brand" className="uppercase">
-            {productLabel}
-          </Badge>
+          {/* 의도(콘텐츠 유형) 칩을 가장 좌측에 */}
           <Badge
             tone={
               article.contentType === 'howto'
@@ -160,11 +150,12 @@ export default async function HelpArticlePage({
           >
             {CONTENT_TYPE_LABEL[article.contentType]}
           </Badge>
-          {article.categoryPath?.map((seg, i) => (
-            <Badge key={`${seg}-${i}`} tone="slate">
-              {seg}
-            </Badge>
-          ))}
+          {/* 카테고리 대분류 > 중분류 > 소분류 */}
+          {article.categoryPath && article.categoryPath.length > 0 && (
+            <span className="text-sm text-slate-500 dark:text-slate-400">
+              {article.categoryPath.join(' > ')}
+            </span>
+          )}
           {article.status !== 'published' && (
             <Badge tone="warn">DRAFT (미리보기)</Badge>
           )}
@@ -175,30 +166,15 @@ export default async function HelpArticlePage({
           {article.title}
         </h1>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-          {article.publishedAt && (
-            <span className="inline-flex items-center gap-1">
-              <CalendarDays className="h-3 w-3" />
-              {formatDateKst(article.publishedAt)} 발행
-            </span>
-          )}
-          {article.authorName && (
-            <span className="inline-flex items-center gap-1">
-              <UserIcon className="h-3 w-3" />
-              {article.authorName}
-            </span>
-          )}
-          <span className="inline-flex items-center gap-1">
-            <Eye className="h-3 w-3" />
-            조회 {article.viewCount.toLocaleString()}
-          </span>
-          {helpfulPct !== null && (
+        {/* 발행일·작성자·조회수는 노출하지 않음 (도움됨 비율만 표시) */}
+        {helpfulPct !== null && (
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
             <span className="inline-flex items-center gap-1">
               <ThumbsUp className="h-3 w-3" />
               도움됨 {helpfulPct}% ({helpfulTotal}명)
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <ArticleShareBar title={article.title} />
@@ -291,7 +267,16 @@ export default async function HelpArticlePage({
           )}
         </article>
 
-        <ArticleToc toc={article.toc ?? []} variant="sidebar" />
+        <aside className="hidden flex-col gap-3 lg:flex">
+          <ArticleToc toc={article.toc ?? []} variant="sidebar" />
+          {/* 목차 아래 문의하기 버튼 */}
+          <Button asChild className="w-full">
+            <Link href="/tickets/new">
+              <MessageCircle className="h-4 w-4" />
+              문의하기
+            </Link>
+          </Button>
+        </aside>
       </div>
     </div>
   );

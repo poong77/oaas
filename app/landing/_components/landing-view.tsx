@@ -246,12 +246,12 @@ export function LandingView() {
             <div className="flex flex-col gap-3 rounded-lg bg-white p-6 lg:flex-[1.6]">
               <span className="text-base font-semibold text-[#1A1C20]">고객센터</span>
               <span className="text-2xl font-bold text-[#00A36B]">1833-4702</span>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#1A1C20]">
-                <span><b className="font-semibold">1번</b> 시스템 사용 문의</span>
+              <div className="flex flex-nowrap items-center gap-x-2 whitespace-nowrap text-sm text-[#1A1C20]">
+                <span><b className="font-semibold">1번</b> 사용 문의</span>
                 <span className="text-[#868B94]">·</span>
                 <span><b className="font-semibold">2번</b> 도입 상담</span>
                 <span className="text-[#868B94]">·</span>
-                <span><b className="font-semibold">3번</b> 경영·회계 기타</span>
+                <span><b className="font-semibold">3번</b> 회계/기타</span>
               </div>
             </div>
 
@@ -298,12 +298,14 @@ export function LandingView() {
                 원활한 문제 해결이 필요하신가요? 파트너의 안내에 따라 원격지원 연결하기 버튼을 눌러주세요.
               </p>
             </div>
-            <button
-              type="button"
+            <a
+              href="https://939.co.kr/oatech/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="shrink-0 rounded-lg bg-[#E6F7F0] px-5 py-2.5 text-sm font-medium text-[#00A36B] transition-colors hover:bg-[#d2f0e4]"
             >
               원격지원 연결하기
-            </button>
+            </a>
           </div>
         </div>
       </section>

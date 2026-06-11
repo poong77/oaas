@@ -52,7 +52,7 @@ export function ArticleShareBar({ title }: { title: string }) {
     <div className="flex flex-wrap items-center gap-2 print:hidden">
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={() => window.print()}
         title="인쇄"
@@ -62,7 +62,7 @@ export function ArticleShareBar({ title }: { title: string }) {
       </Button>
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={handleShare}
         disabled={pending}

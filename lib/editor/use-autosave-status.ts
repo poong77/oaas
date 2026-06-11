@@ -106,8 +106,7 @@ export function useAutosaveStatus(
 export function formatRelative(date: Date | null, now: Date = new Date()): string {
   if (!date) return '아직 저장되지 않음';
   const diff = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
-  if (diff < 3) return '방금 전 저장됨';
-  if (diff < 60) return `${diff}초 전 저장됨`;
+  if (diff < 60) return '방금 전 저장됨';
   if (diff < 3600) return `${Math.floor(diff / 60)}분 전 저장됨`;
   return `${Math.floor(diff / 3600)}시간 전 저장됨`;
 }

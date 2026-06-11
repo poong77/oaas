@@ -124,10 +124,20 @@ export default async function HelpProductPage({
         }
       />
 
-      <ProductFilters initial={sp} productCode={current.code} />
+      {/* 상단: 정렬만 (검색창은 좌측 사이드바로 이동) + 모바일 검색 */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="lg:hidden">
+          <ProductFilters initial={sp} productCode={current.code} only="search" />
+        </div>
+        <div className="sm:ml-auto">
+          <ProductFilters initial={sp} productCode={current.code} only="sort" />
+        </div>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         <aside className="hidden flex-col gap-4 lg:flex">
+          {/* 카테고리 박스 바로 위 — 제품 내 검색 */}
+          <ProductFilters initial={sp} productCode={current.code} only="search" />
           {/* B1 — menu_taxonomies 트리 사이드바 (좌측) */}
           <MenuTreeSidebar
             productCode={current.code}

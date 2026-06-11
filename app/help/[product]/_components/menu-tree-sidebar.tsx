@@ -176,7 +176,7 @@ function TreeList({
               <button
                 type="button"
                 onClick={() => onSelect(myPath)}
-                className={`flex flex-1 items-center gap-1 text-left text-xs ${
+                className={`flex min-w-0 flex-1 items-center gap-1 text-left text-xs ${
                   isSelected
                     ? 'font-semibold text-brand-700 dark:text-brand-300'
                     : 'text-slate-700 dark:text-slate-200'
@@ -201,7 +201,9 @@ function TreeList({
                 ) : (
                   <span className="inline-block h-4 w-4" />
                 )}
-                <span className="truncate">{n.label}</span>
+                <span className="min-w-0 flex-1 truncate" title={n.label}>
+                  {n.label}
+                </span>
               </button>
               <span className="ml-1 text-[10px] text-slate-400 tabular-nums">
                 {count > 0 ? count : ''}

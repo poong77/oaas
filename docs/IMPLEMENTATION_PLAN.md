@@ -830,3 +830,29 @@ created_at, is_active
 | 6 | Slack Webhook URL 3개 | Phase 5 | `#as-new`, `#as-urgent`, `#dev-escalation` |
 | 7 | oachat.ai 임베드 URL 및 인증 방식 | Phase 8 | 외부 도구 연동 |
 | 8 | Neon 프로젝트/브랜치 분리 정책 (dev/preview/prod) | Phase 0 | Vercel preview마다 별도 브랜치? |
+
+---
+
+## 부록 — 마스터 아이콘 이미지 업로드 (2026-06-10)
+
+> 제품분류 **대분류**와 **역할별 시작**에 lucide 아이콘명 외에 **이미지 아이콘 업로드** 지원.
+> 업로드 이미지가 있으면 프론트(홈 `제품으로 찾기`·`역할로 찾기`)에서 lucide보다 우선 표시.
+
+### 스키마 변경
+- `categories.icon_image_url text` (멱등 DDL `ADD COLUMN IF NOT EXISTS`)
+- `role_starters.icon_image_url text`
+- 마이그레이션: 운영DB migrate 불가 원칙 → `db/add-master-icon-columns.ts` 일회성 멱등 스크립트(`npx tsx`).
+
+### 업로드/표시 경로
+- 업로드: `POST /api/upload` `purpose=master-icon` → S3 키 `…/master-icons/{userId}/{uniq}-{name}` (이미지 전용).
+- 표시: 버킷 비공개 + 홈 공개경로 → **공개 프록시** `GET /api/files/master-icon?key=…` (인증 없음, `master-icons/` prefix만, 장기 캐시).
+- 권장 규격: **정사각형 PNG(투명배경) 128×128px 이상, 1MB 이하**.
+
+### 영향 파일
+- schema: `db/schema/categories.ts`, `db/schema/role-starters.ts`
+- s3: `lib/s3.ts` (`isMasterIconKey`/`buildMasterIconProxyUrl`)
+- api: `app/api/upload/route.ts`, `app/api/files/master-icon/route.ts`(신규)
+- service: `lib/services/master-categories.ts`, `master-role-starters.ts`, `categories.ts`(ProductCategoryView)
+- action/schema: `app/actions/master-actions.ts`
+- admin UI: `master/categories`·`role-starters` 편집 폼 + 공용 `MasterIconUpload`
+- front: `app/_components/home/category-grid.tsx`, `role-starters.tsx`

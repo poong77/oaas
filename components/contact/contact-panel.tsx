@@ -368,28 +368,26 @@ function FooterPanel({
           </div>
         </div>
 
-        {/* PC 원격 연결 서비스 */}
-        {contact.websiteUrl && (
-          <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <Monitor className="h-5 w-5 text-brand-600 dark:text-brand-400" />
-                <span className="text-base font-semibold">PC 원격 연결 서비스</span>
-              </div>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                원활한 문제 해결이 필요하신가요? 파트너의 안내에 따라 원격지원 연결하기 버튼을 눌러주세요.
-              </p>
+        {/* PC 원격 연결 서비스 — 원격지원 아웃링크(고정) */}
+        <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Monitor className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+              <span className="text-base font-semibold">PC 원격 연결 서비스</span>
             </div>
-            <a
-              href={contact.websiteUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="shrink-0 rounded-lg bg-brand-50 px-5 py-2.5 text-sm font-medium text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-300 dark:hover:bg-brand-900/50"
-            >
-              원격지원 연결하기
-            </a>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              원활한 문제 해결이 필요하신가요? 파트너의 안내에 따라 원격지원 연결하기 버튼을 눌러주세요.
+            </p>
           </div>
-        )}
+          <a
+            href="https://939.co.kr/oatech/"
+            target="_blank"
+            rel="noreferrer"
+            className="shrink-0 rounded-lg bg-brand-50 px-5 py-2.5 text-sm font-medium text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-300 dark:hover:bg-brand-900/50"
+          >
+            원격지원 연결하기
+          </a>
+        </div>
       </div>
     </section>
   );
