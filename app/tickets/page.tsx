@@ -1,31 +1,36 @@
 /**
- * `/tickets` — 내 문의 목록 (Phase 5 IS-01).
+ * `/tickets` — 내 문의 목록 (Phase 5 IS-01, 시안 반영).
  *
  * 호텔리어: 본인 reporter_id OR 같은 hotel_id 티켓.
  * 매니저+어드민: 본인 reporter_id 티켓만 (전체 큐는 `/admin/tickets`).
  *
- * 필터: status (탭), productCode, sortOrder
+ * 필터: status(탭, 프로덕션 3종), productCode(대분류), sortOrder, q(검색), pageSize(10/30/50)
  */
 
 import Link from 'next/link';
-import { FilePlus2 } from 'lucide-react';
-import { PageHeader } from '@/components/ui/page-header';
-import { Button } from '@/components/ui/button';
 import { requireAuth } from '@/lib/permissions';
 import { listTickets } from '@/lib/services/tickets';
-import { getCategoriesByType } from '@/lib/services/categories';
+import {
+  getProductCategories,
+  getCategoriesByType,
+} from '@/lib/services/categories';
 import type { TicketStatus } from '@/db/schema';
 import { MyTicketsList } from './_components/my-tickets-list';
 import { MyTicketsFilters } from './_components/my-tickets-filters';
+import { MyTicketsPageSize } from './_components/my-tickets-page-size';
 
-export const metadata = { title: '내 문의 — OA서포트' };
+export const metadata = { title: '문의 내역 — OA서포트' };
 export const dynamic = 'force-dynamic';
+
+const PAGE_SIZES = [10, 30, 50];
 
 type SearchParams = Promise<{
   status?: string;
   productCode?: string;
   sortOrder?: 'asc' | 'desc';
+  q?: string;
   page?: string;
+  pageSize?: string;
 }>;
 
 export default async function MyTicketsPage({
@@ -45,14 +50,15 @@ export default async function MyTicketsPage({
       ? (statusRaw as TicketStatus | 'all')
       : 'all';
 
-  const sortOrder: 'asc' | 'desc' =
-    params.sortOrder === 'asc' ? 'asc' : 'desc';
+  const sortOrder: 'asc' | 'desc' = params.sortOrder === 'asc' ? 'asc' : 'desc';
   const productCode = params.productCode || null;
+  const q = params.q?.trim() || '';
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
+  const pageSize = PAGE_SIZES.includes(Number(params.pageSize))
+    ? Number(params.pageSize)
+    : 10;
 
   // 호텔리어: 같은 호텔까지 모두. 매니저·어드민: 본인 접수만.
-  // listTickets는 reporterId/hotelId OR 조건을 직접 지원하지 않으므로 호텔리어는 hotelId만 사용.
-  // (본인 접수는 자동 포함됨 — 같은 호텔이니까. 호텔 미매핑 호텔리어는 reporter_id로 조회.)
   const filter =
     user.role === 'hotelier'
       ? user.hotelId
@@ -60,99 +66,107 @@ export default async function MyTicketsPage({
         : { reporterId: user.id }
       : { reporterId: user.id };
 
-  const [productCategories, ticketsResult] = await Promise.all([
+  // 필터 드롭다운은 대분류(roots)만. 라벨 해석은 전체 product 맵 사용.
+  const [productRoots, allProducts, ticketsResult] = await Promise.all([
+    getProductCategories(),
     getCategoriesByType('product'),
     listTickets(
       {
         ...filter,
         status,
         productCode: productCode ?? undefined,
+        q: q || undefined,
         sortOrder,
         sortBy: 'created_at',
         page,
-        pageSize: 20,
+        pageSize,
       },
       { id: user.id, role: user.role, hotelId: user.hotelId },
     ),
   ]);
 
-  const [issueTypeCategories, urgencyCategories] = await Promise.all([
-    getCategoriesByType('issue_type'),
-    getCategoriesByType('urgency'),
-  ]);
+  const issueTypeCategories = await getCategoriesByType('issue_type');
   const productMap: Record<string, string> = Object.fromEntries(
-    productCategories.map((c) => [c.code, c.label]),
+    allProducts.map((c) => [c.code, c.label]),
   );
   const issueTypeMap: Record<string, string> = Object.fromEntries(
     issueTypeCategories.map((c) => [c.code, c.label]),
   );
-  const urgencyMap: Record<string, string> = Object.fromEntries(
-    urgencyCategories.map((c) => [c.code, c.label]),
-  );
 
   const total = ticketsResult.total;
-  const pageSize = ticketsResult.pageSize;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const effPageSize = ticketsResult.pageSize;
+  const totalPages = Math.max(1, Math.ceil(total / effPageSize));
+
+  const buildHref = (p: number) => {
+    const sp = new URLSearchParams();
+    if (status !== 'all') sp.set('status', status);
+    if (productCode) sp.set('productCode', productCode);
+    if (sortOrder !== 'desc') sp.set('sortOrder', sortOrder);
+    if (q) sp.set('q', q);
+    if (pageSize !== 10) sp.set('pageSize', String(pageSize));
+    sp.set('page', String(p));
+    return `/tickets?${sp.toString()}`;
+  };
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <PageHeader
-        title="내 문의"
-        description={
-          user.role === 'hotelier' && user.hotelId
-            ? '본인과 같은 호텔에서 접수된 문의 전체를 확인할 수 있습니다.'
-            : '본인이 접수한 문의의 처리 상태와 답변을 확인합니다.'
-        }
-        actions={
-          <Button asChild size="sm">
-            <Link href="/tickets/new">
-              <FilePlus2 className="h-4 w-4" />
-              신규 접수
-            </Link>
-          </Button>
-        }
-      />
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-[#1A1C20] dark:text-white">
+          문의 내역
+        </h1>
+        <Link
+          href="/tickets/new"
+          className="rounded-lg bg-[#00A36B] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#008A59]"
+        >
+          문의하기
+        </Link>
+      </div>
 
       <MyTicketsFilters
         status={status}
         sortOrder={sortOrder}
         productCode={productCode}
-        products={productCategories.map((c) => ({ code: c.code, label: c.label }))}
+        q={q}
+        products={productRoots.map((c) => ({ code: c.code, label: c.label }))}
       />
 
       <MyTicketsList
         items={ticketsResult.items}
         productMap={productMap}
         issueTypeMap={issueTypeMap}
-        urgencyMap={urgencyMap}
       />
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 text-sm">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
-            const sp = new URLSearchParams();
-            if (status !== 'all') sp.set('status', status);
-            if (productCode) sp.set('productCode', productCode);
-            if (sortOrder !== 'desc') sp.set('sortOrder', sortOrder);
-            sp.set('page', String(p));
-            const href = `/tickets?${sp.toString()}`;
-            const active = p === page;
-            return (
-              <Link
-                key={p}
-                href={href}
-                className={
-                  active
-                    ? 'inline-flex h-8 w-8 items-center justify-center rounded-md bg-brand-600 text-white'
-                    : 'inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
-                }
-              >
-                {p}
-              </Link>
-            );
-          })}
+      {/* 페이지네이션 + 보기 옵션 */}
+      <div className="mt-2 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+        <div className="hidden sm:block">
+          <MyTicketsPageSize pageSize={effPageSize} />
         </div>
-      )}
+        {totalPages > 1 ? (
+          <div className="flex items-center justify-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+              const active = p === page;
+              return (
+                <Link
+                  key={p}
+                  href={buildHref(p)}
+                  className={`flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                    active
+                      ? 'bg-[#1A1C20] text-white'
+                      : 'text-[#555D6D] hover:bg-[#F3F4F5] dark:text-slate-300 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {p}
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div />
+        )}
+        <div className="sm:hidden">
+          <MyTicketsPageSize pageSize={effPageSize} />
+        </div>
+      </div>
     </div>
   );
 }

@@ -63,6 +63,8 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // 접수 성공 시 안내 팝업 노출 (시안 반영). 닫으면 내 문의 목록으로.
+  const [submitted, setSubmitted] = useState(false);
 
   // 대분류 칩 목록 (실데이터)
   const products: Option[] = props.productTree.map((n) => ({
@@ -175,8 +177,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
         return;
       }
       if (result.ticketId) {
-        router.push(`/tickets/${result.ticketId}?created=1`);
-        router.refresh();
+        setSubmitted(true);
       }
     });
   }
@@ -188,6 +189,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
     'flex items-center gap-0.5 text-base font-medium text-slate-800 dark:text-slate-100';
 
   return (
+    <>
     <form
       onSubmit={handleSubmit}
       className="mx-auto flex w-full max-w-[820px] flex-col gap-8"
@@ -374,6 +376,45 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
         {pending ? '접수 중...' : '접수하기'}
       </button>
     </form>
+
+    {/* 접수 완료 안내 팝업 (시안 반영) */}
+    {submitted && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+        <div className="flex w-full max-w-[420px] flex-col gap-6 rounded-2xl bg-white p-7 text-center shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] dark:bg-slate-900">
+          <div className="flex flex-col gap-1.5">
+            <h3 className="text-lg font-bold text-[#1A1C20] dark:text-white">
+              문의가 접수되었어요
+            </h3>
+            <p className="text-sm text-[#555D6D] dark:text-slate-300">
+              빠른 시간 내에 답변드리겠습니다.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                router.push('/tickets');
+                router.refresh();
+              }}
+              className="flex-1 rounded-lg bg-[#E6F7F0] py-3 text-sm font-semibold text-[#00A36B] transition-colors hover:bg-[#d6f0e6]"
+            >
+              내 문의 목록
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                router.push('/');
+                router.refresh();
+              }}
+              className="flex-1 rounded-lg bg-[#F3F4F5] py-3 text-sm font-semibold text-[#555D6D] transition-colors hover:bg-[#e9eaec] dark:bg-slate-800 dark:text-slate-200"
+            >
+              홈으로
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

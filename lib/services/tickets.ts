@@ -618,6 +618,8 @@ export type TicketListItem = Pick<
   assigneeName: string | null;
   /** 공개 메시지(=답변) 카운트. */
   messageCount: number;
+  /** 최종 공개 답변(=답변 메시지) 일자. 답변 없으면 null. */
+  answeredAt: Date | null;
 };
 
 export type ListTicketsParams = {
@@ -760,11 +762,13 @@ export async function listTickets(
     // 메시지 카운트 (kind=public만)
     const ids = items.map((it) => it.id);
     const messageCountMap: Record<string, number> = {};
+    const answeredAtMap: Record<string, Date> = {};
     if (ids.length > 0) {
       const rows = await db
         .select({
           ticketId: ticketMessages.ticketId,
           count: sql<number>`count(*)::int`,
+          lastAt: sql<string | null>`max(${ticketMessages.createdAt})`,
         })
         .from(ticketMessages)
         .where(
@@ -775,7 +779,10 @@ export async function listTickets(
           ),
         )
         .groupBy(ticketMessages.ticketId);
-      for (const r of rows) messageCountMap[r.ticketId] = Number(r.count);
+      for (const r of rows) {
+        messageCountMap[r.ticketId] = Number(r.count);
+        if (r.lastAt) answeredAtMap[r.ticketId] = new Date(r.lastAt);
+      }
     }
 
     const totalRows = await db
@@ -790,6 +797,7 @@ export async function listTickets(
         ...it,
         assigneeName: it.assigneeId ? (assigneeMap[it.assigneeId] ?? null) : null,
         messageCount: messageCountMap[it.id] ?? 0,
+        answeredAt: answeredAtMap[it.id] ?? null,
       })),
       total,
       page,

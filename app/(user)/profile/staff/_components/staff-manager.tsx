@@ -206,7 +206,7 @@ export function StaffManager({
             setShowCreate((v) => !v);
             resetCreate();
           }}
-          variant={showCreate ? 'ghost' : 'default'}
+          variant={showCreate ? 'outline' : 'default'}
           size="sm"
         >
           {showCreate ? '닫기' : <><Plus className="h-4 w-4" />직원 추가</>}

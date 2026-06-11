@@ -1,120 +1,142 @@
+/**
+ * MyTicketsList — 내 문의 목록 (시안 반영).
+ *
+ * 데스크톱: 테이블(문의일·처리상태·제목·문의유형·답변일).
+ * 모바일: 카드뷰. 빈 상태: EmptyState.
+ * 상태 pill은 프로덕션 3종(접수/처리중/완료)에 맞춘다.
+ */
+
 import Link from 'next/link';
-import {
-  ChevronRight,
-  Clock,
-  Hash,
-  ListChecks,
-  MessageSquare,
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { ListChecks } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import type { TicketListItem } from '@/lib/services/tickets';
-import { STATUS_LABEL } from '@/lib/services/tickets-meta';
 import type { TicketStatus } from '@/db/schema';
 
-const STATUS_TONE: Record<TicketStatus, 'slate' | 'brand' | 'warn' | 'success'> = {
-  received: 'brand',
-  in_progress: 'warn',
-  completed: 'success',
+const STATUS_META: Record<TicketStatus, { label: string; cls: string }> = {
+  received: { label: '접수', cls: 'border-[#217CF9] bg-[#EFF6FF] text-[#217CF9]' },
+  in_progress: { label: '처리중', cls: 'border-[#8969EA] bg-[#F5F3FE] text-[#8969EA]' },
+  completed: { label: '답변 완료', cls: 'border-[#008A59] bg-[#E6F7F0] text-[#00A36B]' },
 };
+
+function StatusPill({ status }: { status: TicketStatus }) {
+  const m = STATUS_META[status];
+  return (
+    <span
+      className={`inline-flex w-fit shrink-0 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${m.cls}`}
+    >
+      {m.label}
+    </span>
+  );
+}
 
 function fmtDate(d: Date | null): string {
   if (!d) return '-';
-  const date = new Date(d);
-  return date.toLocaleString('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return new Date(d).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
 }
 
 export function MyTicketsList({
   items,
   productMap,
   issueTypeMap,
-  urgencyMap,
 }: {
   items: TicketListItem[];
   productMap: Record<string, string>;
   issueTypeMap: Record<string, string>;
-  urgencyMap: Record<string, string>;
 }) {
   if (items.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <EmptyState
-            icon={<ListChecks className="h-6 w-6" />}
-            title="아직 접수된 문의가 없습니다"
-            description="궁금한 점이나 발생한 문제를 접수하시면 처리 상태와 답변을 이곳에서 확인할 수 있습니다."
-            action={
-              <Button asChild size="sm">
-                <Link href="/tickets/new">신규 문의 접수</Link>
-              </Button>
-            }
-          />
-        </CardContent>
-      </Card>
+      <div className="rounded-xl border border-black/[0.06] bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+        <EmptyState
+          icon={<ListChecks className="h-6 w-6" />}
+          title="아직 접수된 문의가 없습니다"
+          description="궁금한 점이나 발생한 문제를 접수하시면 처리 상태와 답변을 이곳에서 확인할 수 있습니다."
+          action={
+            <Button asChild size="sm">
+              <Link href="/tickets/new">신규 문의 접수</Link>
+            </Button>
+          }
+        />
+      </div>
     );
   }
 
+  const typeLabel = (t: TicketListItem) =>
+    `${productMap[t.productCode] ?? t.productCode}·${issueTypeMap[t.issueType] ?? t.issueType}`;
+
   return (
-    <ul className="flex flex-col gap-3">
-      {items.map((t) => (
-        <li key={t.id}>
-          <Link href={`/tickets/${t.id}`} className="block">
-            <Card className="transition-colors hover:border-brand-300 hover:bg-brand-50/30 dark:hover:border-brand-700 dark:hover:bg-brand-950/20">
-              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4">
-                <div className="flex flex-col gap-1 sm:flex-1">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="inline-flex items-center gap-1 font-mono">
-                      <Hash className="h-3 w-3" />
-                      {t.ticketNo}
-                    </span>
-                    <span>·</span>
-                    <span>{productMap[t.productCode] ?? t.productCode}</span>
-                    <span>·</span>
-                    <span>{issueTypeMap[t.issueType] ?? t.issueType}</span>
-                    {t.urgency === 'p1' && (
-                      <Badge tone="danger">P1 긴급</Badge>
-                    )}
-                  </div>
-                  <div className="text-base font-semibold text-slate-900 dark:text-slate-50">
+    <>
+      {/* 데스크톱 테이블 */}
+      <div className="hidden overflow-hidden rounded-xl border border-black/[0.06] dark:border-slate-800 sm:block">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-black/[0.06] text-sm text-[#868B94] dark:border-slate-800">
+              <th className="px-5 py-3 text-left font-medium">문의일</th>
+              <th className="px-5 py-3 text-left font-medium">처리 상태</th>
+              <th className="px-5 py-3 text-left font-medium">제목</th>
+              <th className="px-5 py-3 text-left font-medium">문의 유형</th>
+              <th className="px-5 py-3 text-right font-medium">답변일</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((t) => (
+              <tr
+                key={t.id}
+                className="border-b border-black/[0.06] text-sm last:border-b-0 dark:border-slate-800"
+              >
+                <td className="px-5 py-4 text-[#555D6D] dark:text-slate-300">
+                  {fmtDate(t.createdAt)}
+                </td>
+                <td className="px-5 py-4">
+                  <StatusPill status={t.status} />
+                </td>
+                <td className="px-5 py-4">
+                  <Link
+                    href={`/tickets/${t.id}`}
+                    className="font-medium text-[#1A1C20] hover:text-[#00A36B] dark:text-slate-100"
+                  >
                     {t.title}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="inline-flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {fmtDate(t.createdAt)}
-                    </span>
-                    {t.messageCount > 0 && (
-                      <span className="inline-flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" />
-                        답변 {t.messageCount}
-                      </span>
-                    )}
-                    {t.assigneeName && (
-                      <span className="inline-flex items-center gap-1">
-                        담당: {t.assigneeName}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 sm:flex-col sm:items-end">
-                  <Badge tone={STATUS_TONE[t.status]}>
-                    {STATUS_LABEL[t.status]}
-                  </Badge>
-                  <ChevronRight className="h-4 w-4 text-slate-400" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </li>
-      ))}
-    </ul>
+                  </Link>
+                </td>
+                <td className="px-5 py-4 text-[#555D6D] dark:text-slate-300">
+                  {typeLabel(t)}
+                </td>
+                <td className="px-5 py-4 text-right text-[#868B94] dark:text-slate-400">
+                  {fmtDate(t.answeredAt)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* 모바일 카드뷰 */}
+      <ul className="flex flex-col gap-3 sm:hidden">
+        {items.map((t) => (
+          <li key={t.id}>
+            <Link
+              href={`/tickets/${t.id}`}
+              className="flex flex-col gap-2 rounded-xl border border-black/[0.06] p-4 dark:border-slate-800"
+            >
+              <div className="flex items-center justify-between">
+                <StatusPill status={t.status} />
+                <span className="text-xs text-[#868B94] dark:text-slate-400">
+                  {fmtDate(t.createdAt)}
+                </span>
+              </div>
+              <span className="text-base font-semibold text-[#1A1C20] dark:text-slate-100">
+                {t.title}
+              </span>
+              <div className="flex items-center justify-between text-sm text-[#555D6D] dark:text-slate-300">
+                <span>{typeLabel(t)}</span>
+                <span className="text-[#868B94] dark:text-slate-400">
+                  답변일 {fmtDate(t.answeredAt)}
+                </span>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
