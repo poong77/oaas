@@ -75,7 +75,7 @@ export function TicketsListView() {
   return (
     <div className="mx-auto w-full max-w-[1200px]">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-[#1A1C20]">문의 내역</h1>
+        <h1 className="text-3xl font-bold text-[#1A1C20]">내 문의</h1>
         <Link
           href="/landing/inquiry"
           className="rounded-lg bg-[#00A36B] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#008A59]"

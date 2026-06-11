@@ -119,11 +119,11 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
   }, []);
 
   function applyTemplate(t: TemplateItem) {
-    const clean = toPlainText(t.content);
+    const block = normalizeTemplate(t.content);
     setContent((prev) =>
       prev.trim().length === 0
-        ? clean
-        : `${prev}\n\n${clean}`.slice(0, MAX_CONTENT),
+        ? block
+        : `${prev}\n\n${block}`.slice(0, MAX_CONTENT),
     );
     toast.success(`'${t.title}' 템플릿을 넣었습니다`);
   }
@@ -420,17 +420,19 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
 
 // ─────────────────────────────────────────────────────────────────────
 
-/** 템플릿(마크다운)을 plain textarea에서 읽기 좋게 평문으로 정리. */
-function toPlainText(md: string): string {
+/**
+ * 템플릿(마크다운)을 본문에 삽입할 형태로 정리.
+ *
+ * 굵은 라벨(**라벨**)은 그대로 보존해 상세 화면에서 스타일이 살아있게 하고,
+ * 각 항목을 빈 줄(\n\n)로 분리한다. 마크다운은 단일 줄바꿈(\n)을 공백으로
+ * 접어버리므로, 빈 줄로 분리해야 항목별 줄바꿈이 보존된다.
+ */
+function normalizeTemplate(md: string): string {
   return md
-    .replace(/\*\*(.*?)\*\*/g, '$1') // **굵게** → 굵게
-    .replace(/\*(.*?)\*/g, '$1') // *기울임* → 기울임
-    .replace(/`([^`]*)`/g, '$1') // `코드` → 코드
-    .replace(/^#{1,6}\s+/gm, '') // 헤딩 마커 제거
-    .replace(/^\s*[-*]\s+/gm, '· ') // 불릿 → ·
-    .replace(/[ \t]*\\$/gm, '') // 줄 끝 하드브레이크 백슬래시 제거
-    .replace(/\n{3,}/g, '\n\n') // 과도한 빈 줄 축소
-    .trim();
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join('\n\n');
 }
 
 function Req() {

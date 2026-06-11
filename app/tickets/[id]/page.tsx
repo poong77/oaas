@@ -123,7 +123,7 @@ export default async function HotelierTicketDetailPage({
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#555D6D] hover:text-[#00A36B] dark:text-slate-300"
       >
         <ArrowLeft className="h-4 w-4" />
-        문의 내역으로
+        내 문의로
       </Link>
       <p className="font-mono text-sm text-[#868B94] dark:text-slate-400">
         {ticket.ticketNo}

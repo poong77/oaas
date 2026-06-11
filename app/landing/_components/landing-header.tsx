@@ -5,7 +5,7 @@
  *
  * variant:
  *   - 'public'  : 미인증. 우측에 [로그인] 버튼.
- *   - 'authed'  : 인증. 내비에 '문의내역' 추가, 우측에 호텔명(아웃라인) 버튼.
+ *   - 'authed'  : 인증. 내비에 '내 문의' 추가, 우측에 호텔명(아웃라인) 버튼.
  *
  * 전 시안 페이지가 동일 헤더를 재사용해 일관성을 보장한다.
  */
@@ -23,7 +23,7 @@ const NAV_PUBLIC = [
 const NAV_AUTHED = [
   { label: '제품별 가이드', href: '/landing/help' },
   { label: '문의하기', href: '/landing/inquiry' },
-  { label: '문의내역', href: '/landing/tickets' },
+  { label: '내 문의', href: '/landing/tickets' },
   { label: '공지사항', href: '/landing/notices' },
 ];
 

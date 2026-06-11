@@ -62,7 +62,7 @@ const ROLES: { key: string; label: string; Icon: LucideIcon }[] = [
 const NAV = [
   { label: '가이드북', href: '/landing/home#category' },
   { label: '문의하기', href: '/tickets/new' },
-  { label: '문의내역', href: '/landing/tickets' },
+  { label: '내 문의', href: '/landing/tickets' },
   { label: '공지사항', href: '/landing/home#notice' },
 ];
 
@@ -100,7 +100,7 @@ const MY_TICKETS: { id: number; status: keyof typeof TICKET_STATUS; title: strin
 
 const USER_MENU = [
   { label: '마이페이지', href: '/landing/home', Icon: User },
-  { label: '문의 내역', href: '/landing/tickets', Icon: FileText },
+  { label: '내 문의', href: '/landing/tickets', Icon: FileText },
   { label: '로그아웃', href: '/login', Icon: LogOut },
 ];
 

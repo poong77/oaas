@@ -19,7 +19,7 @@ import { MyTicketsList } from './_components/my-tickets-list';
 import { MyTicketsFilters } from './_components/my-tickets-filters';
 import { MyTicketsPageSize } from './_components/my-tickets-page-size';
 
-export const metadata = { title: '문의 내역 — OA서포트' };
+export const metadata = { title: '내 문의 — OA서포트' };
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZES = [10, 30, 50];
@@ -112,7 +112,7 @@ export default async function MyTicketsPage({
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-[#1A1C20] dark:text-white">
-          문의 내역
+          내 문의
         </h1>
         <Link
           href="/tickets/new"

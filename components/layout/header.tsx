@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { label: '홈', href: '/' },
   { label: '도움말 찾기', href: '/search' },
   { label: '문의하기', href: '/tickets/new' },
-  { label: '문의 현황', href: '/tickets' },
+  { label: '내 문의', href: '/tickets' },
 ];
 
 function isActiveNav(pathname: string, href: string) {
@@ -35,7 +35,7 @@ function isActiveNav(pathname: string, href: string) {
 
 /**
  * 최장 일치 기준 활성 메뉴 1개 결정.
- * `/tickets/new`(문의하기)와 `/tickets`(문의 현황)처럼 prefix를 공유하는
+ * `/tickets/new`(문의하기)와 `/tickets`(내 문의)처럼 prefix를 공유하는
  * 메뉴가 동시에 활성화되는 것을 방지한다.
  */
 function resolveActiveHref(pathname: string): string | null {

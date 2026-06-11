@@ -9,7 +9,7 @@ import { LandingFooter } from '../_components/landing-footer';
 import { TicketsListView } from '../_components/tickets-list-view';
 
 export const metadata = {
-  title: '문의 내역 — OA서포트',
+  title: '내 문의 — OA서포트',
 };
 
 export default function LandingTicketsPage() {

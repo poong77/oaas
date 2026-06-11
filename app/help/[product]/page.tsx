@@ -10,19 +10,16 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, BookOpen, ExternalLink } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
-import { EmptyState } from '@/components/ui/empty-state';
-import { Button } from '@/components/ui/button';
 import { getProductCategories } from '@/lib/services/categories';
 import { listArticles } from '@/lib/services/articles';
 import { getMenuTaxonomyTreeByProduct } from '@/lib/services/master-menu-taxonomies';
 import { parsePathParam, pathToKey } from '@/lib/url-query';
 import { resolveIcon } from '@/app/_components/home/_icon-map';
-import { ProductFilters } from './_components/product-filters';
-import { ProductArticleList } from './_components/product-article-list';
 import { MenuTreeSidebar } from './_components/menu-tree-sidebar';
+import { ProductArticleBrowser } from './_components/product-article-browser';
 
 export const dynamic = 'force-dynamic';
 
@@ -124,108 +121,48 @@ export default async function HelpProductPage({
         }
       />
 
-      {/* 상단: 정렬만 (검색창은 좌측 사이드바로 이동) + 모바일 검색 */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="lg:hidden">
-          <ProductFilters initial={sp} productCode={current.code} only="search" />
-        </div>
-        <div className="sm:ml-auto">
-          <ProductFilters initial={sp} productCode={current.code} only="sort" />
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-        <aside className="hidden flex-col gap-4 lg:flex">
-          {/* 카테고리 박스 바로 위 — 제품 내 검색 */}
-          <ProductFilters initial={sp} productCode={current.code} only="search" />
-          {/* B1 — menu_taxonomies 트리 사이드바 (좌측) */}
-          <MenuTreeSidebar
-            productCode={current.code}
-            tree={menuTree}
-            selectedPath={selectedPath}
-            articleCountsByPath={articleCountsByPath}
-            totalCount={allInProduct.total}
-          />
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
-                다른 제품
-              </h3>
-              <ul className="flex flex-col gap-1.5 text-sm">
-                {others.map((o) => (
-                  <li key={o.id}>
-                    <Link
-                      href={`/help/${o.code}`}
-                      className="block rounded px-2 py-1 text-slate-600 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-300 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
-                    >
-                      {o.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </aside>
-
-        <Card>
-          <CardContent className="p-0">
-            {items.length === 0 ? (
-              <div className="p-6">
-                <EmptyState
-                  icon={<BookOpen className="h-6 w-6" />}
-                  title={
-                    sp.q
-                      ? '검색 결과가 없습니다'
-                      : `${current.label} 아티클이 아직 없습니다`
-                  }
-                  description={
-                    sp.q
-                      ? '다른 키워드로 시도하거나 문의로 접수해주세요.'
-                      : '곧 핸드북이 추가될 예정입니다. 급한 문의는 아래 버튼을 이용하세요.'
-                  }
-                  action={
-                    <Button asChild size="sm">
-                      <Link href={`/tickets/new?product=${current.code}`}>
-                        {current.label} 문의하기
+      {/* 좌측 사이드바(검색+카테고리) + 우측 무한스크롤 리스트.
+          카테고리 변경 시 selectedPath 기준으로 브라우저 상태를 리셋한다. */}
+      <ProductArticleBrowser
+        key={pathToKey(selectedPath)}
+        productCode={current.code}
+        productLabel={current.label}
+        selectedPath={selectedPath}
+        initialItems={items}
+        initialTotal={total}
+        pageSize={pageSize}
+        sidebarExtra={
+          <div className="flex flex-col gap-4">
+            {/* B1 — menu_taxonomies 트리 사이드바 (좌측) */}
+            <MenuTreeSidebar
+              productCode={current.code}
+              tree={menuTree}
+              selectedPath={selectedPath}
+              articleCountsByPath={articleCountsByPath}
+              totalCount={allInProduct.total}
+            />
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                  다른 제품
+                </h3>
+                <ul className="flex flex-col gap-1.5 text-sm">
+                  {others.map((o) => (
+                    <li key={o.id}>
+                      <Link
+                        href={`/help/${o.code}`}
+                        className="block rounded px-2 py-1 text-slate-600 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-300 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
+                      >
+                        {o.label}
                       </Link>
-                    </Button>
-                  }
-                />
-              </div>
-            ) : (
-              <ProductArticleList
-                items={items}
-                productCode={current.code}
-                total={total}
-                page={page}
-                pageSize={pageSize}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardContent className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm">
-            <p className="font-medium text-slate-700 dark:text-slate-200">
-              찾는 내용이 없으신가요?
-            </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              기존 help.oapms.com에 같은 주제가 있을 수 있습니다.
-            </p>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
           </div>
-          <a
-            href="https://help.oapms.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 self-start rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium hover:border-brand-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-700"
-          >
-            help.oapms.com 열기
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        </CardContent>
-      </Card>
+        }
+      />
     </div>
   );
 }

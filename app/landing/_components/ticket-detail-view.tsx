@@ -88,7 +88,7 @@ export function TicketDetailView({ status }: { status: TicketStatus }) {
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#555D6D] hover:text-[#00A36B]"
       >
         <ArrowLeft className="h-4 w-4" />
-        문의 내역으로
+        내 문의로
       </Link>
       <p className="text-sm text-[#868B94]">{TICKET_NO}</p>
       <h1 className="mb-6 text-3xl font-bold text-[#1A1C20]">일마감이 안돼요</h1>
