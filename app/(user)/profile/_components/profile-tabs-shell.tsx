@@ -9,13 +9,31 @@
  */
 
 import { useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import {
+  Building2,
+  History,
+  KeyRound,
+  User as UserIcon,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
+
+/**
+ * 아이콘은 서버→클라이언트 경계를 넘길 수 없으므로(함수 직렬화 불가)
+ * key로 매핑한다. page.tsx는 직렬화 가능한 값(key/label/node/footer)만 전달한다.
+ */
+const TAB_ICONS: Record<string, LucideIcon> = {
+  profile: UserIcon,
+  password: KeyRound,
+  hotel: Building2,
+  staff: Users,
+  history: History,
+};
 
 export type ProfileTab = {
   key: string;
   label: string;
-  Icon: LucideIcon;
   node: ReactNode;
   /** true면 데스크톱 세로 내비에서 하단(footer)으로 분리 배치 */
   footer?: boolean;
@@ -44,7 +62,7 @@ export function ProfileTabsShell({
 
   function NavButton({ tab }: { tab: ProfileTab }) {
     const isActive = tab.key === active;
-    const { Icon } = tab;
+    const Icon = TAB_ICONS[tab.key] ?? UserIcon;
     return (
       <button
         type="button"

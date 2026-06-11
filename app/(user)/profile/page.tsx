@@ -4,14 +4,7 @@
  * 탭(탭 유지 + 메뉴 추가 정책):
  *   내 정보 / 비밀번호 변경 / 호텔 & 솔루션 / 직원 목록 / 변경이력(하단)
  */
-import {
-  AlertCircle,
-  Building2,
-  History,
-  KeyRound,
-  User as UserIcon,
-  Users,
-} from 'lucide-react';
+import { AlertCircle, Users } from 'lucide-react';
 import { requireAuth } from '@/lib/permissions';
 import {
   getHotelById,
@@ -61,7 +54,6 @@ export default async function ProfilePage() {
     {
       key: 'profile',
       label: '내 정보',
-      Icon: UserIcon,
       node: (
         <ProfileForm
           initial={{
@@ -77,13 +69,11 @@ export default async function ProfilePage() {
     {
       key: 'password',
       label: '비밀번호 변경',
-      Icon: KeyRound,
       node: <ChangePasswordForm />,
     },
     {
       key: 'hotel',
       label: '호텔 & 솔루션',
-      Icon: Building2,
       node: (
         <>
           <HotelInfoReadonly
@@ -106,13 +96,11 @@ export default async function ProfilePage() {
     {
       key: 'staff',
       label: '직원 목록',
-      Icon: Users,
       node: staffNode,
     },
     {
       key: 'history',
       label: '변경이력',
-      Icon: History,
       footer: true,
       node: <ChangeHistory logs={activityLogs} />,
     },
