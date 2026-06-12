@@ -266,14 +266,14 @@ function FooterPanel({
     <section
       id="contact"
       ref={highlightRef}
-      className="scroll-mt-20 bg-slate-50 px-4 py-12 dark:bg-slate-900/40 sm:px-6 lg:px-8"
+      className="scroll-mt-20 bg-[#F7F8F9] px-4 py-12 dark:bg-slate-900/40 sm:px-6 lg:px-8"
     >
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
         <h2 className="text-xl font-bold tracking-tight sm:text-2xl">고객센터</h2>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex flex-col gap-3 lg:flex-row">
           {/* 고객센터 전화 + ARS */}
-          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-col gap-3 rounded-xl bg-white p-6 dark:bg-slate-900 lg:flex-[420_1_0%]">
             <div className="flex items-center gap-2">
               <Phone className="h-5 w-5 text-brand-600 dark:text-brand-400" />
               <span className="text-base font-semibold">고객센터</span>
@@ -301,7 +301,7 @@ function FooterPanel({
           </div>
 
           {/* 상담시간 */}
-          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-col gap-3 rounded-xl bg-white p-6 dark:bg-slate-900 lg:flex-[248_1_0%]">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-brand-600 dark:text-brand-400" />
               <span className="text-base font-semibold">상담시간</span>
@@ -323,7 +323,7 @@ function FooterPanel({
           </div>
 
           {/* 이메일 및 팩스 */}
-          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-col gap-3 rounded-xl bg-white p-6 dark:bg-slate-900 lg:flex-[248_1_0%]">
             <div className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-brand-600 dark:text-brand-400" />
               <span className="text-base font-semibold">이메일 및 팩스</span>
@@ -347,7 +347,7 @@ function FooterPanel({
           </div>
 
           {/* 야간/휴일 긴급 장애 신고 */}
-          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-col gap-3 rounded-xl bg-white p-6 dark:bg-slate-900 lg:flex-[248_1_0%]">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />
               <span className="text-base font-semibold">
@@ -369,7 +369,7 @@ function FooterPanel({
         </div>
 
         {/* PC 원격 연결 서비스 — 원격지원 아웃링크(고정) */}
-        <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center">
+        <div className="flex flex-col items-start justify-between gap-4 rounded-xl bg-white p-6 dark:bg-slate-900 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <Monitor className="h-5 w-5 text-brand-600 dark:text-brand-400" />
