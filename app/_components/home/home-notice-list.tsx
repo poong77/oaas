@@ -55,7 +55,7 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
                 className="flex flex-col gap-2 px-2 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40 sm:flex-row sm:items-center sm:gap-5"
               >
                 <span
-                  className={`inline-flex w-fit shrink-0 items-center rounded-md px-2 py-0.5 text-xs font-medium ${m.cls}`}
+                  className={`inline-flex w-fit shrink-0 items-center rounded-lg px-2 py-0.5 text-xs font-medium ${m.cls}`}
                 >
                   {m.label}
                 </span>

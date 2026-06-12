@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>칩(Chip) 너비 동일화 — 정리 보고서</title>
+<style>
+  :root{
+    --brand-50:#f0fdf4; --brand-100:#dcfce7; --brand-500:#22c55e;
+    --brand-600:#16a34a; --brand-700:#15803d; --brand-800:#166534;
+    --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 16px 64px}
+  header.page{background:linear-gradient(135deg,var(--brand-600),var(--brand-800));
+    color:#fff;border-radius:18px;padding:28px 24px;box-shadow:0 8px 24px rgba(22,101,52,.18)}
+  header.page h1{margin:0 0 6px;font-size:22px;letter-spacing:-.02em}
+  header.page p{margin:0;opacity:.9;font-size:14px}
+  .meta{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+  .meta span{background:rgba(255,255,255,.16);padding:4px 10px;border-radius:999px;font-size:12px}
+  section{background:#fff;border:1px solid var(--line);border-radius:16px;
+    padding:20px 20px 24px;margin-top:18px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  h2{font-size:17px;margin:0 0 14px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+  h2 .n{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+    background:var(--brand-100);color:var(--brand-700);border-radius:8px;font-size:13px;font-weight:700}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:4px}
+  .card{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--brand-50)}
+  .card .k{font-size:12px;color:var(--muted)}
+  .card .v{font-size:20px;font-weight:800;color:var(--brand-700);margin-top:2px;letter-spacing:-.02em}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;display:block;overflow-x:auto}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;white-space:nowrap}
+  th{background:#f1f5f9;font-weight:700;font-size:12px;color:#334155}
+  td.wrap-cell,th.wrap-cell{white-space:normal;min-width:220px}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:6px;font-size:12px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#0f172a}
+  .path{color:var(--brand-700);font-size:12px;font-family:ui-monospace,Menlo,monospace}
+  .demo{display:flex;flex-wrap:wrap;gap:24px;margin-top:8px}
+  .demo .col{flex:1;min-width:240px}
+  .demo h4{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:700}
+  .row{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
+  .pill-line{display:flex;align-items:center;gap:10px}
+  .pill{display:inline-flex;align-items:center;border-radius:999px;border:1px solid;
+    padding:4px 12px;font-size:12px;font-weight:600;line-height:1}
+  .pill.md{border-radius:8px;border:none;padding:3px 8px;font-weight:500}
+  .pill.fix{min-width:80px;justify-content:center}
+  .pill.fixb{min-width:64px;justify-content:center}
+  .sky{background:#f0f9ff;color:#0369a1;border-color:#7dd3fc}
+  .vio{background:#f5f3ff;color:#6d28d9;border-color:#c4b5fd}
+  .emr{background:#ecfdf5;color:#047857;border-color:#6ee7b7}
+  .skyb{background:#f0f9ff;color:#0369a1}
+  .viob{background:#f5f3ff;color:#6d28d9}
+  .rosb{background:#fff1f2;color:#be123c}
+  .b-slate{background:#f1f5f9;color:#334155}
+  .b-amber{background:#fef3c7;color:#b45309}
+  .b-emr{background:#d1fae5;color:#047857}
+  .tip{font-size:11px;color:var(--muted);margin-top:6px}
+  .check{list-style:none;padding:0;margin:6px 0 0}
+  .check li{padding:8px 0 8px 30px;position:relative;border-bottom:1px dashed var(--line);font-size:14px}
+  .check li:before{content:"☐";position:absolute;left:4px;top:7px;color:var(--brand-600);font-size:16px}
+  .check li.done:before{content:"✔";}
+  .badge-note{display:inline-block;background:var(--brand-100);color:var(--brand-800);
+    padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;margin-left:6px}
+  .small{font-size:12px;color:var(--muted)}
+  .ok{color:var(--brand-700);font-weight:700}
+  .warnt{color:#b45309;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <h1>칩(Chip) 너비 동일화 — 정리 보고서</h1>
+    <p>접수·처리중·공지사항·릴리즈 등 상태/카테고리 칩의 현재 너비 진단과 동일화 버전</p>
+    <div class="meta">
+      <span>📅 2026-06-12</span>
+      <span>🎯 적용 범위: 홈 칩 + 공통 Badge 전체</span>
+      <span>🟢 OA서포트</span>
+    </div>
+  </header>
+
+  <section>
+    <h2><span class="n">i</span> 요약</h2>
+    <div class="cards">
+      <div class="card"><div class="k">진단된 칩 패밀리</div><div class="v">6종</div></div>
+      <div class="card"><div class="k">현재 너비 방식</div><div class="v">가변</div></div>
+      <div class="card"><div class="k">권장 — 홈 칩</div><div class="v">80px</div></div>
+      <div class="card"><div class="k">권장 — Badge</div><div class="v">64px</div></div>
+    </div>
+    <p class="small" style="margin-top:12px">
+      현재 모든 칩은 <code>px-*</code> 패딩만 있고 <code>min-width</code>·<code>justify-center</code>가 없어
+      <b>글자 수에 따라 너비가 제각각</b>입니다. 동일화 방식은 <code>justify-center</code> +
+      <code>min-w-[…]</code> 추가로, 짧은 라벨은 가운데 정렬로 채워 같은 너비로 렌더됩니다.
+    </p>
+  </section>
+
+  <section>
+    <h2><span class="n">1</span> 칩 인벤토리 — 화면에 보이는 홈 칩</h2>
+    <table>
+      <thead><tr>
+        <th>칩</th><th>라벨</th><th class="wrap-cell">위치</th><th class="wrap-cell">현재 너비 클래스</th><th>너비</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>티켓 상태</td>
+          <td>접수 / 처리중 / 답변 완료</td>
+          <td class="path">home-my-tickets.tsx:107</td>
+          <td class="wrap-cell"><code>inline-flex w-fit shrink-0 items-center rounded-full border px-3 py-1 text-xs font-semibold</code></td>
+          <td class="warnt">가변</td>
+        </tr>
+        <tr>
+          <td>공지 카테고리</td>
+          <td>공지사항 / 릴리즈 / 서비스 장애</td>
+          <td class="path">home-notice-list.tsx:57</td>
+          <td class="wrap-cell"><code>inline-flex w-fit shrink-0 items-center rounded-md px-2 py-0.5 text-xs font-medium</code></td>
+          <td class="warnt">가변</td>
+        </tr>
+        <tr>
+          <td>상태/공지(우측 박스)</td>
+          <td>공지·릴리즈·장애 라벨</td>
+          <td class="path">home-status-updates-box.tsx:179</td>
+          <td class="wrap-cell"><code>inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium</code></td>
+          <td class="warnt">가변</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span> 칩 인벤토리 — 공통 Badge 기반 (어드민·기타)</h2>
+    <table>
+      <thead><tr>
+        <th>칩 종류</th><th>라벨</th><th class="wrap-cell">정의 위치</th><th>너비</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>공통 Badge (베이스)</td><td>tone: slate/brand/success/warn/danger</td><td class="path">components/ui/badge.tsx:6 — <code>px-2 py-0.5</code></td><td class="warnt">가변</td></tr>
+        <tr><td>티켓 상태(어드민)</td><td>접수 / 처리중 / 완료</td><td class="path">lib/services/tickets-meta.ts</td><td class="warnt">가변</td></tr>
+        <tr><td>긴급도</td><td>P1 / P2 / P3</td><td class="path">tickets-meta.ts (+Flame 아이콘)</td><td class="warnt">가변</td></tr>
+        <tr><td>피드백</td><td>해결됨 / 일부 해결 / 미해결</td><td class="path">tickets-meta.ts</td><td class="warnt">가변</td></tr>
+        <tr><td>서비스 상태</td><td>정상 / 일부 제한 / 장애 발생 / 점검 중</td><td class="path">service-status-meta.ts</td><td class="warnt">가변(라벨 길어 편차 큼)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span> Before / After 시각 비교</h2>
+    <div class="demo">
+      <div class="col">
+        <h4>BEFORE — 가변 (글자 수만큼)</h4>
+        <div class="row">
+          <div class="pill-line"><span class="pill sky">접수</span><span class="small">너비 ≈ 46px</span></div>
+          <div class="pill-line"><span class="pill vio">처리중</span><span class="small">너비 ≈ 58px</span></div>
+          <div class="pill-line"><span class="pill emr">답변 완료</span><span class="small">너비 ≈ 74px</span></div>
+          <div class="pill-line"><span class="pill md skyb">공지사항</span><span class="small">너비 ≈ 56px</span></div>
+          <div class="pill-line"><span class="pill md viob">릴리즈</span><span class="small">너비 ≈ 44px</span></div>
+          <div class="pill-line"><span class="pill md rosb">서비스 장애</span><span class="small">너비 ≈ 72px</span></div>
+        </div>
+        <p class="tip">세로로 줄이 안 맞고 들쭉날쭉</p>
+      </div>
+      <div class="col">
+        <h4>AFTER — 동일 (min-w-[80px] + 가운데정렬)</h4>
+        <div class="row">
+          <div class="pill-line"><span class="pill sky fix">접수</span><span class="small ok">80px</span></div>
+          <div class="pill-line"><span class="pill vio fix">처리중</span><span class="small ok">80px</span></div>
+          <div class="pill-line"><span class="pill emr fix">답변 완료</span><span class="small ok">80px</span></div>
+          <div class="pill-line"><span class="pill md skyb fix">공지사항</span><span class="small ok">80px</span></div>
+          <div class="pill-line"><span class="pill md viob fix">릴리즈</span><span class="small ok">80px</span></div>
+          <div class="pill-line"><span class="pill md rosb fix">서비스 장애</span><span class="small ok">80px</span></div>
+        </div>
+        <p class="tip">왼쪽 가장자리·너비가 정렬됨</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span> 너비 동일화 버전 (적용안)</h2>
+    <table>
+      <thead><tr><th>대상</th><th class="wrap-cell">현재</th><th class="wrap-cell">동일화 후 (추가)</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>홈 티켓 상태 칩<br><span class="path">home-my-tickets.tsx:107</span></td>
+          <td class="wrap-cell"><code>… px-3 py-1</code></td>
+          <td class="wrap-cell"><code>… px-3 py-1 <b>min-w-[80px] justify-center</b></code></td>
+        </tr>
+        <tr>
+          <td>홈 공지 카테고리 칩<br><span class="path">home-notice-list.tsx:57</span></td>
+          <td class="wrap-cell"><code>… px-2 py-0.5</code></td>
+          <td class="wrap-cell"><code>… px-2 py-0.5 <b>min-w-[80px] justify-center</b></code></td>
+        </tr>
+        <tr>
+          <td>홈 우측 박스 칩<br><span class="path">home-status-updates-box.tsx:179</span></td>
+          <td class="wrap-cell"><code>… px-1.5 py-0.5 text-[10px]</code></td>
+          <td class="wrap-cell"><code>… <b>min-w-[64px] justify-center</b></code> <span class="small">(박스 폭 좁아 64px)</span></td>
+        </tr>
+        <tr>
+          <td>공통 Badge (어드민 전체)<br><span class="path">components/ui/badge.tsx:6</span></td>
+          <td class="wrap-cell"><code>… px-2 py-0.5</code></td>
+          <td class="wrap-cell"><code>… px-2 py-0.5 <b>min-w-[64px] justify-center</b></code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="tip">
+      ※ <code>min-w</code>는 <b>최소</b> 너비라, 더 긴 라벨(예: 서비스 상태 “일부 제한/장애 발생”)은 그만큼 늘어납니다.
+      서비스 상태 그룹까지 완전히 같은 폭으로 강제하려면 그 그룹만 <code>min-w-[88px]</code>로 별도 상향이 필요합니다.
+    </p>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span> 적용 대상 파일 체크리스트</h2>
+    <ul class="check">
+      <li><code>components/ui/badge.tsx</code> — 베이스 variant에 <code>min-w-[64px] justify-center</code> 추가 <span class="badge-note">어드민 전체 일괄 반영</span></li>
+      <li><code>app/_components/home/home-my-tickets.tsx</code> — 상태 칩 span에 <code>min-w-[80px] justify-center</code></li>
+      <li><code>app/_components/home/home-notice-list.tsx</code> — 카테고리 칩 span에 <code>min-w-[80px] justify-center</code></li>
+      <li><code>app/_components/home/home-status-updates-box.tsx</code> — 우측 박스 칩에 <code>min-w-[64px] justify-center</code></li>
+      <li class="small" style="border:none">검증: <code>tsc --noEmit</code> + <code>next build</code> + 라이트/다크 시각 확인</li>
+    </ul>
+    <p class="small" style="margin-top:10px">
+      위 4개 파일만 수정하면 됩니다(라벨·색상 맵은 그대로). 진행 승인하시면 적용 후 빌드·커밋·푸시까지 처리하겠습니다.
+    </p>
+  </section>
+
+</div>
+</body>
+</html>
