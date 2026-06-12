@@ -17,7 +17,7 @@ export const NOTICE_KIND_META: Record<
   }
 > = {
   notice: {
-    label: '공지',
+    label: '공지사항',
     badge: 'brand',
     description: '일반 공지 — 기능 안내, 운영 알림',
   },
@@ -27,20 +27,23 @@ export const NOTICE_KIND_META: Record<
     description: '릴리즈 노트 — 버전 업데이트 내역',
   },
   incident: {
-    label: '장애',
+    label: '서비스 장애',
     badge: 'danger',
     description: '장애 공지 — 진행/사후',
   },
 };
 
-/** Badge 컴포넌트는 violet tone이 없으므로 인라인 className을 별도 제공. */
+/**
+ * Badge 컴포넌트는 violet tone이 없으므로 인라인 className을 별도 제공.
+ * 홈(home-notice-list)과 동일한 톤(sky/violet/rose)으로 통일 — 전 페이지 일관.
+ */
 export const NOTICE_KIND_CLASSES: Record<NoticeKind, string> = {
   notice:
-    'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300',
+    'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300',
   release:
-    'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+    'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300',
   incident:
-    'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+    'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300',
 };
 
 /** 배너용 색상 (emergency-banner에서 사용). */
