@@ -5,16 +5,21 @@
  * @see db/schema/articles.ts articleContentTypeEnum
  */
 
+import type { BadgeTone } from '@/components/ui/badge';
 import type { ArticleContentType } from '@/db/schema';
 
-export type ContentTypeTone = 'brand' | 'success' | 'warn';
+/**
+ * 의도 뱃지 톤은 Badge가 실제 가진 tone에서만 고른다.
+ * 3색은 서로 명확히 구분되도록 그린(사용방법)·블루(기능설명)·앰버(문제해결)로 고정.
+ */
+export type ContentTypeTone = Extract<BadgeTone, 'brand' | 'info' | 'warn'>;
 
 export const CONTENT_TYPE_META: Record<
   ArticleContentType,
   { label: string; hint: string; tone: ContentTypeTone }
 > = {
   howto: { label: '사용방법', hint: '따라하기', tone: 'brand' },
-  feature: { label: '기능설명', hint: '이해하기', tone: 'success' },
+  feature: { label: '기능설명', hint: '이해하기', tone: 'info' },
   troubleshoot: { label: '문제해결', hint: '고치기', tone: 'warn' },
 };
 

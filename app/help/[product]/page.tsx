@@ -17,7 +17,7 @@ import { getProductCategories } from '@/lib/services/categories';
 import { listArticles } from '@/lib/services/articles';
 import { getMenuTaxonomyTreeByProduct } from '@/lib/services/master-menu-taxonomies';
 import { parsePathParam, pathToKey } from '@/lib/url-query';
-import { resolveIcon } from '@/app/_components/home/_icon-map';
+import { MasterIcon } from '@/components/master-icon';
 import { MenuTreeSidebar } from './_components/menu-tree-sidebar';
 import { ProductArticleBrowser } from './_components/product-article-browser';
 
@@ -95,7 +95,6 @@ export default async function HelpProductPage({
     }
   }
 
-  const Icon = resolveIcon(current.icon);
   const others = categories.filter((c) => c.code !== product);
 
   return (
@@ -104,7 +103,11 @@ export default async function HelpProductPage({
         title={
           <span className="inline-flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
-              <Icon className="h-5 w-5" />
+              <MasterIcon
+                iconName={current.icon}
+                iconImageUrl={current.iconImageUrl}
+                className="h-5 w-5"
+              />
             </span>
             {current.label} 가이드
           </span>
@@ -112,11 +115,10 @@ export default async function HelpProductPage({
         description={`${current.label} 사용을 위한 핸드북·체크리스트·점검 절차 (총 ${total}건)`}
         breadcrumb={
           <Link
-            href="/help"
+            href="/"
             className="inline-flex items-center gap-1 hover:underline"
           >
-            <ArrowLeft className="h-3 w-3" />
-            제품별 가이드
+            <ArrowLeft className="h-3 w-3" />홈
           </Link>
         }
       />

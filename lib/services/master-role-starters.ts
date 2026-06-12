@@ -97,6 +97,7 @@ export type RoleStarterArticleCard = {
 export type RoleStarterFaqCard = {
   id: string;
   question: string;
+  answerMarkdown: string;
   productCode: string;
   issueType: string | null;
 };
@@ -151,6 +152,7 @@ export async function getRoleStarterWithArticles(roleKey: string): Promise<{
         .select({
           id: faqs.id,
           question: faqs.question,
+          answerMarkdown: faqs.answerMarkdown,
           productCode: faqs.productCode,
           issueType: faqs.issueType,
         })

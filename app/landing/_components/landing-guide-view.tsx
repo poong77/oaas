@@ -209,7 +209,7 @@ export function LandingGuideView({ products }: { products?: string[] }) {
           {/* 배지 */}
           <div className="mb-3 flex flex-wrap items-center gap-1.5">
             <Badge tone="brand">PMS</Badge>
-            <Badge tone="slate">사용방법</Badge>
+            <Badge tone="brandSoft">사용방법</Badge>
             <Badge tone="slate">보고서</Badge>
             <Badge tone="brandSoft">객실별 매출집계</Badge>
           </div>
@@ -348,7 +348,7 @@ export function LandingGuideView({ products }: { products?: string[] }) {
                   >
                     <div className="flex items-center gap-1.5">
                       <Badge tone="brand">PMS</Badge>
-                      <Badge tone="slate">기능설명</Badge>
+                      <Badge tone="blue">기능설명</Badge>
                     </div>
                     <p className="text-sm font-semibold text-[#1A1C20]">
                       {r.title}
@@ -447,7 +447,7 @@ function Badge({
   tone,
   children,
 }: {
-  tone: 'brand' | 'brandSoft' | 'slate';
+  tone: 'brand' | 'brandSoft' | 'blue' | 'slate';
   children: React.ReactNode;
 }) {
   const cls =
@@ -455,7 +455,9 @@ function Badge({
       ? 'bg-[#00A36B] text-white'
       : tone === 'brandSoft'
         ? 'bg-[#E6F7F0] text-[#00A36B]'
-        : 'bg-[#F1F3F5] text-[#555D6D]';
+        : tone === 'blue'
+          ? 'bg-[#DBEAFE] text-[#1D4ED8]'
+          : 'bg-[#F1F3F5] text-[#555D6D]';
   return (
     <span
       className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${cls}`}

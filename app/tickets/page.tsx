@@ -4,10 +4,11 @@
  * 호텔리어: 본인 reporter_id OR 같은 hotel_id 티켓.
  * 매니저+어드민: 본인 reporter_id 티켓만 (전체 큐는 `/admin/tickets`).
  *
- * 필터: status(탭, 프로덕션 3종), productCode(대분류), sortOrder, q(검색), pageSize(10/30/50)
+ * 필터: status(탭, 프로덕션 3종), productCode(대분류), sortOrder, q(검색). 페이지당 고정 20개.
  */
 
 import Link from 'next/link';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { requireAuth } from '@/lib/permissions';
 import { listTickets } from '@/lib/services/tickets';
 import {
@@ -17,12 +18,12 @@ import {
 import type { TicketStatus } from '@/db/schema';
 import { MyTicketsList } from './_components/my-tickets-list';
 import { MyTicketsFilters } from './_components/my-tickets-filters';
-import { MyTicketsPageSize } from './_components/my-tickets-page-size';
 
 export const metadata = { title: '내 문의 — OA서포트' };
 export const dynamic = 'force-dynamic';
 
-const PAGE_SIZES = [10, 30, 50];
+// 내 문의는 필터가 많아 보기 갯수 선택 UI 없이 고정 20개씩 표시한다.
+const PAGE_SIZE = 20;
 
 type SearchParams = Promise<{
   status?: string;
@@ -30,7 +31,6 @@ type SearchParams = Promise<{
   sortOrder?: 'asc' | 'desc';
   q?: string;
   page?: string;
-  pageSize?: string;
 }>;
 
 export default async function MyTicketsPage({
@@ -54,9 +54,7 @@ export default async function MyTicketsPage({
   const productCode = params.productCode || null;
   const q = params.q?.trim() || '';
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
-  const pageSize = PAGE_SIZES.includes(Number(params.pageSize))
-    ? Number(params.pageSize)
-    : 10;
+  const pageSize = PAGE_SIZE;
 
   // 호텔리어: 같은 호텔까지 모두. 매니저·어드민: 본인 접수만.
   const filter =
@@ -94,8 +92,7 @@ export default async function MyTicketsPage({
   );
 
   const total = ticketsResult.total;
-  const effPageSize = ticketsResult.pageSize;
-  const totalPages = Math.max(1, Math.ceil(total / effPageSize));
+  const totalPages = Math.max(1, Math.ceil(total / ticketsResult.pageSize));
 
   const buildHref = (p: number) => {
     const sp = new URLSearchParams();
@@ -103,10 +100,16 @@ export default async function MyTicketsPage({
     if (productCode) sp.set('productCode', productCode);
     if (sortOrder !== 'desc') sp.set('sortOrder', sortOrder);
     if (q) sp.set('q', q);
-    if (pageSize !== 10) sp.set('pageSize', String(pageSize));
     sp.set('page', String(p));
     return `/tickets?${sp.toString()}`;
   };
+
+  // 번호 페이지네이션 윈도우 (최대 5개, 현재±2)
+  const windowStart = Math.max(1, Math.min(page - 2, totalPages - 4));
+  const pageNumbers = Array.from(
+    { length: Math.min(5, totalPages) },
+    (_, i) => windowStart + i,
+  ).filter((p) => p >= 1 && p <= totalPages);
 
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
@@ -136,37 +139,53 @@ export default async function MyTicketsPage({
         issueTypeMap={issueTypeMap}
       />
 
-      {/* 페이지네이션 + 보기 옵션 */}
-      <div className="mt-2 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-        <div className="hidden sm:block">
-          <MyTicketsPageSize pageSize={effPageSize} />
-        </div>
-        {totalPages > 1 ? (
-          <div className="flex items-center justify-center gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
-              const active = p === page;
-              return (
-                <Link
-                  key={p}
-                  href={buildHref(p)}
-                  className={`flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
-                    active
-                      ? 'bg-[#1A1C20] text-white'
-                      : 'text-[#555D6D] hover:bg-[#F3F4F5] dark:text-slate-300 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {p}
-                </Link>
-              );
-            })}
-          </div>
-        ) : (
-          <div />
-        )}
-        <div className="sm:hidden">
-          <MyTicketsPageSize pageSize={effPageSize} />
-        </div>
-      </div>
+      {/* 페이지네이션 */}
+      {totalPages > 1 && (
+        <nav className="mt-2 flex items-center justify-center gap-1">
+          {page > 1 ? (
+            <Link
+              href={buildHref(page - 1)}
+              aria-label="이전"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-[#868B94] hover:bg-[#F3F4F5] dark:hover:bg-slate-800"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Link>
+          ) : (
+            <span className="flex h-8 w-8 items-center justify-center rounded-md text-[#DCDEE3] dark:text-slate-600">
+              <ChevronLeft className="h-4 w-4" />
+            </span>
+          )}
+          {pageNumbers.map((p) => {
+            const active = p === page;
+            return (
+              <Link
+                key={p}
+                href={buildHref(p)}
+                className={`flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-[#1A1C20] text-white'
+                    : 'text-[#555D6D] hover:bg-[#F3F4F5] dark:text-slate-300 dark:hover:bg-slate-800'
+                }`}
+              >
+                {p}
+              </Link>
+            );
+          })}
+          {page < totalPages ? (
+            <Link
+              href={buildHref(page + 1)}
+              aria-label="다음"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-[#868B94] hover:bg-[#F3F4F5] dark:hover:bg-slate-800"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <span className="flex h-8 w-8 items-center justify-center rounded-md text-[#DCDEE3] dark:text-slate-600">
+              <ChevronRight className="h-4 w-4" />
+            </span>
+          )}
+        </nav>
+      )}
     </div>
   );
 }

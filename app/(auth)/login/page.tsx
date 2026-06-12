@@ -16,7 +16,15 @@ export default async function LoginPage({
   const session = await auth();
   const params = await searchParams;
   if (session?.user) {
-    redirect(params.callbackUrl || defaultLandingFor(session.user.role));
+    // login-form.tsx 와 동일 정책: 어드민·매니저는 /admin callbackUrl만 존중,
+    // 호텔리어는 항상 역할 기본 화면(홈)으로. 깨진 공지 callbackUrl로 인한 빈 페이지 방지.
+    const role = session.user.role;
+    const isStaff = role === 'admin' || role === 'manager';
+    const dest =
+      isStaff && params.callbackUrl?.startsWith('/admin')
+        ? params.callbackUrl
+        : defaultLandingFor(role);
+    redirect(dest);
   }
 
   const devStubEnabled =

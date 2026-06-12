@@ -61,6 +61,21 @@ function fmtDate(d: Date | string | null): string {
   return new Date(d).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
 }
 
+/** 상태 카드용 — 날짜 + 시간(HH:mm) 표기. */
+function fmtDateTime(d: Date | string | null): string {
+  if (!d) return '-';
+  const date = new Date(d).toLocaleDateString('en-CA', {
+    timeZone: 'Asia/Seoul',
+  });
+  const time = new Date(d).toLocaleTimeString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  return `${date} ${time}`;
+}
+
 export default async function HotelierTicketDetailPage({
   params,
   searchParams,
@@ -99,7 +114,7 @@ export default async function HotelierTicketDetailPage({
 
   const currentIndex = CURRENT_INDEX[ticket.status];
   const steps: { label: string; date: string }[] = [
-    { label: '접수', date: fmtDate(ticket.createdAt) },
+    { label: '접수', date: fmtDateTime(ticket.createdAt) },
     {
       label: '처리중',
       date:
@@ -111,7 +126,10 @@ export default async function HotelierTicketDetailPage({
     },
     {
       label: '답변 완료',
-      date: ticket.status === 'completed' ? fmtDate(lastPublicAt) : '대기',
+      date:
+        ticket.status === 'completed'
+          ? fmtDateTime(lastPublicAt ?? ticket.updatedAt)
+          : '대기',
     },
   ];
 

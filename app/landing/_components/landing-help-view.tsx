@@ -53,7 +53,7 @@ const TOTAL_COUNT = 71;
 
 type Card = {
   type: string;
-  tone: 'amber' | 'green' | 'teal';
+  tone: 'amber' | 'green' | 'blue';
   cats: string[];
   title: string;
   summary: string;
@@ -81,7 +81,7 @@ const CARDS: Card[] = [
   },
   {
     type: '기능설명',
-    tone: 'teal',
+    tone: 'blue',
     cats: ['객실 일마감', '일마감'],
     title: '일마감 화면 구성과 영업일자 변경',
     summary:
@@ -93,7 +93,7 @@ const CARDS: Card[] = [
 const TONE: Record<Card['tone'], string> = {
   amber: 'bg-[#FEF3C7] text-[#B45309]',
   green: 'bg-[#E6F7F0] text-[#00A36B]',
-  teal: 'bg-[#E0F2F1] text-[#2EB3B2]',
+  blue: 'bg-[#DBEAFE] text-[#1D4ED8]',
 };
 
 export function LandingHelpView({ products }: { products?: string[] }) {

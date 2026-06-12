@@ -68,7 +68,14 @@ export function MyTicketsList({
     <>
       {/* 데스크톱 테이블 */}
       <div className="hidden overflow-hidden rounded-xl border border-black/[0.06] dark:border-slate-800 sm:block">
-        <table className="w-full">
+        <table className="w-full table-fixed">
+          <colgroup>
+            <col className="w-[120px]" />
+            <col className="w-[120px]" />
+            <col />
+            <col className="w-[150px]" />
+            <col className="w-[110px]" />
+          </colgroup>
           <thead>
             <tr className="border-b border-black/[0.06] text-sm text-[#868B94] dark:border-slate-800">
               <th className="px-5 py-3 text-left font-medium">문의일</th>
@@ -93,13 +100,16 @@ export function MyTicketsList({
                 <td className="px-5 py-4">
                   <Link
                     href={`/tickets/${t.id}`}
-                    className="font-medium text-[#1A1C20] hover:text-[#00A36B] dark:text-slate-100"
+                    title={t.title}
+                    className="block truncate font-medium text-[#1A1C20] hover:text-[#00A36B] dark:text-slate-100"
                   >
                     {t.title}
                   </Link>
                 </td>
                 <td className="px-5 py-4 text-[#555D6D] dark:text-slate-300">
-                  {typeLabel(t)}
+                  <span className="block truncate" title={typeLabel(t)}>
+                    {typeLabel(t)}
+                  </span>
                 </td>
                 <td className="px-5 py-4 text-right text-[#868B94] dark:text-slate-400">
                   {fmtDate(t.answeredAt)}

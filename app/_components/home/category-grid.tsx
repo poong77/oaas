@@ -6,7 +6,6 @@
  */
 
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 import { resolveIcon } from './_icon-map';
 import type { ProductCategoryView } from '@/lib/services/categories';
 
@@ -29,12 +28,6 @@ export function CategoryGrid({
             제품으로 찾기
           </h2>
         </div>
-        <Link
-          href="/help"
-          className="hidden items-center gap-1 text-label-medium-medium text-brand-600 hover:underline dark:text-brand-400 sm:inline-flex"
-        >
-          전체 보기 <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
       </div>
 
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -67,14 +60,6 @@ export function CategoryGrid({
         })}
       </ul>
 
-      <div className="mt-4 flex justify-end sm:hidden">
-        <Link
-          href="/help"
-          className="inline-flex items-center gap-1 text-label-small-medium text-brand-600 hover:underline dark:text-brand-400"
-        >
-          전체 보기 <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
     </section>
   );
 }

@@ -672,7 +672,6 @@ export async function createArticleAction(
     payload: { slug: input.slug, title: input.title, publish: !!input.publish },
   });
   revalidatePath('/admin/articles');
-  revalidatePath('/help');
   revalidatePath(`/help/${input.productCode}`);
   if (input.publish) {
     revalidatePath(`/help/${input.productCode}/${input.slug}`);
@@ -756,7 +755,6 @@ export async function updateArticleAction(
   });
   revalidatePath('/admin/articles');
   revalidatePath(`/admin/articles/${id}`);
-  revalidatePath('/help');
   revalidatePath(`/help/${input.productCode}`);
   // 실제 라우트는 4단 구조: /help/[product]/[content_type]/[slug]
   if (input.contentType) {
@@ -783,7 +781,6 @@ export async function togglePublishArticleAction(
       payload: { publish },
     });
     revalidatePath('/admin/articles');
-    revalidatePath('/help');
   }
   return result;
 }
@@ -834,7 +831,6 @@ export async function publishArticleAction(
   });
   revalidatePath('/admin/articles');
   revalidatePath(`/admin/articles/${id}`);
-  revalidatePath('/help');
   revalidatePath(`/help/${article.productCode}`);
   revalidatePath(
     `/help/${article.productCode}/${article.contentType}/${article.slug}`,
@@ -860,7 +856,6 @@ export async function unpublishArticleAction(
   });
   revalidatePath('/admin/articles');
   revalidatePath(`/admin/articles/${id}`);
-  revalidatePath('/help');
   revalidatePath(
     `/help/${article.productCode}/${article.contentType}/${article.slug}`,
   );
@@ -880,7 +875,6 @@ export async function archiveArticleAction(
       targetId: id,
     });
     revalidatePath('/admin/articles');
-    revalidatePath('/help');
   }
   return result;
 }
@@ -898,7 +892,6 @@ export async function restoreArticleAction(
       targetId: id,
     });
     revalidatePath('/admin/articles');
-    revalidatePath('/help');
   }
   return result;
 }

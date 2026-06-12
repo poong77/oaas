@@ -35,6 +35,7 @@ import {
 import { getCurrentUser } from '@/lib/permissions';
 import { getProductCategories } from '@/lib/services/categories';
 import { CONTENT_TYPE_LABEL } from '@/lib/articles/zod-schemas';
+import { CONTENT_TYPE_META } from '@/lib/articles/content-type-meta';
 import type { ArticleContentType } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
@@ -139,15 +140,7 @@ export default async function HelpArticlePage({
 
         <div className="flex flex-wrap items-center gap-2">
           {/* 의도(콘텐츠 유형) 칩을 가장 좌측에 */}
-          <Badge
-            tone={
-              article.contentType === 'howto'
-                ? 'brand'
-                : article.contentType === 'feature'
-                  ? 'success'
-                  : 'warn'
-            }
-          >
+          <Badge tone={CONTENT_TYPE_META[article.contentType].tone}>
             {CONTENT_TYPE_LABEL[article.contentType]}
           </Badge>
           {/* 카테고리 대분류 > 중분류 > 소분류 */}
@@ -239,13 +232,7 @@ export default async function HelpArticlePage({
                             {r.productCode}
                           </Badge>
                           <Badge
-                            tone={
-                              r.contentType === 'howto'
-                                ? 'brand'
-                                : r.contentType === 'feature'
-                                  ? 'success'
-                                  : 'warn'
-                            }
+                            tone={CONTENT_TYPE_META[r.contentType].tone}
                             className="text-[10px]"
                           >
                             {CONTENT_TYPE_LABEL[r.contentType]}

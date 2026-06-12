@@ -66,16 +66,16 @@ export function LoginForm({
           duration: 10000,
         });
       }
-      // 어드민·매니저는 로그인 직후 항상 어드민으로 진입한다.
-      // (프론트 보호경로에서 넘어온 callbackUrl이 /help 등 빈 페이지로 멈추는 문제 방지)
-      // 단, callbackUrl이 어드민 영역(/admin)이면 그대로 존중.
+      // 로그인 직후 도착지는 역할별 기본 화면으로 보낸다.
+      // (보호경로에서 넘어온 callbackUrl이 삭제/미발행 공지 등 404 빈 페이지로
+      //  멈추는 문제 방지 — 어드민·매니저는 /admin 영역만 callbackUrl 존중,
+      //  호텔리어는 항상 홈(/)으로 진입)
       const role = session?.user?.role;
       const isStaff = role === 'admin' || role === 'manager';
-      const destination = isStaff
-        ? callbackUrl && callbackUrl.startsWith('/admin')
+      const destination =
+        isStaff && callbackUrl && callbackUrl.startsWith('/admin')
           ? callbackUrl
-          : defaultLandingFor(role)
-        : callbackUrl || defaultLandingFor(role);
+          : defaultLandingFor(role);
       router.push(destination);
       router.refresh();
     });

@@ -23,6 +23,7 @@ import { MarkdownView } from '@/components/articles/markdown-view';
 import { ArticleToc } from '@/components/articles/article-toc';
 import { extractToc } from '@/lib/articles/toc-extractor';
 import { CONTENT_TYPE_LABEL } from '@/lib/articles/zod-schemas';
+import { CONTENT_TYPE_META } from '@/lib/articles/content-type-meta';
 import {
   loadPreview,
   clearPreview,
@@ -109,15 +110,7 @@ export function PreviewRenderer() {
             <Badge tone="brand" className="uppercase">
               {data.productLabel}
             </Badge>
-            <Badge
-              tone={
-                data.contentType === 'howto'
-                  ? 'brand'
-                  : data.contentType === 'feature'
-                    ? 'success'
-                    : 'warn'
-              }
-            >
+            <Badge tone={CONTENT_TYPE_META[data.contentType].tone}>
               {CONTENT_TYPE_LABEL[data.contentType]}
             </Badge>
             {data.categoryPath.map((seg, i) => (
