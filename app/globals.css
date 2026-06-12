@@ -94,6 +94,137 @@
   --color-brand-800: oklch(0.398 0.195 277.37);
   --color-brand-900: oklch(0.359 0.144 278.70);
   --color-brand-950: oklch(0.257 0.092 281.29);
+
+  /*
+   * ─────────────────────────────────────────────────────────────────
+   * 타이포그래피 토큰 — Figma textStyles.json export 기준 (35종)
+   *
+   * Tailwind 4 `--text-{name}` 문법으로 등록 → `text-{name}` 유틸리티 자동 생성.
+   *   예) text-heading-large-bold, text-body-medium-regular
+   * size + line-height + font-weight 가 한 번에 묶여 적용된다.
+   *
+   * line-height = 원본 % → 비율 (148% → 1.48), weight = 원본 매핑.
+   * 폰트 패밀리는 전역 --font-sans(Pretendard)를 그대로 상속.
+   * ─────────────────────────────────────────────────────────────────
+   */
+
+  /* Display */
+  /* ⚠ 이름은 medium 이지만 Figma 원본 weight=900(Black). 디자인 확정 시 이름/값 재검토 */
+  --text-display-xlarge-medium: 60px;
+  --text-display-xlarge-medium--line-height: 1.2;
+  --text-display-xlarge-medium--font-weight: 900;
+  --text-display-xlarge-bold: 60px;
+  --text-display-xlarge-bold--line-height: 1.2;
+  --text-display-xlarge-bold--font-weight: 700;
+  --text-display-large-medium: 48px;
+  --text-display-large-medium--line-height: 1.2;
+  --text-display-large-medium--font-weight: 500;
+  --text-display-large-bold: 48px;
+  --text-display-large-bold--line-height: 1.2;
+  --text-display-large-bold--font-weight: 700;
+  --text-display-medium-medium: 36px;
+  --text-display-medium-medium--line-height: 1.3;
+  --text-display-medium-medium--font-weight: 500;
+  --text-display-medium-bold: 36px;
+  --text-display-medium-bold--line-height: 1.3;
+  --text-display-medium-bold--font-weight: 700;
+
+  /* Heading */
+  --text-heading-large-medium: 32px;
+  --text-heading-large-medium--line-height: 1.48;
+  --text-heading-large-medium--font-weight: 500;
+  --text-heading-large-bold: 32px;
+  --text-heading-large-bold--line-height: 1.48;
+  --text-heading-large-bold--font-weight: 700;
+  --text-heading-medium-medium: 24px;
+  --text-heading-medium-medium--line-height: 1.48;
+  --text-heading-medium-medium--font-weight: 500;
+  --text-heading-medium-bold: 24px;
+  --text-heading-medium-bold--line-height: 1.48;
+  --text-heading-medium-bold--font-weight: 700;
+  --text-heading-small-medium: 20px;
+  --text-heading-small-medium--line-height: 1.48;
+  --text-heading-small-medium--font-weight: 500;
+  --text-heading-small-bold: 20px;
+  --text-heading-small-bold--line-height: 1.48;
+  --text-heading-small-bold--font-weight: 700;
+
+  /* Title */
+  --text-title-large-medium: 18px;
+  --text-title-large-medium--line-height: 1.48;
+  --text-title-large-medium--font-weight: 500;
+  --text-title-large-semibold: 18px;
+  --text-title-large-semibold--line-height: 1.48;
+  --text-title-large-semibold--font-weight: 600;
+  --text-title-large-bold: 18px;
+  --text-title-large-bold--line-height: 1.48;
+  --text-title-large-bold--font-weight: 700;
+  --text-title-medium-medium: 16px;
+  --text-title-medium-medium--line-height: 1.48;
+  --text-title-medium-medium--font-weight: 500;
+  --text-title-medium-semibold: 16px;
+  --text-title-medium-semibold--line-height: 1.48;
+  --text-title-medium-semibold--font-weight: 600;
+  --text-title-medium-bold: 16px;
+  --text-title-medium-bold--line-height: 1.48;
+  --text-title-medium-bold--font-weight: 700;
+
+  /* Body */
+  --text-body-large-regular: 16px;
+  --text-body-large-regular--line-height: 1.48;
+  --text-body-large-regular--font-weight: 400;
+  --text-body-large-medium: 16px;
+  --text-body-large-medium--line-height: 1.48;
+  --text-body-large-medium--font-weight: 500;
+  --text-body-large-semibold: 16px;
+  --text-body-large-semibold--line-height: 1.48;
+  --text-body-large-semibold--font-weight: 600;
+  --text-body-medium-regular: 14px;
+  --text-body-medium-regular--line-height: 1.48;
+  --text-body-medium-regular--font-weight: 400;
+  --text-body-medium-medium: 14px;
+  --text-body-medium-medium--line-height: 1.48;
+  --text-body-medium-medium--font-weight: 500;
+  --text-body-medium-semibold: 14px;
+  --text-body-medium-semibold--line-height: 1.48;
+  --text-body-medium-semibold--font-weight: 600;
+  --text-body-small-regular: 12px;
+  --text-body-small-regular--line-height: 1.48;
+  --text-body-small-regular--font-weight: 400;
+  --text-body-small-medium: 12px;
+  --text-body-small-medium--line-height: 1.48;
+  --text-body-small-medium--font-weight: 500;
+  --text-body-small-semibold: 12px;
+  --text-body-small-semibold--line-height: 1.48;
+  --text-body-small-semibold--font-weight: 600;
+
+  /* Label */
+  --text-label-large-medium: 16px;
+  --text-label-large-medium--line-height: 1.48;
+  --text-label-large-medium--font-weight: 500;
+  --text-label-large-semibold: 16px;
+  --text-label-large-semibold--line-height: 1.48;
+  --text-label-large-semibold--font-weight: 600;
+  --text-label-medium-medium: 14px;
+  --text-label-medium-medium--line-height: 1.48;
+  --text-label-medium-medium--font-weight: 500;
+  --text-label-medium-semibold: 14px;
+  --text-label-medium-semibold--line-height: 1.48;
+  --text-label-medium-semibold--font-weight: 600;
+  --text-label-small-medium: 12px;
+  --text-label-small-medium--line-height: 1.48;
+  --text-label-small-medium--font-weight: 500;
+  --text-label-small-semibold: 12px;
+  --text-label-small-semibold--line-height: 1.48;
+  --text-label-small-semibold--font-weight: 600;
+
+  /* Caption */
+  --text-caption-medium: 11px;
+  --text-caption-medium--line-height: 1.4;
+  --text-caption-medium--font-weight: 500;
+  --text-caption-semibold: 11px;
+  --text-caption-semibold--line-height: 1.4;
+  --text-caption-semibold--font-weight: 600;
 }
 
 /* 매니저 — 코발트 블루 (Tailwind blue 팔레트) */

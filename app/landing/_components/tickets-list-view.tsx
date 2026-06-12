@@ -52,7 +52,7 @@ function StatusPill({ status }: { status: Status }) {
   const m = STATUS_META[status];
   return (
     <span
-      className={`inline-flex w-fit shrink-0 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${m.cls}`}
+      className={`inline-flex w-fit shrink-0 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-medium min-w-[80px] ${m.cls}`}
     >
       {m.label}
     </span>
