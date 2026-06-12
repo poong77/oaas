@@ -10,11 +10,10 @@ import {
   CheckCircle2,
   Mail,
   MessageSquare,
-  ShieldCheck,
   UserRound,
 } from 'lucide-react';
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -157,63 +156,63 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="items-center gap-2 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-white">
-          <ShieldCheck className="h-5 w-5" />
-        </div>
-        <div>
-          <h1 className="text-lg font-bold">비밀번호 찾기</h1>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            이메일로 본인 계정을 확인하고 인증 후 새 비밀번호를 설정합니다.
+    <Card className="w-full max-w-[436px] rounded-xl p-12 shadow-none">
+      <div className="flex flex-col gap-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-black dark:text-white">
+            비밀번호 찾기
+          </h1>
+          <p className="mt-2 text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
+            가입 시 등록한 이메일로 계정을 확인합니다.
           </p>
+          <div className="mt-4 flex justify-center">
+            <StepIndicator step={step} />
+          </div>
         </div>
-        <StepIndicator step={step} />
-      </CardHeader>
 
-      <CardContent className="flex flex-col gap-4">
         {/* 1단계: 이메일 입력 */}
         {step === 'email' && (
-          <>
-            <form className="flex flex-col gap-2" onSubmit={lookupEmail}>
-              <Label htmlFor="reset-email">이메일 주소</Label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Mail className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    id="reset-email"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setNotFound(false);
-                    }}
-                    placeholder="가입 시 등록한 이메일"
-                    className="pl-8"
-                    autoFocus
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={pending || !EMAIL_RE.test(email.trim())}
-                >
-                  확인
-                </Button>
+          <div className="flex flex-col gap-4">
+            <form className="flex flex-col gap-3" onSubmit={lookupEmail}>
+              <Label htmlFor="reset-email" className="sr-only">
+                이메일 주소
+              </Label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <Input
+                  id="reset-email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setNotFound(false);
+                  }}
+                  placeholder="이메일 주소"
+                  className="h-[52px] rounded-lg border-[#DCDEE3] pl-12 pr-4 text-base shadow-none dark:border-slate-700"
+                  autoFocus
+                />
               </div>
-              <p className="text-[11px] text-slate-400">
+              <Button
+                type="submit"
+                disabled={pending || !EMAIL_RE.test(email.trim())}
+                className="h-[52px] w-full rounded-lg px-5 text-base shadow-none"
+              >
+                {pending ? '확인 중...' : '확인'}
+              </Button>
+              <p className="text-center text-xs text-slate-400">
                 계정에 등록된 이메일 주소를 입력해주세요.
               </p>
             </form>
 
             {notFound && <AccountHelp />}
-          </>
+          </div>
         )}
 
         {/* 2단계: 계정 선택 (이메일이 여러 계정에 걸린 경우) */}
         {step === 'account' && (
-          <>
+          <div className="flex flex-col gap-4">
             <BackBar
               label="이메일 다시 입력"
               onBack={() => {
@@ -221,16 +220,16 @@ export function ForgotPasswordForm() {
                 setAccounts([]);
               }}
             />
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               같은 이메일로 등록된 계정이 여러 개입니다. 본인 호텔의 계정을 선택해주세요.
             </p>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               {accounts.map((a) => (
                 <button
                   key={a.userId}
                   type="button"
                   onClick={() => selectAccount(a)}
-                  className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left text-sm transition-colors hover:border-brand-400 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                  className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white px-4 py-3 text-left text-sm transition-colors hover:border-brand-400 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
                 >
                   <span className="flex items-center gap-2 font-medium">
                     <Building2 className="h-4 w-4 shrink-0 text-slate-400" />
@@ -244,17 +243,17 @@ export function ForgotPasswordForm() {
                 </button>
               ))}
             </div>
-          </>
+          </div>
         )}
 
         {/* 3단계: 채널 선택 */}
         {step === 'channel' && account && (
-          <>
+          <div className="flex flex-col gap-4">
             <BackBar
               label={accounts.length > 1 ? account.hotelName ?? account.maskedName : '이메일 다시 입력'}
               onBack={() => setStep(accounts.length > 1 ? 'account' : 'email')}
             />
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               인증 정보를 받을 방법을 선택해주세요.
             </p>
             <div className="flex flex-col gap-2">
@@ -277,14 +276,14 @@ export function ForgotPasswordForm() {
                 />
               )}
             </div>
-          </>
+          </div>
         )}
 
         {/* 4단계: 문자 코드 입력 */}
         {step === 'verify' && (
-          <>
+          <div className="flex flex-col gap-4">
             <BackBar label="인증코드 입력" onBack={() => setStep('channel')} />
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               <strong>{maskedTarget}</strong> 로 보낸 6자리 인증코드를 입력해주세요.
             </p>
             <form className="flex flex-col gap-3" onSubmit={verifyCode}>
@@ -297,7 +296,7 @@ export function ForgotPasswordForm() {
                   setCode(e.target.value.replace(/\D/g, '').slice(0, 6))
                 }
                 placeholder="000000"
-                className="text-center text-lg tracking-[0.5em]"
+                className="h-[52px] rounded-lg border-[#DCDEE3] px-4 text-center text-xl tracking-[0.5em] shadow-none dark:border-slate-700"
                 autoFocus
               />
               {codeError && (
@@ -305,47 +304,58 @@ export function ForgotPasswordForm() {
                   {codeError}
                 </div>
               )}
-              <Button type="submit" disabled={pending || code.length !== 6}>
+              <Button
+                type="submit"
+                disabled={pending || code.length !== 6}
+                className="h-[52px] w-full rounded-lg px-5 text-base shadow-none"
+              >
                 {pending ? '확인 중...' : '인증코드 확인'}
               </Button>
               <button
                 type="button"
                 disabled={pending}
                 onClick={() => requestReset('sms')}
-                className="text-xs text-slate-500 underline-offset-2 hover:underline disabled:opacity-50"
+                className="text-center text-xs text-slate-500 underline-offset-2 hover:text-brand-600 hover:underline disabled:opacity-50 dark:text-slate-400"
               >
                 인증코드 다시 받기
               </button>
             </form>
-          </>
+          </div>
         )}
 
         {/* 이메일 발송 완료 */}
         {step === 'emailSent' && (
-          <div className="flex flex-col items-center gap-3 py-4 text-center">
-            <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-            <p className="text-sm font-medium">재설정 링크를 보냈습니다</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              <strong>{maskedTarget}</strong> 로 비밀번호 재설정 링크를 발송했습니다.
-              메일을 열어 30분 이내에 새 비밀번호를 설정해주세요.
+          <div className="flex flex-col items-center gap-3 py-2 text-center">
+            <CheckCircle2 className="h-12 w-12 text-brand-500" />
+            <p className="text-[15px] font-semibold">재설정 링크를 보냈습니다</p>
+            <p className="text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
+              <strong className="text-slate-900 dark:text-slate-100">
+                {maskedTarget}
+              </strong>{' '}
+              로 비밀번호 재설정 링크를 발송했습니다. 메일을 열어 30분 이내에 새
+              비밀번호를 설정해주세요.
             </p>
-            <Button asChild variant="outline" className="mt-2">
+            <Button
+              asChild
+              variant="outline"
+              className="mt-2 h-[52px] w-full rounded-lg px-5 text-base shadow-none"
+            >
               <Link href="/login">로그인 화면으로</Link>
             </Button>
           </div>
         )}
 
         {step !== 'emailSent' && (
-          <div className="border-t border-slate-100 pt-3 text-center dark:border-slate-800">
+          <div className="border-t border-slate-100 pt-4 text-center dark:border-slate-800">
             <Link
               href="/login"
-              className="text-xs text-slate-500 hover:text-brand-600 dark:text-slate-400"
+              className="text-xs text-slate-500 underline-offset-2 hover:text-brand-600 hover:underline dark:text-slate-400"
             >
               로그인 화면으로 돌아가기
             </Link>
           </div>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 }
