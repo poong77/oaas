@@ -27,7 +27,7 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
   return (
     <section
       aria-labelledby="home-notice-heading"
-      className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8"
+      className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8"
     >
       <div className="mb-4 flex items-center justify-between">
         <h2

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -82,11 +82,11 @@ export function LoginForm({
   }
 
   return (
-    <Card className="w-full max-w-md p-2 sm:p-4">
-      <CardHeader className="items-center pb-2 text-center">
-        <h1 className="text-2xl font-bold text-black dark:text-white">로그인</h1>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <Card className="w-full max-w-[436px] rounded-xl p-12 shadow-none">
+      <div className="flex flex-col gap-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-black dark:text-white">로그인</h1>
+        </div>
         {!credentialsEnabled && !ssoEnabled && (
           <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
             현재 어떤 로그인 방식도 활성화되어 있지 않습니다. 관리자에게
@@ -112,7 +112,7 @@ export function LoginForm({
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="이메일 주소 또는 아이디"
-                className="h-[52px] text-base"
+                className="h-[52px] rounded-lg border-[#DCDEE3] px-4 text-base shadow-none dark:border-slate-700"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -128,7 +128,7 @@ export function LoginForm({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="비밀번호"
-                  className="h-[52px] pr-12 text-base"
+                  className="h-[52px] rounded-lg border-[#DCDEE3] pl-4 pr-12 text-base shadow-none dark:border-slate-700"
                 />
                 <button
                   type="button"
@@ -151,7 +151,11 @@ export function LoginForm({
                 {formError}
               </div>
             )}
-            <Button type="submit" disabled={pending} className="h-12 w-full text-base">
+            <Button
+              type="submit"
+              disabled={pending}
+              className="h-[52px] w-full rounded-lg px-5 text-base shadow-none"
+            >
               {pending ? '로그인 중...' : '로그인'}
             </Button>
 
@@ -189,7 +193,7 @@ export function LoginForm({
             OA PMS SSO로 로그인 (준비 중)
           </Button>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 }

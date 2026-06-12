@@ -39,7 +39,7 @@ export async function EmergencyBanner() {
           aria-live="assertive"
           className="w-full border-b border-red-700 bg-red-600 text-white"
         >
-          <div className="mx-auto flex w-full max-w-6xl items-start gap-2 px-4 py-2 text-sm sm:items-center sm:px-6 lg:px-8">
+          <div className="mx-auto flex w-full max-w-[1200px] items-start gap-2 px-4 py-2 text-sm sm:items-center sm:px-6 lg:px-8">
             <AlertOctagon className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" />
             <div className="flex flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
               <span className="font-semibold tracking-tight">[장애 발생]</span>
@@ -66,7 +66,7 @@ export async function EmergencyBanner() {
             aria-live="polite"
             className={`w-full ${meta.container}`}
           >
-            <div className="mx-auto flex w-full max-w-6xl items-start gap-2 px-4 py-2 text-sm sm:items-center sm:px-6 lg:px-8">
+            <div className="mx-auto flex w-full max-w-[1200px] items-start gap-2 px-4 py-2 text-sm sm:items-center sm:px-6 lg:px-8">
               <Megaphone className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" />
               <div className="flex flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
                 <span className="font-semibold tracking-tight">

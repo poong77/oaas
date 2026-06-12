@@ -99,7 +99,7 @@ export default async function HelpProductPage({
   const others = categories.filter((c) => c.code !== product);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <PageHeader
         title={
           <span className="inline-flex items-center gap-2.5">

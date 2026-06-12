@@ -16,7 +16,7 @@ export default async function UserLayout({
   return (
     <div
       data-role={userMode}
-      className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8"
+      className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8"
     >
       {children}
     </div>

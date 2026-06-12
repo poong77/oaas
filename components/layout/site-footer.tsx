@@ -17,7 +17,7 @@ const OA_FAMILY = [
 export function SiteFooter() {
   return (
     <footer className="mt-auto bg-[#2A3038] px-5 py-10">
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center gap-6">
         {/* OA 패밀리 */}
         <ul className="grid w-full max-w-[820px] grid-cols-1 gap-3 sm:grid-cols-3">
           {OA_FAMILY.map((s) => (

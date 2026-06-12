@@ -18,7 +18,7 @@ export function CategoryGrid({
   return (
     <section
       aria-labelledby="category-heading"
-      className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
+      className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
     >
       <div className="mb-5 flex items-end justify-between gap-3">
         <div>

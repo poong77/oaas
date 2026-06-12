@@ -46,7 +46,7 @@ export function HomeHero({
     <section className="relative overflow-hidden border-b border-slate-200/70 bg-white pb-10 pt-10 dark:border-slate-800 dark:bg-slate-950 sm:pt-14">
       <div
         className={`mx-auto grid w-full gap-8 px-4 sm:px-6 lg:gap-10 lg:px-8 ${
-          sidebar ? 'max-w-6xl lg:grid-cols-12' : 'max-w-3xl'
+          sidebar ? 'max-w-[1200px] lg:grid-cols-12' : 'max-w-3xl'
         }`}
       >
         {/* 검색 영역 — sidebar 있으면 좌측 7칸, 없으면 중앙 정렬 */}

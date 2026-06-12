@@ -51,7 +51,7 @@ export function HomeMyTickets({
   return (
     <section
       aria-labelledby="my-tickets-heading"
-      className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8"
+      className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8"
     >
       <div className="mb-4 flex items-center justify-between">
         <h2 id="my-tickets-heading" className="text-title-large-bold tracking-tight sm:text-heading-small-bold">

@@ -70,7 +70,7 @@ export function ChatbotFab({ embedUrl }: { embedUrl: string }) {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="챗봇 열기"
-          className="fixed bottom-3 right-3 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-600/30 transition-transform hover:scale-105 hover:bg-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 sm:bottom-4 sm:right-4 sm:h-14 sm:w-14"
+          className="fixed bottom-3 right-3 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-white transition-transform hover:scale-105 hover:bg-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 sm:bottom-4 sm:right-4 sm:h-14 sm:w-14"
         >
           <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>

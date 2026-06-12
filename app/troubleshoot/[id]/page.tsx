@@ -49,7 +49,7 @@ export default async function TroubleshootRunPage({
   const productLabel = productMap[checklist.productCode]?.label ?? checklist.productCode;
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
         <div className="flex flex-col gap-5">
       <PageHeader

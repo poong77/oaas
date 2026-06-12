@@ -30,7 +30,7 @@ export function CategoryTabs({
       aria-labelledby="category-heading"
       className="bg-slate-100 py-10 dark:bg-slate-900 sm:py-14"
     >
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-7 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center gap-7 px-4 sm:px-6 lg:px-8">
         <h2
           id="category-heading"
           className="text-center text-heading-large-bold tracking-tight"

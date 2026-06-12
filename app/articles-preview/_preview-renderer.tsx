@@ -66,7 +66,7 @@ export function PreviewRenderer() {
 
   if (status === 'loading') {
     return (
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-center px-4 py-20 text-sm text-slate-500">
+      <div className="mx-auto flex w-full max-w-[1200px] items-center justify-center px-4 py-20 text-sm text-slate-500">
         미리보기 데이터를 불러오는 중...
       </div>
     );
@@ -98,7 +98,7 @@ export function PreviewRenderer() {
     <>
       <PreviewBanner isPublishedSource={data.isPublishedSource} />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="flex flex-col gap-3">
           <span className="inline-flex items-center gap-1 text-xs text-slate-500">
             <ArrowLeft className="h-3 w-3" />
@@ -199,7 +199,7 @@ function PreviewBanner({
   if (closed) return null;
   return (
     <div className="sticky top-0 z-40 border-b border-amber-300 bg-amber-100 px-4 py-2 text-xs text-amber-900 shadow-sm dark:border-amber-700 dark:bg-amber-950/60 dark:text-amber-200">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3">
+      <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Eye className="h-3.5 w-3.5 shrink-0" />
           <span>
