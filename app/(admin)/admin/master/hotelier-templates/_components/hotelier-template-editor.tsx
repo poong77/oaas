@@ -92,7 +92,7 @@ export function HotelierTemplateEditor({
             required
             placeholder="계정생성/삭제"
           />
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] text-slate-400">
             접수폼 「자세한 내용」 위에 노출되는 버튼 이름입니다.
           </span>
         </div>
@@ -129,7 +129,7 @@ export function HotelierTemplateEditor({
           onChange={(e) => setSortOrder(e.target.value)}
           className="w-24"
         />
-        <span className="text-[11px] text-slate-400 dark:text-slate-500">
+        <span className="text-[11px] text-slate-400">
           숫자가 작을수록 버튼이 왼쪽에 노출됩니다.
         </span>
       </div>

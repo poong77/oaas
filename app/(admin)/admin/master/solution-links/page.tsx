@@ -82,7 +82,7 @@ export default async function MasterSolutionLinksPage() {
                           {!it.isActive && <Badge tone="danger">비활성</Badge>}
                         </div>
                         {it.defaultUrlTemplate && (
-                          <code className="truncate font-mono text-[10px] text-slate-400 dark:text-slate-500">
+                          <code className="truncate font-mono text-[10px] text-slate-400">
                             {it.defaultUrlTemplate}
                           </code>
                         )}

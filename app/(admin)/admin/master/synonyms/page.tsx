@@ -95,7 +95,7 @@ export default async function SynonymsIndexPage() {
                         </span>
                       )}
                     </div>
-                    <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5 dark:text-slate-500" />
+                    <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
                   </Link>
                 </li>
               ))}

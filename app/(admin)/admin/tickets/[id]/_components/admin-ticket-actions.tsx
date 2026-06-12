@@ -274,13 +274,13 @@ export function AdminTicketActions({
                 checked={oneCall}
                 onChange={(e) => setOneCall(e.target.checked)}
                 disabled={pending}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400 dark:border-slate-700"
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
               />
               <span>
                 <span className="font-medium text-slate-700 dark:text-slate-200">
                   원콜 해결
                 </span>
-                <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+                <span className="ml-1 text-xs text-slate-500">
                   1회 작업으로 해결 (대시보드 원콜완료 지표에 집계)
                 </span>
               </span>

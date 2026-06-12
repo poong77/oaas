@@ -73,7 +73,7 @@ export function ChannelForm({ channel }: Props) {
           {state.fieldErrors?.code ? (
             <p className="text-xs text-red-500">{state.fieldErrors.code}</p>
           ) : (
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               snake_case 영문 소문자/숫자만. 저장 후 변경 불가.
               {isSystem && ' (시스템 채널 — 잠금)'}
             </p>
@@ -152,7 +152,7 @@ export function ChannelForm({ channel }: Props) {
           />
         </div>
       </div>
-      <p className="-mt-2 text-xs text-slate-500 dark:text-slate-400">
+      <p className="-mt-2 text-xs text-slate-500">
         새 아이콘이 필요하면 <code className="font-mono">lib/ticket-channel-label.ts</code>{' '}
         <code className="font-mono">CHANNEL_ICON_MAP</code>에 추가 후 배포해주세요.
       </p>
@@ -170,7 +170,7 @@ export function ChannelForm({ channel }: Props) {
             <span className="font-medium text-slate-700 dark:text-slate-200">
               티켓 생성 폼에 노출
             </span>
-            <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+            <span className="ml-1 text-xs text-slate-500">
               (체크 해제 시 매니저 폼 드롭다운에서 숨김. 'web'/'chatbot'은 자동 태깅용으로 끄세요)
             </span>
           </span>
@@ -187,7 +187,7 @@ export function ChannelForm({ channel }: Props) {
             <span className="font-medium text-slate-700 dark:text-slate-200">
               티켓 생성 폼 기본 선택값
             </span>
-            <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+            <span className="ml-1 text-xs text-slate-500">
               (true는 1개만. 저장 시 기존 기본값은 자동 해제)
             </span>
           </span>

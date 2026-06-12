@@ -101,7 +101,7 @@ export function TicketsListClient({
                     {t.title}
                   </Link>
                   {t.messageCount > 0 && (
-                    <span className="ml-1 inline-flex items-center gap-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+                    <span className="ml-1 inline-flex items-center gap-0.5 text-[11px] text-slate-400">
                       <MessageSquare className="h-3 w-3" />
                       {t.messageCount}
                     </span>
@@ -112,7 +112,7 @@ export function TicketsListClient({
                 </td>
                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
                   {productMap[t.productCode] ?? t.productCode}
-                  <span className="text-slate-400 dark:text-slate-500"> · </span>
+                  <span className="text-slate-400"> · </span>
                   {issueTypeMap[t.issueType] ?? t.issueType}
                 </td>
                 <td className="px-3 py-2">
@@ -129,7 +129,7 @@ export function TicketsListClient({
                 </td>
                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
                   {t.assigneeName ?? (
-                    <span className="text-slate-400 dark:text-slate-500">미배정</span>
+                    <span className="text-slate-400">미배정</span>
                   )}
                 </td>
                 <td className="px-3 py-2">

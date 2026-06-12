@@ -213,8 +213,8 @@ function Field({
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
       {children}
-      {hint && !error && <p className="text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
-      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+      {hint && !error && <p className="text-xs text-slate-400">{hint}</p>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }
@@ -235,13 +235,13 @@ function RepeatList({
   return (
     <div className="flex flex-col gap-2 rounded-md border border-slate-200 p-3 dark:border-slate-800">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{title}</span>
+        <span className="text-xs font-medium text-slate-500">{title}</span>
         <Button type="button" size="sm" variant="ghost" onClick={onAdd}>
           <Plus className="h-3.5 w-3.5" />{addLabel}
         </Button>
       </div>
       {empty ? (
-        <p className="text-xs text-slate-400 dark:text-slate-500">등록된 항목이 없습니다.</p>
+        <p className="text-xs text-slate-400">등록된 항목이 없습니다.</p>
       ) : (
         <div className="flex flex-col gap-2">{children}</div>
       )}

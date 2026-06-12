@@ -142,14 +142,14 @@ export function TicketHotelSolutions({
                     바로가기 <ExternalLink className="h-3 w-3" />
                   </button>
                 ) : (
-                  <span className="text-xs text-slate-400 dark:text-slate-500">URL 없음</span>
+                  <span className="text-xs text-slate-400">URL 없음</span>
                 )}
               </div>
               {(s.loginId || s.hasPassword) && (
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-600 dark:text-slate-300">
                   {s.loginId && (
                     <span className="inline-flex items-center gap-1">
-                      <span className="text-slate-400 dark:text-slate-500">ID</span>{' '}
+                      <span className="text-slate-400">ID</span>{' '}
                       <span className="font-mono">{s.loginId}</span>
                       <button
                         type="button"
@@ -159,7 +159,7 @@ export function TicketHotelSolutions({
                             ok ? 'ID가 복사되었습니다.' : '복사에 실패했습니다',
                           );
                         }}
-                        className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200"
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                         aria-label="ID 복사"
                         title="ID 복사"
                       >
@@ -169,7 +169,7 @@ export function TicketHotelSolutions({
                   )}
                   {s.hasPassword && (
                     <span className="inline-flex items-center gap-1">
-                      <span className="text-slate-400 dark:text-slate-500">PW</span>{' '}
+                      <span className="text-slate-400">PW</span>{' '}
                       {canReveal ? (
                         <>
                           <span className="font-mono">
@@ -178,7 +178,7 @@ export function TicketHotelSolutions({
                           <button
                             type="button"
                             onClick={() => toggleReveal(s.id)}
-                            className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200"
+                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                             aria-label={revealed[s.id] !== undefined ? '숨기기' : '보기'}
                             title={revealed[s.id] !== undefined ? '숨기기' : '보기'}
                           >
@@ -191,7 +191,7 @@ export function TicketHotelSolutions({
                           <button
                             type="button"
                             onClick={() => void copyPassword(s.id)}
-                            className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200"
+                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                             aria-label="비밀번호 복사"
                             title="비밀번호 복사"
                           >
@@ -204,7 +204,7 @@ export function TicketHotelSolutions({
                           <button
                             type="button"
                             onClick={() => void copyPassword(s.id)}
-                            className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200"
+                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                             aria-label="비밀번호 복사"
                             title="비밀번호 복사"
                           >
@@ -212,7 +212,7 @@ export function TicketHotelSolutions({
                           </button>
                         </>
                       ) : (
-                        <span className="text-slate-400 dark:text-slate-500">어드민 전용</span>
+                        <span className="text-slate-400">어드민 전용</span>
                       )}
                     </span>
                   )}

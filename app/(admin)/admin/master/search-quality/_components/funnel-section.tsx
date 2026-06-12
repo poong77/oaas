@@ -19,11 +19,11 @@ export function FunnelSection({ funnel }: { funnel: FunnelStats }) {
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             실사용 퍼널 — 노출 → 클릭 → 접수
           </h2>
-          <span className="text-xs text-slate-400 dark:text-slate-500">최근 90일 실제 검색</span>
+          <span className="text-xs text-slate-400">최근 90일 실제 검색</span>
         </div>
 
         {searches === 0 ? (
-          <p className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">
+          <p className="py-4 text-center text-sm text-slate-500">
             아직 실사용 검색 로그가 없습니다. 사용자가 /search에서 검색하면
             집계됩니다.
           </p>
@@ -53,7 +53,7 @@ export function FunnelSection({ funnel }: { funnel: FunnelStats }) {
 
             {/* 클릭 위치 분포 */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              <span className="text-xs font-medium text-slate-500">
                 클릭 위치 분포
               </span>
               <div className="flex h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
@@ -65,7 +65,7 @@ export function FunnelSection({ funnel }: { funnel: FunnelStats }) {
                 <Bar n={funnel.clickMid} d={clicks || 1} cls="bg-amber-400" />
                 <Bar n={funnel.clickDeep} d={clicks || 1} cls="bg-red-400" />
               </div>
-              <div className="flex gap-3 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex gap-3 text-xs text-slate-500">
                 <span>🟩 1~4위 {funnel.clickTop4}</span>
                 <span>🟨 5~8위 {funnel.clickMid}</span>
                 <span>🟥 9위+ {funnel.clickDeep}</span>
@@ -113,9 +113,9 @@ function FunnelStep({
         : 'text-amber-600 dark:text-amber-400';
   return (
     <div className="rounded-lg border border-slate-200 p-3 text-center dark:border-slate-700">
-      <div className="text-xs text-slate-500 dark:text-slate-400">{label}</div>
+      <div className="text-xs text-slate-500">{label}</div>
       <div className={`text-xl font-bold ${cls}`}>{value.toLocaleString()}</div>
-      <div className="text-xs text-slate-400 dark:text-slate-500">{sub}</div>
+      <div className="text-xs text-slate-400">{sub}</div>
     </div>
   );
 }
@@ -143,9 +143,9 @@ function Insight({
       : 'text-red-600 dark:text-red-400';
   return (
     <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
-      <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</div>
+      <div className="text-xs font-medium text-slate-500">{label}</div>
       <div className={`text-lg font-bold ${cls}`}>{value}</div>
-      <div className="text-xs text-slate-400 dark:text-slate-500">{hint}</div>
+      <div className="text-xs text-slate-400">{hint}</div>
     </div>
   );
 }

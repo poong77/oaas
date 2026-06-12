@@ -41,7 +41,7 @@ export function SearchFilters({
         onSubmit={submitQuery}
         className="relative w-full sm:min-w-[200px] sm:flex-1"
       >
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
           type="search"
           value={q}
@@ -90,7 +90,7 @@ export function SearchFilters({
       </Select>
 
       {pending && (
-        <span className="text-xs text-slate-500 dark:text-slate-400">적용 중...</span>
+        <span className="text-xs text-slate-500">적용 중...</span>
       )}
     </div>
   );

@@ -43,7 +43,7 @@ export function PopularArticleList({ items }: { items: ArticleListItem[] }) {
                   {a.summary30s}
                 </p>
               )}
-              <div className="mt-1 flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
+              <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
                 <span className="inline-flex items-center gap-1">
                   <Eye className="h-3 w-3" />
                   {a.viewCount.toLocaleString()}
@@ -59,7 +59,7 @@ export function PopularArticleList({ items }: { items: ArticleListItem[] }) {
                 )}
               </div>
             </div>
-            <ArrowUpRight className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+            <ArrowUpRight className="h-4 w-4 text-slate-400" />
           </Link>
         </li>
       ))}

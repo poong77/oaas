@@ -100,10 +100,10 @@ export function AttachmentList({
               >
                 <Paperclip className="h-3.5 w-3.5" />
                 {a.originalName}
-                <span className="text-xs text-slate-400 dark:text-slate-500">
+                <span className="text-xs text-slate-400">
                   ({formatBytes(a.sizeBytes)})
                 </span>
-                <ExternalLink className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                <ExternalLink className="h-3 w-3 text-slate-400" />
               </a>
             </li>
           ))}

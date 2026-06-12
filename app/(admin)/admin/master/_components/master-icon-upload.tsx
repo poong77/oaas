@@ -66,7 +66,7 @@ export function MasterIconUpload({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="text-[10px] font-medium text-slate-500">{label}</span>
       <input type="hidden" name={name} value={url ?? ''} />
       <div className="flex items-center gap-2">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
@@ -74,7 +74,7 @@ export function MasterIconUpload({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt="아이콘 미리보기" className="h-full w-full object-contain" />
           ) : (
-            <ImageIcon className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+            <ImageIcon className="h-5 w-5 text-slate-400" />
           )}
         </div>
         <div className="flex flex-col gap-1">
@@ -93,14 +93,14 @@ export function MasterIconUpload({
                 type="button"
                 onClick={() => setUrl(null)}
                 disabled={pending}
-                className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 disabled:opacity-50 dark:border-slate-700 dark:hover:bg-rose-950/30"
+                className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:border-slate-700 dark:hover:bg-rose-950/30"
               >
                 <X className="h-3 w-3" />
                 제거
               </button>
             )}
           </div>
-          <span className="text-[10px] leading-tight text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] leading-tight text-slate-400">
             정사각형 PNG(투명배경) 128×128px↑ · 1MB 이하 권장
           </span>
         </div>

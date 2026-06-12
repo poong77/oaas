@@ -67,7 +67,7 @@ export default async function HotelDetailPage({
       <div>
         <Link
           href="/admin/hotels"
-          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
         >
           <ArrowLeft className="h-4 w-4" />호텔 마스터로
         </Link>
@@ -105,7 +105,7 @@ export default async function HotelDetailPage({
         </CardHeader>
         <CardContent>
           {mappedUsers.length === 0 ? (
-            <p className="flex items-center gap-2 py-2 text-sm text-slate-400 dark:text-slate-500">
+            <p className="flex items-center gap-2 py-2 text-sm text-slate-400">
               <Users className="h-4 w-4" />매핑된 이용자 계정이 없습니다.
             </p>
           ) : (
@@ -113,7 +113,7 @@ export default async function HotelDetailPage({
               {mappedUsers.map((u) => (
                 <li key={u.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5 text-sm">
                   <span className="font-medium">{u.name}</span>
-                  <span className="text-slate-500 dark:text-slate-400">{u.username ?? u.email}</span>
+                  <span className="text-slate-500">{u.username ?? u.email}</span>
                   <Badge tone={u.role === 'admin' ? 'brand' : 'slate'}>
                     {ROLE_LABEL[u.role] ?? u.role}
                   </Badge>

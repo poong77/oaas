@@ -155,7 +155,7 @@ export function AiAssistPanel({
                       {d.title}
                     </a>
                     <span
-                      className="text-[11px] tabular-nums text-slate-400 dark:text-slate-500"
+                      className="text-[11px] tabular-nums text-slate-400"
                       aria-label={`유사도 ${Math.round(d.score * 100)}퍼센트`}
                     >
                       {Math.round(d.score * 100)}%
@@ -191,7 +191,7 @@ export function AiAssistPanel({
                     className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+                      <span className="font-mono text-[11px] text-slate-400">
                         {t.ticketNo}
                       </span>
                       <Badge tone={STATUS_TONE[t.status] ?? 'slate'}>
@@ -236,7 +236,7 @@ export function AiAssistPanel({
               {pending ? '초안 생성 중...' : 'AI 답변 초안 생성'}
             </button>
             {models.length === 0 && (
-              <p className="flex items-center gap-1 text-[11px] text-slate-400 dark:text-slate-500">
+              <p className="flex items-center gap-1 text-[11px] text-slate-400">
                 <FileText className="h-3 w-3" />
                 활성 AI 모델이 없습니다 (어드민에서 설정).
               </p>
@@ -263,7 +263,7 @@ export function AiAssistPanel({
 
 function EmptyHint({ text }: { text: string }) {
   return (
-    <p className="rounded-md border border-dashed border-slate-200 px-2.5 py-2 text-[11px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
+    <p className="rounded-md border border-dashed border-slate-200 px-2.5 py-2 text-[11px] text-slate-400 dark:border-slate-700">
       {text}
     </p>
   );

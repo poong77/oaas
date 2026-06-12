@@ -594,7 +594,7 @@ export function NoticeEditor({
             ? '저장 + 재발행'
             : '발행하기'}
         </Button>
-        {pending && <span className="text-xs text-slate-500 dark:text-slate-400">저장 중...</span>}
+        {pending && <span className="text-xs text-slate-500">저장 중...</span>}
       </div>
 
       {/* 본문 미리보기 — 호텔리어에게 보이는 화면 (현재 입력 기준, 저장 전) */}
@@ -614,7 +614,7 @@ export function NoticeEditor({
               <button
                 type="button"
                 onClick={() => setBodyPreviewOpen(false)}
-                className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                 aria-label="닫기"
               >
                 <X className="h-4 w-4" />
@@ -630,7 +630,7 @@ export function NoticeEditor({
                 >
                   {NOTICE_KIND_META[kind].label}
                 </span>
-                <span className="text-xs text-slate-400 dark:text-slate-500">
+                <span className="text-xs text-slate-400">
                   {categories.find((c) => c.code === productCode)?.label ??
                     '전체 공지'}
                 </span>
@@ -641,7 +641,7 @@ export function NoticeEditor({
               {body.trim() ? (
                 <MarkdownView source={body} />
               ) : (
-                <p className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">
+                <p className="py-8 text-center text-sm text-slate-400">
                   본문이 비어있습니다.
                 </p>
               )}
@@ -678,7 +678,7 @@ export function NoticeEditor({
 }
 
 function FieldError({ msg }: { msg: string }) {
-  return <span className="text-xs text-rose-600 dark:text-rose-400">{msg}</span>;
+  return <span className="text-xs text-rose-600">{msg}</span>;
 }
 
 /** 운영시간 일러스트 — 듀오톤 시계 (배경 원 + 시침/분침 + 상단 버튼) */
@@ -802,7 +802,7 @@ function RelatedSettingsPanel() {
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="flex items-center gap-1 text-sm font-medium text-slate-800 dark:text-slate-100">
                 {title}
-                <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand-500 dark:text-slate-500" />
+                <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand-500" />
               </span>
               <span className="text-xs leading-snug text-slate-500 dark:text-slate-400">
                 {description}

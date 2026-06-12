@@ -228,17 +228,17 @@ export function UsersListClient({
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`truncate font-medium ${u.isActive ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}
+                            className={`truncate font-medium ${u.isActive ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500'}`}
                           >
                             {u.name}
                           </span>
                           <RoleBadge role={u.role} />
                         </div>
-                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
                           {loginId ? (
                             <span className="truncate font-mono">{loginId}</span>
                           ) : (
-                            <span className="text-slate-400 dark:text-slate-500">아이디 없음</span>
+                            <span className="text-slate-400">아이디 없음</span>
                           )}
                           {u.title && (
                             <>
@@ -256,7 +256,7 @@ export function UsersListClient({
                     {u.hotelName ? (
                       <span className="text-slate-700 dark:text-slate-300">{u.hotelName}</span>
                     ) : (
-                      <span className="text-slate-400 dark:text-slate-500">소속 없음</span>
+                      <span className="text-slate-400">소속 없음</span>
                     )}
                   </td>
 
@@ -264,13 +264,13 @@ export function UsersListClient({
                   <td className="px-4 py-2.5">
                     <div className="text-slate-600 dark:text-slate-300">
                       {isDummyEmail(u.email) ? (
-                        <span className="text-slate-400 dark:text-slate-500">이메일 미등록</span>
+                        <span className="text-slate-400">이메일 미등록</span>
                       ) : (
                         <span className="truncate">{u.email}</span>
                       )}
                     </div>
-                    <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                      {u.phone ? formatPhone(u.phone) : <span className="text-slate-400 dark:text-slate-500">—</span>}
+                    <div className="mt-0.5 text-xs text-slate-500">
+                      {u.phone ? formatPhone(u.phone) : <span className="text-slate-400">—</span>}
                     </div>
                   </td>
 
@@ -282,10 +282,10 @@ export function UsersListClient({
                           {formatDateKst(u.lastLoginAt)}
                         </span>
                       ) : (
-                        <span className="text-slate-400 dark:text-slate-500">미접속</span>
+                        <span className="text-slate-400">미접속</span>
                       )}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+                    <div className="mt-0.5 text-[11px] text-slate-400">
                       가입 {formatDateKst(u.createdAt)}
                     </div>
                   </td>
@@ -306,7 +306,7 @@ export function UsersListClient({
                           e.stopPropagation();
                           copyAccountGuide(u);
                         }}
-                        className="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-brand-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-brand-400"
+                        className="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800 dark:hover:text-brand-400"
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </button>
@@ -362,13 +362,13 @@ export function UsersListClient({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span
-                      className={`truncate font-semibold ${u.isActive ? '' : 'text-slate-500 dark:text-slate-400'}`}
+                      className={`truncate font-semibold ${u.isActive ? '' : 'text-slate-500'}`}
                     >
                       {u.name}
                     </span>
                     <RoleBadge role={u.role} />
                   </div>
-                  <div className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                  <div className="mt-0.5 truncate text-xs text-slate-500">
                     {u.hotelName ?? '소속 없음'}
                     {u.title && ` · ${u.title}`}
                   </div>
@@ -377,19 +377,19 @@ export function UsersListClient({
               </div>
 
               <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-                <dt className="text-slate-400 dark:text-slate-500">아이디</dt>
+                <dt className="text-slate-400">아이디</dt>
                 <dd className="truncate font-mono text-slate-700 dark:text-slate-300">
                   {loginId || '—'}
                 </dd>
-                <dt className="text-slate-400 dark:text-slate-500">이메일</dt>
+                <dt className="text-slate-400">이메일</dt>
                 <dd className="truncate text-slate-600 dark:text-slate-300">
                   {isDummyEmail(u.email) ? '미등록' : u.email}
                 </dd>
-                <dt className="text-slate-400 dark:text-slate-500">연락처</dt>
+                <dt className="text-slate-400">연락처</dt>
                 <dd className="text-slate-600 dark:text-slate-300">
                   {u.phone ? formatPhone(u.phone) : '—'}
                 </dd>
-                <dt className="text-slate-400 dark:text-slate-500">최근 접속</dt>
+                <dt className="text-slate-400">최근 접속</dt>
                 <dd className="text-slate-600 dark:text-slate-300">
                   {u.lastLoginAt ? formatDateKst(u.lastLoginAt) : '미접속'}
                 </dd>
@@ -415,7 +415,7 @@ export function UsersListClient({
       {/* ───────── 페이지네이션 ───────── */}
       <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm dark:border-slate-800 sm:flex-row">
         <div className="flex items-center gap-3">
-          <div className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="text-xs text-slate-500">
             <span className="font-medium text-slate-700 dark:text-slate-300">
               {total === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)}
             </span>
@@ -435,7 +435,7 @@ export function UsersListClient({
             >
               <ChevronLeft className="h-4 w-4" />이전
             </Button>
-            <span className="px-2 text-xs tabular-nums text-slate-500 dark:text-slate-400">
+            <span className="px-2 text-xs tabular-nums text-slate-500">
               <span className="font-semibold text-slate-700 dark:text-slate-300">{page}</span>
               {' / '}
               {lastPage}
@@ -491,7 +491,7 @@ function StatusDot({ active }: { active: boolean }) {
         }`}
       />
       <span
-        className={`text-xs ${active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}
+        className={`text-xs ${active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400'}`}
       >
         {active ? '활성' : '비활성'}
       </span>

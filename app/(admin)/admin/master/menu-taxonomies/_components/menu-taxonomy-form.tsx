@@ -131,7 +131,7 @@ export function MenuTaxonomyForm({
           {state.fieldErrors?.parentId ? (
             <p className="text-xs text-red-500">{state.fieldErrors.parentId}</p>
           ) : (
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               비우면 대메뉴(루트). 최대 3단(루트/중분류/소분류).
             </p>
           )}
@@ -155,7 +155,7 @@ export function MenuTaxonomyForm({
         {state.fieldErrors?.label ? (
           <p className="text-xs text-red-500">{state.fieldErrors.label}</p>
         ) : (
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-500">
             사용자에게 노출되는 메뉴 이름. 같은 부모 아래에서는 중복 불가.
           </p>
         )}
@@ -191,7 +191,7 @@ export function MenuTaxonomyForm({
             max={9999}
             disabled={pending}
           />
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-500">
             낮을수록 앞쪽 (기본 100). 형제 노드끼리 정렬 기준.
           </p>
         </div>

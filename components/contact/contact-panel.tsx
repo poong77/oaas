@@ -400,7 +400,7 @@ function FooterPanel({
 function PanelUnavailable() {
   return (
     <aside className="sticky top-20 flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <p className="text-xs text-slate-500 dark:text-slate-400">
+      <p className="text-xs text-slate-500">
         운영시간이 아직 설정되지 않았습니다. 어드민이 설정하면 자동으로 표시됩니다.
       </p>
     </aside>

@@ -145,7 +145,7 @@ async function NotificationPanel() {
               </code>
             ))}
           </div>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs text-slate-500">
             DB에 row 없으면 <code>lib/notifications/templates.ts</code>의 하드코딩
             빌더로 자동 fallback됩니다.
           </p>

@@ -35,11 +35,11 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
-        {/* Pretendard — 전 페이지(프론트·어드민) 전역 본문 폰트. 전체 글리프 안정 로드 */}
+        {/* Pretendard — 동적 서브셋(dynamic-subset)으로 필요한 글리프만 로드 */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
         />
       </head>
       <body className="min-h-screen font-sans antialiased">

@@ -175,10 +175,10 @@ export function HotelsManager({
             onSubmit={(e) => { e.preventDefault(); applyFilters({ q }); }}
             className="relative sm:col-span-2"
           >
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="호텔명 검색 (띄어쓰기 무시)" className="pl-8 pr-8" />
             {q && (
-              <button type="button" onClick={() => { setQ(''); applyFilters({ q: undefined }); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" aria-label="지우기">
+              <button type="button" onClick={() => { setQ(''); applyFilters({ q: undefined }); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" aria-label="지우기">
                 <X className="h-4 w-4" />
               </button>
             )}
@@ -311,7 +311,7 @@ export function HotelsManager({
 
         <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-3 text-sm dark:border-slate-800 sm:flex-row">
           <div className="flex items-center gap-3">
-            <div className="text-xs text-slate-500 dark:text-slate-400">
+            <div className="text-xs text-slate-500">
               {total === 0 ? 0 : (page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} / {total}개
             </div>
             <PageSizeSelect pageSize={pageSize} />
@@ -354,7 +354,7 @@ function HotelForm({
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="h-name">호텔명 *</Label>
         <Input id="h-name" name="name" defaultValue={initial?.name} required aria-invalid={!!errors.name} />
-        {errors.name && <p className="text-xs text-red-600 dark:text-red-400">{errors.name}</p>}
+        {errors.name && <p className="text-xs text-red-600">{errors.name}</p>}
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="h-managerName">담당자명</Label>
@@ -363,7 +363,7 @@ function HotelForm({
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="h-phone">전화번호</Label>
         <Input id="h-phone" name="phone" type="tel" defaultValue={initial?.phone ?? ''} aria-invalid={!!errors.phone} />
-        {errors.phone && <p className="text-xs text-red-600 dark:text-red-400">{errors.phone}</p>}
+        {errors.phone && <p className="text-xs text-red-600">{errors.phone}</p>}
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="h-businessNo">사업자번호</Label>

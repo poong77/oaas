@@ -104,7 +104,7 @@ export function RoleStarterUpsert({
             required
             // 편집 시 변경 불가 — 단, disabled면 FormData에 미전송되어 저장 실패하므로 readOnly 사용
             readOnly={isEdit}
-            className={`font-mono text-xs ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' : ''}`}
+            className={`font-mono text-xs ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-800' : ''}`}
             placeholder="front"
           />
           <datalist id="role-keys">
@@ -175,7 +175,7 @@ export function RoleStarterUpsert({
               placeholder="아티클 검색 (제목 또는 slug, 2자 이상)"
               emptyText="아직 매핑된 가이드가 없어요. 아래 검색에서 추가하세요."
             />
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+            <p className="text-[10px] text-slate-500">
               /role/{item!.roleKey} 페이지에 이 순서대로 카드 노출됩니다.
             </p>
           </div>
@@ -191,7 +191,7 @@ export function RoleStarterUpsert({
               placeholder="FAQ 검색 (질문, 2자 이상)"
               emptyText="아직 매핑된 FAQ가 없어요. 아래 검색에서 추가하세요."
             />
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+            <p className="text-[10px] text-slate-500">
               /role/{item!.roleKey} 페이지 “자주 묻는 질문” 영역에 노출됩니다.
             </p>
           </div>

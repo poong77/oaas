@@ -40,7 +40,7 @@ function rehypeIframeAllowlist() {
         if (!ok) {
           node.tagName = 'div';
           node.properties = {
-            className: 'rounded border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-2 text-xs text-amber-900',
+            className: 'rounded border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900',
           };
           node.children = [{ type: 'text', value: `[차단된 iframe: ${url.hostname}]` }];
         }
@@ -198,7 +198,7 @@ export function MarkdownView({
           ul: ({ children, ...props }) => (
             <ul
               {...props}
-              className="my-3 ml-6 list-disc space-y-1 marker:text-slate-400 dark:marker:text-slate-500"
+              className="my-3 ml-6 list-disc space-y-1 marker:text-slate-400"
             >
               {children}
             </ul>
@@ -206,7 +206,7 @@ export function MarkdownView({
           ol: ({ children, ...props }) => (
             <ol
               {...props}
-              className="my-3 ml-6 list-decimal space-y-1 marker:text-slate-400 dark:marker:text-slate-500"
+              className="my-3 ml-6 list-decimal space-y-1 marker:text-slate-400"
             >
               {children}
             </ol>

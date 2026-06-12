@@ -154,7 +154,7 @@ export function ServiceStatusForm({
         <Label htmlFor="status-message">
           안내 메시지
           {option.requiresMessage && (
-            <span className="ml-1 text-red-600 dark:text-red-400">*</span>
+            <span className="ml-1 text-red-600">*</span>
           )}
         </Label>
         <Textarea
@@ -174,7 +174,7 @@ export function ServiceStatusForm({
           maxLength={500}
           disabled={pending}
         />
-        <span className="text-right text-xs text-slate-400 dark:text-slate-500">
+        <span className="text-right text-xs text-slate-400">
           {message.length} / 500
         </span>
       </div>

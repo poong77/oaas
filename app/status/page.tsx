@@ -191,7 +191,7 @@ function PublicHistoryTable({
                     </Badge>
                   </td>
                   <td className="max-w-md px-4 py-3 text-slate-700 dark:text-slate-200">
-                    {s.message || <span className="text-slate-400 dark:text-slate-500">-</span>}
+                    {s.message || <span className="text-slate-400">-</span>}
                   </td>
                   <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
                     {formatDateTime(s.startedAt)}

@@ -65,7 +65,7 @@ export function MenuAccessList({ menus, initialAccess }: Props) {
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 {menu.label}
               </span>
-              <code className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+              <code className="font-mono text-[11px] text-slate-400">
                 /admin/master/{menu.key}
               </code>
             </div>

@@ -116,7 +116,7 @@ export function HotelSolutions({
         )}
 
         {solutions.length === 0 && !showAdd ? (
-          <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
+          <p className="py-4 text-center text-sm text-slate-400">
             등록된 솔루션이 없습니다.
           </p>
         ) : (
@@ -145,14 +145,14 @@ export function HotelSolutions({
                       바로가기 <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   ) : (
-                    <span className="text-sm text-slate-400 dark:text-slate-500">URL 없음</span>
+                    <span className="text-sm text-slate-400">URL 없음</span>
                   )}
                   <span className="text-sm text-slate-600 dark:text-slate-300">
-                    <span className="text-slate-400 dark:text-slate-500">ID</span>{' '}
-                    {s.loginId || <span className="text-slate-400 dark:text-slate-500">-</span>}
+                    <span className="text-slate-400">ID</span>{' '}
+                    {s.loginId || <span className="text-slate-400">-</span>}
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
-                    <span className="text-slate-400 dark:text-slate-500">PW</span>{' '}
+                    <span className="text-slate-400">PW</span>{' '}
                     {s.hasPassword ? (
                       <>
                         <span className="font-mono">
@@ -161,14 +161,14 @@ export function HotelSolutions({
                         <button
                           type="button"
                           onClick={() => handleReveal(s.id)}
-                          className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200"
+                          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                           aria-label={revealed[s.id] !== undefined ? '숨기기' : '보기'}
                         >
                           {revealed[s.id] !== undefined ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </>
                     ) : (
-                      <span className="text-slate-400 dark:text-slate-500">-</span>
+                      <span className="text-slate-400">-</span>
                     )}
                   </span>
                   <div className="ml-auto flex shrink-0 gap-1">
@@ -289,12 +289,12 @@ function SolutionForm({
             disabled={clearPassword}
             className="pr-9"
           />
-          <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" aria-label="비밀번호 표시 전환">
+          <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" aria-label="비밀번호 표시 전환">
             {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
         {isEdit && initial?.hasPassword && (
-          <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <label className="flex items-center gap-1.5 text-xs text-slate-500">
             <input type="checkbox" checked={clearPassword} onChange={(e) => setClearPassword(e.target.checked)} />
             저장된 비밀번호 삭제
           </label>

@@ -147,7 +147,7 @@ export function ImageUploadDialog({
           type="button"
           onClick={onClose}
           aria-label="닫기"
-          className="absolute right-3 top-3 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
+          className="absolute right-3 top-3 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
         >
           <X className="h-4 w-4" />
         </button>
@@ -178,7 +178,7 @@ export function ImageUploadDialog({
               <button
                 type="button"
                 onClick={() => setStage('select')}
-                className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
               >
                 <ArrowLeft className="h-3 w-3" />
                 업로드 화면으로
@@ -242,7 +242,7 @@ function SelectStage({
         accept={ACCEPT}
         onChange={(e) => onFile(e.target.files?.[0] ?? null)}
         className={cn(
-          'mb-3 block w-full cursor-pointer rounded border border-dashed border-slate-300 px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400 hover:border-brand-400 dark:border-slate-600',
+          'mb-3 block w-full cursor-pointer rounded border border-dashed border-slate-300 px-3 py-6 text-center text-sm text-slate-500 hover:border-brand-400 dark:border-slate-600',
           file && 'border-brand-400 bg-brand-50/30 dark:bg-brand-950/20',
         )}
       />
@@ -263,7 +263,7 @@ function SelectStage({
               <button
                 type="button"
                 onClick={onClearAnnotation}
-                className="text-[10px] text-slate-400 dark:text-slate-500 underline hover:text-slate-700 dark:hover:text-slate-200"
+                className="text-[10px] text-slate-400 underline hover:text-slate-700"
                 title="원본으로 되돌리기"
               >
                 원본으로
@@ -334,7 +334,7 @@ function SelectStage({
 
 function AnnotatorLoading() {
   return (
-    <div className="flex items-center justify-center p-10 text-xs text-slate-500 dark:text-slate-400">
+    <div className="flex items-center justify-center p-10 text-xs text-slate-500">
       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       마크업 도구를 불러오는 중...
     </div>

@@ -158,7 +158,7 @@ export async function HomeStatusUpdatesBox({ latest }: { latest: LatestStatus })
             {statusMessage}
           </span>
         </div>
-        <ArrowUpRight className="hidden h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500 transition-colors group-hover:text-brand-500 sm:block" />
+        <ArrowUpRight className="hidden h-3.5 w-3.5 shrink-0 text-slate-400 transition-colors group-hover:text-brand-500 sm:block" />
       </Link>
 
       {/* 최근 업데이트 — 한 줄 row(칩 + 제목 + 날짜) */}
@@ -186,7 +186,7 @@ export async function HomeStatusUpdatesBox({ latest }: { latest: LatestStatus })
                   {item.title}
                 </p>
                 {item.publishedAt && (
-                  <span className="shrink-0 text-[10px] text-slate-400 dark:text-slate-500 sm:text-xs">
+                  <span className="shrink-0 text-[10px] text-slate-400 sm:text-xs">
                     {formatDate(item.publishedAt)}
                   </span>
                 )}

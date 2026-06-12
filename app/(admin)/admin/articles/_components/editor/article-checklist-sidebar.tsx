@@ -65,7 +65,7 @@ export function ArticleChecklistSidebar({
       <Card>
         <CardContent className="p-4">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
               발행 준비
             </span>
             <span
@@ -121,7 +121,7 @@ export function ArticleChecklistSidebar({
           {outline.items.length > 0 && (
             <>
               <div className="my-3 border-t border-slate-100 dark:border-slate-800" />
-              <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                 본문 H2
               </span>
               <ul className="flex flex-col gap-1">
@@ -259,7 +259,7 @@ function AutosaveStatusBar({
     <Card>
       <CardContent className="flex items-center justify-between gap-2 px-3 py-2">
         <div className="flex items-center gap-2 text-xs">
-          <Save className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+          <Save className="h-3.5 w-3.5 text-slate-400" />
           <span className={`inline-block h-2 w-2 rounded-full ${dot}`} />
           <span className="text-slate-600 dark:text-slate-300">{label}</span>
         </div>

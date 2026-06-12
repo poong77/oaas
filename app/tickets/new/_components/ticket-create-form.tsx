@@ -278,7 +278,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
         <div className="flex flex-col gap-2">
           <span className={labelCls}>
             문의 프로그램
-            <span className="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500">선택 (미선택 시 기타)</span>
+            <span className="ml-1 text-xs font-normal text-slate-400">선택 (미선택 시 기타)</span>
           </span>
           <div className="flex flex-wrap gap-2">
             {products.map((p) => (
@@ -296,7 +296,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
         <div className="flex flex-col gap-2">
           <span className={labelCls}>
             상세 유형
-            <span className="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500">선택 (미선택 시 기타)</span>
+            <span className="ml-1 text-xs font-normal text-slate-400">선택 (미선택 시 기타)</span>
           </span>
           <div className="flex flex-wrap gap-2">
             {props.issueTypeCategories.map((d) => (
@@ -376,13 +376,13 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
             {fieldErrors.content ? (
               <span className="text-xs text-red-500">{fieldErrors.content}</span>
             ) : (
-              <span className="text-xs text-slate-400 dark:text-slate-500">
+              <span className="text-xs text-slate-400">
                 발생 시각·재현 단계·기대 결과를 적어주시면 처리가 빨라집니다.
               </span>
             )}
             <div className="flex items-center gap-3">
               <SaveIndicator status={saveStatus} lastSavedAt={savedAt} />
-              <span className="text-sm text-slate-400 dark:text-slate-500">
+              <span className="text-sm text-slate-400">
                 {content.length.toLocaleString()} /{' '}
                 {MAX_CONTENT.toLocaleString()}
               </span>
@@ -596,7 +596,7 @@ function ContactOption({
       <span
         className={cn(
           'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors',
-          selected ? 'border-brand-600 bg-brand-600' : 'border-slate-300 dark:border-slate-700',
+          selected ? 'border-brand-600 bg-brand-600' : 'border-slate-300',
         )}
       >
         {selected && <Check className="h-3.5 w-3.5 text-white" />}

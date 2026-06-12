@@ -131,7 +131,7 @@ export default async function HelpArticlePage({
       <div className="flex flex-col gap-3">
         <Link
           href={`/help/${product}`}
-          className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 hover:underline"
+          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:underline"
         >
           <ArrowLeft className="h-3 w-3" />
           {productLabel} 가이드
@@ -255,7 +255,7 @@ export default async function HelpArticlePage({
                           {r.title}
                         </span>
                         {(r.summary ?? r.summary30s) && (
-                          <span className="line-clamp-1 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="line-clamp-1 text-xs text-slate-500">
                             {r.summary ?? r.summary30s}
                           </span>
                         )}

@@ -102,7 +102,7 @@ function FaqAccordionItem({
               {productLabel}
             </Badge>
             {issueLabel && <Badge tone="slate">{issueLabel}</Badge>}
-            <span className="text-[10px] text-slate-400 dark:text-slate-500">
+            <span className="text-[10px] text-slate-400">
               조회 {faq.viewCount.toLocaleString()}
             </span>
           </div>
@@ -112,7 +112,7 @@ function FaqAccordionItem({
         </div>
         <ChevronDown
           className={cn(
-            'mt-1 h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500 transition-transform',
+            'mt-1 h-4 w-4 shrink-0 text-slate-400 transition-transform',
             open && 'rotate-180 text-brand-600',
           )}
         />

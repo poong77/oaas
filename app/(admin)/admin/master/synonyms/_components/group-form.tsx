@@ -88,7 +88,7 @@ export function GroupForm({
               {state.fieldErrors.canonicalTerm}
             </p>
           ) : (
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               사용자에게 노출되는 표준 표현. 그룹마다 1개.
             </p>
           )}
@@ -134,7 +134,7 @@ export function GroupForm({
             </option>
           ))}
         </Select>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-slate-500">
           본 그룹의 동의어가 본문에 매칭되면 이 카테고리를 추천합니다 (P1
           기능).
         </p>
@@ -170,7 +170,7 @@ export function GroupForm({
             max={9999}
             disabled={pending}
           />
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-500">
             낮을수록 앞쪽 (기본 100).
           </p>
         </div>

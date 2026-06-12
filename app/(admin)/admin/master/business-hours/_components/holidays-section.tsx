@@ -232,7 +232,7 @@ function AddHolidayForm({ onSuccess }: { onSuccess: () => void }) {
             name="isRecurring"
             className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600"
           />
-          <RefreshCw className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+          <RefreshCw className="h-3.5 w-3.5 text-slate-400" />
           <span className="text-xs text-slate-600 dark:text-slate-300">
             양력 공휴일
           </span>

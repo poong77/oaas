@@ -71,7 +71,7 @@ export function FaqHelpfulWidget({
       <span className="text-slate-500 dark:text-slate-400">
         이 FAQ가 도움이 되었나요?
         {yesPct !== null && (
-          <span className="ml-1 text-slate-400 dark:text-slate-500">
+          <span className="ml-1 text-slate-400">
             ({total}명 중 {yesPct}%)
           </span>
         )}

@@ -180,11 +180,11 @@ export function FaqsListClient({
                   <div className="inline-flex items-center gap-1 tabular-nums">
                     <ThumbsUp className="h-3 w-3 text-emerald-500" />
                     {f.helpfulYes}
-                    <span className="text-slate-400 dark:text-slate-500">/</span>
+                    <span className="text-slate-400">/</span>
                     <span className="text-rose-500">{f.helpfulNo}</span>
                   </div>
                 </td>
-                <td className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">
+                <td className="px-3 py-2 text-xs text-slate-500">
                   {formatDateKst(f.updatedAt)}
                 </td>
                 <td className="px-3 py-2">
@@ -250,12 +250,12 @@ export function FaqsListClient({
             >
               {f.question}
             </Link>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
               <span>정렬 {f.sortOrder}</span>
               <span>조회 {f.viewCount.toLocaleString()}</span>
               <span>
                 도움됨{' '}
-                <span className="text-emerald-600 dark:text-emerald-400">{f.helpfulYes}</span>/
+                <span className="text-emerald-600">{f.helpfulYes}</span>/
                 <span className="text-rose-500">{f.helpfulNo}</span>
               </span>
               <span>{formatDateKst(f.updatedAt)}</span>
@@ -307,7 +307,7 @@ export function FaqsListClient({
       {/* 페이지네이션 */}
       <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-3 py-3 text-sm dark:border-slate-800 sm:flex-row">
         <div className="flex items-center gap-3">
-          <div className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="text-xs text-slate-500">
             {total === 0 ? 0 : (page - 1) * pageSize + 1}-
             {Math.min(page * pageSize, total)} / {total}
           </div>

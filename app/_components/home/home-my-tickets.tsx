@@ -114,14 +114,14 @@ export function HomeMyTickets({
                       </span>
                       <span className="text-xs text-slate-500 dark:text-slate-400">{meta}</span>
                     </span>
-                    <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{fmtDate(t.createdAt)}</span>
+                    <span className="shrink-0 text-xs text-slate-400">{fmtDate(t.createdAt)}</span>
                   </Link>
                 </li>
               );
             })}
           </ul>
         ) : (
-          <div className="flex items-center justify-center rounded-xl border border-dashed border-slate-200 p-8 text-sm text-slate-400 dark:border-slate-800 dark:text-slate-500">
+          <div className="flex items-center justify-center rounded-xl border border-dashed border-slate-200 p-8 text-sm text-slate-400 dark:border-slate-800">
             아직 접수한 문의가 없습니다.
           </div>
         )}

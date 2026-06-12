@@ -242,7 +242,7 @@ export function ChecklistStepsEditor({
                         </div>
                         {step.bodyMarkdown && (
                           <details className="mt-1">
-                            <summary className="cursor-pointer text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+                            <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-800">
                               본문 보기
                             </summary>
                             <div className="mt-2 rounded border border-slate-100 p-2 dark:border-slate-800">
@@ -253,7 +253,7 @@ export function ChecklistStepsEditor({
                             </div>
                           </details>
                         )}
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                           <span>
                             <strong>{step.yesLabel}</strong> →{' '}
                             {actionLabel(step.conditionYesAction)}

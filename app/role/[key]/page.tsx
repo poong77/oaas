@@ -116,7 +116,7 @@ export default async function RoleStarterPage({
                       {idx + 1}
                     </span>
                     <div className="flex-1">
-                      <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-slate-400">
                         <span>{a.productCode}</span>
                         <span>·</span>
                         <span>{a.contentType}</span>
@@ -159,7 +159,7 @@ export default async function RoleStarterPage({
                       <HelpCircle className="h-3.5 w-3.5" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="mb-0.5 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      <div className="mb-0.5 text-[10px] uppercase tracking-wider text-slate-400">
                         {f.productCode}
                       </div>
                       <h3 className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">

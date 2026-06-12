@@ -147,7 +147,7 @@ function TreeNodeRow({ node }: { node: MenuTaxonomyTreeNode }) {
                 ? 'text-brand-500'
                 : node.depth === 1
                   ? 'text-amber-500'
-                  : 'text-slate-400 dark:text-slate-500'
+                  : 'text-slate-400'
             }`}
           />
           <span className="flex-1 text-sm text-slate-700 dark:text-slate-200">
@@ -159,7 +159,7 @@ function TreeNodeRow({ node }: { node: MenuTaxonomyTreeNode }) {
             </Badge>
           )}
           {node.children.length > 0 && (
-            <span className="text-xs text-slate-400 dark:text-slate-500">
+            <span className="text-xs text-slate-400">
               · 하위 {node.children.length}
             </span>
           )}

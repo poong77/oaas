@@ -68,7 +68,7 @@ export function ProductArticleCards({
                   {a.summary30s}
                 </p>
               )}
-              <div className="mt-auto flex items-center gap-3 pt-2 text-xs text-slate-500 dark:text-slate-400">
+              <div className="mt-auto flex items-center gap-3 pt-2 text-xs text-slate-500">
                 <span className="inline-flex items-center gap-1">
                   <Eye className="h-3 w-3" />
                   {a.viewCount.toLocaleString()}

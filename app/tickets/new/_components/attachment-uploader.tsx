@@ -187,7 +187,7 @@ export function AttachmentUploader({
           disabled && 'cursor-not-allowed opacity-60',
         )}
       >
-        <Paperclip className="h-6 w-6 text-slate-400 dark:text-slate-500" />
+        <Paperclip className="h-6 w-6 text-slate-400" />
         <div className="text-sm font-medium text-slate-700 dark:text-slate-200">
           파일을 끌어 놓거나 클릭하여 선택
         </div>
@@ -234,7 +234,7 @@ export function AttachmentUploader({
               key={it.key}
               className="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
             >
-              <div className="text-slate-400 dark:text-slate-500">
+              <div className="text-slate-400">
                 <FileIconFor mime={it.file.type} name={it.file.name} />
               </div>
               <div className="min-w-0 flex-1">
@@ -263,7 +263,7 @@ export function AttachmentUploader({
                   onClick={() => removeItem(it.key)}
                   aria-label="삭제"
                 >
-                  <Trash2 className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                  <Trash2 className="h-4 w-4 text-slate-400" />
                 </Button>
               </div>
             </li>

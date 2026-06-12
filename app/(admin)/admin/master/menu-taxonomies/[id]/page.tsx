@@ -82,7 +82,7 @@ export default async function MenuTaxonomyDetailPage({
           </span>
           <div className="flex flex-1 flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+              <span className="font-mono text-xs text-slate-500">
                 {node.productCode}
               </span>
               <Badge tone="slate" className="text-[10px]">

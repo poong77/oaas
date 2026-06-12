@@ -145,7 +145,7 @@ export function DiffPreviewModal({
                 </DialogPrimitive.Description>
               )}
               {summaryOfChanges.length === 0 && (
-                <DialogPrimitive.Description className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                <DialogPrimitive.Description className="mt-1 text-xs text-slate-500">
                   변경된 섹션을 확인하고 적용/거부를 선택해주세요.
                 </DialogPrimitive.Description>
               )}
@@ -154,7 +154,7 @@ export function DiffPreviewModal({
               type="button"
               onClick={onClose}
               aria-label="닫기"
-              className="rounded p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-100 hover:text-rose-500 dark:hover:bg-slate-800"
+              className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-rose-500 dark:hover:bg-slate-800"
             >
               <X className="h-4 w-4" />
             </button>
@@ -163,7 +163,7 @@ export function DiffPreviewModal({
           {/* 섹션 카드 리스트 */}
           <div className="flex-1 overflow-y-auto px-5 py-2">
             {!anyChanged && (
-              <p className="my-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              <p className="my-8 text-center text-sm text-slate-500">
                 AI가 제안한 변경 사항이 없어요. 본문 그대로 유지됩니다.
               </p>
             )}
@@ -190,7 +190,7 @@ export function DiffPreviewModal({
 
           {/* 액션 */}
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 px-5 py-3 dark:border-slate-700">
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-slate-500">
               변경 {changedCount}개 섹션 · 선택 {selectedCount}개
             </span>
             <div className="flex gap-1.5">
@@ -269,7 +269,7 @@ function SectionDiffCard({
             'flex-1 truncate text-xs',
             sec.changed
               ? 'font-semibold text-slate-900 dark:text-slate-100 cursor-pointer'
-              : 'text-slate-500 dark:text-slate-400',
+              : 'text-slate-500',
           )}
         >
           {headingLabel}
@@ -289,14 +289,14 @@ function SectionDiffCard({
         <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
           {/* 좌: 기존 */}
           <div className="border-r border-slate-200 p-2 dark:border-slate-700">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
               기존
             </div>
             <DiffLineList lines={sec.lineDiff} side="before" />
           </div>
           {/* 우: 제안 */}
           <div className="p-2">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
               AI 제안
             </div>
             <DiffLineList lines={sec.lineDiff} side="after" />
@@ -321,7 +321,7 @@ function DiffLineList({
   });
   if (visible.length === 0) {
     return (
-      <p className="text-[11px] italic text-slate-400 dark:text-slate-500">(비어있음)</p>
+      <p className="text-[11px] italic text-slate-400">(비어있음)</p>
     );
   }
   return (

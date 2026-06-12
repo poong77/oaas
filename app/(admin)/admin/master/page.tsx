@@ -128,7 +128,7 @@ export default async function AdminMasterIndexPage() {
                 <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                   {group.label}
                 </h2>
-                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                <span className="text-[11px] text-slate-400">
                   {group.items.length}
                 </span>
               </div>
@@ -158,7 +158,7 @@ export default async function AdminMasterIndexPage() {
                               어드민
                             </Badge>
                           )}
-                          <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5 dark:text-slate-500" />
+                          <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
                         </div>
                       </div>
                       <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -193,7 +193,7 @@ export default async function AdminMasterIndexPage() {
         </CardContent>
       </Card>
 
-      <p className="text-xs text-slate-400 dark:text-slate-500">
+      <p className="text-xs text-slate-400">
         <Database className="mr-1 inline h-3 w-3" />
         Phase 9 — 어드민 마스터DB 편집
       </p>

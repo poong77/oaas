@@ -156,7 +156,7 @@ export function ChecklistMetaForm({
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
           />
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          <span className="text-xs text-slate-500">
             작을수록 위. 10 단위 권장.
           </span>
         </div>
@@ -167,7 +167,7 @@ export function ChecklistMetaForm({
             {mode === 'create' ? '저장하고 단계 편집' : '메타 저장'}
           </Button>
           {pending && (
-            <span className="text-xs text-slate-500 dark:text-slate-400">저장 중...</span>
+            <span className="text-xs text-slate-500">저장 중...</span>
           )}
         </div>
       </CardContent>

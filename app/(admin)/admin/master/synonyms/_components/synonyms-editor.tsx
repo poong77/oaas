@@ -103,9 +103,9 @@ export function SynonymsEditor({ groupId, synonyms, canonicalTerm }: Props) {
       <div className="flex items-center justify-between">
         <Label className="text-sm font-semibold">
           동의어{' '}
-          <span className="text-slate-500 dark:text-slate-400">({synonyms.length}개)</span>
+          <span className="text-slate-500">({synonyms.length}개)</span>
         </Label>
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-2 text-xs text-slate-500">
           <span>대표어 "{canonicalTerm}"는 자동 포함</span>
         </div>
       </div>
@@ -178,7 +178,7 @@ export function SynonymsEditor({ groupId, synonyms, canonicalTerm }: Props) {
           추가
         </Button>
       </div>
-      <p className="text-xs text-slate-500 dark:text-slate-400">
+      <p className="text-xs text-slate-500">
         Enter 또는 쉼표(,)로 빠르게 추가. 칩 클릭 시 삭제.
       </p>
     </div>

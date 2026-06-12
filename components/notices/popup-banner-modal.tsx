@@ -112,7 +112,7 @@ export function PopupBannerModal({
                 오늘 하루 보지 않기
               </button>
             ) : (
-              <span className="text-slate-400 dark:text-slate-500">미리보기 — 실제 노출 시 ‘오늘 하루 보지 않기’ 제공</span>
+              <span className="text-slate-400">미리보기 — 실제 노출 시 ‘오늘 하루 보지 않기’ 제공</span>
             )}
             <button
               type="button"

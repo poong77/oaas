@@ -82,7 +82,7 @@ export function TicketThread({
             >
               <RefreshCcw className="h-3 w-3" />
               <span>{m.content}</span>
-              <span className="text-slate-400 dark:text-slate-500">·</span>
+              <span className="text-slate-400">·</span>
               <span>{fmtDateTime(m.createdAt)}</span>
             </li>
           );
@@ -134,7 +134,7 @@ export function TicketThread({
                   )
                 )}
               </div>
-              <span className="text-slate-400 dark:text-slate-500">
+              <span className="text-slate-400">
                 {fmtDateTime(m.createdAt)}
               </span>
             </div>

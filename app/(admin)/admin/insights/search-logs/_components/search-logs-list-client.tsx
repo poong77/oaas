@@ -15,9 +15,9 @@ import type { HelpfulTally, SearchLogRow } from '@/lib/services/search-logs';
 
 /** 도착 페이지(아티클/FAQ) 하단 도움됐어요/아니예요 반응표. */
 function Helpful({ tally }: { tally: HelpfulTally | null }) {
-  if (!tally) return <span className="text-xs text-slate-400 dark:text-slate-500">—</span>;
+  if (!tally) return <span className="text-xs text-slate-400">—</span>;
   if (tally.yes === 0 && tally.no === 0) {
-    return <span className="text-xs text-slate-400 dark:text-slate-500">반응 없음</span>;
+    return <span className="text-xs text-slate-400">반응 없음</span>;
   }
   return (
     <span className="inline-flex items-center gap-2 tabular-nums">
@@ -35,10 +35,10 @@ function Helpful({ tally }: { tally: HelpfulTally | null }) {
 
 function Outflow({ row }: { row: SearchLogRow }) {
   if (!row.outflowLabel) {
-    return <span className="text-xs text-slate-400 dark:text-slate-500">— (이탈)</span>;
+    return <span className="text-xs text-slate-400">— (이탈)</span>;
   }
   if (!row.outflowUrl) {
-    return <span className="text-xs text-slate-500 dark:text-slate-400">{row.outflowLabel}</span>;
+    return <span className="text-xs text-slate-500">{row.outflowLabel}</span>;
   }
   return (
     <Link
@@ -92,7 +92,7 @@ export function SearchLogsListClient({
             {items.map((r) => (
               <tr key={r.id}>
                 <td className="px-3 py-2 font-medium">{r.query}</td>
-                <td className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">
+                <td className="px-3 py-2 text-xs text-slate-500">
                   {formatDateTimeSecKst(r.createdAt)}
                 </td>
                 <td className="px-3 py-2">
@@ -118,11 +118,11 @@ export function SearchLogsListClient({
               <span className="font-semibold">{r.query}</span>
               <Helpful tally={r.helpful} />
             </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
               <span>{formatDateTimeSecKst(r.createdAt)}</span>
             </div>
             <div className="text-xs">
-              <span className="text-slate-400 dark:text-slate-500">유출 · </span>
+              <span className="text-slate-400">유출 · </span>
               <Outflow row={r} />
             </div>
           </div>
@@ -132,7 +132,7 @@ export function SearchLogsListClient({
       {/* 페이지네이션 */}
       {lastPage > 1 && (
         <div className="flex items-center justify-between border-t border-slate-200 px-3 py-3 text-sm dark:border-slate-800">
-          <div className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="text-xs text-slate-500">
             {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} /{' '}
             {total}
           </div>

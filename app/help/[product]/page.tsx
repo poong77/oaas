@@ -143,7 +143,7 @@ export default async function HelpProductPage({
             />
             <Card>
               <CardContent className="p-4">
-                <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
                   다른 제품
                 </h3>
                 <ul className="flex flex-col gap-1.5 text-sm">

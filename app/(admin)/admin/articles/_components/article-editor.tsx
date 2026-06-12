@@ -631,7 +631,7 @@ export function ArticleEditor({
               : '발행하기'}
           </Button>
           {pending && (
-            <span className="text-xs text-slate-500 dark:text-slate-400">저장 중...</span>
+            <span className="text-xs text-slate-500">저장 중...</span>
           )}
         </div>
       </div>

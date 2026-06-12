@@ -66,7 +66,7 @@ export function PreviewRenderer() {
 
   if (status === 'loading') {
     return (
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-center px-4 py-20 text-sm text-slate-500 dark:text-slate-400">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-center px-4 py-20 text-sm text-slate-500">
         미리보기 데이터를 불러오는 중...
       </div>
     );
@@ -77,7 +77,7 @@ export function PreviewRenderer() {
       <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 px-4 py-20 text-center">
         <FileQuestion className="h-12 w-12 text-slate-300" />
         <h1 className="text-lg font-semibold">미리보기 데이터를 찾을 수 없어요</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-slate-500">
           미리보기는 10분간만 유효합니다. 편집기로 돌아가서 다시 시도해주세요.
           <br />
           (시크릿 모드·다른 브라우저·다른 기기에서 열면 데이터가 보이지 않아요)
@@ -100,7 +100,7 @@ export function PreviewRenderer() {
 
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="flex flex-col gap-3">
-          <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+          <span className="inline-flex items-center gap-1 text-xs text-slate-500">
             <ArrowLeft className="h-3 w-3" />
             {data.productLabel} 가이드 (미리보기)
           </span>
