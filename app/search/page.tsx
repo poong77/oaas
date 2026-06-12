@@ -35,14 +35,12 @@ import {
   NOTICE_KIND_CLASSES,
   NOTICE_KIND_META,
 } from '@/lib/services/notices-meta';
-import { getProductCategories } from '@/lib/services/categories';
 import { expandKeywords } from '@/lib/services/synonym-expander';
 import { buildHighlightRegex } from '@/lib/text/search-match';
 import { logSearch } from '@/lib/services/search-logs';
 import { getCurrentUser, isManagerOrAdmin } from '@/lib/permissions';
 import { formatDateKst } from '@/lib/business-hours/format';
 import { SearchTabs } from './_components/search-tabs';
-import { SearchFilters } from './_components/search-filters';
 import { TrackedLink } from './_components/tracked-link';
 import { SearchBox } from './_components/search-box';
 import { resolvePopularKeywords } from '@/lib/services/master-popular-keywords';
@@ -167,8 +165,6 @@ async function SearchResults({
   product?: string;
   contentType?: 'howto' | 'feature' | 'troubleshoot';
 }) {
-  const categories = await getProductCategories();
-
   // 결과 카운트는 모든 탭 한꺼번에 가져와서 뱃지로 표시 (단순 N+1)
   let helpHits: SearchArticleHit[] = [];
   let faqHits: SearchFaqHit[] = [];
@@ -235,10 +231,6 @@ async function SearchResults({
 
           {tab === 'all' && (
             <>
-              <SearchFilters
-                initial={{ product, sort, contentType }}
-                categories={categories}
-              />
               {sortedAll.length === 0 ? (
                 <EmptyResults query={query} logId={logId} />
               ) : (
@@ -289,10 +281,6 @@ async function SearchResults({
 
           {tab === 'help' && (
             <>
-              <SearchFilters
-                initial={{ product, sort, contentType }}
-                categories={categories}
-              />
               {sortedHelp.length === 0 ? (
                 <EmptyResults query={query} logId={logId} />
               ) : (
@@ -346,10 +334,6 @@ async function SearchResults({
 
           {tab === 'faq' && (
             <>
-              <SearchFilters
-                initial={{ product, sort, contentType }}
-                categories={categories}
-              />
               {sortedFaq.length === 0 ? (
                 <EmptyResults query={query} kind="faq" logId={logId} />
               ) : (
@@ -401,10 +385,6 @@ async function SearchResults({
 
           {tab === 'notice' && (
             <>
-              <SearchFilters
-                initial={{ product, sort, contentType }}
-                categories={categories}
-              />
               {sortedNotice.length === 0 ? (
                 <EmptyResults query={query} kind="notice" logId={logId} />
               ) : (
