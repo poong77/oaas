@@ -23,7 +23,7 @@ export function HomeQuickChoice() {
         <div className="mb-5">
           <h2
             id="quick-choice-heading"
-            className="text-lg font-bold tracking-tight sm:text-xl"
+            className="text-title-large-bold tracking-tight sm:text-heading-small-bold"
           >
             무엇을 하시겠어요?
           </h2>
@@ -38,11 +38,11 @@ export function HomeQuickChoice() {
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 text-white shadow-sm dark:bg-brand-500">
               <Search className="h-5 w-5" />
             </span>
-            <span className="flex items-center gap-1.5 text-base font-semibold text-brand-900 dark:text-brand-100">
+            <span className="flex items-center gap-1.5 text-title-medium-semibold text-brand-900 dark:text-brand-100">
               답 찾기
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </span>
-            <span className="text-sm leading-snug text-brand-900/80 dark:text-brand-100/80">
+            <span className="text-body-medium-regular leading-snug text-brand-900/80 dark:text-brand-100/80">
               FAQ · 제품별 가이드를 한 번에 검색합니다.
             </span>
           </Link>
@@ -55,11 +55,11 @@ export function HomeQuickChoice() {
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white shadow-sm">
               <PencilLine className="h-5 w-5" />
             </span>
-            <span className="flex items-center gap-1.5 text-base font-semibold text-red-900 dark:text-red-100">
+            <span className="flex items-center gap-1.5 text-title-medium-semibold text-red-900 dark:text-red-100">
               문의하기
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </span>
-            <span className="text-sm leading-snug text-red-900/80 dark:text-red-100/80">
+            <span className="text-body-medium-regular leading-snug text-red-900/80 dark:text-red-100/80">
               오류·기능문의를 새 티켓으로 접수합니다.
             </span>
           </Link>
@@ -69,7 +69,7 @@ export function HomeQuickChoice() {
         <div className="mt-3 flex justify-center">
           <Link
             href="/tickets"
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-label-medium-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             <ListChecks className="h-4 w-4" />
             이미 접수한 문의의 처리 상태 확인

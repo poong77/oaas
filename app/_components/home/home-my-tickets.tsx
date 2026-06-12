@@ -54,12 +54,12 @@ export function HomeMyTickets({
       className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8"
     >
       <div className="mb-4 flex items-center justify-between">
-        <h2 id="my-tickets-heading" className="text-lg font-bold tracking-tight sm:text-xl">
+        <h2 id="my-tickets-heading" className="text-title-large-bold tracking-tight sm:text-heading-small-bold">
           내 문의
         </h2>
         <Link
           href="/tickets"
-          className="inline-flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400"
+          className="inline-flex items-center gap-1 text-label-medium-medium text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400"
         >
           내 문의 전체보기
           <ArrowRight className="h-4 w-4" />
@@ -72,10 +72,10 @@ export function HomeMyTickets({
           <div className="grid grid-cols-3 gap-2 text-center">
             {ORDER.map((s) => (
               <div key={s} className="flex flex-col gap-1">
-                <span className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="text-body-small-regular text-slate-500 dark:text-slate-400">
                   {STATUS_META[s].label}
                 </span>
-                <span className={`text-2xl font-bold ${STATUS_META[s].num}`}>
+                <span className={`text-heading-medium-bold ${STATUS_META[s].num}`}>
                   {counts[s] ?? 0}
                 </span>
               </div>
@@ -83,7 +83,7 @@ export function HomeMyTickets({
           </div>
           <Link
             href="/tickets/new"
-            className="rounded-lg bg-brand-600 py-3 text-center text-base font-semibold text-white transition-colors hover:bg-brand-500"
+            className="rounded-lg bg-brand-600 py-3 text-center text-label-large-semibold text-white transition-colors hover:bg-brand-500"
           >
             문의하기
           </Link>
@@ -104,24 +104,24 @@ export function HomeMyTickets({
                     className="flex flex-col gap-2 px-2 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40 sm:flex-row sm:items-center sm:gap-5"
                   >
                     <span
-                      className={`inline-flex w-fit shrink-0 items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold min-w-[80px] ${m.badge}`}
+                      className={`inline-flex w-fit shrink-0 items-center justify-center rounded-full border px-3 py-1 text-label-small-semibold min-w-[80px] ${m.badge}`}
                     >
                       {m.label}
                     </span>
                     <span className="flex flex-1 flex-col">
-                      <span className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                      <span className="text-title-medium-semibold text-slate-900 dark:text-slate-100">
                         {t.title}
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">{meta}</span>
+                      <span className="text-body-small-regular text-slate-500 dark:text-slate-400">{meta}</span>
                     </span>
-                    <span className="shrink-0 text-xs text-slate-400">{fmtDate(t.createdAt)}</span>
+                    <span className="shrink-0 text-body-small-regular text-slate-400">{fmtDate(t.createdAt)}</span>
                   </Link>
                 </li>
               );
             })}
           </ul>
         ) : (
-          <div className="flex items-center justify-center rounded-xl border border-dashed border-slate-200 p-8 text-sm text-slate-400 dark:border-slate-800">
+          <div className="flex items-center justify-center rounded-xl border border-dashed border-slate-200 p-8 text-body-medium-regular text-slate-400 dark:border-slate-800">
             아직 접수한 문의가 없습니다.
           </div>
         )}

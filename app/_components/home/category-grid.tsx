@@ -24,14 +24,14 @@ export function CategoryGrid({
         <div>
           <h2
             id="category-heading"
-            className="text-lg font-bold tracking-tight sm:text-xl"
+            className="text-title-large-bold tracking-tight sm:text-heading-small-bold"
           >
             제품으로 찾기
           </h2>
         </div>
         <Link
           href="/help"
-          className="hidden items-center gap-1 text-sm font-medium text-brand-600 hover:underline dark:text-brand-400 sm:inline-flex"
+          className="hidden items-center gap-1 text-label-medium-medium text-brand-600 hover:underline dark:text-brand-400 sm:inline-flex"
         >
           전체 보기 <ArrowRight className="h-3.5 w-3.5" />
         </Link>
@@ -58,7 +58,7 @@ export function CategoryGrid({
                     <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                   )}
                 </span>
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                <span className="text-body-medium-semibold text-slate-800 dark:text-slate-100">
                   {cat.label}
                 </span>
               </Link>
@@ -70,7 +70,7 @@ export function CategoryGrid({
       <div className="mt-4 flex justify-end sm:hidden">
         <Link
           href="/help"
-          className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline dark:text-brand-400"
+          className="inline-flex items-center gap-1 text-label-small-medium text-brand-600 hover:underline dark:text-brand-400"
         >
           전체 보기 <ArrowRight className="h-3 w-3" />
         </Link>

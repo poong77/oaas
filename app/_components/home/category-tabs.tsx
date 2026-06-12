@@ -33,7 +33,7 @@ export function CategoryTabs({
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-7 px-4 sm:px-6 lg:px-8">
         <h2
           id="category-heading"
-          className="text-center text-2xl font-bold tracking-tight sm:text-[28px]"
+          className="text-center text-heading-large-bold tracking-tight"
         >
           카테고리 찾아보기
         </h2>
@@ -45,7 +45,7 @@ export function CategoryTabs({
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`flex-1 rounded-lg px-2 py-2 text-sm font-semibold transition-colors sm:text-base ${
+              className={`flex-1 rounded-lg px-2 py-2 text-label-medium-semibold transition-colors sm:text-label-large-semibold ${
                 tab === t
                   ? 'bg-white text-brand-700 shadow-sm dark:bg-slate-950 dark:text-brand-300'
                   : 'text-slate-500 dark:text-slate-400'
@@ -75,7 +75,7 @@ export function CategoryTabs({
                         <Icon className="h-6 w-6" />
                       )}
                     </span>
-                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    <span className="text-body-medium-semibold text-slate-800 dark:text-slate-100">
                       {cat.label}
                     </span>
                   </Link>
@@ -101,7 +101,7 @@ export function CategoryTabs({
                         <Icon className="h-6 w-6" />
                       )}
                     </span>
-                    <span className="whitespace-nowrap text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    <span className="whitespace-nowrap text-body-medium-semibold text-slate-800 dark:text-slate-100">
                       {role.label}
                     </span>
                   </Link>

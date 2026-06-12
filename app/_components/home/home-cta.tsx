@@ -41,11 +41,11 @@ export function HomeCTA() {
         <div className="mb-5">
           <h2
             id="cta-heading"
-            className="text-lg font-bold tracking-tight sm:text-xl"
+            className="text-title-large-bold tracking-tight sm:text-heading-small-bold"
           >
             바로 시작하기
           </h2>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+          <p className="mt-1 text-body-small-regular text-slate-500 dark:text-slate-400 sm:text-body-medium-regular">
             상황에 맞는 접수 / 조회 메뉴를 선택하세요.
           </p>
         </div>
@@ -71,8 +71,8 @@ export function HomeCTA() {
                   >
                     <Icon className="h-5 w-5" />
                   </span>
-                  <span className="text-base font-semibold">{cta.label}</span>
-                  <span className="text-sm leading-snug opacity-80">
+                  <span className="text-title-medium-semibold">{cta.label}</span>
+                  <span className="text-body-medium-regular leading-snug opacity-80">
                     {cta.description}
                   </span>
                 </Link>

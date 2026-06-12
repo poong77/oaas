@@ -148,13 +148,13 @@ export async function HomeStatusUpdatesBox({ latest }: { latest: LatestStatus })
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <span
             className={cn(
-              'shrink-0 text-xs font-bold sm:text-sm',
+              'shrink-0 text-label-small-semibold sm:text-label-medium-semibold',
               STATUS_TEXT_CLASS[latest.status],
             )}
           >
             {statusMeta.label}
           </span>
-          <span className="truncate text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
+          <span className="truncate text-body-small-regular text-slate-600 dark:text-slate-300 sm:text-body-medium-regular">
             {statusMessage}
           </span>
         </div>
@@ -163,7 +163,7 @@ export async function HomeStatusUpdatesBox({ latest }: { latest: LatestStatus })
 
       {/* 최근 업데이트 — 한 줄 row(칩 + 제목 + 날짜) */}
       {shown.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-slate-200 px-3 py-3 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+        <p className="rounded-lg border border-dashed border-slate-200 px-3 py-3 text-center text-body-small-regular text-slate-500 dark:border-slate-700 dark:text-slate-400">
           아직 발행된 공지가 없습니다.
         </p>
       ) : (
@@ -176,17 +176,17 @@ export async function HomeStatusUpdatesBox({ latest }: { latest: LatestStatus })
               >
                 <span
                   className={cn(
-                    'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                    'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-label-small-semibold',
                     item.labelClass,
                   )}
                 >
                   {item.label}
                 </span>
-                <p className="min-w-0 flex-1 truncate text-xs font-medium text-slate-800 dark:text-slate-100 sm:text-sm">
+                <p className="min-w-0 flex-1 truncate text-body-small-medium text-slate-800 dark:text-slate-100 sm:text-body-medium-medium">
                   {item.title}
                 </p>
                 {item.publishedAt && (
-                  <span className="shrink-0 text-[10px] text-slate-400 sm:text-xs">
+                  <span className="shrink-0 text-label-small-semibold text-slate-400">
                     {formatDate(item.publishedAt)}
                   </span>
                 )}

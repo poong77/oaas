@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>타이포그래피 토큰 도입 — 2026-06-12</title>
+<style>
+  :root {
+    --brand-50:#eef2ff; --brand-100:#e0e7ff; --brand-500:#6366f1;
+    --brand-600:#4f46e5; --brand-700:#4338ca; --brand-900:#312e81;
+    --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc;
+    --warn-bg:#fff7ed; --warn-line:#fed7aa; --warn-ink:#9a3412;
+    --ok-bg:#f0fdf4; --ok-line:#bbf7d0; --ok-ink:#166534;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:960px; margin:0 auto; padding:32px 20px 80px; }
+  header.hero {
+    background:linear-gradient(135deg,var(--brand-700),var(--brand-500));
+    color:#fff; border-radius:20px; padding:32px 28px; margin-bottom:28px;
+    box-shadow:0 10px 30px -10px rgba(79,70,229,.5);
+  }
+  header.hero .tag {
+    display:inline-block; background:rgba(255,255,255,.18); border-radius:999px;
+    padding:4px 12px; font-size:12px; font-weight:600; letter-spacing:.02em; margin-bottom:14px;
+  }
+  header.hero h1 { margin:0 0 8px; font-size:26px; font-weight:800; letter-spacing:-.01em; }
+  header.hero p { margin:0; opacity:.92; font-size:14px; }
+  .meta-row { display:flex; flex-wrap:wrap; gap:18px; margin-top:18px; font-size:13px; }
+  .meta-row b { display:block; opacity:.75; font-weight:500; font-size:11px; margin-bottom:2px; }
+
+  .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:30px; }
+  .card {
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px;
+    text-align:center; box-shadow:0 1px 2px rgba(0,0,0,.03);
+  }
+  .card .num { font-size:28px; font-weight:800; color:var(--brand-600); line-height:1.1; }
+  .card .lbl { font-size:12px; color:var(--muted); margin-top:6px; }
+
+  section { background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px 22px; margin-bottom:22px; }
+  section > h2 {
+    margin:0 0 16px; font-size:17px; font-weight:700; display:flex; align-items:center; gap:8px;
+    padding-bottom:12px; border-bottom:1px solid var(--line);
+  }
+  section > h2 .dot { width:8px; height:8px; border-radius:3px; background:var(--brand-500); }
+  p.lead { margin:0 0 16px; color:var(--muted); font-size:14px; }
+
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:var(--brand-50); color:var(--brand-900); font-weight:600; font-size:12px; white-space:nowrap; }
+  tbody tr:last-child td { border-bottom:none; }
+  code {
+    background:#f1f5f9; border:1px solid var(--line); border-radius:5px;
+    padding:1px 6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; color:var(--brand-700);
+    white-space:nowrap;
+  }
+  .arrow { color:var(--muted); padding:0 4px; }
+
+  .callout { border-radius:12px; padding:14px 16px; font-size:13.5px; }
+  .callout.warn { background:var(--warn-bg); border:1px solid var(--warn-line); color:var(--warn-ink); }
+  .callout.ok { background:var(--ok-bg); border:1px solid var(--ok-line); color:var(--ok-ink); }
+  .callout b { font-weight:700; }
+
+  ul.clean { margin:0; padding-left:18px; font-size:13.5px; }
+  ul.clean li { margin:6px 0; }
+  .badge { display:inline-block; border-radius:6px; padding:2px 8px; font-size:11px; font-weight:600; }
+  .badge.skip { background:var(--warn-bg); color:var(--warn-ink); border:1px solid var(--warn-line); }
+  .badge.done { background:var(--ok-bg); color:var(--ok-ink); border:1px solid var(--ok-line); }
+  footer { text-align:center; color:var(--muted); font-size:12px; margin-top:30px; }
+
+  @media (max-width:640px) {
+    .cards { grid-template-columns:repeat(2,1fr); }
+    header.hero h1 { font-size:22px; }
+    th, td { padding:8px 9px; font-size:12px; }
+    code { font-size:11px; white-space:normal; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="tag">OA서포트 · 디자인 시스템</span>
+    <h1>Figma 타이포그래피 토큰 도입 &amp; 홈 적용</h1>
+    <p>Figma textStyles.json(35종)을 Tailwind 4 <code style="background:rgba(255,255,255,.15);border:none;color:#fff">@theme</code> 토큰으로 등록하고, 홈 컴포넌트 전체에 적용했습니다.</p>
+    <div class="meta-row">
+      <div><b>작업일</b>2026-06-12</div>
+      <div><b>대상</b>app/globals.css · app/_components/home</div>
+      <div><b>방식</b>Tailwind 4 CSS-first (--text-*)</div>
+      <div><b>빌드</b>✓ Compiled successfully</div>
+    </div>
+  </header>
+
+  <div class="cards">
+    <div class="card"><div class="num">35</div><div class="lbl">등록 토큰</div></div>
+    <div class="card"><div class="num">9</div><div class="lbl">적용 컴포넌트</div></div>
+    <div class="card"><div class="num">30+</div><div class="lbl">교체 클래스</div></div>
+    <div class="card"><div class="num">0</div><div class="lbl">남은 보류</div></div>
+  </div>
+
+  <section>
+    <h2><span class="dot"></span>1. 무엇을 했나</h2>
+    <p class="lead">디자이너가 Figma에서 export한 폰트 스타일 35종을 프로젝트의 디자인 토큰으로 흡수했습니다.</p>
+    <ul class="clean">
+      <li><b>원본 CSS 파일은 import하지 않음</b> — Tailwind 4 전용 문법 <code>--text-{name}</code>으로 <code>@theme</code>에 등록하여 <code>text-{name}</code> 유틸리티가 자동 생성되도록 함.</li>
+      <li><code>size</code> + <code>line-height</code> + <code>font-weight</code>가 한 클래스에 묶여 적용됨. 예) <code>text-heading-large-bold</code> = 32px / 1.48 / 700.</li>
+      <li>폰트 패밀리는 전역 <code>--font-sans</code>(Pretendard) 상속, 색은 기존 <code>text-brand-*</code>/<code>text-slate-*</code> 유지 — <b>타이포와 컬러 역할 분리</b>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="dot"></span>2. 토큰 스케일 (6 카테고리)</h2>
+    <table>
+      <thead><tr><th>카테고리</th><th>크기</th><th>용도</th></tr></thead>
+      <tbody>
+        <tr><td><code>display-*</code></td><td>36 · 48 · 60px</td><td>랜딩 대형 타이틀</td></tr>
+        <tr><td><code>heading-*</code></td><td>20 · 24 · 32px</td><td>페이지 제목</td></tr>
+        <tr><td><code>title-*</code></td><td>16 · 18px</td><td>카드 · 섹션 제목</td></tr>
+        <tr><td><code>body-*</code></td><td>12 · 14 · 16px</td><td>본문</td></tr>
+        <tr><td><code>label-*</code></td><td>12 · 14 · 16px</td><td>버튼 · 폼 · 배지 · 링크</td></tr>
+        <tr><td><code>caption</code></td><td>11px</td><td>최소 보조 텍스트</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="dot"></span>3. 이름 결정 사항</h2>
+    <div class="callout ok">
+      <b>display-xlarge-medium → display-xlarge-black</b> 으로 변경.<br>
+      Figma 원본 스타일명은 'Medium'이었으나 실제 weight가 <b>900(Black)</b>이어서, 이름·값 불일치를 없애기 위해 <code>black</code>으로 확정(디자인 확인 완료). 미사용 토큰이라 안전하게 개명.
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot"></span>4. 적용 컴포넌트 <span class="badge done" style="margin-left:6px">9개 완료</span></h2>
+    <table>
+      <thead><tr><th>파일</th><th>적용 영역</th></tr></thead>
+      <tbody>
+        <tr><td><code>home-notice-list.tsx</code></td><td>제목 · 링크 · 배지 · 공지명 · 날짜</td></tr>
+        <tr><td><code>home-cta.tsx</code></td><td>섹션 제목 · 설명 · 카드 라벨 · 카드 설명</td></tr>
+        <tr><td><code>home-help-cta.tsx</code></td><td>제목 · 설명 · 버튼</td></tr>
+        <tr><td><code>home-quick-choice.tsx</code></td><td>제목 · 카드 2종 · 보조 링크</td></tr>
+        <tr><td><code>category-grid.tsx</code></td><td>제목 · 전체보기 · 카드 라벨</td></tr>
+        <tr><td><code>role-starters.tsx</code></td><td>제목 · 역할명 · 설명</td></tr>
+        <tr><td><code>category-tabs.tsx</code></td><td>탭 버튼 · 카드 라벨 2종</td></tr>
+        <tr><td><code>home-my-tickets.tsx</code></td><td>제목 · 링크 · 카운트 · 버튼 · 배지 · 티켓명 · 메타 · 날짜 · 빈상태</td></tr>
+        <tr><td><code>home-status-updates-box.tsx</code></td><td>메시지 · 빈상태 · 업데이트 제목</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="dot"></span>5. 교체 패턴 예시</h2>
+    <table>
+      <thead><tr><th>변경 전 (Tailwind 기본)</th><th></th><th>변경 후 (토큰)</th></tr></thead>
+      <tbody>
+        <tr><td><code>text-lg font-bold</code></td><td class="arrow">→</td><td><code>text-title-large-bold</code></td></tr>
+        <tr><td><code>sm:text-xl</code></td><td class="arrow">→</td><td><code>sm:text-heading-small-bold</code></td></tr>
+        <tr><td><code>text-sm font-medium</code></td><td class="arrow">→</td><td><code>text-label-medium-medium</code></td></tr>
+        <tr><td><code>text-base font-semibold</code></td><td class="arrow">→</td><td><code>text-title-medium-semibold</code></td></tr>
+        <tr><td><code>text-xs font-semibold</code> (배지)</td><td class="arrow">→</td><td><code>text-label-small-semibold</code></td></tr>
+        <tr><td><code>text-2xl font-bold</code></td><td class="arrow">→</td><td><code>text-heading-medium-bold</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="dot"></span>6. 보류 항목 — 디자이너 결정 반영 완료 <span class="badge done" style="margin-left:6px">해결됨</span></h2>
+    <p class="lead">스케일 밖이던 4건은 디자이너 결정으로 모두 토큰 스케일 안으로 흡수되었습니다.</p>
+    <table>
+      <thead><tr><th>위치</th><th>이전</th><th></th><th>결정 · 적용</th></tr></thead>
+      <tbody>
+        <tr><td>home-hero H1 "무엇을 도와드릴까요?"</td><td>30px / sm 36px</td><td class="arrow">→</td><td>36px <code>text-display-medium-bold</code></td></tr>
+        <tr><td>category-tabs H2 "카테고리 찾아보기"</td><td>24px / sm 28px</td><td class="arrow">→</td><td>32px <code>text-heading-large-bold</code></td></tr>
+        <tr><td>status-box 상태 라벨</td><td>12/700 bold</td><td class="arrow">→</td><td>semibold <code>text-label-small-semibold sm:text-label-medium-semibold</code></td></tr>
+        <tr><td>status-box 칩 · 날짜</td><td>10px</td><td class="arrow">→</td><td>12px <code>text-label-small-semibold</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout ok" style="margin-top:14px">
+      <b>결과:</b> 28·30·10px 등 스케일 밖 값과 12px-bold 제거 → 홈 컴포넌트 폰트 <b>100% 토큰화</b>. 추가 토큰 신설 없이 기존 35종으로 흡수. <code>npx next build</code> ✓ 통과.
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot"></span>7. 검증 &amp; 다음 단계</h2>
+    <ul class="clean">
+      <li><span class="badge done">완료</span> <code>npx next build</code> — ✓ Compiled successfully (회귀 없음, 추가/교체만).</li>
+      <li><span class="badge skip">대기</span> 로컬 <code>npm run dev</code> → <code>/</code> 시각 회귀 육안 확인.</li>
+      <li><span class="badge done">완료</span> 보류 4건 디자이너 결정 반영 (홈 100% 토큰화).</li>
+      <li><span class="badge skip">대기</span> <code>docs/dev-rules.md</code>에 "타이포는 <code>text-*</code> 토큰 사용" 컨벤션 추가 후 커밋.</li>
+    </ul>
+  </section>
+
+  <footer>
+    OA서포트 (support.oapms.com) · 개발 일지 · 2026-06-12 · Generated with Claude Code
+  </footer>
+
+</div>
+</body>
+</html>

@@ -62,7 +62,7 @@ export function RoleStarters({ items }: { items?: RoleStarter[] }) {
       <div className="mb-5">
         <h2
           id="role-heading"
-          className="text-lg font-bold tracking-tight sm:text-xl"
+          className="text-title-large-bold tracking-tight sm:text-heading-small-bold"
         >
           역할로 찾기
         </h2>
@@ -89,11 +89,11 @@ export function RoleStarters({ items }: { items?: RoleStarter[] }) {
                     <Icon className="h-4 w-4" />
                   )}
                 </span>
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                <span className="text-body-medium-semibold text-slate-800 dark:text-slate-100">
                   {role.label}
                 </span>
                 {role.description && (
-                  <span className="text-xs leading-snug text-slate-500 dark:text-slate-400">
+                  <span className="text-body-small-regular leading-snug text-slate-500 dark:text-slate-400">
                     {role.description}
                   </span>
                 )}

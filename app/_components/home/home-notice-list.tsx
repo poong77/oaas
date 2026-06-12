@@ -32,13 +32,13 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
       <div className="mb-4 flex items-center justify-between">
         <h2
           id="home-notice-heading"
-          className="text-lg font-bold tracking-tight sm:text-xl"
+          className="text-title-large-bold tracking-tight sm:text-heading-small-bold"
         >
           공지사항
         </h2>
         <Link
           href="/notices"
-          className="inline-flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400"
+          className="inline-flex items-center gap-1 text-label-medium-medium text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400"
         >
           공지사항 전체보기
           <ArrowRight className="h-4 w-4" />
@@ -55,14 +55,14 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
                 className="flex flex-col gap-2 px-2 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40 sm:flex-row sm:items-center sm:gap-5"
               >
                 <span
-                  className={`inline-flex w-fit shrink-0 items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium min-w-[88px] ${m.cls}`}
+                  className={`inline-flex w-fit shrink-0 items-center justify-center rounded-lg px-2 py-0.5 text-label-small-medium min-w-[88px] ${m.cls}`}
                 >
                   {m.label}
                 </span>
-                <span className="flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                <span className="flex-1 truncate text-body-medium-medium text-slate-800 dark:text-slate-100">
                   {n.title}
                 </span>
-                <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
+                <span className="shrink-0 text-body-small-regular text-slate-400 dark:text-slate-500">
                   {fmtDate(n.publishedAt)}
                 </span>
               </Link>

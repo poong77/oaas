@@ -133,6 +133,14 @@
 - **Primary**: OA 브랜드 컬러 기준 (아직 미정 → 우선 `slate` + `indigo`로 시작 후 확정)
 - Tailwind 컬러 50~900 전체 스케일 정의 (`tailwind.config.ts`)
 
+### 타이포그래피 (Figma 토큰)
+- **폰트 크기·굵기·줄간격은 `text-*` 토큰 사용** — 원시값(`text-sm`, `font-bold`, `text-[28px]`) 직접 지정 금지
+- 토큰은 `app/globals.css`의 `@theme` 블록에 `--text-{name}` 으로 정의 (Figma `textStyles.json` export 기준 35종)
+- 이름 규칙: `text-{용도}-{크기}-{굵기}` (예: `text-heading-large-bold`, `text-body-medium-regular`)
+  - 용도: `display`(36/48/60) · `heading`(20/24/32) · `title`(16/18) · `body`(12/14/16) · `label`(12/14/16) · `caption`(11)
+- **타이포 ↔ 컬러 역할 분리**: 크기/굵기는 `text-*` 토큰, 색은 `text-brand-*`/`text-slate-*` 로 따로 지정
+- 토큰 스케일에 없는 크기가 필요하면 임의값(`text-[Npx]`) 대신 **디자이너 확인 후 토큰 신설**
+
 ### 반응형 (모바일 우선)
 - 호텔리어 대부분 모바일 환경 → **모바일 우선 설계**
 - Breakpoint: sm(640) / md(768) / lg(1024) / xl(1280)

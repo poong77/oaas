@@ -109,10 +109,10 @@
    */
 
   /* Display */
-  /* ⚠ 이름은 medium 이지만 Figma 원본 weight=900(Black). 디자인 확정 시 이름/값 재검토 */
-  --text-display-xlarge-medium: 60px;
-  --text-display-xlarge-medium--line-height: 1.2;
-  --text-display-xlarge-medium--font-weight: 900;
+  /* xlarge 최상위는 Black(900). Figma 원본 스타일명이 'Medium'이나 실제 weight=900이라 black으로 명명(디자인 확정) */
+  --text-display-xlarge-black: 60px;
+  --text-display-xlarge-black--line-height: 1.2;
+  --text-display-xlarge-black--font-weight: 900;
   --text-display-xlarge-bold: 60px;
   --text-display-xlarge-bold--line-height: 1.2;
   --text-display-xlarge-bold--font-weight: 700;

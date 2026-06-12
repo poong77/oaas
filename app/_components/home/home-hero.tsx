@@ -57,7 +57,7 @@ export function HomeHero({
               : 'items-center text-center'
           }`}
         >
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-[36px]">
+          <h1 className="text-display-medium-bold tracking-tight text-slate-900 dark:text-white">
             무엇을 도와드릴까요?
           </h1>
 
@@ -77,7 +77,7 @@ export function HomeHero({
               />
               <button
                 type="submit"
-                className="absolute right-1.5 inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-brand-500 sm:h-11 sm:px-5"
+                className="absolute right-1.5 inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-label-medium-semibold text-white shadow-sm hover:bg-brand-500 sm:h-11 sm:px-5"
               >
                 통합검색
               </button>
@@ -89,7 +89,7 @@ export function HomeHero({
               <li key={kw}>
                 <Link
                   href={`/search?q=${encodeURIComponent(kw)}`}
-                  className="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-brand-950/50 dark:hover:text-brand-300 sm:text-sm"
+                  className="inline-flex items-center rounded-full px-3 py-1.5 text-label-small-medium text-slate-600 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-brand-950/50 dark:hover:text-brand-300 sm:text-label-medium-medium"
                 >
                   # {kw}
                 </Link>
