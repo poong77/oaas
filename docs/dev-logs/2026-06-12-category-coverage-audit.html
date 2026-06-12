@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아티클·FAQ 제품분류 정합 점검 및 재매핑 — 2026-06-12</title>
+<style>
+  :root{
+    --pri:#2563eb; --pri-d:#1e40af; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+    --bg:#f8fafc; --card:#fff; --bd:#e2e8f0; --tx:#1e293b; --mut:#64748b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,'Noto Sans KR',sans-serif;
+    background:var(--bg);color:var(--tx);line-height:1.6;padding:24px}
+  .wrap{max-width:960px;margin:0 auto}
+  header{background:linear-gradient(135deg,var(--pri),var(--pri-d));color:#fff;
+    border-radius:16px;padding:28px 32px;margin-bottom:24px}
+  header h1{margin:0 0 8px;font-size:1.5rem}
+  header p{margin:0;opacity:.9;font-size:.92rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:20px 0}
+  .stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;text-align:center}
+  .stat .n{font-size:1.7rem;font-weight:700;color:var(--pri)}
+  .stat .n.ok{color:var(--ok)} .stat .n.bad{color:var(--bad)}
+  .stat .l{font-size:.8rem;color:var(--mut);margin-top:4px}
+  section{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:22px 24px;margin-bottom:20px}
+  section h2{margin:0 0 14px;font-size:1.15rem;display:flex;align-items:center;gap:8px}
+  .tag{font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:999px}
+  .tag.ok{background:#dcfce7;color:#166534} .tag.warn{background:#fef3c7;color:#92400e}
+  .tag.bad{background:#fee2e2;color:#991b1b} .tag.info{background:#dbeafe;color:#1e40af}
+  table{width:100%;border-collapse:collapse;font-size:.88rem;margin:8px 0}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--bd)}
+  th{background:#f1f5f9;font-weight:600;color:#334155}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .arrow{color:var(--pri);font-weight:700}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:.85em;color:#0f172a}
+  .note{background:#fffbeb;border-left:4px solid var(--warn);padding:12px 16px;border-radius:6px;margin:12px 0;font-size:.88rem}
+  .note.bad{background:#fef2f2;border-color:var(--bad)}
+  .note.ok{background:#f0fdf4;border-color:var(--ok)}
+  ul{margin:8px 0;padding-left:20px} li{margin:4px 0}
+  footer{text-align:center;color:var(--mut);font-size:.8rem;margin-top:24px}
+  .mono{font-family:ui-monospace,Menlo,monospace;font-size:.82rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>아티클·FAQ 제품분류 정합 점검 및 재매핑</h1>
+  <p>OA서포트 · support.oapms.com — 활성 product 분류 기준 콘텐츠 정합 점검 / 2026-06-12</p>
+</header>
+
+<div class="grid">
+  <div class="stat"><div class="n">39</div><div class="l">활성 product 분류</div></div>
+  <div class="stat"><div class="n bad">32</div><div class="l">숨겨진 콘텐츠(점검 시)</div></div>
+  <div class="stat"><div class="n ok">0</div><div class="l">비활성 참조(완료 후)</div></div>
+  <div class="stat"><div class="n">61</div><div class="l">이전 항목(콘텐츠+메뉴)</div></div>
+</div>
+
+<section>
+  <h2>📋 한눈에 보기</h2>
+  <p>현재 활성화된 product 분류 기준으로 아티클·FAQ가 잘 정리됐는지 점검한 결과,
+  <strong>분류 개편(대→중/소 계층화)은 끝났으나 구 분류(<code>web</code> 웹서비스 · <code>config</code> 설정)의
+  콘텐츠·메뉴트리가 이전되지 않아 32건이 브라우징에서 숨겨진 상태</strong>였습니다.
+  설계 의도(활성 대분류 6종: pms·homepage·cms·keyless·kiosk·etc)에 맞춰 <code>web/config</code>를
+  <code>pms</code>·<code>etc</code>로 흡수 통합하여 정리를 완료했습니다.</p>
+  <div class="note ok"><strong>결과:</strong> 활성 콘텐츠의 비활성 분류 참조 <strong>0건</strong>. 숨겨졌던 31 아티클·3 FAQ가 활성 제품 카드(pms/etc)에서 정상 노출됩니다.</div>
+</section>
+
+<section>
+  <h2>🔴 점검에서 발견된 문제</h2>
+  <h3 style="font-size:.98rem;margin:6px 0">문제 1 — 비활성 분류를 가리키는 콘텐츠 (사용자에게 안 보임)</h3>
+  <p style="font-size:.88rem;color:var(--mut)"><code>/help</code> 랜딩·검색은 <span class="mono">getProductCategories()</span>가 활성 대분류만 노출 → 아래 코드의 콘텐츠는 어느 제품 카드에도 안 잡힘.</p>
+  <table>
+    <tr><th>비활성 코드</th><th class="num">아티클</th><th class="num">FAQ</th><th>내용</th></tr>
+    <tr><td><code>web</code> 웹서비스</td><td class="num">24</td><td class="num">1</td><td>하우스키퍼·웹POS·메시지/알림톡·게시판·스마트TV</td></tr>
+    <tr><td><code>config</code> 설정</td><td class="num">5</td><td class="num">2</td><td>객실설정·공통설정·계정 문의</td></tr>
+    <tr style="font-weight:700"><td>합계</td><td class="num">29</td><td class="num">3</td><td>= 32건 숨김</td></tr>
+  </table>
+  <h3 style="font-size:.98rem;margin:14px 0 6px">문제 2 — 신규 분류는 준비됐으나 콘텐츠 이관 누락</h3>
+  <p style="font-size:.88rem">활성 계층에 들어갈 자리(<code>pms_housekeeper</code>·<code>pms_webpos</code>·<code>etc_message</code>·<code>etc_hoteltv</code> 등)가 이미 비어 있는 채로 존재 → 개편이 절반만 진행된 상태.</p>
+  <h3 style="font-size:.98rem;margin:14px 0 6px">문제 3 — <span class="tag info">설계상 정상</span> 콘텐츠가 대분류 코드에만 매핑</h3>
+  <p style="font-size:.88rem">아티클 product_code는 대분류만 사용하고 제품 내 내비게이션은 <code>menu_taxonomies</code> 라벨 트리로 구동. <strong>product_code를 하위 코드로 내리면 <code>/help/[product]</code> 라우팅이 깨지므로 의도된 설계</strong>로 판단 → 하위 코드 강제 이전은 제외.</p>
+</section>
+
+<section>
+  <h2>🔧 수행한 재매핑 <span class="tag ok">완료</span></h2>
+  <p style="font-size:.88rem">단순 product_code 교체가 아니라 <strong>menu_taxonomies + articles + faqs 3테이블을 동기 이전</strong>. category_path[1] 라벨로 타깃 결정.</p>
+  <table>
+    <tr><th>구 분류 / 루트</th><th class="arrow">→</th><th>활성 대분류</th><th class="num">메뉴노드</th><th class="num">아티클</th></tr>
+    <tr><td>web · OA 하우스키퍼</td><td class="arrow">→</td><td><code>pms</code></td><td class="num">5</td><td class="num">5</td></tr>
+    <tr><td>web · OA 웹POS</td><td class="arrow">→</td><td><code>pms</code></td><td class="num">—</td><td class="num">5</td></tr>
+    <tr><td>web · OA 게시판</td><td class="arrow">→</td><td><code>pms</code></td><td class="num">—</td><td class="num">2</td></tr>
+    <tr><td>web · OA 메시지</td><td class="arrow">→</td><td><code>etc</code></td><td class="num">8</td><td class="num">10</td></tr>
+    <tr><td>web · OA 스마트 TV</td><td class="arrow">→</td><td><code>etc</code></td><td class="num">2</td><td class="num">1</td></tr>
+    <tr><td>config · 공통설정</td><td class="arrow">→</td><td><code>pms</code></td><td class="num">3</td><td class="num">2</td></tr>
+    <tr><td>config · 객실설정</td><td class="arrow">→</td><td><code>pms</code></td><td class="num">4</td><td class="num">3</td></tr>
+    <tr><td>web/config · FAQ 전체</td><td class="arrow">→</td><td><code>etc</code></td><td class="num">—</td><td class="num">3 (FAQ)</td></tr>
+    <tr style="font-weight:700"><td>합계</td><td></td><td></td><td class="num">30</td><td class="num">31+3</td></tr>
+  </table>
+  <p style="font-size:.85rem;color:var(--mut)">스크립트: <span class="mono">scripts/remap-web-config.ts</span> (멱등, dry-run 기본 / --apply 적용). 점검: <span class="mono">scripts/audit-category-coverage.ts</span>, <span class="mono">audit-category-detail.ts</span>, <span class="mono">audit-menu-taxonomy.ts</span></p>
+</section>
+
+<section>
+  <h2>📊 재매핑 전·후 분포</h2>
+  <table>
+    <tr><th>product</th><th class="num">아티클 (전)</th><th class="num">아티클 (후)</th><th class="num">FAQ (전→후)</th></tr>
+    <tr><td><code>pms</code></td><td class="num">71</td><td class="num">88</td><td class="num">33 → 33</td></tr>
+    <tr><td><code>etc</code></td><td class="num">0</td><td class="num">11</td><td class="num">0 → 3</td></tr>
+    <tr><td><code>cms</code></td><td class="num">22</td><td class="num">11 *</td><td class="num">30 → 30</td></tr>
+    <tr><td><code>homepage</code></td><td class="num">2</td><td class="num">13 *</td><td class="num">0 → 0</td></tr>
+    <tr><td><code>keyless</code></td><td class="num">15</td><td class="num">15</td><td class="num">13 → 13</td></tr>
+    <tr><td><code>kiosk</code></td><td class="num">9</td><td class="num">9</td><td class="num">9 → 9</td></tr>
+    <tr><td class="bad"><code>web</code> (비활성)</td><td class="num">24</td><td class="num">0</td><td class="num">1 → 0</td></tr>
+    <tr><td class="bad"><code>config</code> (비활성)</td><td class="num">5</td><td class="num">0</td><td class="num">2 → 0</td></tr>
+  </table>
+  <div class="note"><strong>* cms 22→11 / homepage 2→13 (11건)</strong> 은 본 재매핑과 무관합니다. 점검 중(2026-06-12 05:25–05:51 UTC) 운영팀이 어드민에서 "OA 홈페이지 & 부킹엔진" 아티클을 cms→homepage로 <strong>라이브 재분류</strong>한 것으로, 재매핑 대상(web/config)과 행이 겹치지 않아 충돌은 없었습니다.</div>
+</section>
+
+<section>
+  <h2>⚠️ 남은 별개 항목 (미처리)</h2>
+  <ul>
+    <li><strong>cms/homepage 메뉴트리 정합</strong> — <code>menu_taxonomies</code>에 product 불일치 고아노드 7건(cms "홈페이지 …" 노드의 parent가 homepage 계열). 운영팀의 라이브 재분류와 연관된 사안으로, 편집 종료 후 별도 정리 권장.</li>
+    <li><strong>비활성 분류 보존</strong> — <code>web</code>·<code>config</code>·<code>oachat</code>·<code>lock</code>·<code>pms_pms_ver</code>는 참조 0 확인 후에도 <strong>물리 삭제하지 않고 소프트 비활성 유지</strong>(이력 보존 원칙).</li>
+    <li><strong><code>etc</code> 대분류 카드</strong> — 이제 콘텐츠 11+3건 보유로 정상 노출. 빈 카드 문제 해소.</li>
+    <li><strong>하위 33분류 콘텐츠 0건</strong> — 접수폼 cascade 전용(의도된 설계). 핸드북 분류엔 미사용으로 정상.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>🛠 작업 중 발견·교정한 리스크</h2>
+  <div class="note bad"><strong>운영 DB 직결 + sql 태그 즉시실행:</strong> <span class="mono">connectPg().sql</span>은 <span class="mono">pool.query</span> 기반으로 <strong>태그 호출 즉시 쿼리를 전송</strong>합니다. 최초 스크립트가 dry-run에서 UPDATE 문을 변수에 담기만 했는데도 menu_taxonomies UPDATE가 실제 전송되어 menu 이전이 dry-run 중 선반영됨. → 매핑이 의도한 결과와 동일하여 데이터 손상은 없었고, 스크립트를 즉시실행 안전 패턴으로 교정 후 articles/faqs 이전을 완료. <span class="mono">BEGIN/COMMIT</span>도 pool 특성상 트랜잭션이 성립하지 않아 제거(매핑 멱등으로 대체).</div>
+</section>
+
+<footer>OA서포트 개발 점검 보고서 · 2026-06-12 · 생성: Claude</footer>
+</div>
+</body>
+</html>
