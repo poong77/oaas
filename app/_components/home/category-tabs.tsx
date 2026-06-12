@@ -12,7 +12,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 import { resolveIcon } from '@/components/icon-resolver';
 import type { ProductCategoryView } from '@/lib/services/categories';
 import type { RoleStarter } from '@/db/schema';
@@ -29,7 +28,7 @@ export function CategoryTabs({
   return (
     <section
       aria-labelledby="category-heading"
-      className="bg-slate-50/60 py-10 dark:bg-slate-900/40 sm:py-14"
+      className="bg-slate-100 py-10 dark:bg-slate-900 sm:py-14"
     >
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-7 px-4 sm:px-6 lg:px-8">
         <h2
@@ -68,7 +67,7 @@ export function CategoryTabs({
                     href={`/help/${cat.code}`}
                     className="group flex h-full flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700 sm:p-5"
                   >
-                    <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-brand-100 text-brand-600 transition-colors group-hover:bg-brand-600 group-hover:text-white dark:bg-brand-900/40 dark:text-brand-300 dark:group-hover:bg-brand-500 dark:group-hover:text-white">
+                    <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white text-brand-600 transition-colors group-hover:text-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:group-hover:text-brand-200">
                       {cat.iconImageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={cat.iconImageUrl} alt="" className="h-7 w-7 object-contain" />
@@ -94,7 +93,7 @@ export function CategoryTabs({
                     href={`/role/${role.roleKey}`}
                     className="group flex h-full flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700 sm:p-5"
                   >
-                    <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-brand-100 text-brand-600 transition-colors group-hover:bg-brand-600 group-hover:text-white dark:bg-brand-900/40 dark:text-brand-300 dark:group-hover:bg-brand-500 dark:group-hover:text-white">
+                    <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white text-brand-600 transition-colors group-hover:text-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:group-hover:text-brand-200">
                       {role.iconImageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={role.iconImageUrl} alt="" className="h-7 w-7 object-contain" />
@@ -111,14 +110,6 @@ export function CategoryTabs({
             })}
           </ul>
         )}
-
-        <Link
-          href="/help"
-          className="inline-flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400"
-        >
-          가이드 전체보기
-          <ArrowRight className="h-4 w-4" />
-        </Link>
       </div>
     </section>
   );
