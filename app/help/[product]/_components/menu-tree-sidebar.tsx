@@ -190,7 +190,7 @@ function TreeList({
                       onToggle(key);
                     }}
                     aria-label={isOpen ? '접기' : '펼치기'}
-                    className="inline-flex h-4 w-4 items-center justify-center text-slate-400 hover:text-slate-700"
+                    className="inline-flex h-4 w-4 items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
                   >
                     {isOpen ? (
                       <ChevronDown className="h-3 w-3" />

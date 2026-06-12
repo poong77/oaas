@@ -86,7 +86,7 @@ export function SolutionLinks({
       <CardHeader>
         <CardTitle>
           솔루션 링크
-          <span className="ml-2 text-xs font-normal text-slate-500">
+          <span className="ml-2 text-xs font-normal text-slate-500 dark:text-slate-400">
             ({links.length} / {MAX_LINKS})
           </span>
         </CardTitle>
@@ -117,7 +117,7 @@ export function SolutionLinks({
                   <Button type="button" size="sm" variant="ghost" onClick={() => setEditingId(null)}>취소</Button>
                 </div>
                 {(errors.label || errors.url) && (
-                  <div className="col-span-full text-xs text-red-600">
+                  <div className="col-span-full text-xs text-red-600 dark:text-red-400">
                     {errors.label || errors.url}
                   </div>
                 )}
@@ -144,7 +144,7 @@ export function SolutionLinks({
                     size="sm"
                     variant="ghost"
                     onClick={() => handleDelete(link.id, link.label)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-red-600 hover:text-red-700 dark:text-red-400"
                   >
                     <Trash2 className="h-3.5 w-3.5" />삭제
                   </Button>
@@ -172,7 +172,7 @@ export function SolutionLinks({
               <Button type="button" size="sm" variant="ghost" onClick={() => setShowNew(false)}>취소</Button>
             </div>
             {(errors.label || errors.url) && (
-              <div className="col-span-full text-xs text-red-600">{errors.label || errors.url}</div>
+              <div className="col-span-full text-xs text-red-600 dark:text-red-400">{errors.label || errors.url}</div>
             )}
           </form>
         )}
@@ -190,7 +190,7 @@ export function SolutionLinks({
         )}
 
         {!canAddMore && (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             최대 {MAX_LINKS}개까지 등록 가능합니다. 추가하려면 기존 항목을 먼저 삭제해주세요.
           </p>
         )}

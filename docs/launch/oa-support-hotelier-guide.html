@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OA서포트 — 호텔리어 안내</title>
+<style>
+  :root {
+    --brand-50:#f1f1fe; --brand-100:#e5e4fd; --brand-200:#cbc9fb;
+    --brand-400:#7c78f0; --brand-500:#5b56e0; --brand-600:#4a44cf;
+    --brand-700:#3f3ab0; --brand-900:#272356;
+    --ink:#1b1b2b; --muted:#5b5b72; --line:#e8e8f0; --bg:#fafaff; --card:#ffffff;
+    --ok:#16a34a;
+    --shadow:0 1px 2px rgba(39,35,86,.04), 0 8px 24px rgba(39,35,86,.06);
+    --shadow-lg:0 12px 40px rgba(39,35,86,.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink:#f3f3fa; --muted:#a9a9c2; --line:#2c2c3e; --bg:#0e0e16; --card:#16161f;
+      --brand-50:#1a1942; --brand-100:#232157; --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:980px; margin:0 auto; padding:0 20px; }
+
+  /* HERO */
+  .hero {
+    background:linear-gradient(150deg, var(--brand-600) 0%, var(--brand-900) 100%);
+    color:#fff; padding:72px 0 88px; text-align:center; position:relative; overflow:hidden;
+  }
+  .hero::after {
+    content:""; position:absolute; inset:auto 0 -1px 0; height:48px;
+    background:var(--bg); border-radius:50% 50% 0 0 / 100% 100% 0 0;
+  }
+  .badge {
+    display:inline-block; font-size:13px; font-weight:600; letter-spacing:.02em;
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28);
+    padding:6px 14px; border-radius:999px; margin-bottom:22px; backdrop-filter:blur(4px);
+  }
+  .hero h1 { font-size:clamp(28px,5vw,46px); font-weight:800; letter-spacing:-.02em; line-height:1.25; }
+  .hero h1 .hl { color:#d6d4ff; }
+  .hero p { margin-top:18px; font-size:clamp(15px,2.4vw,19px); color:#dcdbf5; max-width:620px; margin-left:auto; margin-right:auto; }
+  .hero .url { margin-top:26px; font-size:14px; color:#bfbdf0; font-weight:500; }
+  .hero .url b { color:#fff; }
+
+  section { padding:54px 0; }
+  .eyebrow { color:var(--brand-500); font-weight:700; font-size:13px; letter-spacing:.08em; text-transform:uppercase; }
+  .sec-title { font-size:clamp(22px,3.4vw,30px); font-weight:800; letter-spacing:-.01em; margin:8px 0 8px; }
+  .sec-sub { color:var(--muted); font-size:15px; max-width:640px; }
+
+  /* FEATURE CARDS */
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; margin-top:30px; }
+  .card {
+    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:26px;
+    box-shadow:var(--shadow); transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); }
+  .card .num {
+    display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px;
+    border-radius:12px; background:var(--brand-50); color:var(--brand-600);
+    font-weight:800; font-size:17px; margin-bottom:16px;
+  }
+  .card h3 { font-size:18px; font-weight:750; letter-spacing:-.01em; margin-bottom:8px; }
+  .card p { color:var(--muted); font-size:14.5px; }
+  .card .kw { display:inline-block; margin-top:14px; font-size:12.5px; font-weight:600;
+    color:var(--brand-600); background:var(--brand-50); padding:4px 11px; border-radius:999px; }
+
+  /* COMPARE TABLE */
+  .compare { background:var(--brand-50); border-radius:22px; padding:34px 26px; margin-top:30px; border:1px solid var(--line); }
+  table { width:100%; border-collapse:collapse; font-size:14.5px; }
+  thead th { text-align:left; font-weight:700; color:var(--ink); padding:0 14px 14px; font-size:13.5px; }
+  thead th.now { color:var(--brand-600); }
+  tbody td { padding:14px; border-top:1px solid var(--line); vertical-align:top; color:var(--muted); }
+  tbody td.case { font-weight:650; color:var(--ink); white-space:nowrap; }
+  tbody td.now { color:var(--ink); font-weight:600; }
+  tbody td.now::before { content:"✓ "; color:var(--ok); font-weight:800; }
+
+  /* STEPS */
+  .steps { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:30px; counter-reset:s; }
+  .step { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px 18px; box-shadow:var(--shadow); position:relative; }
+  .step::before {
+    counter-increment:s; content:counter(s); position:absolute; top:-12px; left:18px;
+    width:30px; height:30px; border-radius:50%; background:var(--brand-600); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px;
+    box-shadow:0 4px 10px rgba(91,86,224,.4);
+  }
+  .step h4 { font-size:15.5px; font-weight:700; margin:10px 0 6px; }
+  .step p { font-size:13.5px; color:var(--muted); }
+
+  /* CTA */
+  .cta { background:linear-gradient(135deg,var(--brand-600),var(--brand-700)); color:#fff;
+    border-radius:24px; padding:48px 32px; text-align:center; margin:10px 0 0; box-shadow:var(--shadow-lg); }
+  .cta h2 { font-size:clamp(22px,3.6vw,30px); font-weight:800; letter-spacing:-.01em; }
+  .cta p { margin-top:12px; color:#dcdbf5; font-size:15.5px; }
+  .cta .btns { margin-top:26px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .btn { display:inline-block; padding:13px 26px; border-radius:12px; font-weight:700; font-size:15px; text-decoration:none; transition:transform .15s; }
+  .btn:hover { transform:translateY(-2px); }
+  .btn-primary { background:#fff; color:var(--brand-700); }
+  .btn-ghost { background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.35); }
+
+  footer { text-align:center; color:var(--muted); font-size:13px; padding:40px 0 56px; }
+
+  @media (max-width:680px) {
+    .grid, .steps { grid-template-columns:1fr; }
+    .steps { gap:26px; margin-top:34px; }
+    .compare { padding:20px 14px; }
+    table { font-size:13px; }
+    tbody td.case { white-space:normal; }
+    section { padding:44px 0; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <span class="badge">호텔리어 전용 통합 지원 허브</span>
+      <h1>OA 지원, 이제 <span class="hl">한 곳에서</span> 끝냅니다</h1>
+      <p>매뉴얼 검색부터 직접 해결, 안 되면 이슈 접수까지 — 흩어져 있던 모든 지원 창구를 OA서포트 하나로 모았습니다.</p>
+      <div class="url">👉 <b>support.oapms.com</b> 에서 지금 만나보세요</div>
+    </div>
+  </header>
+
+  <!-- INTRO -->
+  <section>
+    <div class="wrap">
+      <div class="eyebrow">Why OA서포트</div>
+      <h2 class="sec-title">"이제 어디로 물어보지?"가 사라집니다</h2>
+      <p class="sec-sub">그동안 매뉴얼은 도움말 사이트에서, AS는 별도 접수 페이지에서, 급한 건 전화·메신저로 — 제각각이었습니다. OA서포트는 PMS·CMS·키리스·키오스크·웹서비스 <b>전 제품의 지원을 한 화면에</b> 통합했습니다. 로그인 한 번이면 충분합니다.</p>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="grid">
+        <div class="card">
+          <div class="num">1</div>
+          <h3>흩어진 창구를 하나로</h3>
+          <p>가이드 검색 · 직접 해결 · 이슈 접수 · 챗봇을 한 곳에 통합했습니다. 북마크 하나, 로그인 한 번이면 모든 OA 솔루션의 지원을 받습니다.</p>
+          <span class="kw"># 원스톱</span>
+        </div>
+        <div class="card">
+          <div class="num">2</div>
+          <h3>똑똑한 AI 검색으로 셀프픽스</h3>
+          <p>"체크인 시간이 안 바뀌어요"처럼 평소 말투로 검색해도 정확히 찾아줍니다. 입력하는 동안 실시간으로 결과가 뜨고, 스크롤만 내리면 계속 이어집니다. 전화 없이 1분.</p>
+          <span class="kw"># 의미기반 검색</span>
+        </div>
+        <div class="card">
+          <div class="num">3</div>
+          <h3>접수 후 진행 상황이 다 보입니다</h3>
+          <p>접수 → 처리 중 → 답변 → 완료까지 상태가 실시간 추적됩니다. "내 문의 지금 어떻게 됐지?"를 다시 물어볼 필요가 없습니다. 과거 이력도 그대로 보존됩니다.</p>
+          <span class="kw"># 실시간 추적</span>
+        </div>
+        <div class="card">
+          <div class="num">4</div>
+          <h3>우리 숙소 직원은 우리가 관리</h3>
+          <p>호텔 담당자가 직접 직원 계정을 추가·관리합니다. 입·퇴사가 잦은 현장에 맞춰 OA에 일일이 요청하지 않아도 됩니다. 우리 솔루션 현황도 한눈에.</p>
+          <span class="kw"># 셀프 관리</span>
+        </div>
+        <div class="card">
+          <div class="num">5</div>
+          <h3>챗봇이 24시간 1차 응대</h3>
+          <p>화면에 바로 임베드된 챗봇이 영업시간 외에도 즉시 1차 답변을 드립니다. 챗봇으로 안 풀리면 그 자리에서 바로 접수폼으로 끊김 없이 연결됩니다.</p>
+          <span class="kw"># 24시간</span>
+        </div>
+        <div class="card">
+          <div class="num">6</div>
+          <h3>알림은 받던 채널 그대로</h3>
+          <p>처리 결과와 공지를 이메일·문자로 받고, 받은 내역은 사이트 내 메시지함에 차곡차곡 쌓입니다. 놓친 안내가 없는지 한 곳에서 다시 확인하세요.</p>
+          <span class="kw"># 메일·문자·메시지함</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARE -->
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="eyebrow">Before / After</div>
+      <h2 class="sec-title">무엇이 달라지나요</h2>
+      <div class="compare">
+        <table>
+          <thead>
+            <tr><th>이런 상황에서</th><th>기존</th><th class="now">OA서포트</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="case">사용법이 궁금할 때</td><td>도움말 사이트 따로 검색</td><td class="now">AI 검색으로 즉시, 한 화면에서</td></tr>
+            <tr><td class="case">문제가 생겼을 때</td><td>전화·메신저, 연결 대기</td><td class="now">직접 해결 → 안 되면 바로 접수</td></tr>
+            <tr><td class="case">접수한 다음</td><td>"처리됐나?" 다시 문의</td><td class="now">상태 실시간 추적</td></tr>
+            <tr><td class="case">직원 권한 변경</td><td>OA에 요청</td><td class="now">담당자가 직접 관리</td></tr>
+            <tr><td class="case">야간·주말</td><td>응대 불가</td><td class="now">챗봇 24시간 1차 응대</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEPS -->
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="eyebrow">How it works</div>
+      <h2 class="sec-title">막히면, 이렇게 끝납니다</h2>
+      <div class="steps">
+        <div class="step"><h4>검색한다</h4><p>평소 말투로 검색하면 관련 가이드·FAQ가 바로 뜹니다.</p></div>
+        <div class="step"><h4>직접 해결</h4><p>안내대로 따라 하며 그 자리에서 셀프픽스.</p></div>
+        <div class="step"><h4>안 되면 접수</h4><p>챗봇 또는 접수폼으로 끊김 없이 이슈 등록.</p></div>
+        <div class="step"><h4>결과 확인</h4><p>진행 상태 추적 + 메일·문자·메시지함 알림.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="cta">
+        <h2>검색부터 접수까지, 이제 한 곳에서</h2>
+        <p>지금 OA서포트에 로그인하고, 우리 호텔의 OA를 직접 관리해 보세요.</p>
+        <div class="btns">
+          <a class="btn btn-primary" href="https://support.oapms.com">OA서포트 시작하기</a>
+          <a class="btn btn-ghost" href="https://support.oapms.com">제품 가이드 둘러보기</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    OA서포트 · support.oapms.com — OA 솔루션 호텔리어를 위한 통합 셀프 서비스 &amp; AS 허브
+  </footer>
+
+</body>
+</html>

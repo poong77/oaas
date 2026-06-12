@@ -235,18 +235,18 @@ export function StaffManager({
               />
               <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold">
                 {usernameStatus === 'checking' && (
-                  <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-400 dark:text-slate-500" />
                 )}
                 {usernameStatus === 'ok' && (
-                  <span className="inline-flex items-center gap-0.5 text-brand-600">
+                  <span className="inline-flex items-center gap-0.5 text-brand-600 dark:text-brand-400">
                     <Check className="h-3.5 w-3.5" />사용 가능
                   </span>
                 )}
                 {usernameStatus === 'taken' && (
-                  <span className="text-red-600">이미 사용 중</span>
+                  <span className="text-red-600 dark:text-red-400">이미 사용 중</span>
                 )}
                 {usernameStatus === 'invalid' && (
-                  <span className="text-red-600">형식 오류</span>
+                  <span className="text-red-600 dark:text-red-400">형식 오류</span>
                 )}
               </span>
             </div>
@@ -264,7 +264,7 @@ export function StaffManager({
               · 로그인은 <b>ID 또는 이메일</b>로 가능합니다. 임시 비밀번호는 입력한 이메일·SMS로 발송됩니다.
             </p>
             {(errors.name || errors.username || errors.email || errors.phone) && (
-              <p className="col-span-full text-xs text-red-600">
+              <p className="col-span-full text-xs text-red-600 dark:text-red-400">
                 {errors.name || errors.username || errors.email || errors.phone}
               </p>
             )}
@@ -301,7 +301,7 @@ export function StaffManager({
                     <td className="truncate px-3 py-2.5 font-medium">
                       {s.name}
                       {isSelf && (
-                        <span className="ml-1 text-xs text-brand-600">(나)</span>
+                        <span className="ml-1 text-xs text-brand-600 dark:text-brand-400">(나)</span>
                       )}
                     </td>
                     <td className="truncate px-3 py-2.5 text-slate-600 dark:text-slate-300">
@@ -320,7 +320,7 @@ export function StaffManager({
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-400 dark:text-slate-500">
           직원을 누르면 상세 정보 조회·수정 및 활성화 여부를 변경할 수 있습니다.
         </p>
       </CardContent>
@@ -345,7 +345,7 @@ export function StaffManager({
               <button
                 type="button"
                 onClick={() => setEditing(null)}
-                className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+                className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800"
                 aria-label="닫기"
               >
                 <X className="h-4 w-4" />
@@ -392,7 +392,7 @@ export function StaffManager({
                   disabled={pending}
                   className={
                     editing.isActive
-                      ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950/30'
+                      ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30'
                       : ''
                   }
                 >

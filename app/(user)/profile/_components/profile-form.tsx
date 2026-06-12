@@ -107,9 +107,9 @@ function Field({
         placeholder={placeholder}
         disabled={disabled}
         aria-invalid={!!error}
-        className={`${disabled ? 'bg-slate-100 text-slate-500 dark:bg-slate-800' : ''} ${mono ? 'font-mono text-sm' : ''}`}
+        className={`${disabled ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' : ''} ${mono ? 'font-mono text-sm' : ''}`}
       />
-      {helper && <p className="text-xs text-slate-400">{helper}</p>}
+      {helper && <p className="text-xs text-slate-400 dark:text-slate-500">{helper}</p>}
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );

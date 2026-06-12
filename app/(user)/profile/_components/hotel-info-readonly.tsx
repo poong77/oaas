@@ -26,7 +26,7 @@ function Row({ label, value }: { label: string; value: string | null }) {
     <div className="grid grid-cols-[110px_minmax(0,1fr)] gap-3 border-b border-dashed border-slate-100 py-2.5 text-sm last:border-b-0 dark:border-slate-800">
       <span className="text-slate-500 dark:text-slate-400">{label}</span>
       <span className="break-words text-slate-900 dark:text-slate-100">
-        {value?.trim() ? value : <span className="text-slate-400">—</span>}
+        {value?.trim() ? value : <span className="text-slate-400 dark:text-slate-500">—</span>}
       </span>
     </div>
   );
