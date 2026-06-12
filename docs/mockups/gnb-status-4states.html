@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>운영상태 뱃지 툴팁 — 4종 (HH:MM 적용)</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+      "Malgun Gothic", sans-serif;
+    background: #f1f3f8;
+    color: #0f172a;
+    padding: 40px 24px 80px;
+  }
+  h1 { font-size: 20px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .desc { color: #64748b; font-size: 13px; margin: 0 0 32px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 28px;
+    max-width: 1000px;
+  }
+  .cell {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 22px 20px 28px;
+  }
+  .cell h2 {
+    font-size: 13px; font-weight: 700; color: #475569;
+    margin: 0 0 18px; letter-spacing: -0.01em;
+  }
+  /* ── badge ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px; padding: 4px 10px;
+    font-size: 12px; font-weight: 600; margin-bottom: 14px;
+  }
+  .badge svg { width: 14px; height: 14px; }
+  .b-open   { background:#d1fae5; color:#047857; }
+  .b-lunch  { background:#fef3c7; color:#b45309; }
+  .b-warn   { background:#ffedd5; color:#c2410c; }
+  .b-closed { background:#e2e8f0; color:#475569; }
+  /* ── tooltip card ── */
+  .tip {
+    position: relative;
+    width: 268px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 18px 50px rgba(20,30,55,0.18);
+  }
+  .tip .arrow {
+    position: absolute; top: -6px; right: 24px;
+    width: 12px; height: 12px; transform: rotate(45deg);
+    border-left: 1px solid #e2e8f0; border-top: 1px solid #e2e8f0;
+    background: #fff;
+  }
+  .tip .head {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px; padding: 4px 10px;
+    font-size: 12px; font-weight: 700; margin-bottom: 12px;
+  }
+  .tip .head svg { width: 14px; height: 14px; }
+  .h-emerald { background:#d1fae5; color:#047857; }
+  .h-blue    { background:#dbeafe; color:#1d4ed8; }
+  .h-amber   { background:#fef3c7; color:#b45309; }
+  .h-slate   { background:#f1f5f9; color:#475569; }
+  .tip .title {
+    font-size: 15px; font-weight: 800; letter-spacing: -0.02em;
+    color: #0f172a; margin: 0;
+  }
+  .tip .sub {
+    margin: 6px 0 0; font-size: 13px; line-height: 1.6; color: #64748b;
+  }
+  .a-emerald { color:#059669; font-weight:700; }
+  .a-blue    { color:#2563eb; font-weight:700; }
+  .a-amber   { color:#d97706; font-weight:700; }
+  .emergency {
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 13px; color: #64748b;
+  }
+  .emergency svg { width: 16px; height: 16px; color:#f43f5e; flex-shrink:0; margin-top:2px; }
+  .emergency b { color:#f43f5e; font-weight:800; }
+  .emergency .note { font-size: 11.5px; }
+  .changed { color:#059669; font-weight:800; }
+</style>
+</head>
+<body>
+  <h1>운영상태 뱃지 호버 툴팁 — 4종</h1>
+  <p class="desc">
+    운영 시간 표기를 <b class="changed">HH:MM ~ HH:MM</b> 로 변경 적용
+    (기존 HH:MM:SS 초 단위 제거). 평일 10:00~18:40 / 점심 12:30~13:30 기준 예시.
+  </p>
+
+  <div class="grid">
+    <!-- 1. 운영 중 -->
+    <div class="cell">
+      <h2>1 · 운영 중 (open)</h2>
+      <span class="badge b-open">🎧 운영 중</span>
+      <div class="tip">
+        <span class="arrow"></span>
+        <span class="head h-emerald">🎧 운영 중</span>
+        <p class="title">운영 시간 <span class="changed">10:00~18:40</span></p>
+        <p class="sub">마감까지 <b class="a-emerald">3시간 5분</b> 남음</p>
+      </div>
+    </div>
+
+    <!-- 2. 점심시간 -->
+    <div class="cell">
+      <h2>2 · 점심시간 (lunch)</h2>
+      <span class="badge b-lunch">🍽 점심시간</span>
+      <div class="tip">
+        <span class="arrow"></span>
+        <span class="head h-blue">🍽 점심시간</span>
+        <p class="title">점심시간 <span class="changed">12:30~13:30</span></p>
+        <p class="sub">점심시간에는 <b class="a-blue">상담이 잠시 쉬어갑니다</b></p>
+      </div>
+    </div>
+
+    <!-- 3. 접수 마감 -->
+    <div class="cell">
+      <h2>3 · 접수 마감 (intake_closed)</h2>
+      <span class="badge b-warn">⏳ 접수 마감</span>
+      <div class="tip">
+        <span class="arrow"></span>
+        <span class="head h-amber">⏳ 접수 마감</span>
+        <p class="title">운영 시간 <span class="changed">10:00~18:40</span></p>
+        <p class="sub">당일 <b class="a-amber">접수 마감중</b> 입니다</p>
+      </div>
+    </div>
+
+    <!-- 4. 운영 종료 -->
+    <div class="cell">
+      <h2>4 · 운영 종료 (closed)</h2>
+      <span class="badge b-closed">🌙 운영 종료</span>
+      <div class="tip">
+        <span class="arrow"></span>
+        <span class="head h-slate">🌙 운영 종료</span>
+        <p class="title">상담 운영이 종료되었습니다.</p>
+        <div class="emergency">
+          🚨
+          <span>
+            긴급 장애 신고: <b>1666-0000</b><br />
+            <span class="note">(단순 문의 및 금액 정정 제외)</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

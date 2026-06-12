@@ -221,12 +221,17 @@ const ACCENT_CLS = {
   amber: 'text-amber-600 dark:text-amber-400',
 } as const;
 
+// "HH:MM:SS" → "HH:MM" (이미 HH:MM 형태면 그대로)
+function hhmm(t: string): string {
+  return t.slice(0, 5);
+}
+
 function buildTooltip(
   s: BusinessStatusResult,
   hours: BusinessHoursInput | null,
 ): TooltipModel {
   const range =
-    hours ? `${hours.weekdayOpen}~${hours.weekdayClose}` : null;
+    hours ? `${hhmm(hours.weekdayOpen)}~${hhmm(hours.weekdayClose)}` : null;
 
   if (s.status === 'open') {
     return {
@@ -247,7 +252,7 @@ function buildTooltip(
   if (s.status === 'lunch') {
     const lunchRange =
       hours?.lunchStart && hours?.lunchEnd
-        ? `${hours.lunchStart}~${hours.lunchEnd}`
+        ? `${hhmm(hours.lunchStart)}~${hhmm(hours.lunchEnd)}`
         : null;
     return {
       headCls: HEAD_CLS.blue,
