@@ -202,11 +202,11 @@ export function ImageAnnotator({ file, onComplete, onCancel }: ImageAnnotatorPro
   if (loadError) {
     return (
       <div className="flex flex-col items-center gap-3 p-6 text-center">
-        <p className="text-sm text-rose-600">{loadError}</p>
+        <p className="text-sm text-rose-600 dark:text-rose-400">{loadError}</p>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded border border-slate-300 px-3 py-1.5 text-xs hover:bg-slate-50"
+          className="rounded border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs hover:bg-slate-50 dark:hover:bg-slate-800"
         >
           돌아가기
         </button>
@@ -216,7 +216,7 @@ export function ImageAnnotator({ file, onComplete, onCancel }: ImageAnnotatorPro
 
   if (!img) {
     return (
-      <div className="flex items-center justify-center p-10 text-xs text-slate-500">
+      <div className="flex items-center justify-center p-10 text-xs text-slate-500 dark:text-slate-400">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         이미지를 불러오는 중...
       </div>
@@ -263,7 +263,7 @@ export function ImageAnnotator({ file, onComplete, onCancel }: ImageAnnotatorPro
         />
       </div>
 
-      <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
+      <div className="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
         <span>
           {img.width} × {img.height}px
           {shapes.length > 0 && ` · 마크업 ${shapes.length}개`}

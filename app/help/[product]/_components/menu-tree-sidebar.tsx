@@ -98,7 +98,7 @@ export function MenuTreeSidebar({
     <aside className="flex flex-col gap-2">
       <div className="rounded-md border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">
+          <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             카테고리
           </h3>
           <button
@@ -107,14 +107,14 @@ export function MenuTreeSidebar({
             className={`text-xs ${
               selectedPath.length === 0
                 ? 'font-semibold text-brand-600 dark:text-brand-300'
-                : 'text-slate-500 hover:text-brand-600'
+                : 'text-slate-500 dark:text-slate-400 hover:text-brand-600'
             }`}
           >
             전체 ({totalCount})
           </button>
         </div>
         {tree.length === 0 ? (
-          <p className="text-xs text-slate-400">메뉴 마스터가 비어 있습니다.</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">메뉴 마스터가 비어 있습니다.</p>
         ) : (
           <TreeList
             nodes={tree}
@@ -190,7 +190,7 @@ function TreeList({
                       onToggle(key);
                     }}
                     aria-label={isOpen ? '접기' : '펼치기'}
-                    className="inline-flex h-4 w-4 items-center justify-center text-slate-400 hover:text-slate-700"
+                    className="inline-flex h-4 w-4 items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
                   >
                     {isOpen ? (
                       <ChevronDown className="h-3 w-3" />
@@ -205,7 +205,7 @@ function TreeList({
                   {n.label}
                 </span>
               </button>
-              <span className="ml-1 text-[10px] text-slate-400 tabular-nums">
+              <span className="ml-1 text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
                 {count > 0 ? count : ''}
               </span>
             </div>

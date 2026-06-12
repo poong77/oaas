@@ -48,7 +48,7 @@ export function FieldLabel({
       {error ? (
         <span className="text-xs text-red-500">{error}</span>
       ) : hint ? (
-        <span className="text-xs text-slate-400">{hint}</span>
+        <span className="text-xs text-slate-400 dark:text-slate-500">{hint}</span>
       ) : null}
     </div>
   );

@@ -121,13 +121,13 @@ function StatCard({
   return (
     <Card>
       <CardContent className="flex flex-col gap-1 p-4">
-        <span className="text-xs font-medium text-slate-500">{label}</span>
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</span>
         <span className="flex items-baseline gap-1.5">
           <span className={`text-2xl font-bold ${valueClass}`}>
             {value.toLocaleString()}
           </span>
           {sub && (
-            <span className="text-xs font-medium text-slate-400">{sub}</span>
+            <span className="text-xs font-medium text-slate-400 dark:text-slate-500">{sub}</span>
           )}
         </span>
       </CardContent>

@@ -173,7 +173,7 @@ export default async function NoticeDetailPage({
                         {rMeta.label}
                       </span>
                       {r.publishedAt && (
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-slate-400 dark:text-slate-500">
                           {formatDateKst(r.publishedAt)}
                         </span>
                       )}

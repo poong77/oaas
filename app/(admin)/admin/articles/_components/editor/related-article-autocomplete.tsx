@@ -152,7 +152,7 @@ export function RelatedArticleAutocomplete({
               key={s}
               className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
             >
-              <Link2 className="h-3 w-3 text-slate-400" />
+              <Link2 className="h-3 w-3 text-slate-400 dark:text-slate-500" />
               {s}
               <button
                 type="button"
@@ -169,7 +169,7 @@ export function RelatedArticleAutocomplete({
 
       {/* 검색 input */}
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400" />
+        <Search className="pointer-events-none absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
         <Input
           value={search}
           onChange={(e) => {
@@ -216,7 +216,7 @@ export function RelatedArticleAutocomplete({
       {/* 추천 칩 */}
       {(recsLoading || recs.length > 0) && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             추천 관련 문서 {recsLoading && '(로딩 중...)'}
           </span>
           <div className="flex flex-wrap gap-1.5">

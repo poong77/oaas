@@ -144,7 +144,7 @@ export default async function TroubleshootHubPage({
                     {successRate !== null && (
                       <span className="text-emerald-600 dark:text-emerald-400">
                         해결률 {successRate}%
-                        <span className="ml-1 text-slate-400">
+                        <span className="ml-1 text-slate-400 dark:text-slate-500">
                           ({resolved}/{completed})
                         </span>
                       </span>

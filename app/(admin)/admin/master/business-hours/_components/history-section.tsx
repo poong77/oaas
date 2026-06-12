@@ -139,7 +139,7 @@ function LogRow({ log }: { log: BusinessHoursActivityLogRow }) {
   return (
     <li className="mb-4 ml-4 last:mb-0">
       <span className="absolute -left-[10px] flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-        <Icon className="h-3 w-3 text-slate-500" />
+        <Icon className="h-3 w-3 text-slate-500 dark:text-slate-400" />
       </span>
       <div className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
@@ -148,7 +148,7 @@ function LogRow({ log }: { log: BusinessHoursActivityLogRow }) {
           </span>
           <Badge tone={meta.tone}>{log.action.split('.').slice(1).join('.')}</Badge>
           {isSystem && <Badge tone="slate">시스템</Badge>}
-          <time className="text-xs text-slate-500">
+          <time className="text-xs text-slate-500 dark:text-slate-400">
             {formatLogTime(log.createdAt)}
           </time>
         </div>
@@ -162,7 +162,7 @@ function LogRow({ log }: { log: BusinessHoursActivityLogRow }) {
             {log.userName ? (
               <>by <strong className="font-medium text-slate-700 dark:text-slate-300">{log.userName}</strong></>
             ) : log.userId ? (
-              <code className="font-mono text-slate-400">
+              <code className="font-mono text-slate-400 dark:text-slate-500">
                 user:{log.userId.slice(0, 8)}…
               </code>
             ) : null}

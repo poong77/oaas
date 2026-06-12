@@ -40,7 +40,7 @@ export function SearchLogsFilters({ period }: { period: SearchLogPeriod }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30">
-      <span className="mr-1 text-xs font-medium text-slate-500">기간</span>
+      <span className="mr-1 text-xs font-medium text-slate-500 dark:text-slate-400">기간</span>
       {OPTIONS.map((o) => {
         const active = period === o.value;
         return (
@@ -66,7 +66,7 @@ export function SearchLogsFilters({ period }: { period: SearchLogPeriod }) {
           </Button>
         );
       })}
-      <span className="ml-auto text-xs text-slate-400">
+      <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
         {period === 'today'
           ? '오늘 00:00~현재까지 · 30초마다 자동 갱신'
           : '어제를 끝으로 집계 (오늘 제외)'}

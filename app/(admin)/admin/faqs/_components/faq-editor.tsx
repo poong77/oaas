@@ -202,7 +202,7 @@ export function FaqEditor({
               onChange={(e) => setSortOrder(e.target.value)}
               placeholder="0 (작을수록 위)"
             />
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
               같은 제품 내에서 작을수록 위에 표시. 10 단위 권장.
             </span>
           </div>
@@ -256,7 +256,7 @@ export function FaqEditor({
                   <button
                     type="button"
                     onClick={() => removeKeyword(k)}
-                    className="text-slate-400 hover:text-rose-600"
+                    className="text-slate-400 dark:text-slate-500 hover:text-rose-600"
                     aria-label={`${k} 삭제`}
                   >
                     <X className="h-3 w-3" />
@@ -283,7 +283,7 @@ export function FaqEditor({
               추가
             </Button>
           </div>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             질문에 없는 다른 표현을 보강하면 검색이 더 잘 잡혀요. 영문 약어·외국어는
             여기 대신{' '}
             <a
@@ -303,7 +303,7 @@ export function FaqEditor({
           {mode === 'create' ? '저장 + 노출' : '저장'}
         </Button>
         {pending && (
-          <span className="text-xs text-slate-500">저장 중...</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">저장 중...</span>
         )}
       </div>
     </div>
@@ -311,5 +311,5 @@ export function FaqEditor({
 }
 
 function FieldError({ msg }: { msg: string }) {
-  return <span className="text-xs text-rose-600">{msg}</span>;
+  return <span className="text-xs text-rose-600 dark:text-rose-400">{msg}</span>;
 }

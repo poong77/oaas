@@ -82,7 +82,7 @@ export function UserEditForm({
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="name">이름 *</Label>
             <Input id="name" name="name" defaultValue={target.name} required maxLength={100} aria-invalid={!!errors.name} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name}</p>}
+            {errors.name && <p className="text-xs text-red-600 dark:text-red-400">{errors.name}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -98,7 +98,7 @@ export function UserEditForm({
               placeholder="없음"
               disabled
             />
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               로그인 시 이메일 또는 이 ID를 사용합니다. (변경 불가)
             </p>
           </div>
@@ -106,13 +106,13 @@ export function UserEditForm({
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="emailReadonly">이메일 (변경 불가)</Label>
             <Input id="emailReadonly" defaultValue={target.email} disabled />
-            <p className="text-[11px] text-slate-500">이메일은 본인이 자기 프로필에서만 변경 가능합니다.</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">이메일은 본인이 자기 프로필에서만 변경 가능합니다.</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="phone">연락처</Label>
             <Input id="phone" name="phone" type="tel" defaultValue={target.phone ?? ''} aria-invalid={!!errors.phone} />
-            {errors.phone && <p className="text-xs text-red-600">{errors.phone}</p>}
+            {errors.phone && <p className="text-xs text-red-600 dark:text-red-400">{errors.phone}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -152,7 +152,7 @@ export function UserEditForm({
               required={role === 'hotelier'}
               invalid={!!errors.hotelId}
             />
-            {errors.hotelId && <p className="text-xs text-red-600">{errors.hotelId}</p>}
+            {errors.hotelId && <p className="text-xs text-red-600 dark:text-red-400">{errors.hotelId}</p>}
           </div>
         </CardContent>
         <CardFooter>

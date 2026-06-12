@@ -388,7 +388,7 @@ function SideRow({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="mt-0.5 text-slate-400">{icon}</span>
+      <span className="mt-0.5 text-slate-400 dark:text-slate-500">{icon}</span>
       <span className="min-w-[60px] text-slate-500 dark:text-slate-400">
         {label}
       </span>

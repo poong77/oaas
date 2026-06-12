@@ -221,7 +221,7 @@ async function ChannelsPanel() {
                       <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {c.label}
                       </span>
-                      <code className="font-mono text-[11px] text-slate-500">
+                      <code className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
                         {c.code}
                       </code>
                       {system && (

@@ -128,7 +128,7 @@ export function AiModelSelectModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:text-slate-500 dark:hover:bg-slate-800"
               aria-label="닫기"
             >
               <X className="h-4 w-4" />
@@ -193,7 +193,7 @@ export function AiModelSelectModal({
                   <>
                     <div className="mb-2 mt-4 text-xs font-semibold text-slate-600 dark:text-slate-300">
                       참고 문서{' '}
-                      <span className="font-normal text-slate-400">
+                      <span className="font-normal text-slate-400 dark:text-slate-500">
                         (체크된 문서만 근거로 사용)
                       </span>
                     </div>
@@ -210,13 +210,13 @@ export function AiModelSelectModal({
                               type="checkbox"
                               checked={on}
                               onChange={() => toggle(c)}
-                              className="h-3.5 w-3.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                              className="h-3.5 w-3.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-700"
                             />
                             <Badge tone="slate">{c.badge}</Badge>
                             <span className="flex-1 truncate text-slate-700 dark:text-slate-200">
                               {c.title}
                             </span>
-                            <span className="text-[11px] tabular-nums text-slate-400">
+                            <span className="text-[11px] tabular-nums text-slate-400 dark:text-slate-500">
                               {Math.round(c.score * 100)}%
                             </span>
                           </label>

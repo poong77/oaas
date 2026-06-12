@@ -238,7 +238,7 @@ export function FeedbackWidget({
               maxLength={2000}
               disabled={pending}
             />
-            <div className="mt-1 text-right text-[11px] text-slate-400">
+            <div className="mt-1 text-right text-[11px] text-slate-400 dark:text-slate-500">
               {comment.length} / 2000
             </div>
           </div>

@@ -150,7 +150,7 @@ export function ArticlesListClient({
                     ))}
                   </div>
                   <div className="mt-1 font-medium">{a.title}</div>
-                  <div className="text-xs text-slate-500">/{a.slug}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">/{a.slug}</div>
                 </td>
                 <td className="px-3 py-2">
                   {a.contentType && CONTENT_TYPE_META[a.contentType] ? (
@@ -158,7 +158,7 @@ export function ArticlesListClient({
                       {CONTENT_TYPE_META[a.contentType].label}
                     </Badge>
                   ) : (
-                    <span className="text-xs text-slate-400">-</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">-</span>
                   )}
                 </td>
                 <td className="px-3 py-2">
@@ -188,11 +188,11 @@ export function ArticlesListClient({
                   <div className="inline-flex items-center gap-1 tabular-nums">
                     <ThumbsUp className="h-3 w-3 text-emerald-500" />
                     {a.helpfulYes}
-                    <span className="text-slate-400">/</span>
+                    <span className="text-slate-400 dark:text-slate-500">/</span>
                     <span className="text-rose-500">{a.helpfulNo}</span>
                   </div>
                 </td>
-                <td className="px-3 py-2 text-xs text-slate-500">
+                <td className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">
                   {formatDateKst(a.updatedAt)}
                 </td>
                 <td className="px-3 py-2">
@@ -295,8 +295,8 @@ export function ArticlesListClient({
             >
               {a.title}
             </Link>
-            <div className="text-xs text-slate-500">/{a.slug}</div>
-            <div className="flex items-center gap-3 text-xs text-slate-500">
+            <div className="text-xs text-slate-500 dark:text-slate-400">/{a.slug}</div>
+            <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
               <span>조회 {a.viewCount.toLocaleString()}</span>
               <span>
                 도움됨{' '}
@@ -346,7 +346,7 @@ export function ArticlesListClient({
       {/* 페이지네이션 */}
       <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-3 py-3 text-sm dark:border-slate-800 sm:flex-row">
         <div className="flex items-center gap-3">
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-slate-500 dark:text-slate-400">
             {total === 0 ? 0 : (page - 1) * pageSize + 1}-
             {Math.min(page * pageSize, total)} / {total}
           </div>

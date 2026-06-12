@@ -275,7 +275,7 @@ async function SearchResults({
                             />
                           </p>
                         )}
-                        <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
+                        <div className="mt-1 flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
                           {m.date && <span>{formatDateKst(m.date)}</span>}
                           <span>조회 {m.viewCount.toLocaleString()}</span>
                         </div>
@@ -330,7 +330,7 @@ async function SearchResults({
                             />
                           </p>
                         )}
-                        <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
+                        <div className="mt-1 flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
                           {h.publishedAt && (
                             <span>{formatDateKst(h.publishedAt)}</span>
                           )}
@@ -385,7 +385,7 @@ async function SearchResults({
                             regex={highlightRegex}
                           />
                         </p>
-                        <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
+                        <div className="mt-1 flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
                           <span>조회 {f.viewCount.toLocaleString()}</span>
                           <span>
                             도움됨 {f.helpfulYes}/{f.helpfulNo}
@@ -448,7 +448,7 @@ async function SearchResults({
                               regex={highlightRegex}
                             />
                           </p>
-                          <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
+                          <div className="mt-1 flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
                             {n.publishedAt && (
                               <span>{formatDateKst(n.publishedAt)}</span>
                             )}
@@ -476,7 +476,7 @@ async function SearchResults({
                     >
                       <div className="flex items-center gap-2">
                         <Badge tone="warn">{row.status}</Badge>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
                           {formatDateKst(row.startedAt)}
                         </span>
                       </div>

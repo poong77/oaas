@@ -151,7 +151,7 @@ export function AiModelsManager({
                 type="button"
                 onClick={() => move(m, -1)}
                 disabled={i === 0 || pending}
-                className="rounded border border-slate-200 p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30 dark:border-slate-700"
+                className="rounded border border-slate-200 p-0.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 disabled:opacity-30 dark:border-slate-700"
                 aria-label="위로"
               >
                 <ArrowUp className="h-3.5 w-3.5" />
@@ -160,7 +160,7 @@ export function AiModelsManager({
                 type="button"
                 onClick={() => move(m, 1)}
                 disabled={i === sorted.length - 1 || pending}
-                className="rounded border border-slate-200 p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30 dark:border-slate-700"
+                className="rounded border border-slate-200 p-0.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 disabled:opacity-30 dark:border-slate-700"
                 aria-label="아래로"
               >
                 <ArrowDown className="h-3.5 w-3.5" />
@@ -182,7 +182,7 @@ export function AiModelsManager({
               </div>
 
               <label className="flex flex-col gap-0.5">
-                <span className="text-[11px] text-slate-400">표시명 (모달 노출)</span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">표시명 (모달 노출)</span>
                 <input
                   value={field(m, 'label') as string}
                   onChange={(e) => setField(m.id, 'label', e.target.value)}
@@ -190,7 +190,7 @@ export function AiModelsManager({
                 />
               </label>
               <label className="flex flex-col gap-0.5">
-                <span className="text-[11px] text-slate-400">설명 (1M 단가·특성)</span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">설명 (1M 단가·특성)</span>
                 <input
                   value={(field(m, 'description') as string | null) ?? ''}
                   onChange={(e) => setField(m.id, 'description', e.target.value)}
@@ -250,7 +250,7 @@ export function AiModelsManager({
                   'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium',
                   m.isDefault
                     ? 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-300'
-                    : 'border-slate-200 text-slate-500 hover:border-amber-300 hover:text-amber-600 disabled:opacity-40 dark:border-slate-700',
+                    : 'border-slate-200 text-slate-500 dark:text-slate-400 hover:border-amber-300 hover:text-amber-600 disabled:opacity-40 dark:border-slate-700',
                 )}
                 title={!m.isActive ? '활성 모델만 기본 지정 가능' : undefined}
               >
@@ -292,7 +292,7 @@ function NewModelForm({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex w-fit items-center gap-1 rounded-md border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-500 hover:border-brand-300 hover:text-brand-600 dark:border-slate-700"
+        className="inline-flex w-fit items-center gap-1 rounded-md border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:border-brand-300 hover:text-brand-600 dark:border-slate-700"
       >
         <Plus className="h-4 w-4" /> 모델 추가
       </button>

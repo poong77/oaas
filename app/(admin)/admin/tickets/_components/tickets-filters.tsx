@@ -122,7 +122,7 @@ export function TicketsFilters({
         </div>
         <form onSubmit={handleSearch} className="flex gap-2">
           <div className="relative flex items-center">
-            <Search className="pointer-events-none absolute left-2.5 h-4 w-4 text-slate-400" />
+            <Search className="pointer-events-none absolute left-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
             <Input
               type="search"
               value={searchValue}

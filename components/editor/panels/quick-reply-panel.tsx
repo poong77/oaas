@@ -162,7 +162,7 @@ export function QuickReplyPanel({ open, onClose, onInsert, vars }: QuickReplyPan
       >
         {/* 검색 */}
         <div className="flex items-center gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
-          <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+          <Search className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden />
           <input
             ref={searchRef}
             type="text"
@@ -175,7 +175,7 @@ export function QuickReplyPanel({ open, onClose, onInsert, vars }: QuickReplyPan
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+            className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
           >
             <X className="h-4 w-4" />
           </button>
@@ -184,14 +184,14 @@ export function QuickReplyPanel({ open, onClose, onInsert, vars }: QuickReplyPan
         {/* 리스트 */}
         <div className="max-h-[60vh] overflow-y-auto">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 p-6 text-sm text-slate-500">
+            <div className="flex items-center justify-center gap-2 p-6 text-sm text-slate-500 dark:text-slate-400">
               <Loader2 className="h-4 w-4 animate-spin" />
               불러오는 중...
             </div>
           ) : error ? (
-            <div className="p-6 text-center text-sm text-rose-600">{error}</div>
+            <div className="p-6 text-center text-sm text-rose-600 dark:text-rose-400">{error}</div>
           ) : filtered.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">
+            <div className="p-6 text-center text-sm text-slate-500 dark:text-slate-400">
               {items.length === 0
                 ? '등록된 빠른답변 템플릿이 없습니다.'
                 : '검색 결과 없음'}

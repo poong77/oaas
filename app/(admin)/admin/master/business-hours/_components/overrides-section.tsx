@@ -360,7 +360,7 @@ function summarizeTimes(o: BusinessHoursOverride): React.ReactNode | null {
   if (o.intakeDeadline) parts.push(`접수${toHHMM(o.intakeDeadline)}`);
   if (parts.length === 0) return null;
   return (
-    <span className="font-mono text-[11px] text-slate-500">{parts.join(' · ')}</span>
+    <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">{parts.join(' · ')}</span>
   );
 }
 
@@ -482,7 +482,7 @@ function AddOverrideForm({ onSuccess }: { onSuccess: () => void }) {
         {state.fieldErrors?.reason ? (
           <p className="text-xs text-red-500">{state.fieldErrors.reason}</p>
         ) : (
-          <p className="text-xs text-slate-500">200자 이내. 이력에 함께 기록됩니다.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">200자 이내. 이력에 함께 기록됩니다.</p>
         )}
       </div>
 

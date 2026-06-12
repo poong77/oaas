@@ -120,7 +120,7 @@ export function ChecklistRunner({
     return (
       <Card>
         <CardContent className="flex flex-col gap-3 p-6 text-center">
-          <ListChecks className="mx-auto h-10 w-10 text-slate-300" />
+          <ListChecks className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-700" />
           <h2 className="text-base font-semibold">
             이 체크리스트는 아직 단계가 등록되지 않았습니다
           </h2>
@@ -293,11 +293,11 @@ export function ChecklistRunner({
           </div>
 
           {/* 액션 힌트 */}
-          <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500">
             <span>
               {step.yesLabel}: {actionLabel(step.conditionYesAction)}
             </span>
-            <span className="text-slate-300">·</span>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
             <span>
               {step.noLabel}: {actionLabel(step.conditionNoAction)}
             </span>

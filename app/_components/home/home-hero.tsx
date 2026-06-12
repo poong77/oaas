@@ -15,7 +15,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { Plus, Search, Sparkles } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { POPULAR_KEYWORDS } from './_constants';
 
 export function HomeHero({
@@ -43,7 +43,7 @@ export function HomeHero({
   }
 
   return (
-    <section className="relative overflow-hidden border-b border-slate-200/70 bg-gradient-to-b from-brand-50/60 via-white to-white pb-10 pt-10 dark:border-slate-800 dark:from-brand-950/30 dark:via-slate-950 dark:to-slate-950 sm:pt-14">
+    <section className="relative overflow-hidden border-b border-slate-200/70 bg-white pb-10 pt-10 dark:border-slate-800 dark:bg-slate-950 sm:pt-14">
       <div
         className={`mx-auto grid w-full gap-8 px-4 sm:px-6 lg:gap-10 lg:px-8 ${
           sidebar ? 'max-w-6xl lg:grid-cols-12' : 'max-w-3xl'
@@ -57,11 +57,6 @@ export function HomeHero({
               : 'items-center text-center'
           }`}
         >
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 text-xs font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-            <Sparkles className="h-3.5 w-3.5" />
-            모든 OA 솔루션
-          </span>
-
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-[36px]">
             무엇을 도와드릴까요?
           </h1>
@@ -94,7 +89,7 @@ export function HomeHero({
               <li key={kw}>
                 <Link
                   href={`/search?q=${encodeURIComponent(kw)}`}
-                  className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-brand-700 dark:hover:bg-brand-950/50 dark:hover:text-brand-300 sm:text-sm"
+                  className="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-brand-950/50 dark:hover:text-brand-300 sm:text-sm"
                 >
                   # {kw}
                 </Link>

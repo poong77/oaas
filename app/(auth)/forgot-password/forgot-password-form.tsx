@@ -179,7 +179,7 @@ export function ForgotPasswordForm() {
               <Label htmlFor="reset-email">이메일 주소</Label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Mail className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Mail className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                   <Input
                     id="reset-email"
                     type="email"
@@ -202,7 +202,7 @@ export function ForgotPasswordForm() {
                   확인
                 </Button>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">
                 계정에 등록된 이메일 주소를 입력해주세요.
               </p>
             </form>
@@ -233,10 +233,10 @@ export function ForgotPasswordForm() {
                   className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left text-sm transition-colors hover:border-brand-400 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
                 >
                   <span className="flex items-center gap-2 font-medium">
-                    <Building2 className="h-4 w-4 shrink-0 text-slate-400" />
+                    <Building2 className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
                     {a.hotelName ?? '소속 미지정'}
                   </span>
-                  <span className="flex items-center gap-1.5 pl-6 text-[11px] text-slate-400">
+                  <span className="flex items-center gap-1.5 pl-6 text-[11px] text-slate-400 dark:text-slate-500">
                     <UserRound className="h-3 w-3 shrink-0" />
                     {a.maskedName}
                     {a.maskedPhone ? ` · ${a.maskedPhone}` : ''}
@@ -312,7 +312,7 @@ export function ForgotPasswordForm() {
                 type="button"
                 disabled={pending}
                 onClick={() => requestReset('sms')}
-                className="text-xs text-slate-500 underline-offset-2 hover:underline disabled:opacity-50"
+                className="text-xs text-slate-500 underline-offset-2 hover:underline disabled:opacity-50 dark:text-slate-400"
               >
                 인증코드 다시 받기
               </button>
@@ -409,7 +409,7 @@ function ChannelButton({
       </span>
       <span className="flex flex-col">
         <span className="text-sm font-medium">{title}</span>
-        <span className="text-[11px] text-slate-400">{target}</span>
+        <span className="text-[11px] text-slate-400 dark:text-slate-500">{target}</span>
       </span>
     </button>
   );

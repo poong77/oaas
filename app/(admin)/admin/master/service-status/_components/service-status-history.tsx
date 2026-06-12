@@ -42,7 +42,7 @@ export function ServiceStatusHistory({
                 <Badge tone={meta.tone}>
                   {meta.emoji} {meta.label}
                 </Badge>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   {!s.isActive && s.endedAt
                     ? '종료'
                     : s.isActive
@@ -92,7 +92,7 @@ export function ServiceStatusHistory({
                     </td>
                     <td className="max-w-md px-4 py-3 text-slate-700 dark:text-slate-200">
                       {s.message || (
-                        <span className="text-slate-400">-</span>
+                        <span className="text-slate-400 dark:text-slate-500">-</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">

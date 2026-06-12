@@ -64,16 +64,12 @@
 /*
  * 디자인 토큰 — 메인 컬러는 brand-* 로 노출.
  *
- * 역할별 동적 분기 (role-mode-ui):
- *   - 기본값 (@theme): 어드민 보라색 (indigo 계열)
- *   - [data-role='manager']:  코발트 블루 (Tailwind blue)
- *   - [data-role='hotelier']: 진녹색 (Tailwind green)
- *
- * data-role 속성은 components/layout/role-scope.tsx가 부여한다.
- * 50+ 파일의 `bg-brand-700` 등 className은 변경 없이 자동으로 다른 색으로 렌더된다.
+ * 단일 통합 테마: 전 역할(어드민·매니저·호텔리어) 동일한 진녹색(Tailwind green 팔레트).
+ * 과거에는 역할별로 보라/블루/그린을 분기했으나, OA서포트 브랜드 톤을 그린 하나로 통일한다.
+ * data-role 속성(components/layout/role-scope.tsx)은 조건부 렌더링 용도로 유지되지만
+ * 더 이상 색상을 분기하지 않는다.
  *
  * @see lib/types/role-mode.ts (resolveRoleMode)
- * @see docs/02-design/features/role-mode-ui.design.md §6
  */
 @theme {
   /*
@@ -83,36 +79,7 @@
   --font-sans: 'Pretendard Variable', Pretendard, ui-sans-serif, system-ui, -apple-system,
     'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
 
-  --color-brand-50:  oklch(0.962 0.018 272.31);
-  --color-brand-100: oklch(0.930 0.034 272.79);
-  --color-brand-200: oklch(0.870 0.065 274.04);
-  --color-brand-300: oklch(0.785 0.115 274.71);
-  --color-brand-400: oklch(0.673 0.182 276.94);
-  --color-brand-500: oklch(0.585 0.233 277.12);
-  --color-brand-600: oklch(0.511 0.262 276.97);
-  --color-brand-700: oklch(0.457 0.240 277.02);
-  --color-brand-800: oklch(0.398 0.195 277.37);
-  --color-brand-900: oklch(0.359 0.144 278.70);
-  --color-brand-950: oklch(0.257 0.092 281.29);
-}
-
-/* 매니저 — 코발트 블루 (Tailwind blue 팔레트) */
-[data-role='manager'] {
-  --color-brand-50:  #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-200: #bfdbfe;
-  --color-brand-300: #93c5fd;
-  --color-brand-400: #60a5fa;
-  --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
-  --color-brand-800: #1e40af;
-  --color-brand-900: #1e3a8a;
-  --color-brand-950: #172554;
-}
-
-/* 호텔리어 — 진녹색 (Tailwind green 팔레트) */
-[data-role='hotelier'] {
+  /* 통합 브랜드 컬러 — 진녹색 (Tailwind green 팔레트) */
   --color-brand-50:  #f0fdf4;
   --color-brand-100: #dcfce7;
   --color-brand-200: #bbf7d0;
@@ -127,12 +94,12 @@
 }
 
 /*
- * 호텔리어 그린(brand-700)은 채도가 높아 본문 H2/H3에서 형광처럼 튄다.
+ * 그린(brand-700)은 채도가 높아 본문 H2/H3에서 형광처럼 튄다.
  * 라이트 모드 헤딩만 한 단계 차분한 톤(green-800)으로 내린다.
  * 다크 모드는 어두운 배경 가독성을 위해 markdown-view의 brand-300(밝은 그린) 유지.
  * (unlayered 규칙이라 Tailwind utility text-brand-700보다 우선 적용)
  */
-html:not(.dark) [data-role='hotelier'] .markdown-view :is(h2, h3) {
+html:not(.dark) .markdown-view :is(h2, h3) {
   color: #166534;
 }
 

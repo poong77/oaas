@@ -57,7 +57,7 @@ export function UsersFilters({
           }}
           className="relative sm:col-span-2 lg:col-span-5"
         >
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -72,7 +72,7 @@ export function UsersFilters({
                 setQ('');
                 applyFilters({ q: undefined });
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800"
               aria-label="검색어 지우기"
             >
               <X className="h-4 w-4" />
@@ -121,7 +121,7 @@ export function UsersFilters({
       </div>
 
       {/* 결과 요약 바 */}
-      <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-3 py-2 text-xs text-slate-500 dark:border-slate-800">
+      <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-3 py-2 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
         <span className="inline-flex items-center gap-1.5">
           <SlidersHorizontal className="h-3.5 w-3.5" />
           {pending ? (
@@ -139,7 +139,7 @@ export function UsersFilters({
           <button
             type="button"
             onClick={resetAll}
-            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             필터 초기화

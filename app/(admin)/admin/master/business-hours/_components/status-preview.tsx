@@ -42,7 +42,7 @@ export function StatusPreview({ status }: Props) {
     return (
       <Card>
         <CardContent className="p-4">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             운영시간이 아직 설정되지 않았습니다. 아래 폼에서 첫 등록을
             진행하세요.
           </p>

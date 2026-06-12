@@ -41,7 +41,7 @@ export function DashboardFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30">
-      <span className="mr-1 text-xs font-medium text-slate-500">기간</span>
+      <span className="mr-1 text-xs font-medium text-slate-500 dark:text-slate-400">기간</span>
       {DASHBOARD_PERIODS.map((p) => (
         <Button
           key={p}
@@ -54,7 +54,7 @@ export function DashboardFilters({
           {PERIOD_LABEL[p]}
         </Button>
       ))}
-      <span className="ml-2 mr-1 text-xs font-medium text-slate-500">제품</span>
+      <span className="ml-2 mr-1 text-xs font-medium text-slate-500 dark:text-slate-400">제품</span>
       <select
         value={productCode ?? ''}
         disabled={pending}
@@ -68,7 +68,7 @@ export function DashboardFilters({
           </option>
         ))}
       </select>
-      <span className="ml-auto text-xs text-slate-400">
+      <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
         KST · 오늘 제외 집계
       </span>
     </div>

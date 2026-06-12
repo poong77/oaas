@@ -156,7 +156,7 @@ export default async function InsightDashboardPage({
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                 검색어 워드클라우드
               </p>
-              <span className="text-xs text-slate-400">호텔리어 실사용 검색</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">호텔리어 실사용 검색</span>
             </div>
             <p className="mb-2 text-xs text-slate-400 dark:text-slate-500">
               동의어 <b className="text-slate-500 dark:text-slate-300">대표어 기준</b>{' '}
@@ -180,7 +180,7 @@ export default async function InsightDashboardPage({
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                 호텔별 문의 수 Top 15
               </p>
-              <span className="text-xs text-slate-400">집중 케어 · 온보딩 점검 대상</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">집중 케어 · 온보딩 점검 대상</span>
             </div>
             {data.hotels.length === 0 ? (
               <EmptyState title="이 기간 문의가 없습니다" />
@@ -250,7 +250,7 @@ export default async function InsightDashboardPage({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Card>
             <CardContent className="flex flex-col gap-1 p-5">
-              <span className="text-xs font-medium text-slate-500">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 평균 첫 응답 시간
               </span>
               <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">
@@ -258,14 +258,14 @@ export default async function InsightDashboardPage({
                   ? `${(Math.round(timeMetrics.avgFirstResponseHours * 10) / 10).toLocaleString()}시간`
                   : '—'}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
                 접수 → 운영팀 첫 공개 답변
               </span>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="flex flex-col gap-1 p-5">
-              <span className="text-xs font-medium text-slate-500">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 평균 해결 소요 (영업일)
               </span>
               <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">
@@ -273,7 +273,7 @@ export default async function InsightDashboardPage({
                   ? `${(Math.round(timeMetrics.avgResolutionBizDays * 10) / 10).toLocaleString()}일`
                   : '—'}
               </span>
-              <span className="text-xs text-slate-400">접수 → 완료 (주말·공휴일 제외)</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">접수 → 완료 (주말·공휴일 제외)</span>
             </CardContent>
           </Card>
         </div>
@@ -286,7 +286,7 @@ export default async function InsightDashboardPage({
               <p className="text-sm font-semibold text-rose-700 dark:text-rose-400">
                 Dev 에스컬레이션 백로그
               </p>
-              <span className="ml-auto text-xs text-slate-400">
+              <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
                 미완료 · 경과 영업일 순
               </span>
             </div>
@@ -296,7 +296,7 @@ export default async function InsightDashboardPage({
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[420px] text-sm">
                   <thead>
-                    <tr className="border-b border-slate-100 text-left text-xs text-slate-400 dark:border-slate-800">
+                    <tr className="border-b border-slate-100 text-left text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
                       <th className="pb-2 pr-3 font-semibold">티켓</th>
                       <th className="pb-2 pr-3 font-semibold">제품</th>
                       <th className="pb-2 pr-3 font-semibold">유형</th>
@@ -312,15 +312,15 @@ export default async function InsightDashboardPage({
                         <td className="py-2.5 pr-3 font-medium text-slate-700 dark:text-slate-200">
                           {r.ticketNo}
                         </td>
-                        <td className="py-2.5 pr-3 text-slate-500">{r.productLabel}</td>
-                        <td className="py-2.5 pr-3 text-slate-500">{r.issueTypeLabel}</td>
+                        <td className="py-2.5 pr-3 text-slate-500 dark:text-slate-400">{r.productLabel}</td>
+                        <td className="py-2.5 pr-3 text-slate-500 dark:text-slate-400">{r.issueTypeLabel}</td>
                         <td
                           className={`py-2.5 text-right font-semibold ${
                             r.elapsedBizDays >= 5
                               ? 'text-rose-600 dark:text-rose-400'
                               : r.elapsedBizDays >= 3
                                 ? 'text-orange-500'
-                                : 'text-slate-500'
+                                : 'text-slate-500 dark:text-slate-400'
                           }`}
                         >
                           {r.elapsedBizDays}일
@@ -346,7 +346,7 @@ export default async function InsightDashboardPage({
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[480px] text-sm">
                   <thead>
-                    <tr className="border-b border-slate-100 text-left text-xs text-slate-400 dark:border-slate-800">
+                    <tr className="border-b border-slate-100 text-left text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
                       <th className="pb-2 pr-4 font-semibold">담당자</th>
                       <th className="pb-2 pr-4 text-right font-semibold">완료</th>
                       <th className="pb-2 pr-4 text-right font-semibold">처리중</th>
@@ -430,7 +430,7 @@ function ActionCard({
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
           <p className={`mt-1 text-4xl font-bold ${valueColor}`}>
             {value.toLocaleString()}
-            <span className="ml-1 text-lg font-normal text-slate-400">건</span>
+            <span className="ml-1 text-lg font-normal text-slate-400 dark:text-slate-500">건</span>
           </p>
           <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{note}</p>
         </div>
@@ -474,9 +474,9 @@ function RatioCard({
         <div className="mt-1 flex items-end gap-2">
           <span className={`text-4xl font-bold ${color}`}>
             {Math.round(rate * 100)}
-            <span className="text-lg font-normal text-slate-400">%</span>
+            <span className="text-lg font-normal text-slate-400 dark:text-slate-500">%</span>
           </span>
-          <span className="mb-1.5 text-sm text-slate-400">{count.toLocaleString()}건</span>
+          <span className="mb-1.5 text-sm text-slate-400 dark:text-slate-500">{count.toLocaleString()}건</span>
         </div>
         <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{desc}</p>
         <div className="mt-3 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800">
@@ -512,9 +512,9 @@ function FunnelStage({
     <div className="flex-1">
       <div className={`rounded-xl border p-4 text-center ${FUNNEL_STAGE_TONE[tone]}`}>
         <p className="text-xs font-semibold uppercase tracking-wide">{label}</p>
-        <p className="mb-2 text-xs text-slate-400">{actor}</p>
+        <p className="mb-2 text-xs text-slate-400 dark:text-slate-500">{actor}</p>
         <p className="text-3xl font-bold">{value.toLocaleString()}</p>
-        <p className="mt-1 text-xs text-slate-400">{sub}</p>
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{sub}</p>
       </div>
     </div>
   );
@@ -557,7 +557,7 @@ function StatusCard({
   return (
     <Card>
       <CardContent className="p-4 text-center">
-        <p className="mb-1 text-xs text-slate-400">{label}</p>
+        <p className="mb-1 text-xs text-slate-400 dark:text-slate-500">{label}</p>
         <p className={`text-2xl font-bold ${color}`}>{value.toLocaleString()}</p>
       </CardContent>
     </Card>

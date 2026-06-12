@@ -126,7 +126,7 @@ export function ProductArticleBrowser({
       <aside className="flex flex-col gap-4">
         {/* 카테고리 박스 바로 위 — 제품 내 검색 (실시간) */}
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -138,7 +138,7 @@ export function ProductArticleBrowser({
             <button
               type="button"
               onClick={() => setQ('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
               aria-label="검색어 지우기"
             >
               <X className="h-4 w-4" />
@@ -180,7 +180,7 @@ export function ProductArticleBrowser({
               {/* 무한스크롤 센티넬 + 로딩/끝 표시 */}
               <div
                 ref={sentinelRef}
-                className="flex items-center justify-center py-5 text-xs text-slate-400"
+                className="flex items-center justify-center py-5 text-xs text-slate-400 dark:text-slate-500"
               >
                 {loading ? (
                   <span className="inline-flex items-center gap-1.5">

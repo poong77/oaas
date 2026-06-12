@@ -18,7 +18,7 @@ export function AdminEditorHelpContent() {
       <Card>
         <CardContent className="p-5">
           <h2 className="mb-2 text-lg font-semibold">단축키 (어드민·매니저)</h2>
-          <p className="mb-3 text-xs text-slate-500">
+          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
             에디터 안에서 <kbd className={kbd}>F1</kbd> 또는 <kbd className={kbd}>Cmd + ?</kbd>로 언제든 도움말 모달을 열 수 있습니다.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -83,7 +83,7 @@ export function AdminEditorHelpContent() {
               ]}
             />
           </div>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             입력 필드 focus 중에는 무시되며, Cmd/Ctrl/Alt 동반 시에도 브라우저 단축키 충돌 방지를 위해 무시됩니다.
           </p>
         </CardContent>
@@ -92,7 +92,7 @@ export function AdminEditorHelpContent() {
       <Card>
         <CardContent className="p-5">
           <h2 className="mb-2 text-lg font-semibold">마크다운 자동 변환</h2>
-          <p className="mb-3 text-xs text-slate-500">
+          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
             입력 시 자동으로 서식이 적용됩니다. 마우스 없이 빠른 입력에 활용하세요.
           </p>
           <div className="overflow-x-auto">
@@ -157,7 +157,7 @@ export function AdminEditorHelpContent() {
       <Card>
         <CardContent className="p-5">
           <h2 className="mb-2 text-lg font-semibold">빠른답변 변수 치환표</h2>
-          <p className="mb-3 text-xs text-slate-500">
+          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
             빠른답변 본문에 아래 변수를 넣어두면 매니저가 티켓 답변 시점에 자동으로 치환됩니다.
             값이 없으면 빈 문자열로 대체됩니다.
           </p>
@@ -204,7 +204,7 @@ export function AdminEditorHelpContent() {
 담당 박상담이(가) 빠르게 처리 도와드리겠습니다.`}
             </div>
           </div>
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
             ⚠ 변수명은 한글 그대로 입력해야 하며 공백·대소문자 변형 불가.
             <code className={code}>{`{{ 호텔명 }}`}</code>처럼 중괄호 안쪽 공백은 허용됩니다.
           </p>
@@ -253,7 +253,7 @@ export function AdminEditorHelpContent() {
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
             ⚠ 페이지 재진입 시 draft가 있으면 <em>복구 / 폐기</em> 다이얼로그가 자동 노출됩니다.
             발행 성공 후에는 해당 draft가 자동 삭제되어 다음 진입 시 다이얼로그가 뜨지 않습니다.
           </p>

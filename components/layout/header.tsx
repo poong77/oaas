@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Menu, X, LogOut, User, Bell } from 'lucide-react';
+import { Moon, Sun, Menu, X, LogOut, User } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { useCurrentUser } from '@/lib/hooks/use-current-user';
@@ -14,45 +13,15 @@ import { BusinessStatusBadge } from '@/components/contact/business-status-badge'
 /**
  * GNB — LP-02.
  *
- * - 활성 메뉴 표시 (usePathname)
  * - 세션 표시 (로그인/로그아웃)
- * - 모바일 햄버거 메뉴
+ * - 모바일 햄버거 메뉴 (프로필·로그아웃)
+ * - 상단 텍스트 메뉴는 제거됨. 다크모드 토글은 로그아웃 우측 배치.
  * - 검색 인풋은 홈 hero 검색으로 일원화되어 GNB에서 제거됨.
  */
-// GNB — 사용자 행동 기준 4개 (2026-06-01 UX 재구성).
-// 공지/업데이트는 우측 🔔 종 아이콘으로 이동. 셀프픽스 메뉴 미사용.
-const NAV_ITEMS = [
-  { label: '홈', href: '/' },
-  { label: '도움말 찾기', href: '/search' },
-  { label: '문의하기', href: '/tickets/new' },
-  { label: '내 문의', href: '/tickets' },
-];
-
-function isActiveNav(pathname: string, href: string) {
-  if (href === '/') return pathname === '/';
-  return pathname === href || pathname.startsWith(href + '/');
-}
-
-/**
- * 최장 일치 기준 활성 메뉴 1개 결정.
- * `/tickets/new`(문의하기)와 `/tickets`(내 문의)처럼 prefix를 공유하는
- * 메뉴가 동시에 활성화되는 것을 방지한다.
- */
-function resolveActiveHref(pathname: string): string | null {
-  let best: string | null = null;
-  for (const { href } of NAV_ITEMS) {
-    if (!isActiveNav(pathname, href)) continue;
-    if (best === null || href.length > best.length) best = href;
-  }
-  return best;
-}
-
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, status } = useCurrentUser();
   const confirm = useConfirmDialog();
-  const pathname = usePathname();
-  const activeHref = resolveActiveHref(pathname);
 
   async function handleLogout() {
     const ok = await confirm({
@@ -81,45 +50,10 @@ export function Header() {
           </Link>
         </div>
 
-        {/* 데스크탑 GNB */}
-        <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
-          {NAV_ITEMS.map((item) => {
-            const active = activeHref === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors lg:px-3',
-                  active
-                    ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
-                )}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           <div className="hidden sm:block">
             <BusinessStatusBadge size="sm" linkTo="#contact" />
           </div>
-          <Link
-            href="/notices"
-            aria-label="공지/업데이트"
-            title="공지/업데이트"
-            className={cn(
-              'inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors',
-              isActiveNav(pathname, '/notices')
-                ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300'
-                : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
-            )}
-          >
-            <Bell className="h-5 w-5" />
-          </Link>
-          <ThemeToggle />
           {status === 'authenticated' && user ? (
             <>
               <Link
@@ -148,6 +82,8 @@ export function Header() {
               로그인
             </Link>
           )}
+          {/* 다크모드 전환 — 로그아웃 우측 배치 */}
+          <ThemeToggle />
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
@@ -170,40 +106,7 @@ export function Header() {
         )}
       >
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6">
-          <nav className="flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => {
-              const active = activeHref === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    'rounded-md px-3 py-2 text-sm font-medium',
-                    active
-                      ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300'
-                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-            <Link
-              href="/notices"
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
-                isActiveNav(pathname, '/notices')
-                  ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300'
-                  : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
-              )}
-            >
-              <Bell className="h-4 w-4" />
-              공지/업데이트
-            </Link>
-          </nav>
-          <div className="flex flex-col gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+          <div className="flex flex-col gap-2">
             {status === 'authenticated' && user ? (
               <>
                 <div className="flex gap-2">

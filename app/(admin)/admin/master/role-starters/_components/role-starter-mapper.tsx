@@ -157,7 +157,7 @@ export function RoleStarterMapper({
   return (
     <div className="flex flex-col gap-2">
       {items.length === 0 ? (
-        <p className="rounded-md border border-dashed border-slate-300 bg-slate-50/40 px-3 py-4 text-center text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900/30">
+        <p className="rounded-md border border-dashed border-slate-300 bg-slate-50/40 px-3 py-4 text-center text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-400">
           {emptyText}
         </p>
       ) : (
@@ -189,14 +189,14 @@ export function RoleStarterMapper({
       )}
 
       {items.length > 1 && (
-        <p className="text-[10px] text-slate-400">
+        <p className="text-[10px] text-slate-400 dark:text-slate-500">
           드래그하거나 ↑↓ 버튼 / 키보드 화살표로 순서를 바꿀 수 있어요.
         </p>
       )}
 
       {/* 검색 + 자동완성 */}
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400" />
+        <Search className="pointer-events-none absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
         <Input
           value={query}
           onChange={(e) => {
@@ -209,7 +209,7 @@ export function RoleStarterMapper({
           className="pl-7"
         />
         {loading && (
-          <Loader2 className="absolute right-2 top-2.5 h-3.5 w-3.5 animate-spin text-slate-400" />
+          <Loader2 className="absolute right-2 top-2.5 h-3.5 w-3.5 animate-spin text-slate-400 dark:text-slate-500" />
         )}
         {searchOpen && results.length > 0 && (
           <ul
@@ -232,7 +232,7 @@ export function RoleStarterMapper({
                     <span className="text-xs font-medium text-slate-900 dark:text-slate-100">
                       {r.title}
                     </span>
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
                       {r.meta} {has && '· 이미 추가됨'}
                     </span>
                   </button>
@@ -298,7 +298,7 @@ function SortableRow({
         aria-label="드래그 핸들"
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none text-slate-300 hover:text-slate-500 active:cursor-grabbing"
+        className="cursor-grab touch-none text-slate-300 hover:text-slate-500 active:cursor-grabbing dark:text-slate-600 dark:hover:text-slate-400"
       >
         <GripVertical className="h-3 w-3" />
       </button>
@@ -306,14 +306,14 @@ function SortableRow({
         <div className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">
           {a.title}
         </div>
-        <div className="truncate text-[10px] text-slate-500">{a.meta}</div>
+        <div className="truncate text-[10px] text-slate-500 dark:text-slate-400">{a.meta}</div>
       </div>
       <button
         type="button"
         onClick={onMoveUp}
         disabled={index === 0}
         aria-label="위로"
-        className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-30 dark:hover:bg-slate-800"
+        className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-30 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
       >
         <ArrowUp className="h-3 w-3" />
       </button>
@@ -322,7 +322,7 @@ function SortableRow({
         onClick={onMoveDown}
         disabled={index === total - 1}
         aria-label="아래로"
-        className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-30 dark:hover:bg-slate-800"
+        className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-30 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
       >
         <ArrowDown className="h-3 w-3" />
       </button>
@@ -330,7 +330,7 @@ function SortableRow({
         type="button"
         onClick={onRemove}
         aria-label="제거"
-        className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/30"
+        className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:text-slate-500 dark:hover:bg-rose-950/30"
       >
         <X className="h-3 w-3" />
       </button>

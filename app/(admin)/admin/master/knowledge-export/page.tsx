@@ -108,7 +108,7 @@ export default async function KnowledgeExportPage({
             <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               Markdown 미리보기
             </h2>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-400 dark:text-slate-500">
               (앞부분 {PREVIEW_CHAR_LIMIT.toLocaleString()}자)
             </span>
           </div>

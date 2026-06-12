@@ -169,7 +169,7 @@ export function BusinessHoursForm({ defaults }: Props) {
               rows={2}
               aria-invalid={!!state.fieldErrors?.emergencyNote}
             />
-            <p className="text-xs text-slate-500">200자 이내</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">200자 이내</p>
           </div>
         </div>
       </fieldset>
@@ -221,7 +221,7 @@ export function BusinessHoursForm({ defaults }: Props) {
             value={JSON.stringify(arsItems)}
           />
           {arsItems.length === 0 && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               "+ 항목 추가"로 1번·2번·3번 등을 등록하세요. ContactPanel에 자동 노출됩니다.
             </p>
           )}
@@ -235,7 +235,7 @@ export function BusinessHoursForm({ defaults }: Props) {
                   next[idx] = { ...item, num: e.target.value };
                   setArsItems(next);
                 }}
-                className="w-16 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                className="w-16 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                 placeholder="1"
                 maxLength={4}
               />
@@ -247,7 +247,7 @@ export function BusinessHoursForm({ defaults }: Props) {
                   next[idx] = { ...item, label: e.target.value };
                   setArsItems(next);
                 }}
-                className="flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                className="flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                 placeholder="시스템 사용 문의"
                 maxLength={60}
               />
@@ -416,7 +416,7 @@ function Field({
       {error ? (
         <p className="text-xs text-red-500">{error}</p>
       ) : help ? (
-        <p className="text-xs text-slate-500">{help}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{help}</p>
       ) : null}
     </div>
   );

@@ -79,7 +79,7 @@ export function ProductTreeEditor({
 
       <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
         {tree.length === 0 ? (
-          <div className="p-6 text-center text-sm text-slate-400">
+          <div className="p-6 text-center text-sm text-slate-400 dark:text-slate-500">
             등록된 대분류가 없습니다. 우측 상단 “대분류 추가”로 시작하세요.
           </div>
         ) : (
@@ -143,7 +143,7 @@ function TreeNode({ node }: { node: ProductCategoryAdminNode }) {
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="shrink-0 rounded p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700"
+            className="shrink-0 rounded p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-700"
             aria-label={expanded ? '접기' : '펼치기'}
           >
             {expanded ? (
@@ -184,7 +184,7 @@ function TreeNode({ node }: { node: ProductCategoryAdminNode }) {
           {node.code}
         </Badge>
         {node.memo && (
-          <span className="truncate text-xs text-slate-400">— {node.memo}</span>
+          <span className="truncate text-xs text-slate-400 dark:text-slate-500">— {node.memo}</span>
         )}
         {!node.isActive && (
           <Badge tone="slate" className="shrink-0 text-[10px]">
@@ -192,7 +192,7 @@ function TreeNode({ node }: { node: ProductCategoryAdminNode }) {
           </Badge>
         )}
         {hasChildren && (
-          <span className="shrink-0 text-[11px] text-slate-400">
+          <span className="shrink-0 text-[11px] text-slate-400 dark:text-slate-500">
             하위 {node.children.length}
           </span>
         )}

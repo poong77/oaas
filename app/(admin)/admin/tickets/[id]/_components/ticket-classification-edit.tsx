@@ -102,7 +102,7 @@ export function TicketClassificationEdit({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-brand-600 dark:hover:text-brand-400"
+              className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400"
             >
               <Pencil className="h-3.5 w-3.5" />
               수정
@@ -112,7 +112,7 @@ export function TicketClassificationEdit({
               type="button"
               onClick={cancel}
               disabled={pending}
-              className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
+              className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             >
               <X className="h-3.5 w-3.5" />
               취소
@@ -134,7 +134,7 @@ export function TicketClassificationEdit({
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <label className="flex flex-col gap-1 text-xs text-slate-500">
+            <label className="flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">
               제품 (대 / 중 / 소분류)
               <ProductPicker
                 tree={productTree}
@@ -145,7 +145,7 @@ export function TicketClassificationEdit({
                 disabled={pending}
               />
             </label>
-            <label className="flex flex-col gap-1 text-xs text-slate-500">
+            <label className="flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">
               유형
               <Select value={t} onChange={(e) => setT(e.target.value)} disabled={pending}>
                 {issueTypes.map((o) => (
@@ -155,7 +155,7 @@ export function TicketClassificationEdit({
                 ))}
               </Select>
             </label>
-            <label className="flex flex-col gap-1 text-xs text-slate-500">
+            <label className="flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">
               긴급도
               <Select value={u} onChange={(e) => setU(e.target.value)} disabled={pending}>
                 {urgencies.map((o) => (

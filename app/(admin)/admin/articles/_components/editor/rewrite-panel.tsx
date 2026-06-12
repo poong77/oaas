@@ -86,7 +86,7 @@ export function RewritePanel({
           <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             AI 재편집
           </span>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             본문을 모드별로 다듬어요. 결과는 diff로 미리보기 후 적용.
           </span>
         </div>
@@ -167,7 +167,7 @@ export function RewritePanel({
 
         {/* 액션 */}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
             {bodyTooShort
               ? '본문 50자 이상 입력 후 활성'
               : onCooldown

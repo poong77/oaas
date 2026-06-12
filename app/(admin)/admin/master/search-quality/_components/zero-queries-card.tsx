@@ -26,13 +26,13 @@ export function ZeroQueriesCard({
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             🚫 0건 검색어 — 콘텐츠·동의어 갭
           </h2>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-400 dark:text-slate-500">
             최근 90일 · 결과가 없던 검색
           </span>
         </div>
 
         {rows.length === 0 ? (
-          <p className="py-4 text-center text-sm text-slate-500">
+          <p className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">
             0건 검색이 없습니다. 👍 검색이 잘 답하고 있어요.
           </p>
         ) : (
@@ -76,7 +76,7 @@ export function ZeroQueriesCard({
             ))}
           </ul>
         )}
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-400 dark:text-slate-500">
           동의어 추가는 표현 차이(약어·이형어)를, FAQ 작성은 콘텐츠 부재를
           메웁니다. 보강 후 다음 측정에서 0건이 줄어드는지 확인하세요.
         </p>

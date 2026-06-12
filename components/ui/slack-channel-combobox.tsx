@@ -83,7 +83,7 @@ export function SlackChannelCombobox({
   return (
     <div ref={rootRef} className="relative max-w-md">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         <input
           type="text"
           role="combobox"
@@ -111,7 +111,7 @@ export function SlackChannelCombobox({
       {open && (
         <div className="absolute z-50 mt-1 max-h-72 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
           {loading ? (
-            <div className="px-3 py-6 text-center text-sm text-slate-400">
+            <div className="px-3 py-6 text-center text-sm text-slate-400 dark:text-slate-500">
               검색 중…
             </div>
           ) : reason === 'slack_not_configured' ? (
@@ -121,7 +121,7 @@ export function SlackChannelCombobox({
               (channels:read · groups:read · channels:join 추가 + 재설치 필요)
             </div>
           ) : results.length === 0 ? (
-            <div className="px-3 py-6 text-center text-sm text-slate-400">
+            <div className="px-3 py-6 text-center text-sm text-slate-400 dark:text-slate-500">
               {query.trim() ? '검색 결과가 없습니다' : '채널명 또는 채널 ID를 입력하세요'}
             </div>
           ) : (
@@ -133,14 +133,14 @@ export function SlackChannelCombobox({
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-brand-50 dark:hover:bg-brand-950/40"
               >
                 {ch.isPrivate ? (
-                  <Lock className="h-4 w-4 shrink-0 text-slate-400" />
+                  <Lock className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
                 ) : (
-                  <Hash className="h-4 w-4 shrink-0 text-slate-400" />
+                  <Hash className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
                 )}
                 <span className="truncate font-medium text-slate-800 dark:text-slate-100">
                   {ch.name}
                 </span>
-                <span className="shrink-0 font-mono text-xs text-slate-400">
+                <span className="shrink-0 font-mono text-xs text-slate-400 dark:text-slate-500">
                   {ch.id}
                 </span>
                 <span className="ml-auto shrink-0 text-[11px] font-semibold">

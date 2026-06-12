@@ -251,7 +251,7 @@ function RecipientPicker({
       </Label>
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -287,7 +287,7 @@ function RecipientPicker({
       {contacts && (
         <div className="rounded-md border border-slate-200 p-2 dark:border-slate-700">
           <div className="mb-1 flex items-center justify-between">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
               {pickedHotel} · 연락처 {contacts.length}건
             </span>
             {contacts.length > 0 && (
@@ -301,7 +301,7 @@ function RecipientPicker({
             )}
           </div>
           {contacts.length === 0 ? (
-            <p className="text-xs text-slate-400">등록된 연락처가 없습니다.</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500">등록된 연락처가 없습니다.</p>
           ) : (
             <div className="flex flex-wrap gap-1">
               {contacts.map((c) => (
@@ -338,7 +338,7 @@ function RecipientPicker({
 function VariableChips({ onInsert }: { onInsert: (token: string) => void }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="text-[11px] text-slate-400">변수 삽입</span>
+      <span className="text-[11px] text-slate-400 dark:text-slate-500">변수 삽입</span>
       {MESSAGE_VARIABLES.map((v) => (
         <button
           key={v.token}
@@ -380,9 +380,9 @@ function ReasonInput({ value, onChange }: { value: string; onChange: (v: string)
 /** 메일 본문 하단 회사 푸터 미리보기 (발송 시 자동 첨부). */
 function MailFooterPreview() {
   return (
-    <div className="mt-3 border-t border-slate-200 pt-3 text-[11.5px] leading-relaxed text-slate-500 dark:border-slate-700">
+    <div className="mt-3 border-t border-slate-200 pt-3 text-[11.5px] leading-relaxed text-slate-500 dark:border-slate-700 dark:text-slate-400">
       <div className="font-semibold text-slate-700 dark:text-slate-200">
-        {MAIL_FOOTER.companyKo} &nbsp;|&nbsp; <span className="text-slate-400">{MAIL_FOOTER.companyEn}</span>
+        {MAIL_FOOTER.companyKo} &nbsp;|&nbsp; <span className="text-slate-400 dark:text-slate-500">{MAIL_FOOTER.companyEn}</span>
       </div>
       <div>{MAIL_FOOTER.hq}</div>
       <div>{MAIL_FOOTER.seoul}</div>
@@ -483,11 +483,11 @@ function MailTab({ senderEmailLocal }: { senderEmailLocal: string }) {
               placeholder="as"
               className="h-9 max-w-[180px] rounded-r-none font-mono"
             />
-            <span className="inline-flex items-center rounded-r-md border border-l-0 border-slate-200 bg-slate-100 px-3 font-mono text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800">
+            <span className="inline-flex items-center rounded-r-md border border-l-0 border-slate-200 bg-slate-100 px-3 font-mono text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
               @oapms.com
             </span>
           </div>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-slate-400 dark:text-slate-500">
             앞부분만 입력하세요. 도메인은 @oapms.com 고정 · SES 프로덕션 검증 완료
           </span>
         </div>
@@ -639,7 +639,7 @@ function SmsTab({ senderPhone }: { senderPhone: string }) {
 
         <div className="flex flex-col gap-1">
           <Label className="text-xs">
-            제목 <span className="font-normal text-slate-400">(선택사항)</span>
+            제목 <span className="font-normal text-slate-400 dark:text-slate-500">(선택사항)</span>
           </Label>
           <Input
             value={subject}
@@ -656,7 +656,7 @@ function SmsTab({ senderPhone }: { senderPhone: string }) {
               <Label className="text-xs">본문</Label>
               <VariableChips onInsert={insertVar} />
             </div>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
               <Badge tone={isLms ? 'warn' : 'slate'} className="mr-1">
                 {smsKindLabel(kind)}
               </Badge>
@@ -672,7 +672,7 @@ function SmsTab({ senderPhone }: { senderPhone: string }) {
             placeholder="문자 본문 (90 byte 이하 SMS, 제목 입력·90 byte 초과 시 LMS). 변수: #{업체명} 등"
             className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900"
           />
-          <div className="flex justify-between text-[11px] text-slate-400">
+          <div className="flex justify-between text-[11px] text-slate-400 dark:text-slate-500">
             <span>한글 2byte · 영문/숫자 1byte 기준 · 변수는 수신자별 치환</span>
             <span>
               {recipientCount}명 · 예상비용 약 {estCost.toLocaleString()}원
@@ -785,7 +785,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+            className="rounded-md p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
           >
             <X className="h-4 w-4" />
           </button>
@@ -818,9 +818,9 @@ function RecipientsModal({ item, onClose }: { item: MessageBatchItem; onClose: (
   return (
     <Modal title={`수신자 ${item.total}명 · ${formatDateTimeSec(item.createdAt)}`} onClose={onClose}>
       {loading || recipients === null ? (
-        <p className="py-6 text-center text-sm text-slate-400">불러오는 중…</p>
+        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">불러오는 중…</p>
       ) : recipients.length === 0 ? (
-        <p className="py-6 text-center text-sm text-slate-400">수신자가 없습니다.</p>
+        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">수신자가 없습니다.</p>
       ) : (
         <div className="flex flex-col gap-1">
           {recipients.map((r, i) => (
@@ -829,10 +829,10 @@ function RecipientsModal({ item, onClose }: { item: MessageBatchItem; onClose: (
               className="flex items-center justify-between gap-3 border-b border-slate-100 py-1.5 text-sm dark:border-slate-800"
             >
               <span className="font-medium text-slate-700 dark:text-slate-200">
-                {r.company ?? <span className="text-slate-400">직접입력</span>}
+                {r.company ?? <span className="text-slate-400 dark:text-slate-500">직접입력</span>}
               </span>
-              <span className="flex-1 truncate text-right font-mono text-xs text-slate-500">{r.address}</span>
-              <span className={'shrink-0 text-xs ' + (r.status === 'sent' ? 'text-green-600' : 'text-red-600')}>
+              <span className="flex-1 truncate text-right font-mono text-xs text-slate-500 dark:text-slate-400">{r.address}</span>
+              <span className={'shrink-0 text-xs ' + (r.status === 'sent' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')}>
                 {r.status === 'sent' ? '성공' : '실패'}
               </span>
             </div>
@@ -851,14 +851,14 @@ function BodyModal({ item, onClose }: { item: MessageBatchItem; onClose: () => v
     <Modal title={item.subject || (item.channel === 'email' ? '(제목 없음)' : '문자 본문')} onClose={onClose}>
       <div className="mb-2 flex flex-wrap items-center gap-2">
         {typeBadge(item)}
-        {item.reason && <span className="text-xs text-slate-500">사유: {item.reason}</span>}
+        {item.reason && <span className="text-xs text-slate-500 dark:text-slate-400">사유: {item.reason}</span>}
       </div>
       <div className="whitespace-pre-wrap break-words rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-        {item.body || <span className="italic text-slate-400">본문이 없습니다.</span>}
+        {item.body || <span className="italic text-slate-400 dark:text-slate-500">본문이 없습니다.</span>}
       </div>
       {item.body && /#\{(업체명|담당자명|연락처|호텔명)\}/.test(item.body) && (
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] text-slate-500">파라미터</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">파라미터</span>
           {MESSAGE_VARIABLES.filter((v) => item.body.includes(v.token)).map((v) => (
             <span
               key={v.token}
@@ -976,7 +976,7 @@ function MessageBoxTab() {
             <Label className="text-xs">발송일</Label>
             <div className="flex items-center gap-1.5">
               <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9" />
-              <span className="text-slate-400">~</span>
+              <span className="text-slate-400 dark:text-slate-500">~</span>
               <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9" />
             </div>
           </div>
@@ -1018,7 +1018,7 @@ function MessageBoxTab() {
         </div>
 
         {/* 툴바 */}
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
           <span>
             총 <b className="text-slate-700 dark:text-slate-200">{total.toLocaleString()}</b>건 발송 묶음
           </span>
@@ -1034,7 +1034,7 @@ function MessageBoxTab() {
                     'px-2.5 py-1 text-xs ' +
                     (pageSize === ps
                       ? 'bg-brand-600 text-white'
-                      : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800')
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800')
                   }
                 >
                   {ps}
@@ -1056,7 +1056,7 @@ function MessageBoxTab() {
             <div className="hidden overflow-x-auto sm:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-xs text-slate-500 dark:border-slate-700">
+                  <tr className="border-b border-slate-200 text-left text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
                     <th className="whitespace-nowrap px-2 py-2">발송일시</th>
                     <th className="px-2 py-2 text-center">유형</th>
                     <th className="px-2 py-2 text-center">총발송</th>
@@ -1084,8 +1084,8 @@ function MessageBoxTab() {
                           {item.total}명
                         </button>
                       </td>
-                      <td className="px-2 py-2.5 text-right font-semibold text-green-600">{item.success}</td>
-                      <td className={'px-2 py-2.5 text-right font-semibold ' + (item.failed > 0 ? 'text-red-600' : 'text-slate-400')}>
+                      <td className="px-2 py-2.5 text-right font-semibold text-green-600 dark:text-green-400">{item.success}</td>
+                      <td className={'px-2 py-2.5 text-right font-semibold ' + (item.failed > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-500')}>
                         {item.failed}
                       </td>
                       <td className="px-2 py-2.5 text-center">
@@ -1109,7 +1109,7 @@ function MessageBoxTab() {
                 <div key={item.batchId} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     {typeBadge(item)}
-                    <span className="font-mono text-[11px] text-slate-400">{formatDateTimeSec(item.createdAt)}</span>
+                    <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">{formatDateTimeSec(item.createdAt)}</span>
                   </div>
                   {item.subject && (
                     <p className="mb-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100">{item.subject}</p>
@@ -1118,8 +1118,8 @@ function MessageBoxTab() {
                     <button type="button" onClick={() => setRecipModal(item)} className="text-brand-600 underline decoration-dotted">
                       총 {item.total}명
                     </button>
-                    <span className="text-green-600">성공 {item.success}</span>
-                    <span className={item.failed > 0 ? 'text-red-600' : 'text-slate-400'}>실패 {item.failed}</span>
+                    <span className="text-green-600 dark:text-green-400">성공 {item.success}</span>
+                    <span className={item.failed > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-500'}>실패 {item.failed}</span>
                     <button type="button" onClick={() => setBodyModal(item)} className="ml-auto text-brand-600 underline decoration-dotted">
                       본문
                     </button>
@@ -1139,7 +1139,7 @@ function MessageBoxTab() {
               >
                 이전
               </Button>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 {page} / {totalPages}
               </span>
               <Button
@@ -1156,7 +1156,7 @@ function MessageBoxTab() {
         )}
 
         {loading && items.length === 0 && (
-          <p className="py-6 text-center text-sm text-slate-400">불러오는 중…</p>
+          <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">불러오는 중…</p>
         )}
       </CardContent>
 

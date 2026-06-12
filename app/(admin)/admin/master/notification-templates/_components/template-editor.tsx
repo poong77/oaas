@@ -149,7 +149,7 @@ export function TemplateEditor({
           className="font-mono text-xs"
           placeholder="안녕하세요 {{reporter_name}}님, 티켓 {{ticket_no}} 이(가) 접수되었습니다."
         />
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           치환자: <code>{`{{변수명}}`}</code> 형식. 예:{' '}
           <code>{`{{ticket_no}}`}</code>, <code>{`{{title}}`}</code>,{' '}
           <code>{`{{ticket_url}}`}</code>

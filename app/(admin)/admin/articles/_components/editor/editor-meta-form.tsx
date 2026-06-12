@@ -293,7 +293,7 @@ export function EditorMetaForm({
             maxLength={2000}
             placeholder="이 문서를 30초 안에 이해할 수 있는 핵심 요약 (200자 내외 권장, 2000자까지)"
           />
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {summary.length} / 2000 {summary.length > 200 && '· 200자 권장'}
           </span>
           <KbAiSuggestionCard
@@ -350,7 +350,7 @@ export function EditorMetaForm({
               추가
             </Button>
           </div>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {keywords.length} / 30 · 한글만 가능 · 영어 약어/동의어는{' '}
             <Link
               href="/admin/master/synonyms"
@@ -402,7 +402,7 @@ export function EditorMetaForm({
             rawValue={related}
             onChange={onRelated}
           />
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             slug 쉼표(,) 구분. 검색 또는 추천 칩에서 클릭으로 추가하세요.
           </span>
           <KbAiSuggestionCard

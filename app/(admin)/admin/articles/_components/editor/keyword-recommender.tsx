@@ -87,7 +87,7 @@ export function KeywordRecommender({
 
   return (
     <div data-testid="keyword-recommend" className="flex flex-col gap-1.5">
-      <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+      <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
         <Sparkles className="h-3 w-3" />
         추천 키워드 {loading && '(로딩 중...)'}
       </span>

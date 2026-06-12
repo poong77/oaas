@@ -167,7 +167,7 @@ export default async function MasterPopularKeywordsPage() {
       <Card>
         <CardContent className="flex flex-col gap-3 p-5">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-slate-500" />
+            <TrendingUp className="h-4 w-4 text-slate-500 dark:text-slate-400" />
             <span className="text-sm font-semibold">
               자동집계 — 최근 30일 검색 top
             </span>
@@ -189,7 +189,7 @@ export default async function MasterPopularKeywordsPage() {
                     className="flex items-center justify-between gap-3 py-2.5"
                   >
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <span className="w-5 text-right text-xs tabular-nums text-slate-400">
+                      <span className="w-5 text-right text-xs tabular-nums text-slate-400 dark:text-slate-500">
                         {i + 1}
                       </span>
                       <span className="truncate text-sm text-slate-800 dark:text-slate-200">

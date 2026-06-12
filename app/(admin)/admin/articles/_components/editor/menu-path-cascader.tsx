@@ -117,7 +117,7 @@ export function MenuPathCascader({
             취소
           </Button>
         </div>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-500 dark:text-slate-400">
           {'>'} 로 구분. 마스터 정본과 매칭되지 않으면 사이드바 트리에서 누락될 수 있어요.
         </span>
       </div>
@@ -170,7 +170,7 @@ export function MenuPathCascader({
         </div>
       )}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-500 dark:text-slate-400">
           {value.length > 0 ? value.join(' > ') : '경로 미선택'}
         </span>
         {allowManual && (

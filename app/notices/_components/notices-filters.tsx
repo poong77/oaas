@@ -55,7 +55,7 @@ export function NoticesFilters({
       </Select>
 
       {pending && (
-        <span className="text-xs text-slate-500 sm:col-span-2">적용 중...</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400 sm:col-span-2">적용 중...</span>
       )}
     </div>
   );

@@ -182,7 +182,7 @@ export function HotelSlackChannels({
         <SlackChannelCombobox onSelect={handleLink} disabled={pending} />
 
         {channels.length === 0 ? (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-400 dark:text-slate-500">
             연동된 슬랙 채널이 없습니다. 채널명 또는 채널 ID로 검색해 연동하세요.
           </p>
         ) : (
@@ -192,7 +192,7 @@ export function HotelSlackChannels({
                 key={c.id}
                 className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3"
               >
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-slate-100 text-slate-500 dark:bg-slate-800">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                   {c.channelIsPrivate ? (
                     <Lock className="h-4 w-4" />
                   ) : (
@@ -213,7 +213,7 @@ export function HotelSlackChannels({
                       <Badge tone="slate">알림 정지</Badge>
                     )}
                   </div>
-                  <div className="mt-0.5 font-mono text-xs text-slate-400">
+                  <div className="mt-0.5 font-mono text-xs text-slate-400 dark:text-slate-500">
                     {c.channelId}
                     {c.channelIsPrivate && ' · 비공개'}
                   </div>
@@ -273,7 +273,7 @@ export function HotelSlackChannels({
                     onClick={() => handleUnlink(c)}
                     disabled={pending}
                     aria-label={`${c.channelName ?? c.channelId} 연동 해제`}
-                    className="rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:hover:bg-red-950/40"
+                    className="rounded-md p-1.5 text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:hover:bg-red-950/40"
                   >
                     <X className="h-4 w-4" />
                   </button>

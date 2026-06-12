@@ -103,7 +103,7 @@ export function ResetPasswordForm({
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="pw">새 비밀번호</Label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <Input
                 id="pw"
                 type={show ? 'text' : 'password'}
@@ -119,7 +119,7 @@ export function ResetPasswordForm({
                 onClick={() => setShow((v) => !v)}
                 tabIndex={-1}
                 aria-label={show ? '비밀번호 숨기기' : '비밀번호 표시'}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200"
               >
                 {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -128,7 +128,7 @@ export function ResetPasswordForm({
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="confirm">새 비밀번호 확인</Label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <Input
                 id="confirm"
                 type={show ? 'text' : 'password'}

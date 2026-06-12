@@ -153,10 +153,10 @@ function BucketCard({
   return (
     <Card>
       <CardContent className="flex flex-col gap-1 p-4">
-        <span className="text-xs font-medium text-slate-500">{label}</span>
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</span>
         <span className={`text-2xl font-bold ${cls}`}>
           {value}
-          <span className="ml-1 text-sm font-normal text-slate-400">
+          <span className="ml-1 text-sm font-normal text-slate-400 dark:text-slate-500">
             / {total} ({pct}%)
           </span>
         </span>

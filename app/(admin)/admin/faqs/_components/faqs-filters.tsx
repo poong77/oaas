@@ -46,7 +46,7 @@ export function FaqsFilters({
   return (
     <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30 sm:grid-cols-2 lg:grid-cols-5">
       <form onSubmit={onSubmit} className="relative lg:col-span-2">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -60,7 +60,7 @@ export function FaqsFilters({
               setQ('');
               apply({ q: undefined });
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600"
             aria-label="검색어 지우기"
           >
             <X className="h-4 w-4" />
@@ -121,7 +121,7 @@ export function FaqsFilters({
       </Select>
 
       {pending && (
-        <span className="text-xs text-slate-500 sm:col-span-2 lg:col-span-5">
+        <span className="text-xs text-slate-500 dark:text-slate-400 sm:col-span-2 lg:col-span-5">
           적용 중...
         </span>
       )}

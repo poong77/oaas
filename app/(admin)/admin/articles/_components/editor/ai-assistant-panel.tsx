@@ -89,7 +89,7 @@ export function AiAssistantPanel({
           <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             AI 작성 보조
           </span>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             슬러그·요약·키워드·관련문서·챗봇메타 한 번에 추출 (각 필드 옆 적용)
           </span>
         </div>
@@ -103,7 +103,7 @@ export function AiAssistantPanel({
             {loading ? '추출 중...' : '✨ 작성 보조'}
           </Button>
           {disabled && (
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] text-slate-400 dark:text-slate-500">
               본문 500자 또는 제목 입력 후 활성
             </span>
           )}
@@ -185,7 +185,7 @@ export function KbAiSuggestionCard({
         type="button"
         onClick={onReject}
         aria-label="제안 거부"
-        className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-rose-500 dark:border-slate-700"
+        className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-rose-500 dark:border-slate-700"
       >
         <X className="h-3 w-3" />
       </button>
@@ -231,7 +231,7 @@ export function KbAiChatbotMetaCard({
             type="button"
             onClick={onReject}
             aria-label="제안 거부"
-            className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-rose-500 dark:border-slate-700"
+            className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-200 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-rose-500 dark:border-slate-700"
           >
             <X className="h-3 w-3" />
           </button>
@@ -239,30 +239,30 @@ export function KbAiChatbotMetaCard({
       </div>
       <dl className="grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
         <div>
-          <dt className="text-slate-500">의도</dt>
+          <dt className="text-slate-500 dark:text-slate-400">의도</dt>
           <dd className="text-slate-700 dark:text-slate-200">{meta.intent}</dd>
         </div>
         <div>
-          <dt className="text-slate-500">예상 시간</dt>
+          <dt className="text-slate-500 dark:text-slate-400">예상 시간</dt>
           <dd className="text-slate-700 dark:text-slate-200">
             {meta.expected_time_minutes}분
           </dd>
         </div>
         <div>
-          <dt className="text-slate-500">엔티티</dt>
+          <dt className="text-slate-500 dark:text-slate-400">엔티티</dt>
           <dd className="text-slate-700 dark:text-slate-200">
             {meta.entities.join(', ') || '(없음)'}
           </dd>
         </div>
         <div>
-          <dt className="text-slate-500">사전 조건</dt>
+          <dt className="text-slate-500 dark:text-slate-400">사전 조건</dt>
           <dd className="text-slate-700 dark:text-slate-200">
             {meta.prerequisites.join(', ') || '(없음)'}
           </dd>
         </div>
         {meta.steps && meta.steps.length > 0 && (
           <div className="sm:col-span-2">
-            <dt className="text-slate-500">단계</dt>
+            <dt className="text-slate-500 dark:text-slate-400">단계</dt>
             <dd>
               <ol className="ml-4 list-decimal text-slate-700 dark:text-slate-200">
                 {meta.steps.map((s, i) => (

@@ -185,13 +185,13 @@ export function NoticesListClient({
                         {formatDateKst(n.publishedAt)}
                       </span>
                     ) : (
-                      <span className="text-slate-400">미발행</span>
+                      <span className="text-slate-400 dark:text-slate-500">미발행</span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">
                     {n.viewCount.toLocaleString()}
                   </td>
-                  <td className="px-3 py-2 text-xs text-slate-500">
+                  <td className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">
                     {formatDateKst(n.updatedAt)}
                   </td>
                   <td className="px-3 py-2">
@@ -281,7 +281,7 @@ export function NoticesListClient({
               >
                 {n.title}
               </Link>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-slate-500 dark:text-slate-400">
                 {productLabel(n.productCode)} · 발행{' '}
                 {n.publishedAt ? formatDateKst(n.publishedAt) : '미발행'} · 조회{' '}
                 {n.viewCount.toLocaleString()} · 수정 {formatDateKst(n.updatedAt)}
@@ -328,7 +328,7 @@ export function NoticesListClient({
       {/* 페이지네이션 */}
       <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-3 py-3 text-sm dark:border-slate-800 sm:flex-row">
         <div className="flex items-center gap-3">
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-slate-500 dark:text-slate-400">
             {total === 0 ? 0 : (page - 1) * pageSize + 1}-
             {Math.min(page * pageSize, total)} / {total}
           </div>

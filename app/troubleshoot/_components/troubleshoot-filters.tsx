@@ -36,7 +36,7 @@ export function TroubleshootFilters({
   return (
     <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/30 sm:grid-cols-2">
       <form onSubmit={onSubmit} className="relative sm:col-span-1">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -50,7 +50,7 @@ export function TroubleshootFilters({
               setQ('');
               apply({ q: undefined });
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
             aria-label="검색어 지우기"
           >
             <X className="h-4 w-4" />
@@ -72,7 +72,7 @@ export function TroubleshootFilters({
       </Select>
 
       {pending && (
-        <span className="text-xs text-slate-500 sm:col-span-2">적용 중...</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400 sm:col-span-2">적용 중...</span>
       )}
     </div>
   );

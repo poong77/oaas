@@ -227,7 +227,7 @@ export function HotelCombobox({
       {name && <input type="hidden" name={name} value={selectedId} />}
 
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         <input
           ref={inputRef}
           id={id}
@@ -267,7 +267,7 @@ export function HotelCombobox({
               commit(null);
               inputRef.current?.focus();
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 dark:text-slate-500 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <X className="h-4 w-4" />
           </button>
@@ -280,7 +280,7 @@ export function HotelCombobox({
           onMouseDown={cancelBlurClose}
         >
           {options.length === 0 ? (
-            <div className="px-3 py-6 text-center text-sm text-slate-400">
+            <div className="px-3 py-6 text-center text-sm text-slate-400 dark:text-slate-500">
               검색 결과가 없습니다
             </div>
           ) : (
@@ -295,7 +295,7 @@ export function HotelCombobox({
                     onMouseEnter={() => setActiveIndex(idx)}
                     onClick={() => selectByIndex(idx)}
                     className={cn(
-                      'flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-500',
+                      'flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-500 dark:text-slate-400',
                       active && 'bg-brand-50 dark:bg-brand-950/40',
                     )}
                   >
@@ -328,12 +328,12 @@ export function HotelCombobox({
                       isSel ? 'text-brand-600' : 'text-transparent',
                     )}
                   />
-                  <Building2 className="h-4 w-4 shrink-0 text-slate-400" />
+                  <Building2 className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
                   <span className="truncate text-slate-800 dark:text-slate-100">
                     {h.name}
                   </span>
                   {h.oaPmsHotelId && (
-                    <span className="ml-auto shrink-0 text-xs text-slate-400">
+                    <span className="ml-auto shrink-0 text-xs text-slate-400 dark:text-slate-500">
                       {h.oaPmsHotelId}
                     </span>
                   )}

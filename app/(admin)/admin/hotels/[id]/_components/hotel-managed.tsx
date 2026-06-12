@@ -97,7 +97,7 @@ export function HotelManaged({
         </div>
 
         {managed.length === 0 ? (
-          <p className="text-sm text-slate-400">연결된 호텔이 없습니다.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500">연결된 호텔이 없습니다.</p>
         ) : (
           <ul className="flex flex-wrap gap-2">
             {managed.map((m) => (
@@ -107,14 +107,14 @@ export function HotelManaged({
               >
                 <Link href={`/admin/hotels/${m.hotelId}`} className="inline-flex items-center gap-1 font-medium hover:underline">
                   {m.name}
-                  <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
+                  <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                 </Link>
                 {!m.isActive && <Badge tone="slate">비활성</Badge>}
                 <button
                   type="button"
                   onClick={() => handleRemove(m)}
                   disabled={pending}
-                  className="rounded-full p-0.5 text-slate-400 hover:bg-slate-200 hover:text-red-600 dark:hover:bg-slate-700"
+                  className="rounded-full p-0.5 text-slate-400 dark:text-slate-500 hover:bg-slate-200 hover:text-red-600 dark:hover:bg-slate-700"
                   aria-label={`${m.name} 연결 해제`}
                 >
                   <X className="h-4 w-4" />

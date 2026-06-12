@@ -147,7 +147,7 @@ export function GoldenBoard({
         <CardContent className="flex flex-col gap-4 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-slate-500">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 적합도 판정
               </span>
               <div className="flex gap-2">
@@ -160,7 +160,7 @@ export function GoldenBoard({
                     className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
                       judge === m
                         ? 'border-brand-400 bg-brand-50 text-brand-700 dark:border-brand-600 dark:bg-brand-950/40 dark:text-brand-300'
-                        : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
                     }`}
                   >
                     {m === 'label'
@@ -197,7 +197,7 @@ export function GoldenBoard({
                   />
                 ))}
               </div>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 {step}/{stepTotal} 단계 ({progressPct}%) — 검색 순위 측정 중…
               </span>
             </div>
@@ -205,7 +205,7 @@ export function GoldenBoard({
 
           {/* 입력 / 추천 */}
           <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-            <span className="text-xs text-slate-500">질문 추가:</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">질문 추가:</span>
             <Button
               onClick={() => setAddOpen((v) => !v)}
               variant="outline"
@@ -297,7 +297,7 @@ export function GoldenBoard({
             </ul>
           )}
           {runCount === 0 && rows.length > 0 && (
-            <p className="border-t border-slate-100 p-3 text-center text-xs text-slate-400 dark:border-slate-800">
+            <p className="border-t border-slate-100 p-3 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
               아직 측정 기록이 없습니다. 위 &quot;순위 측정 실행&quot;을 눌러
               순위를 채우세요.
             </p>
@@ -345,7 +345,7 @@ function RowItem({
           <Badge tone="slate">{SOURCE_LABEL[row.source]}</Badge>
           {row.note && <Badge tone="brand">{row.note}</Badge>}
         </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
           {trend.length > 0 && (
             <span className="inline-flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
@@ -360,7 +360,7 @@ function RowItem({
               : '미지정(LLM 채점)'}
           </span>
           {row.usage && (
-            <span className="text-slate-400">
+            <span className="text-slate-400 dark:text-slate-500">
               실사용 {row.usage.searches}회 · CTR{' '}
               {Math.round(row.usage.ctr * 100)}% · 접수{' '}
               {Math.round(row.usage.ticketRate * 100)}%
@@ -577,7 +577,7 @@ function SuggestModal({
           <h3 className="text-sm font-semibold">
             AI 추천 검수 ({candidates.length}건 · 선택 {selectedCount})
           </h3>
-          <span className="text-xs text-slate-400">추가할 후보를 고르세요</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">추가할 후보를 고르세요</span>
         </div>
         <ul className="flex-1 divide-y divide-slate-100 overflow-y-auto dark:divide-slate-800">
           {candidates.map((c, i) => (
@@ -597,7 +597,7 @@ function SuggestModal({
                   <span className="font-medium text-slate-900 dark:text-slate-100">
                     {c.query}
                   </span>
-                  <span className="text-xs text-slate-400">{c.reason}</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500">{c.reason}</span>
                 </div>
               </label>
               {c.options && c.options.length > 0 && (

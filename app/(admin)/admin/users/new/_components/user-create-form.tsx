@@ -93,7 +93,7 @@ export function UserCreateForm({ hotels }: { hotels: HotelOption[] }) {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="name">이름 *</Label>
             <Input id="name" name="name" required maxLength={100} aria-invalid={!!errors.name} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name}</p>}
+            {errors.name && <p className="text-xs text-red-600 dark:text-red-400">{errors.name}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -108,9 +108,9 @@ export function UserCreateForm({ hotels }: { hotels: HotelOption[] }) {
               aria-invalid={!!errors.username}
             />
             {errors.username ? (
-              <p className="text-xs text-red-600">{errors.username}</p>
+              <p className="text-xs text-red-600 dark:text-red-400">{errors.username}</p>
             ) : (
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 영문·숫자와 . _ - @ 사용 가능. 로그인 시 이 아이디 또는 이메일 사용.
               </p>
             )}
@@ -120,9 +120,9 @@ export function UserCreateForm({ hotels }: { hotels: HotelOption[] }) {
             <Label htmlFor="email">이메일</Label>
             <Input id="email" name="email" type="email" aria-invalid={!!errors.email} />
             {errors.email ? (
-              <p className="text-xs text-red-600">{errors.email}</p>
+              <p className="text-xs text-red-600 dark:text-red-400">{errors.email}</p>
             ) : (
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 선택 — 입력 시 초대 메일 발송. 미입력 시 아이디로만 로그인.
               </p>
             )}
@@ -136,7 +136,7 @@ export function UserCreateForm({ hotels }: { hotels: HotelOption[] }) {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="phone">연락처</Label>
             <Input id="phone" name="phone" type="tel" placeholder="010-0000-0000" aria-invalid={!!errors.phone} />
-            {errors.phone && <p className="text-xs text-red-600">{errors.phone}</p>}
+            {errors.phone && <p className="text-xs text-red-600 dark:text-red-400">{errors.phone}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -185,11 +185,11 @@ export function UserCreateForm({ hotels }: { hotels: HotelOption[] }) {
                 <Plus className="h-4 w-4" />신규 호텔
               </Button>
             </div>
-            {errors.hotelId && <p className="text-xs text-red-600">{errors.hotelId}</p>}
+            {errors.hotelId && <p className="text-xs text-red-600 dark:text-red-400">{errors.hotelId}</p>}
           </div>
         </CardContent>
         <CardFooter className="justify-between">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             초기 비밀번호는 <strong>123456</strong>으로 발급됩니다. 이메일이 있으면 초대 메일도 발송됩니다.
           </p>
           <Button type="submit" disabled={pending}>
@@ -255,13 +255,13 @@ function NewHotelDialog({
                 <Dialog.Title className="text-base font-semibold text-slate-900 dark:text-slate-50">
                   신규 호텔 생성
                 </Dialog.Title>
-                <Dialog.Description className="text-xs text-slate-500">
+                <Dialog.Description className="text-xs text-slate-500 dark:text-slate-400">
                   호텔명만 입력해도 생성됩니다. 나머지는 선택 사항입니다.
                 </Dialog.Description>
               </div>
             </div>
             <Dialog.Close
-              className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+              className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800"
               aria-label="닫기"
             >
               <X className="h-4 w-4" />
@@ -280,14 +280,14 @@ function NewHotelDialog({
                 placeholder="예: 한강 레지던스"
                 aria-invalid={!!errors.name}
               />
-              {errors.name && <p className="text-xs text-red-600">{errors.name}</p>}
+              {errors.name && <p className="text-xs text-red-600 dark:text-red-400">{errors.name}</p>}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="hotel-phone">연락처</Label>
                 <Input id="hotel-phone" name="phone" type="tel" placeholder="02-0000-0000" aria-invalid={!!errors.phone} />
-                {errors.phone && <p className="text-xs text-red-600">{errors.phone}</p>}
+                {errors.phone && <p className="text-xs text-red-600 dark:text-red-400">{errors.phone}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="hotel-manager">담당자명</Label>

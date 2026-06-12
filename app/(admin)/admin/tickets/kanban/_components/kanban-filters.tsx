@@ -85,7 +85,7 @@ export function KanbanFilters({
             update({ mineOnly: e.target.checked ? '1' : null })
           }
           disabled={pending}
-          className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+          className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-700"
         />
         <span>내 담당만</span>
       </label>

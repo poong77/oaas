@@ -120,7 +120,7 @@ export default async function MasterProductCategoriesPage() {
         </CardContent>
       </Card>
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-slate-400 dark:text-slate-500">
         <Layers className="mr-1 inline h-3 w-3" />
         Phase 9 — 제품 분류 마스터
       </p>
@@ -146,7 +146,7 @@ function StatCard({
         <span className="text-xl font-semibold text-slate-900 dark:text-slate-100">
           {value}
         </span>
-        {hint && <span className="text-[11px] text-slate-400">{hint}</span>}
+        {hint && <span className="text-[11px] text-slate-400 dark:text-slate-500">{hint}</span>}
       </CardContent>
     </Card>
   );
