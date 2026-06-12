@@ -40,7 +40,7 @@ export function SearchBox({ defaultValue = '' }: { defaultValue?: string }) {
         />
         <button
           type="submit"
-          className="absolute right-1.5 inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-brand-500 sm:h-11 sm:px-5"
+          className="absolute right-1.5 inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-500 sm:h-11 sm:px-5"
         >
           통합검색
         </button>

@@ -43,7 +43,7 @@ export function HomeHero({
   }
 
   return (
-    <section className="relative overflow-hidden border-b border-slate-200/70 bg-white pb-10 pt-10 dark:border-slate-800 dark:bg-slate-950 sm:pt-14">
+    <section className="relative overflow-hidden bg-white pb-10 pt-10 dark:bg-slate-950 sm:pt-14">
       <div
         className={`mx-auto grid w-full gap-8 px-4 sm:px-6 lg:gap-10 lg:px-8 ${
           sidebar ? 'max-w-[1200px] lg:grid-cols-12' : 'max-w-3xl'
@@ -77,7 +77,7 @@ export function HomeHero({
               />
               <button
                 type="submit"
-                className="absolute right-1.5 inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-label-medium-semibold text-white shadow-sm hover:bg-brand-500 sm:h-11 sm:px-5"
+                className="absolute right-1.5 inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-label-medium-semibold text-white hover:bg-brand-500 sm:h-11 sm:px-5"
               >
                 통합검색
               </button>

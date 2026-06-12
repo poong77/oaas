@@ -28,7 +28,7 @@ export function CategoryTabs({
   return (
     <section
       aria-labelledby="category-heading"
-      className="bg-slate-100 py-10 dark:bg-slate-900 sm:py-14"
+      className="bg-[#F7F8F9] py-10 dark:bg-slate-900 sm:py-14"
     >
       <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center gap-7 px-4 sm:px-6 lg:px-8">
         <h2
@@ -56,61 +56,64 @@ export function CategoryTabs({
           ))}
         </div>
 
-        {/* 카드 그리드 */}
-        {tab === 'product' ? (
-          <ul className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {categories.map((cat) => {
-              const Icon = resolveIcon(cat.icon);
-              return (
-                <li key={cat.id}>
-                  <Link
-                    href={`/help/${cat.code}`}
-                    className="group flex h-full flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700 sm:p-5"
-                  >
-                    <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white text-brand-600 transition-colors group-hover:text-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:group-hover:text-brand-200">
-                      {cat.iconImageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={cat.iconImageUrl} alt="" className="h-7 w-7 object-contain" />
-                      ) : (
-                        <Icon className="h-6 w-6" />
-                      )}
-                    </span>
-                    <span className="text-body-medium-semibold text-slate-800 dark:text-slate-100">
-                      {cat.label}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <ul className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {roles.map((role) => {
-              const Icon = resolveIcon(role.icon);
-              return (
-                <li key={role.id}>
-                  <Link
-                    href={`/role/${role.roleKey}`}
-                    className="group flex h-full flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700 sm:p-5"
-                  >
-                    <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white text-brand-600 transition-colors group-hover:text-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:group-hover:text-brand-200">
-                      {role.iconImageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={role.iconImageUrl} alt="" className="h-7 w-7 object-contain" />
-                      ) : (
-                        <Icon className="h-6 w-6" />
-                      )}
-                    </span>
-                    <span className="whitespace-nowrap text-body-medium-semibold text-slate-800 dark:text-slate-100">
-                      {role.label}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        {/* 카드 그리드 — 흰 카드 위 아이콘만(48×48), 테두리·아이콘 배경 박스 없음 */}
+        <ul className="flex w-full flex-wrap items-stretch justify-center gap-3">
+          {tab === 'product'
+            ? categories.map((cat) => (
+                <CategoryCard
+                  key={cat.id}
+                  href={`/help/${cat.code}`}
+                  icon={cat.icon}
+                  iconImageUrl={cat.iconImageUrl}
+                  label={cat.label}
+                />
+              ))
+            : roles.map((role) => (
+                <CategoryCard
+                  key={role.id}
+                  href={`/role/${role.roleKey}`}
+                  icon={role.icon}
+                  iconImageUrl={role.iconImageUrl}
+                  label={role.label}
+                />
+              ))}
+        </ul>
       </div>
     </section>
+  );
+}
+
+/** 카테고리 카드 — 124×128, 흰 배경, 테두리 없음, 아이콘 48×48 + 텍스트(gap 16). */
+function CategoryCard({
+  href,
+  icon,
+  iconImageUrl,
+  label,
+}: {
+  href: string;
+  icon: string | null;
+  iconImageUrl: string | null;
+  label: string;
+}) {
+  const Icon = resolveIcon(icon);
+  return (
+    <li>
+      <Link
+        href={href}
+        className="group flex h-32 w-[124px] flex-col items-center justify-center gap-4 rounded-lg bg-white px-7 py-5 text-center transition-all hover:-translate-y-0.5 hover:shadow-sm dark:bg-slate-900"
+      >
+        <span className="flex h-12 w-12 items-center justify-center overflow-hidden text-brand-600 transition-colors group-hover:text-brand-700 dark:text-brand-300 dark:group-hover:text-brand-200">
+          {iconImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={iconImageUrl} alt="" className="h-12 w-12 object-contain" />
+          ) : (
+            <Icon className="h-12 w-12" strokeWidth={1.5} />
+          )}
+        </span>
+        <span className="text-body-medium-semibold text-slate-800 dark:text-slate-100">
+          {label}
+        </span>
+      </Link>
+    </li>
   );
 }

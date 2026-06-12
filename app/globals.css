@@ -224,24 +224,11 @@
 }
 
 /*
- * OA서포트 통합 브랜드 — 전 역할 #00A36B 그린으로 통일.
- * (구: manager=블루, hotelier=그린 역할별 구분 → 단일 브랜드로 통합)
- * @theme 기본 스케일과 동일 값. data-role 셀렉터는 향후 분기 여지를 위해 유지.
+ * OA서포트 통합 브랜드 — 전 역할 #00A36B 그린 단일화.
+ * 브랜드 컬러는 위 @theme 한 곳에서만 정의한다. 역할별([data-role]) 오버라이드는
+ * 제거되어, 어드민/매니저/호텔리어 모두 동일한 브랜드 컬러로 렌더된다.
+ * (data-role 속성 자체는 role-scope에서 다른 용도로 계속 부여되나 컬러에는 무관)
  */
-[data-role='manager'],
-[data-role='hotelier'] {
-  --color-brand-50:  #e9faf1;
-  --color-brand-100: #cbf3e0;
-  --color-brand-200: #99e7c8;
-  --color-brand-300: #5ed9a9;
-  --color-brand-400: #1ec98c;
-  --color-brand-500: #00b577;
-  --color-brand-600: #00a36b;
-  --color-brand-700: #00855a;
-  --color-brand-800: #006e4c;
-  --color-brand-900: #0a5a40;
-  --color-brand-950: #033325;
-}
 
 /*
  * 브랜드 그린(brand-700)은 채도가 높아 본문 H2/H3에서 형광처럼 튄다.

@@ -90,17 +90,17 @@ export function LandingNoticesView() {
             <li key={n.id} className="border-b border-[#E5E7EB]">
               <Link
                 href={`/landing/notices/${n.id}`}
-                className="flex flex-col gap-2 px-2 py-4 transition-colors hover:bg-[#F7F8F9] sm:flex-row sm:items-center sm:gap-5"
+                className="flex flex-col gap-2 px-2 py-6 transition-colors hover:bg-[#F7F8F9] sm:flex-row sm:items-center sm:gap-5"
               >
                 <span
-                  className={`inline-flex w-fit shrink-0 items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium ${BADGE[n.type]}`}
+                  className={`inline-flex min-w-[88px] shrink-0 items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium ${BADGE[n.type]}`}
                 >
                   {n.type}
                 </span>
-                <span className="flex-1 truncate text-sm font-medium text-[#1A1C20]">
+                <span className="flex-1 truncate text-title-medium-medium text-[#1A1C20]">
                   {n.title}
                 </span>
-                <span className="shrink-0 text-xs text-[#B0B3BA]">{n.date}</span>
+                <span className="shrink-0 text-body-medium-medium text-[#B0B3BA]">{n.date}</span>
               </Link>
             </li>
           ))}
