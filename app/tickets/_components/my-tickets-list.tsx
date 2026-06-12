@@ -70,11 +70,11 @@ export function MyTicketsList({
       <div className="hidden overflow-hidden rounded-xl border border-black/[0.06] dark:border-slate-800 sm:block">
         <table className="w-full table-fixed">
           <colgroup>
-            <col className="w-[120px]" />
+            <col className="w-[132px]" />
             <col className="w-[120px]" />
             <col />
             <col className="w-[150px]" />
-            <col className="w-[110px]" />
+            <col className="w-[132px]" />
           </colgroup>
           <thead>
             <tr className="border-b border-black/[0.06] text-sm text-[#868B94] dark:border-slate-800">
@@ -91,7 +91,7 @@ export function MyTicketsList({
                 key={t.id}
                 className="border-b border-black/[0.06] text-sm last:border-b-0 dark:border-slate-800"
               >
-                <td className="px-5 py-4 text-[#555D6D] dark:text-slate-300">
+                <td className="whitespace-nowrap px-5 py-4 text-[#555D6D] dark:text-slate-300">
                   {fmtDate(t.createdAt)}
                 </td>
                 <td className="px-5 py-4">
@@ -111,7 +111,7 @@ export function MyTicketsList({
                     {typeLabel(t)}
                   </span>
                 </td>
-                <td className="px-5 py-4 text-right text-[#868B94] dark:text-slate-400">
+                <td className="whitespace-nowrap px-5 py-4 text-right text-[#868B94] dark:text-slate-400">
                   {fmtDate(t.answeredAt)}
                 </td>
               </tr>

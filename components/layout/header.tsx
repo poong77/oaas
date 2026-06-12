@@ -48,13 +48,19 @@ export function Header() {
         <div className="flex items-center">
           <Link
             href="/"
-            aria-label="OAtech 홈으로"
-            className="flex items-center"
+            aria-label="OAtech Support 홈으로"
+            className="flex items-center gap-1.5"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/oatech-logo.png"
+              src="/oatech_logo.png"
               alt="OAtech"
+              className="h-5 w-auto dark:brightness-110"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/support_logo.png"
+              alt="Support"
               className="h-5 w-auto dark:brightness-110"
             />
           </Link>

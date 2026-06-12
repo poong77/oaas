@@ -102,7 +102,7 @@ export default async function HelpProductPage({
       <PageHeader
         title={
           <span className="inline-flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
+            <span className="flex h-9 w-9 items-center justify-center text-brand-600 dark:text-brand-300">
               <MasterIcon
                 iconName={current.icon}
                 iconImageUrl={current.iconImageUrl}
@@ -112,7 +112,6 @@ export default async function HelpProductPage({
             {current.label} 가이드
           </span>
         }
-        description={`${current.label} 사용을 위한 핸드북·체크리스트·점검 절차 (총 ${total}건)`}
         breadcrumb={
           <Link
             href="/"
