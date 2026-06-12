@@ -133,7 +133,7 @@ export function TicketsListClient({
                   )}
                 </td>
                 <td className="px-3 py-2">
-                  <Badge tone={STATUS_TONE[t.status]}>
+                  <Badge tone={STATUS_TONE[t.status]} className="min-w-[80px] justify-center">
                     {STATUS_LABEL[t.status]}
                   </Badge>
                 </td>
@@ -158,7 +158,7 @@ export function TicketsListClient({
                       <Hash className="h-3 w-3" />
                       {t.ticketNo}
                     </span>
-                    <Badge tone={STATUS_TONE[t.status]}>
+                    <Badge tone={STATUS_TONE[t.status]} className="min-w-[80px] justify-center">
                       {STATUS_LABEL[t.status]}
                     </Badge>
                   </div>

@@ -104,7 +104,7 @@ export function HomeMyTickets({
                     className="flex flex-col gap-2 px-2 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40 sm:flex-row sm:items-center sm:gap-5"
                   >
                     <span
-                      className={`inline-flex w-fit shrink-0 items-center rounded-full border px-3 py-1 text-xs font-semibold ${m.badge}`}
+                      className={`inline-flex w-fit shrink-0 items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold min-w-[80px] ${m.badge}`}
                     >
                       {m.label}
                     </span>

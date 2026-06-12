@@ -83,7 +83,7 @@ export default async function NoticeDetailPage({
                 </span>
               )}
               <span
-                className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${kindClass}`}
+                className={`inline-flex items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium min-w-[88px] ${kindClass}`}
               >
                 {meta.label}
               </span>
@@ -168,7 +168,7 @@ export default async function NoticeDetailPage({
                   >
                     <div className="flex items-center gap-2">
                       <span
-                        className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${rKindClass}`}
+                        className={`inline-flex items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium min-w-[88px] ${rKindClass}`}
                       >
                         {rMeta.label}
                       </span>

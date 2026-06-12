@@ -273,7 +273,7 @@ export function KanbanBoard({ initial }: { initial: Columns }) {
               onDrop={(e) => handleDrop(e, status)}
             >
               <div className="flex items-center justify-between px-1.5 py-0.5">
-                <Badge tone={KANBAN_COLUMN_TONE[status]}>
+                <Badge tone={KANBAN_COLUMN_TONE[status]} className="min-w-[80px] justify-center">
                   {STATUS_LABEL[status]}
                 </Badge>
                 <span className="text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">

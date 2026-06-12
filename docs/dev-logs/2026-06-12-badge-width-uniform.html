@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>상태·공지 뱃지 너비 균일화 — 적용 보고서</title>
+<style>
+  :root{
+    --brand-50:#f0fdf4;--brand-100:#dcfce7;--brand-600:#16a34a;--brand-700:#15803d;--brand-800:#166534;
+    --ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--bg:#f8fafc;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:24px 16px 64px}
+  header.page{background:linear-gradient(135deg,var(--brand-600),var(--brand-800));
+    color:#fff;border-radius:18px;padding:26px 24px;box-shadow:0 8px 24px rgba(22,101,52,.18)}
+  header.page h1{margin:0 0 6px;font-size:21px;letter-spacing:-.02em}
+  header.page p{margin:0;opacity:.92;font-size:14px}
+  .meta{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+  .meta span{background:rgba(255,255,255,.16);padding:4px 10px;border-radius:999px;font-size:12px}
+  section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:18px;
+    box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  h2{font-size:17px;margin:0 0 14px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+  h2 .n{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+    background:var(--brand-100);color:var(--brand-700);border-radius:8px;font-size:13px;font-weight:700}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .card{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--brand-50)}
+  .card .k{font-size:12px;color:var(--muted)}
+  .card .v{font-size:19px;font-weight:800;color:var(--brand-700);margin-top:2px;letter-spacing:-.02em}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;font-weight:700;font-size:12px;color:#334155}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:6px;font-size:12px;
+    font-family:ui-monospace,Menlo,monospace}
+  .path{color:var(--brand-700);font-size:12px;font-family:ui-monospace,Menlo,monospace}
+  .demo{display:flex;flex-wrap:wrap;gap:22px;margin-top:6px}
+  .demo .col{flex:1;min-width:220px}
+  .demo h4{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:700}
+  .row{display:flex;flex-direction:column;gap:9px;padding:13px;border:1px dashed var(--line);
+    border-radius:12px;background:#fff;align-items:flex-start}
+  .pill{display:inline-flex;align-items:center;font-size:12px;line-height:1}
+  /* 상태 뱃지 (rounded-full, border, px-3 py-1, semibold) */
+  .st{border-radius:999px;border:1px solid;padding:5px 12px;font-weight:600}
+  .st.u{min-width:80px;justify-content:center}
+  .sky{background:#f0f9ff;color:#0369a1;border-color:#7dd3fc}
+  .vio{background:#f5f3ff;color:#6d28d9;border-color:#c4b5fd}
+  .emr{background:#ecfdf5;color:#047857;border-color:#6ee7b7}
+  /* 공지 뱃지 (rounded-lg, px-2 py-0.5, medium) */
+  .nt{border-radius:8px;padding:3px 8px;font-weight:500}
+  .nt.u{min-width:88px;justify-content:center}
+  .nsky{background:#f0f9ff;color:#0369a1}
+  .nvio{background:#f5f3ff;color:#6d28d9}
+  .nros{background:#fff1f2;color:#be123c}
+  .ruler{position:relative;margin-top:2px}
+  .tip{font-size:11px;color:var(--muted);margin-top:8px}
+  .ok{color:var(--brand-700);font-weight:700;font-size:11px}
+  .warnt{color:#b45309;font-weight:700;font-size:11px}
+  .check{list-style:none;padding:0;margin:6px 0 0}
+  .check li{padding:8px 0 8px 30px;position:relative;border-bottom:1px dashed var(--line);font-size:14px}
+  .check li:before{content:"✔";position:absolute;left:5px;top:7px;color:var(--brand-600);font-size:15px;font-weight:700}
+  .small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <h1>상태·공지 뱃지 너비 균일화 — 적용 보고서</h1>
+    <p>접수 상태 뱃지와 공지 뱃지를 <b>각 그룹 내 동일 너비</b>로 정렬</p>
+    <div class="meta">
+      <span>📅 2026-06-12</span>
+      <span>✅ 적용 완료 (빌드 통과)</span>
+      <span>🟢 OA서포트</span>
+    </div>
+  </header>
+
+  <section>
+    <h2><span class="n">i</span> 요약</h2>
+    <div class="cards">
+      <div class="card"><div class="k">대상 뱃지</div><div class="v">2그룹</div></div>
+      <div class="card"><div class="k">상태 뱃지 너비</div><div class="v">80px</div></div>
+      <div class="card"><div class="k">공지 뱃지 너비</div><div class="v">88px</div></div>
+      <div class="card"><div class="k">방식</div><div class="v">min-w +<br>중앙정렬</div></div>
+    </div>
+    <p class="small" style="margin-top:12px">
+      각 그룹의 <b>가장 긴 라벨</b>에 맞춰 <code>min-w-[…]</code>를 잡고 <code>justify-center</code>로
+      가운데 정렬했습니다. 짧은 라벨도 같은 너비로 채워져, 세로로 가장자리가 정렬됩니다.
+      두 그룹은 패딩·테두리·글꼴 굵기가 달라(상태=테두리·굵게, 공지=면색) 너비를 각각 산정했습니다.
+    </p>
+  </section>
+
+  <section>
+    <h2><span class="n">1</span> 접수 상태 뱃지</h2>
+    <div class="demo">
+      <div class="col">
+        <h4>BEFORE — 가변</h4>
+        <div class="row">
+          <span class="pill st sky">접수</span>
+          <span class="pill st vio">처리중</span>
+          <span class="pill st emr">답변 완료</span>
+        </div>
+        <p class="tip warnt">글자 수만큼 너비 제각각</p>
+      </div>
+      <div class="col">
+        <h4>AFTER — min-w-[80px]</h4>
+        <div class="row">
+          <span class="pill st sky u">접수</span>
+          <span class="pill st vio u">처리중</span>
+          <span class="pill st emr u">답변 완료</span>
+        </div>
+        <p class="tip ok">모두 80px · 가운데 정렬</p>
+      </div>
+    </div>
+    <table style="margin-top:14px">
+      <tr><th>파일</th><td class="path">app/_components/home/home-my-tickets.tsx</td></tr>
+      <tr><th>변경</th><td><code>… px-3 py-1</code> → <code>… px-3 py-1 <b>justify-center min-w-[80px]</b></code></td></tr>
+      <tr><th>라벨</th><td>접수 · 처리중 · 답변 완료 (최장 "답변 완료" 기준)</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span> 공지 뱃지</h2>
+    <div class="demo">
+      <div class="col">
+        <h4>BEFORE — 가변</h4>
+        <div class="row">
+          <span class="pill nt nsky">공지사항</span>
+          <span class="pill nt nvio">릴리즈</span>
+          <span class="pill nt nros">서비스 장애</span>
+        </div>
+        <p class="tip warnt">글자 수만큼 너비 제각각</p>
+      </div>
+      <div class="col">
+        <h4>AFTER — min-w-[88px]</h4>
+        <div class="row">
+          <span class="pill nt nsky u">공지사항</span>
+          <span class="pill nt nvio u">릴리즈</span>
+          <span class="pill nt nros u">서비스 장애</span>
+        </div>
+        <p class="tip ok">모두 88px · 가운데 정렬</p>
+      </div>
+    </div>
+    <table style="margin-top:14px">
+      <tr><th>파일</th><td class="path">app/_components/home/home-notice-list.tsx</td></tr>
+      <tr><th>변경</th><td><code>… rounded-lg px-2 py-0.5</code> → <code>… rounded-lg px-2 py-0.5 <b>justify-center min-w-[88px]</b></code></td></tr>
+      <tr><th>라벨</th><td>공지사항 · 릴리즈 · 서비스 장애 (최장 "서비스 장애" 기준)</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span> 적용 결과</h2>
+    <ul class="check">
+      <li><code>home-my-tickets.tsx</code> — 상태 뱃지 <code>min-w-[80px] justify-center</code> 적용</li>
+      <li><code>home-notice-list.tsx</code> — 공지 뱃지 <code>min-w-[88px] justify-center</code> 적용</li>
+      <li>타입체크(<code>tsc --noEmit</code>) 통과</li>
+    </ul>
+    <p class="small" style="margin-top:12px">
+      ※ 범위는 <b>홈 화면의 두 뱃지</b>로 한정했습니다. /notices 목록·검색결과·어드민의 동종 뱃지까지
+      같은 너비로 맞추려면 추가로 적용할 수 있습니다(말씀 주세요). 커밋·푸시는 승인 후 진행합니다.
+    </p>
+  </section>
+
+</div>
+</body>
+</html>
