@@ -49,12 +49,13 @@ export default async function AdminTicketsQueuePage({
   const params = await searchParams;
 
   const statusRaw = params.status ?? 'received';
-  const status: TicketStatus | 'all' =
+  const status: TicketStatus | 'all' | 'open' =
     statusRaw === 'received' ||
     statusRaw === 'in_progress' ||
     statusRaw === 'completed' ||
-    statusRaw === 'all'
-      ? (statusRaw as TicketStatus | 'all')
+    statusRaw === 'all' ||
+    statusRaw === 'open'
+      ? (statusRaw as TicketStatus | 'all' | 'open')
       : 'received';
 
   const sortOrder: 'asc' | 'desc' =

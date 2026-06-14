@@ -72,6 +72,8 @@ export function TicketsSummaryCards({
     tone: Tone;
     href: string;
     active: boolean;
+    /** 추가 뱃지(예: P1 카드의 '미처리') — 카운트 기준을 시각적으로 명확히 표시 */
+    secondBadge?: { label: string; icon: React.ReactNode; tone: Tone };
   }> = [
     {
       key: 'all',
@@ -111,12 +113,19 @@ export function TicketsSummaryCards({
     },
     {
       key: 'p1',
-      label: 'P1 긴급',
+      label: '긴급',
       value: p1Urgent,
       icon: <Flame className="h-4 w-4" />,
       tone: 'danger',
-      href: buildHref({ status: 'all', urgency: 'p1' }),
+      // 카드 숫자(p1Urgent)는 미완료 P1만 집계하므로, 클릭 필터도 미완료(open=접수+처리중)로 일치시킨다
+      href: buildHref({ status: 'open', urgency: 'p1' }),
       active: onList && isP1,
+      // 카운트 기준(P1 ∧ 미처리)을 '긴급' + '미처리' 두 뱃지로 명시
+      secondBadge: {
+        label: '미처리',
+        icon: <Clock className="h-4 w-4" />,
+        tone: 'warn',
+      },
     },
   ];
 
@@ -139,14 +148,27 @@ export function TicketsSummaryCards({
             )}
           >
             <CardContent className="flex flex-col gap-1 p-4">
-              <div
-                className={cn(
-                  'inline-flex w-fit items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium',
-                  TONE_BADGE[c.tone],
+              <div className="flex flex-wrap items-center gap-1">
+                <div
+                  className={cn(
+                    'inline-flex w-fit items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium',
+                    TONE_BADGE[c.tone],
+                  )}
+                >
+                  {c.icon}
+                  {c.label}
+                </div>
+                {c.secondBadge && (
+                  <div
+                    className={cn(
+                      'inline-flex w-fit items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium',
+                      TONE_BADGE[c.secondBadge.tone],
+                    )}
+                  >
+                    {c.secondBadge.icon}
+                    {c.secondBadge.label}
+                  </div>
                 )}
-              >
-                {c.icon}
-                {c.label}
               </div>
               <div className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-50">
                 {c.value}
