@@ -121,7 +121,8 @@ export async function listFaqs(
       : desc(sortColumn);
 
   try {
-    const items = await db
+    // 본조회와 count(독립) 병렬 실행
+    const itemsPromise = db
       .select({
         id: faqs.id,
         productCode: faqs.productCode,
@@ -142,10 +143,12 @@ export async function listFaqs(
       .limit(pageSize)
       .offset(offset);
 
-    const totalRows = await db
+    const totalPromise = db
       .select({ count: sql<number>`count(*)::int` })
       .from(faqs)
       .where(whereExpr);
+
+    const [items, totalRows] = await Promise.all([itemsPromise, totalPromise]);
     const total = Number(totalRows[0]?.count ?? 0);
 
     return { items, total, page, pageSize };

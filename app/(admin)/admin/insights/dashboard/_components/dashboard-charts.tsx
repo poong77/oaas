@@ -213,9 +213,9 @@ export function ProductPieChart({ data }: { data: ProductAgg[] }) {
 // ── 유형별 (가로 누적 막대: 완료 / 처리중) ─────────────────
 export function TypeBarChart({ data }: { data: TypeAgg[] }) {
   const dark = useIsDark();
-  const rows = [...data].reverse();
   const option = useMemo(() => {
   const t = chartTheme(dark);
+  const rows = [...data].reverse();
   return {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, ...tooltipBase(t) },
@@ -259,5 +259,5 @@ export function TypeBarChart({ data }: { data: TypeAgg[] }) {
     ],
   };
   }, [data, dark]);
-  return <EChart option={option} height={Math.max(160, rows.length * 34 + 50)} />;
+  return <EChart option={option} height={Math.max(160, data.length * 34 + 50)} />;
 }

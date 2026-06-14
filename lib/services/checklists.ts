@@ -126,7 +126,8 @@ export async function listChecklists(
       : desc(sortColumn);
 
   try {
-    const items = await db
+    // 본조회와 total count(독립) 병렬 실행
+    const itemsPromise = db
       .select({
         id: checklists.id,
         productCode: checklists.productCode,
@@ -146,8 +147,14 @@ export async function listChecklists(
       .orderBy(orderExpr, desc(checklists.createdAt))
       .limit(pageSize)
       .offset(offset);
+    const totalPromise = db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(checklists)
+      .where(whereExpr);
+    const [items, totalRows] = await Promise.all([itemsPromise, totalPromise]);
+    const total = Number(totalRows[0]?.count ?? 0);
 
-    // 단계 카운트 일괄 조회 (활성만)
+    // 단계 카운트 일괄 조회 (활성만) — items.id 의존이라 위 wave 이후 실행
     const ids = items.map((c) => c.id);
     const stepCounts: Record<string, number> = {};
     if (ids.length > 0) {
@@ -166,12 +173,6 @@ export async function listChecklists(
         .groupBy(checklistSteps.checklistId);
       for (const r of rows) stepCounts[r.checklistId] = Number(r.count);
     }
-
-    const totalRows = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(checklists)
-      .where(whereExpr);
-    const total = Number(totalRows[0]?.count ?? 0);
 
     return {
       items: items.map((it) => ({ ...it, stepCount: stepCounts[it.id] ?? 0 })),

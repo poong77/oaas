@@ -108,7 +108,8 @@ export async function listUsers(
       : desc(sortColumn);
 
   try {
-    const rows = await db
+    // 본조회와 count(독립) 병렬 실행
+    const rowsPromise = db
       .select({
         user: users,
         hotelName: hotels.name,
@@ -120,11 +121,13 @@ export async function listUsers(
       .limit(pageSize)
       .offset(offset);
 
-    const totalRows = await db
+    const totalPromise = db
       .select({ count: sql<number>`count(*)::int` })
       .from(users)
       .leftJoin(hotels, eq(users.hotelId, hotels.id))
       .where(whereExpr);
+
+    const [rows, totalRows] = await Promise.all([rowsPromise, totalPromise]);
     const total = Number(totalRows[0]?.count ?? 0);
 
     return {
@@ -310,17 +313,19 @@ export async function listHotels(params: ListHotelsParams = {}): Promise<{
       : desc(sortColumn);
 
   try {
-    const items = await db
+    // 본조회와 count(독립) 병렬 실행
+    const itemsPromise = db
       .select()
       .from(hotels)
       .where(whereExpr)
       .orderBy(orderExpr)
       .limit(pageSize)
       .offset(offset);
-    const totalRows = await db
+    const totalPromise = db
       .select({ count: sql<number>`count(*)::int` })
       .from(hotels)
       .where(whereExpr);
+    const [items, totalRows] = await Promise.all([itemsPromise, totalPromise]);
     return {
       items,
       total: Number(totalRows[0]?.count ?? 0),

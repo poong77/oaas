@@ -624,7 +624,8 @@ export type TicketListItem = Pick<
 
 export type ListTicketsParams = {
   q?: string;
-  status?: TicketStatus | 'all';
+  /** 'open' = 미완료(received + in_progress) 합산 필터 */
+  status?: TicketStatus | 'all' | 'open';
   productCode?: string;
   issueType?: string;
   urgency?: string;
@@ -656,7 +657,9 @@ export async function listTickets(
 
   const conditions: SQL[] = [eq(tickets.isActive, true)];
 
-  if (params.status && params.status !== 'all') {
+  if (params.status === 'open') {
+    conditions.push(inArray(tickets.status, ['received', 'in_progress']));
+  } else if (params.status && params.status !== 'all') {
     conditions.push(eq(tickets.status, params.status));
   }
   if (params.productCode) conditions.push(eq(tickets.productCode, params.productCode));
@@ -714,11 +717,10 @@ export async function listTickets(
       : desc(sortColumn);
 
   try {
-    // 메인 조회 (조인 4개)
+    // 메인 조회(조인 4개)와 total count는 서로 독립 → 병렬 실행 (Wave 1)
     const reporters = users; // alias
-    // alias 위한 SQL 작성 (drizzle alias 사용)
     // 같은 users 테이블에 두 번 조인할 수 있으나 코드 단순화를 위해 별도 쿼리로 assignee 이름 lookup.
-    const items = await db
+    const itemsPromise = db
       .select({
         id: tickets.id,
         ticketNo: tickets.ticketNo,
@@ -745,52 +747,56 @@ export async function listTickets(
       .orderBy(orderExpr, desc(tickets.createdAt))
       .limit(pageSize)
       .offset(offset);
-
-    // assignee 이름 매핑
-    const assigneeIds = Array.from(
-      new Set(items.map((it) => it.assigneeId).filter((v): v is string => !!v)),
-    );
-    const assigneeMap: Record<string, string> = {};
-    if (assigneeIds.length > 0) {
-      const rows = await db
-        .select({ id: users.id, name: users.name })
-        .from(users)
-        .where(inArray(users.id, assigneeIds));
-      for (const r of rows) assigneeMap[r.id] = r.name;
-    }
-
-    // 메시지 카운트 (kind=public만)
-    const ids = items.map((it) => it.id);
-    const messageCountMap: Record<string, number> = {};
-    const answeredAtMap: Record<string, Date> = {};
-    if (ids.length > 0) {
-      const rows = await db
-        .select({
-          ticketId: ticketMessages.ticketId,
-          count: sql<number>`count(*)::int`,
-          lastAt: sql<string | null>`max(${ticketMessages.createdAt})`,
-        })
-        .from(ticketMessages)
-        .where(
-          and(
-            eq(ticketMessages.kind, 'public'),
-            eq(ticketMessages.isActive, true),
-            inArray(ticketMessages.ticketId, ids),
-          ),
-        )
-        .groupBy(ticketMessages.ticketId);
-      for (const r of rows) {
-        messageCountMap[r.ticketId] = Number(r.count);
-        if (r.lastAt) answeredAtMap[r.ticketId] = new Date(r.lastAt);
-      }
-    }
-
-    const totalRows = await db
+    const totalPromise = db
       .select({ count: sql<number>`count(*)::int` })
       .from(tickets)
       .leftJoin(hotels, eq(tickets.hotelId, hotels.id))
       .where(whereExpr);
+    const [items, totalRows] = await Promise.all([itemsPromise, totalPromise]);
     const total = Number(totalRows[0]?.count ?? 0);
+
+    // assignee 이름 + 메시지 카운트는 둘 다 items.id에 의존하지만 서로 독립 → 병렬 (Wave 2)
+    const assigneeIds = Array.from(
+      new Set(items.map((it) => it.assigneeId).filter((v): v is string => !!v)),
+    );
+    const ids = items.map((it) => it.id);
+    const [assigneeRows, msgRows] = await Promise.all([
+      assigneeIds.length > 0
+        ? db
+            .select({ id: users.id, name: users.name })
+            .from(users)
+            .where(inArray(users.id, assigneeIds))
+        : Promise.resolve([] as { id: string; name: string }[]),
+      ids.length > 0
+        ? db
+            .select({
+              ticketId: ticketMessages.ticketId,
+              count: sql<number>`count(*)::int`,
+              lastAt: sql<string | null>`max(${ticketMessages.createdAt})`,
+            })
+            .from(ticketMessages)
+            .where(
+              and(
+                eq(ticketMessages.kind, 'public'),
+                eq(ticketMessages.isActive, true),
+                inArray(ticketMessages.ticketId, ids),
+              ),
+            )
+            .groupBy(ticketMessages.ticketId)
+        : Promise.resolve(
+            [] as { ticketId: string; count: number; lastAt: string | null }[],
+          ),
+    ]);
+
+    const assigneeMap: Record<string, string> = {};
+    for (const r of assigneeRows) assigneeMap[r.id] = r.name;
+
+    const messageCountMap: Record<string, number> = {};
+    const answeredAtMap: Record<string, Date> = {};
+    for (const r of msgRows) {
+      messageCountMap[r.ticketId] = Number(r.count);
+      if (r.lastAt) answeredAtMap[r.ticketId] = new Date(r.lastAt);
+    }
 
     return {
       items: items.map((it) => ({
@@ -806,6 +812,45 @@ export async function listTickets(
   } catch (err) {
     console.error('[tickets.listTickets] 실패:', err);
     return { items: [], total: 0, page, pageSize };
+  }
+}
+
+/**
+ * 신청자/호텔 기준 상태별 티켓 개수를 단일 GROUP BY 쿼리로 집계한다.
+ *
+ * 홈의 "내 문의" 카운트(received/in_progress/completed)처럼 목록 본문은 필요 없고
+ * 상태별 개수만 필요한 경우 사용한다. listTickets를 상태별로 N번 호출하던 것을
+ * 1쿼리로 대체한다(기존: 상태당 최대 4서브쿼리 × N).
+ */
+export async function countTicketsByStatus(filter: {
+  reporterId?: string;
+  hotelId?: string;
+}): Promise<Record<TicketStatus, number>> {
+  const result: Record<TicketStatus, number> = {
+    received: 0,
+    in_progress: 0,
+    completed: 0,
+  };
+  if (!db) return result;
+
+  const conditions: SQL[] = [eq(tickets.isActive, true)];
+  if (filter.reporterId) conditions.push(eq(tickets.reporterId, filter.reporterId));
+  if (filter.hotelId) conditions.push(eq(tickets.hotelId, filter.hotelId));
+
+  try {
+    const rows = await db
+      .select({
+        status: tickets.status,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(tickets)
+      .where(and(...conditions))
+      .groupBy(tickets.status);
+    for (const r of rows) result[r.status] = Number(r.count);
+    return result;
+  } catch (err) {
+    console.error('[tickets.countTicketsByStatus] 실패:', err);
+    return result;
   }
 }
 

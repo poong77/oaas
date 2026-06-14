@@ -257,7 +257,8 @@ export async function listArticles(
     (params.sortOrder ?? 'desc') === 'asc' ? asc(sortColumn) : desc(sortColumn);
 
   try {
-    const items = await db
+    // 본조회와 count(독립) 병렬 실행
+    const itemsPromise = db
       .select({
         id: articles.id,
         slug: articles.slug,
@@ -286,7 +287,7 @@ export async function listArticles(
       .limit(pageSize)
       .offset(offset);
 
-    const totalRows = await db
+    const totalPromise = db
       .select({
         count: sql<number>`count(*)::int`,
         published: sql<number>`count(*) filter (where ${articles.publishedAt} is not null)::int`,
@@ -294,6 +295,8 @@ export async function listArticles(
       })
       .from(articles)
       .where(whereExpr);
+
+    const [items, totalRows] = await Promise.all([itemsPromise, totalPromise]);
     const total = Number(totalRows[0]?.count ?? 0);
     const totalPublished = Number(totalRows[0]?.published ?? 0);
     const totalDraft = Number(totalRows[0]?.draft ?? 0);

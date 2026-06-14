@@ -23,8 +23,8 @@ import {
   listActivePopupNotices,
   listRecentPublishedNotices,
 } from '@/lib/services/notices';
-import { listTickets } from '@/lib/services/tickets';
-import type { TicketStatus, UserRole } from '@/db/schema';
+import { listTickets, countTicketsByStatus } from '@/lib/services/tickets';
+import type { UserRole } from '@/db/schema';
 import { getCurrentUser, isManagerOrAdmin } from '@/lib/permissions';
 import { HomePopupBanner } from '@/components/notices/home-popup-banner';
 import { HomeHero } from './_components/home/home-hero';
@@ -44,19 +44,12 @@ async function loadMyTickets(user: {
       ? { hotelId: user.hotelId }
       : { reporterId: user.id };
   const viewer = { id: user.id, role: user.role, hotelId: user.hotelId };
-  const [recent, rc, ip, cp, productCats, issueCats] = await Promise.all([
+  const [recent, counts, productCats, issueCats] = await Promise.all([
     listTickets({ ...filter, sortBy: 'created_at', sortOrder: 'desc', pageSize: 5 }, viewer),
-    listTickets({ ...filter, status: 'received', pageSize: 5 }, viewer),
-    listTickets({ ...filter, status: 'in_progress', pageSize: 5 }, viewer),
-    listTickets({ ...filter, status: 'completed', pageSize: 5 }, viewer),
+    countTicketsByStatus(filter),
     getCategoriesByType('product'),
     getCategoriesByType('issue_type'),
   ]);
-  const counts = {
-    received: rc.total,
-    in_progress: ip.total,
-    completed: cp.total,
-  } as Record<TicketStatus, number>;
   const productMap = Object.fromEntries(productCats.map((c) => [c.code, c.label]));
   const issueMap = Object.fromEntries(issueCats.map((c) => [c.code, c.label]));
   return { counts, items: recent.items, productMap, issueMap };
