@@ -19,10 +19,10 @@ import { STATUS_LABEL } from '@/lib/services/tickets-meta';
 import type { TicketListItem } from '@/lib/services/tickets';
 import type { TicketStatus } from '@/db/schema';
 
-const STATUS_TONE: Record<TicketStatus, 'slate' | 'brand' | 'warn' | 'success'> = {
+const STATUS_TONE: Record<TicketStatus, 'dark' | 'brand' | 'warn' | 'success'> = {
   received: 'brand',
   in_progress: 'warn',
-  completed: 'success',
+  completed: 'dark',
 };
 
 function fmtDate(d: Date | null | string): string {

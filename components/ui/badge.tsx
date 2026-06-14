@@ -9,6 +9,7 @@ const badgeVariants = cva(
       tone: {
         slate:
           'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+        dark: 'bg-slate-600 text-white dark:bg-slate-600 dark:text-slate-50',
         brand:
           'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300',
         success:

@@ -14,10 +14,11 @@ import { CheckCircle2, Clock, Flame, Hourglass, LayoutList } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-type Tone = 'slate' | 'brand' | 'warn' | 'success' | 'danger';
+type Tone = 'slate' | 'dark' | 'brand' | 'warn' | 'success' | 'danger';
 
 const TONE_BADGE: Record<Tone, string> = {
   slate: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  dark: 'bg-slate-600 text-white dark:bg-slate-600 dark:text-slate-50',
   brand: 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300',
   warn: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
   success:
@@ -27,6 +28,7 @@ const TONE_BADGE: Record<Tone, string> = {
 
 const TONE_RING: Record<Tone, string> = {
   slate: 'ring-slate-400 dark:ring-slate-500',
+  dark: 'ring-slate-600 dark:ring-slate-400',
   brand: 'ring-brand-500',
   warn: 'ring-amber-500',
   success: 'ring-emerald-500',
@@ -107,7 +109,7 @@ export function TicketsSummaryCards({
       label: '완료',
       value: completed,
       icon: <CheckCircle2 className="h-4 w-4" />,
-      tone: 'success',
+      tone: 'dark',
       href: buildHref({ status: 'completed', urgency: null }),
       active: onList && !isP1 && curStatus === 'completed',
     },
