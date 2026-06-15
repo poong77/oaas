@@ -1,29 +1,24 @@
 'use client';
 
 /**
- * LP-01 Hero — 7:5 그리드 + 우측 sidebar 슬롯.
+ * LP-01 Hero — "무엇을 도와드릴까요?" + 통합검색 + 인기검색어.
  *
- * - 좌측 (lg:col-span-7): 배지 + 통합검색 + 인기검색어 칩
- * - 우측 (lg:col-span-5): sidebar prop (서비스 상태 + 최근 업데이트 박스)
- * - 모바일/태블릿(< lg): 세로 스택 (좌 → 우 순서)
- * - text-base 이상으로 iOS Safari 줌 방지
+ * - 콘텐츠 프레임은 다른 섹션과 동일하게 max-w-[1200px]로 고정.
+ * - 내부 제목·검색·키워드는 중앙 컬럼(max-w-3xl)으로 가운데 정렬.
+ * - text-base 이상으로 iOS Safari 줌 방지.
  * - Enter / 버튼 → /search?q=...
- *
- * sidebar는 async 서버 컴포넌트이므로 부모(page.tsx)에서 렌더된 노드를 prop으로 전달받는다.
  */
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { POPULAR_KEYWORDS } from './_constants';
 
 export function HomeHero({
-  sidebar,
   keywords,
   canManage,
 }: {
-  sidebar?: ReactNode;
   /** 인기검색어 칩. 미전달 시 하드코딩 fallback. */
   keywords?: string[];
   /** 매니저·어드민이면 칩 끝에 인기검색어 관리(+) 버튼 노출. */
@@ -44,19 +39,10 @@ export function HomeHero({
 
   return (
     <section className="relative overflow-hidden bg-white pb-10 pt-10 dark:bg-slate-950 sm:pt-14">
-      <div
-        className={`mx-auto grid w-full gap-8 px-4 sm:px-6 lg:gap-10 lg:px-8 ${
-          sidebar ? 'max-w-[1200px] lg:grid-cols-12' : 'max-w-3xl'
-        }`}
-      >
-        {/* 검색 영역 — sidebar 있으면 좌측 7칸, 없으면 중앙 정렬 */}
-        <div
-          className={`flex flex-col gap-6 ${
-            sidebar
-              ? 'items-center text-center lg:col-span-7 lg:items-start lg:text-left'
-              : 'items-center text-center'
-          }`}
-        >
+      {/* 콘텐츠 프레임 — 다른 섹션과 동일한 1200px 고정 */}
+      <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
+        {/* 제목·검색·키워드 — 1200px 안에서 중앙 컬럼(가운데 정렬) */}
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
           <h1 className="text-display-medium-bold tracking-tight text-slate-900 dark:text-white">
             무엇을 도와드릴까요?
           </h1>
@@ -87,7 +73,7 @@ export function HomeHero({
             </form>
 
             {/* 추천 키워드 — 한 줄 고정(넘치면 가로 스크롤) */}
-            <ul className="flex flex-nowrap items-center gap-2 overflow-x-auto justify-center lg:justify-start [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <ul className="flex flex-nowrap items-center justify-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {popular.map((kw) => (
                 <li key={kw} className="shrink-0">
                   <Link
@@ -113,11 +99,6 @@ export function HomeHero({
             </ul>
           </div>
         </div>
-
-        {/* 우측: sidebar 슬롯 (lg:col-span-5) */}
-        {sidebar && (
-          <div className="flex flex-col lg:col-span-5">{sidebar}</div>
-        )}
       </div>
     </section>
   );
