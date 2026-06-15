@@ -140,9 +140,6 @@ export function TicketThread({
                   )
                 )}
               </div>
-              <span className="text-slate-400">
-                {fmtDateTime(m.createdAt)}
-              </span>
             </div>
             <MarkdownView source={m.content} className="text-sm" />
             {isInternal && (
