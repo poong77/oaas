@@ -38,9 +38,9 @@ export function HomeHero({
   }
 
   return (
-    <section className="relative overflow-hidden bg-white pb-10 pt-10 dark:bg-slate-950 sm:pt-14">
-      {/* 콘텐츠 프레임 — 다른 섹션과 동일한 1200px 고정 */}
-      <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-white px-4 pb-10 pt-10 dark:bg-slate-950 sm:px-6 sm:pt-14 lg:px-8">
+      {/* 콘텐츠 프레임 — 다른 섹션과 동일한 1200px 고정 (패딩은 바깥 section에) */}
+      <div className="mx-auto w-full max-w-[1200px]">
         {/* 제목·검색·키워드 — 1200px 안에서 중앙 컬럼(가운데 정렬) */}
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
           <h1 className="text-display-medium-bold tracking-tight text-slate-900 dark:text-white">

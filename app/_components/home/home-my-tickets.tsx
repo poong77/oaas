@@ -51,8 +51,9 @@ export function HomeMyTickets({
   return (
     <section
       aria-labelledby="my-tickets-heading"
-      className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8"
+      className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8"
     >
+      <div className="mx-auto w-full max-w-[1200px]">
       <div className="mb-4 flex items-center justify-between">
         <h2 id="my-tickets-heading" className="text-heading-medium-bold tracking-tight">
           내 문의
@@ -104,7 +105,7 @@ export function HomeMyTickets({
                     className="grid grid-cols-[80px_minmax(0,1fr)_auto] items-center gap-x-4 px-2 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
                   >
                     <span
-                      className={`inline-flex w-fit items-center justify-center whitespace-nowrap rounded-md border px-1.5 py-1 text-label-small-semibold ${m.badge}`}
+                      className={`inline-flex w-full items-center justify-center whitespace-nowrap rounded-md border px-1.5 py-1 text-label-small-semibold ${m.badge}`}
                     >
                       {m.label}
                     </span>
@@ -125,6 +126,7 @@ export function HomeMyTickets({
             아직 접수한 문의가 없습니다.
           </div>
         )}
+      </div>
       </div>
     </section>
   );

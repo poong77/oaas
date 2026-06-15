@@ -26,8 +26,9 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
   return (
     <section
       aria-labelledby="home-notice-heading"
-      className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8"
+      className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8"
     >
+      <div className="mx-auto w-full max-w-[1200px]">
       <div className="mb-4 flex items-center justify-between">
         <h2
           id="home-notice-heading"
@@ -55,7 +56,7 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
                   className="grid grid-cols-[100px_minmax(0,1fr)_auto] items-center gap-x-4 px-2 py-6 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
                 >
                   <span
-                    className={`inline-flex w-fit items-center justify-center whitespace-nowrap rounded-full px-3 py-1 text-label-small-medium ${m.cls}`}
+                    className={`inline-flex w-full items-center justify-center whitespace-nowrap rounded-full px-3 py-1 text-label-small-medium ${m.cls}`}
                   >
                     {m.label}
                   </span>
@@ -83,6 +84,7 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
           </p>
         </div>
       )}
+      </div>
     </section>
   );
 }
