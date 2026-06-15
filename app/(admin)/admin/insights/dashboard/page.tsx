@@ -100,7 +100,7 @@ export default async function InsightDashboardPage({
         <ActionCard
           tone="danger"
           icon={<TriangleAlert className="h-5 w-5" />}
-          label="긴급 처리건 (P1 미완료)"
+          label="긴급건"
           value={actionCards.p1Open}
           note="urgency P1 · 미완료 전체"
           href="/admin/tickets?status=open&urgency=p1"
@@ -108,9 +108,9 @@ export default async function InsightDashboardPage({
         <ActionCard
           tone="warn"
           icon={<Clock className="h-5 w-5" />}
-          label="장기 지연건 (영업일 3일+)"
+          label="지연건"
           value={actionCards.longDelayed}
-          note="미완료 · 접수 후 영업일 3일 초과"
+          note="처리중 · 접수 후 영업일 3일 초과"
           href="/admin/tickets?longDelayed=1"
         />
       </section>

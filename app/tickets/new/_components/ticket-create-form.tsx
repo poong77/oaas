@@ -149,6 +149,8 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<UploadedAttachment[]>([]);
+  // 첨부 업로드 진행 여부 — 업로드 완료 전 접수 차단
+  const [uploading, setUploading] = useState(false);
   // 발송 방법 — 등록된 수단 기준 기본 선택(이메일 우선). 둘 다 없으면 이메일.
   const [contactMethods, setContactMethods] = useState<Array<'sms' | 'email'>>(
     () =>
@@ -206,6 +208,13 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
     e.preventDefault();
     setFieldErrors({});
     setServerError(null);
+
+    // 첨부 파일이 모두 업로드된 뒤에만 접수 허용 (누락 방지)
+    if (uploading) {
+      setServerError('첨부 파일 업로드가 완료된 뒤 접수할 수 있습니다');
+      toast.error('첨부 파일 업로드가 완료될 때까지 기다려 주세요');
+      return;
+    }
 
     const errs: Record<string, string> = {};
     if (title.trim().length < 2) errs.title = '제목을 2자 이상 입력하세요';
@@ -396,6 +405,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
             attachments={attachments}
             onChange={setAttachments}
             disabled={busy}
+            onUploadingChange={setUploading}
           />
         </div>
       </section>
@@ -452,10 +462,10 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
 
       <button
         type="submit"
-        disabled={busy}
+        disabled={busy || uploading}
         className="w-full rounded-lg bg-brand-600 py-3.5 text-base font-semibold text-white transition-colors hover:bg-brand-500 disabled:opacity-60"
       >
-        {pending ? '접수 중...' : '접수하기'}
+        {uploading ? '파일 업로드 중…' : pending ? '접수 중...' : '접수하기'}
       </button>
     </form>
 

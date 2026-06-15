@@ -2120,9 +2120,9 @@ async function main() {
     mainPhone: '1833-4702',
     mainEmail: 'as@oapms.com',
     arsItems: [
-      { num: '1', label: '시스템 사용 문의' },
+      { num: '1', label: '시스템 문의' },
       { num: '2', label: '도입 상담' },
-      { num: '3', label: '경영·회계 기타' },
+      { num: '3', label: '회계·기타' },
     ],
     faxNumber: '0505-300-4702',
     websiteUrl: 'www.oapms.com',

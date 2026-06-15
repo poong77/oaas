@@ -66,16 +66,25 @@ export function LoginForm({
           duration: 10000,
         });
       }
-      // 로그인 직후 도착지는 역할별 기본 화면으로 보낸다.
-      // (보호경로에서 넘어온 callbackUrl이 삭제/미발행 공지 등 404 빈 페이지로
-      //  멈추는 문제 방지 — 어드민·매니저는 /admin 영역만 callbackUrl 존중,
-      //  호텔리어는 항상 홈(/)으로 진입)
+      // 로그인 전 진입하려던 화면(callbackUrl)으로 복귀시킨다.
+      // 안전한 내부 상대경로(//, 외부 URL 제외)만 허용.
+      //  - 어드민·매니저: /admin 영역 callbackUrl만 존중, 그 외엔 역할별 기본 화면
+      //  - 호텔리어: /admin 이외의 안전한 경로면 원래 화면으로 복귀
       const role = session?.user?.role;
       const isStaff = role === 'admin' || role === 'manager';
-      const destination =
-        isStaff && callbackUrl && callbackUrl.startsWith('/admin')
-          ? callbackUrl
-          : defaultLandingFor(role);
+      const isSafeCallback =
+        !!callbackUrl &&
+        callbackUrl.startsWith('/') &&
+        !callbackUrl.startsWith('//');
+      let destination = defaultLandingFor(role);
+      if (isSafeCallback) {
+        const toAdmin = callbackUrl!.startsWith('/admin');
+        if (isStaff) {
+          destination = toAdmin ? callbackUrl! : defaultLandingFor(role);
+        } else {
+          destination = toAdmin ? defaultLandingFor(role) : callbackUrl!;
+        }
+      }
       router.push(destination);
       router.refresh();
     });

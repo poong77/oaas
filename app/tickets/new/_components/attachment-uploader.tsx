@@ -9,7 +9,7 @@
  * - 50MB 제한, 한 티켓 총 200MB soft 가드
  */
 
-import { useCallback, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   CheckCircle2,
   CircleAlert,
@@ -70,15 +70,24 @@ export function AttachmentUploader({
   attachments,
   onChange,
   disabled,
+  onUploadingChange,
 }: {
   attachments: UploadedAttachment[];
   onChange: (next: UploadedAttachment[]) => void;
   disabled?: boolean;
+  /** 업로드 진행 중 여부 변화를 부모에 알림(접수 버튼 게이팅용). */
+  onUploadingChange?: (uploading: boolean) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const [items, setItems] = useState<LocalFileState[]>([]);
   const [dragOver, setDragOver] = useState(false);
+
+  // 진행 중(uploading) 파일이 하나라도 있으면 부모에 알림 → 접수 버튼 비활성화
+  const isUploading = items.some((it) => it.status === 'uploading');
+  useEffect(() => {
+    onUploadingChange?.(isUploading);
+  }, [isUploading, onUploadingChange]);
 
   const upload = useCallback(
     async (file: File) => {

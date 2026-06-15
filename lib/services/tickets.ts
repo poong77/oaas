@@ -156,9 +156,9 @@ import { STATUS_LABEL } from './tickets-meta';
 import { businessDaysBetween, loadHolidaySet } from './business-days';
 
 /**
- * 장기 지연(미완료 · 접수 후 영업일 3일 초과) 티켓 ID 집합.
+ * 지연건(처리중 단계 · 접수 후 영업일 3일 초과) 티켓 ID 집합.
  * 대시보드 액션카드와 동일 기준(insights.getActionCards). 영업일 계산은 JS측에서
- * 수행하므로 후보(미완료) id+createdAt만 끌어와 필터한다.
+ * 수행하므로 후보(처리중) id+createdAt만 끌어와 필터한다.
  */
 async function getLongDelayedTicketIds(): Promise<string[]> {
   if (!db) return [];
@@ -169,7 +169,8 @@ async function getLongDelayedTicketIds(): Promise<string[]> {
       .where(
         and(
           eq(tickets.isActive, true),
-          inArray(tickets.status, ['received', 'in_progress']),
+          // 지연건 = 처리중(in_progress) 단계 ∩ 접수 후 영업일 3일 초과
+          eq(tickets.status, 'in_progress'),
         ),
       ),
     loadHolidaySet(),
@@ -652,7 +653,7 @@ export type ListTicketsParams = {
   q?: string;
   /** 'open' = 미완료(received + in_progress) 합산 필터 */
   status?: TicketStatus | 'all' | 'open';
-  /** 장기 지연(미완료 · 접수 후 영업일 3일 초과)만 필터 */
+  /** 지연건(처리중 단계 · 접수 후 영업일 3일 초과)만 필터 */
   longDelayed?: boolean;
   productCode?: string;
   issueType?: string;
@@ -686,7 +687,7 @@ export async function listTickets(
   const conditions: SQL[] = [eq(tickets.isActive, true)];
 
   if (params.longDelayed) {
-    // 장기 지연 = 미완료(open) ∩ 영업일 3일 초과. 후보 id를 미리 산출해 IN 조건으로.
+    // 지연건 = 처리중(in_progress) ∩ 영업일 3일 초과. 후보 id를 미리 산출해 IN 조건으로.
     const ids = await getLongDelayedTicketIds();
     if (ids.length === 0) return { items: [], total: 0, page, pageSize };
     conditions.push(inArray(tickets.id, ids));

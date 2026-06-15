@@ -7,7 +7,8 @@
  *      어드민/매니저로 로그인한 상태에서도 프론트 페이지(/, /help, /faq …)
  *      네비게이션이 끊기지 않도록 함. Header 내부에서 역할별 메뉴(문의 관리·어드민
  *      메뉴 배지)는 이미 분기 처리되어 있음.
- *   3. EmergencyBanner·ChatbotFab은 호텔리어 모드에서만 노출 (운영 비용 최소화).
+ *   3. EmergencyBanner는 호텔리어 모드에서만 노출 (운영 비용 최소화).
+ *      (우하단 챗봇 FAB는 전체 페이지에서 제거됨)
  *
  * 경로 판별:
  *   - proxy.ts가 모든 요청에 `x-pathname` 헤더를 주입.
@@ -20,9 +21,7 @@ import { resolveRoleMode } from '@/lib/types/role-mode';
 import { EmergencyBanner } from './emergency-banner';
 import { Header } from './header';
 import { SiteFooter } from './site-footer';
-import { ChatbotFab } from '@/components/chatbot/chatbot-fab';
 import { ContactPanel } from '@/components/contact/contact-panel';
-import { getChatbotEmbedUrl } from '@/lib/services/chatbot-meta';
 
 export async function RoleScope({ children }: { children: React.ReactNode }) {
   const [session, hdrs] = await Promise.all([auth(), headers()]);
@@ -38,10 +37,8 @@ export async function RoleScope({ children }: { children: React.ReactNode }) {
 
   // Header는 어드민 워크스페이스(/admin/*)·랜딩 시안 외 전 영역에서 노출
   const showHeader = !isStandaloneShell;
-  // EmergencyBanner·ChatbotFab은 호텔리어 모드 전용
+  // EmergencyBanner는 호텔리어 모드 전용 (챗봇 FAB는 전체 페이지에서 제거됨)
   const showHotelierExtras = isHotelier && !isStandaloneShell;
-
-  const chatbotEmbedUrl = showHotelierExtras ? getChatbotEmbedUrl() : '';
 
   return (
     <div data-role={mode} className="contents">
@@ -52,7 +49,6 @@ export async function RoleScope({ children }: { children: React.ReactNode }) {
 
       {showHeader && <ContactPanel variant="footer" />}
       {showHeader && <SiteFooter />}
-      {showHotelierExtras && <ChatbotFab embedUrl={chatbotEmbedUrl} />}
     </div>
   );
 }

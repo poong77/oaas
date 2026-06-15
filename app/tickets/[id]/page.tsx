@@ -12,7 +12,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Check, CheckCircle2, Paperclip } from 'lucide-react';
-import { MarkdownView } from '@/components/articles/markdown-view';
 import { requireAuth } from '@/lib/permissions';
 import {
   getTicketDetail,
@@ -179,7 +178,10 @@ export default async function HotelierTicketDetailPage({
                 상세 내용
               </span>
               <div className="rounded-lg bg-[#F7F8F9] p-4 dark:bg-slate-800/60">
-                <MarkdownView source={ticket.content} className="text-sm" />
+                {/* 상세 내용 — 마크다운 문단 파싱 없이 원본 줄바꿈만 보존(줄글 흐름·첫줄 flush) */}
+                <p className="whitespace-pre-wrap break-words text-sm leading-7 text-[#1A1C20] dark:text-slate-100">
+                  {ticket.content}
+                </p>
               </div>
             </div>
 
@@ -206,7 +208,9 @@ export default async function HotelierTicketDetailPage({
             <h2 className="text-base font-bold text-[#1A1C20] dark:text-white">
               답변 내역
             </h2>
-            {replies.length > 0 ? (
+            {/* 답변 내역 — 운영팀/사용자 공개 메시지가 있을 때만 노출.
+                접수 단계엔 보통 답변이 없어 보완 폼만 보인다(빈 placeholder 제거). */}
+            {replies.length > 0 && (
               <TicketThread
                 messages={ticket.messages.map((m) => ({
                   id: m.id,
@@ -219,10 +223,6 @@ export default async function HotelierTicketDetailPage({
                 }))}
                 showInternalMemo={false}
               />
-            ) : (
-              <div className="flex items-center justify-center rounded-lg bg-[#F7F8F9] py-16 text-sm text-[#868B94] dark:bg-slate-800/60 dark:text-slate-400">
-                아직 답변이 없습니다.
-              </div>
             )}
 
             {/* 답변 보완 — 접수(received) 단계에서만 */}
@@ -277,7 +277,7 @@ export default async function HotelierTicketDetailPage({
                       <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white ${
                           done
-                            ? 'bg-[#00A36B]'
+                            ? 'bg-[#868B94]'
                             : active
                               ? ACTIVE_COLOR[ticket.status]
                               : 'bg-[#DCDEE3]'
@@ -287,7 +287,7 @@ export default async function HotelierTicketDetailPage({
                       </span>
                       {!last && (
                         <span
-                          className={`my-1 w-px flex-1 ${done ? 'bg-[#00A36B]' : 'bg-[#DCDEE3]'}`}
+                          className={`my-1 w-px flex-1 ${done ? 'bg-[#D1D3D8]' : 'bg-[#DCDEE3]'}`}
                         />
                       )}
                     </div>

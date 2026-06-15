@@ -59,8 +59,14 @@ export function TicketThread({
   showInternalMemo: boolean;
   emptyHint?: string;
 }) {
+  // 호텔리어(showInternalMemo=false) 화면에선 상태 변경 메시지를 숨긴다.
+  // 진행 상태는 상태 카드(스테퍼)에 이미 표시되므로 답변 내역과 중복되지 않게 한다.
   const visibleMessages = messages.filter((m) =>
-    showInternalMemo ? true : m.kind !== 'internal_memo' && m.kind !== 'system',
+    showInternalMemo
+      ? true
+      : m.kind !== 'internal_memo' &&
+        m.kind !== 'system' &&
+        m.kind !== 'status_change',
   );
 
   if (visibleMessages.length === 0) {

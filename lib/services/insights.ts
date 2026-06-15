@@ -147,7 +147,6 @@ type RangeTicket = {
   updatedAt: Date;
 };
 
-const OPEN_STATUSES = ['received', 'in_progress'] as const;
 const ACCEPTED_STATUSES = ['in_progress', 'completed'] as const;
 
 // ─────────────────────────────────────────────────────────────────────
@@ -479,7 +478,8 @@ async function getActionCards(holidays: Set<string>): Promise<ActionCards> {
         .where(
           and(
             eq(tickets.isActive, true),
-            inArray(tickets.status, [...OPEN_STATUSES]),
+            // 지연건 = 처리중(in_progress) 단계 ∩ 접수 후 영업일 3일 초과
+            eq(tickets.status, 'in_progress'),
           ),
         ),
     ]);

@@ -49,6 +49,7 @@ export function Header() {
           <Link
             href="/"
             aria-label="OAtech Support 홈으로"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-1.5"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
