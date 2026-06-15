@@ -775,24 +775,27 @@ export async function updateNoticeById(
 ): Promise<{ ok: boolean; message?: string }> {
   if (!db) return { ok: false, message: 'DB_NOT_READY' };
   try {
-    await db
-      .update(notices)
-      .set({
-        kind: input.kind,
-        productCode: input.productCode ?? null,
-        title: input.title,
-        bodyMarkdown: input.bodyMarkdown,
-        pinned: input.pinned ?? false,
-        banner: input.banner ?? false,
-        bannerUntil: input.bannerUntil ?? null,
-        popupEnabled: input.popupEnabled ?? false,
-        popupImageUrl: input.popupImageUrl ?? null,
-        popupImageWidth: input.popupImageWidth ?? null,
-        popupImageHeight: input.popupImageHeight ?? null,
-        popupSize: input.popupSize ?? 'medium',
-        popupUntil: input.popupUntil ?? null,
-      })
-      .where(eq(notices.id, id));
+    const setValues: Partial<NewNotice> = {
+      kind: input.kind,
+      productCode: input.productCode ?? null,
+      title: input.title,
+      bodyMarkdown: input.bodyMarkdown,
+      pinned: input.pinned ?? false,
+      banner: input.banner ?? false,
+      bannerUntil: input.bannerUntil ?? null,
+      popupEnabled: input.popupEnabled ?? false,
+      popupImageUrl: input.popupImageUrl ?? null,
+      popupImageWidth: input.popupImageWidth ?? null,
+      popupImageHeight: input.popupImageHeight ?? null,
+      popupSize: input.popupSize ?? 'medium',
+      popupUntil: input.popupUntil ?? null,
+    };
+    // 발행하기(publish=true): published_at 설정. 이미 발행된 공지는 최초 발행일자 보존(COALESCE).
+    // Draft 저장(publish=false)은 published_at을 건드리지 않는다(발행 취소는 togglePublish 전용).
+    if (input.publish) {
+      setValues.publishedAt = sql`COALESCE(${notices.publishedAt}, now())` as unknown as Date;
+    }
+    await db.update(notices).set(setValues).where(eq(notices.id, id));
     return { ok: true };
   } catch (err) {
     console.error('[notices.updateNoticeById] 실패:', err);
