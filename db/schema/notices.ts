@@ -53,19 +53,23 @@ export type NoticeKind = (typeof noticeKindEnum.enumValues)[number];
 /**
  * 홈 팝업 배너 크기 프리셋 (NT-04).
  *
- * small  — max-w-sm  (작은 안내/이벤트)
- * medium — max-w-md  (기본)
- * large  — max-w-2xl (메인 프로모션)
+ * small    — max-w-sm  (작은 안내/이벤트)
+ * medium   — max-w-md  (기본)
+ * large    — max-w-2xl (메인 프로모션)
+ * original — 이미지 원본 크기 그대로 노출 (뷰포트 한도 내). 프리셋 너비 강제 없음
+ *
+ * ⚠️ pg enum이 아니라 text 컬럼이다. drizzle-kit push가 enum 값 추가 시
+ *    `ALTER COLUMN ... SET DATA TYPE` 를 비멱등으로 생성해 매 배포마다 notices를
+ *    파괴한 사고(2026-06-15) 이후, 검증은 앱(zod)에서만 하고 DB는 text로 둔다.
  */
-export const noticePopupSizeEnum = pgEnum('notice_popup_size', [
+export const NOTICE_POPUP_SIZES = [
   'small',
   'medium',
   'large',
-  /** original — 이미지 원본 크기 그대로 노출 (뷰포트 한도 내). 프리셋 너비 강제 없음 */
   'original',
-]);
+] as const;
 
-export type NoticePopupSize = (typeof noticePopupSizeEnum.enumValues)[number];
+export type NoticePopupSize = (typeof NOTICE_POPUP_SIZES)[number];
 
 export const notices = pgTable(
   'notices',
@@ -86,8 +90,8 @@ export const notices = pgTable(
     popupEnabled: boolean('popup_enabled').notNull().default(false),
     /** 팝업 배너 이미지 URL (Vercel Blob). popup_enabled=true의 노출 필수 조건 */
     popupImageUrl: text('popup_image_url'),
-    /** 팝업 모달 크기 프리셋 */
-    popupSize: noticePopupSizeEnum('popup_size').notNull().default('medium'),
+    /** 팝업 모달 크기 프리셋 (text — enum 아님. 값 검증은 앱 zod에서) */
+    popupSize: text('popup_size').notNull().default('medium').$type<NoticePopupSize>(),
     /** 팝업 이미지 원본 px 치수 — CLS 방지용(<img> width/height). 업로드 시 sharp가 측정. nullable(레거시 행) */
     popupImageWidth: integer('popup_image_width'),
     popupImageHeight: integer('popup_image_height'),

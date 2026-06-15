@@ -260,6 +260,29 @@ if [ ! -L ${DEPLOY_PATH}/.env ]; then
     ln -sfn ${DEPLOY_PATH}/standalone/.env ${DEPLOY_PATH}/.env
 fi
 
+# ⚠️ 스키마 적용(push --force) 직전 DB 전체 덤프 — 안전망.
+# 2026-06-15 enum 비멱등 디프로 notices 테이블이 통째로 유실된 사고 이후 추가.
+# 백업 실패/비정상이면 스키마 적용 전에 배포를 중단(fail-safe)한다.
+echo ">>> DB backup before schema apply (pg_dump)..."
+DB_BACKUP_DIR=${DEPLOY_PATH}/backups/db
+mkdir -p \$DB_BACKUP_DIR
+DB_BACKUP_RAW=\$DB_BACKUP_DIR/oaas_prd_\$(date +%Y%m%d_%H%M%S).sql
+sudo docker exec oaas-pg pg_dump -U oaas -d oaas_prd --no-owner --no-privileges > \$DB_BACKUP_RAW || {
+    echo "❌ pg_dump 실패 — 백업 없이 스키마 적용 불가, 배포 중단"
+    rm -f \$DB_BACKUP_RAW
+    exit 1
+}
+DB_BACKUP_SZ=\$(stat -c%s "\$DB_BACKUP_RAW" 2>/dev/null || echo 0)
+if [ "\$DB_BACKUP_SZ" -lt 50000 ]; then
+    echo "❌ DB 백업이 비정상적으로 작음(\${DB_BACKUP_SZ}B) — 배포 중단"
+    rm -f \$DB_BACKUP_RAW
+    exit 1
+fi
+gzip -f \$DB_BACKUP_RAW
+echo "DB backup saved: \${DB_BACKUP_RAW}.gz (raw \${DB_BACKUP_SZ} bytes)"
+# 최근 10개만 보존
+ls -t \$DB_BACKUP_DIR/*.sql.gz 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true
+
 echo ">>> Apply DB schema (drizzle-kit push --force)..."
 # 현재 db/migrations/meta/ 가 gitignore라 drizzle-kit migrate가 동작 불가.
 # push로 schema 비교·자동 적용. strict:true (drizzle.config.ts)라 destructive 변경은 에러.
