@@ -6,7 +6,7 @@
  */
 
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Bell } from 'lucide-react';
 import type { NoticeListItem } from '@/lib/services/notices';
 import type { NoticeKind } from '@/db/schema';
 
@@ -22,8 +22,7 @@ function fmtDate(d: Date | null): string {
 }
 
 export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
-  if (items.length === 0) return null;
-
+  // 공지가 없어도 섹션은 유지하고 EmptyState를 노출한다(레이아웃 빈 구멍 방지).
   return (
     <section
       aria-labelledby="home-notice-heading"
@@ -45,31 +44,45 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
         </Link>
       </div>
 
-      <ul className="border-t border-slate-200 dark:border-slate-800">
-        {items.map((n) => {
-          const m = KIND_META[n.kind];
-          return (
-            <li key={n.id} className="border-b border-slate-200 dark:border-slate-800">
-              <Link
-                href={`/notices/${n.id}`}
-                className="grid grid-cols-[100px_minmax(0,1fr)_auto] items-center gap-x-4 px-2 py-6 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
-              >
-                <span
-                  className={`inline-flex w-fit items-center justify-center whitespace-nowrap rounded-full px-3 py-1 text-label-small-medium ${m.cls}`}
+      {items.length > 0 ? (
+        <ul className="border-t border-slate-200 dark:border-slate-800">
+          {items.map((n) => {
+            const m = KIND_META[n.kind];
+            return (
+              <li key={n.id} className="border-b border-slate-200 dark:border-slate-800">
+                <Link
+                  href={`/notices/${n.id}`}
+                  className="grid grid-cols-[100px_minmax(0,1fr)_auto] items-center gap-x-4 px-2 py-6 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
                 >
-                  {m.label}
-                </span>
-                <span className="min-w-0 truncate text-title-medium-medium text-slate-800 dark:text-slate-100">
-                  {n.title}
-                </span>
-                <span className="shrink-0 text-body-medium-medium text-slate-400 dark:text-slate-500">
-                  {fmtDate(n.publishedAt)}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+                  <span
+                    className={`inline-flex w-fit items-center justify-center whitespace-nowrap rounded-full px-3 py-1 text-label-small-medium ${m.cls}`}
+                  >
+                    {m.label}
+                  </span>
+                  <span className="min-w-0 truncate text-title-medium-medium text-slate-800 dark:text-slate-100">
+                    {n.title}
+                  </span>
+                  <span className="shrink-0 text-body-medium-medium text-slate-400 dark:text-slate-500">
+                    {fmtDate(n.publishedAt)}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-slate-200 px-4 py-14 text-center dark:border-slate-800">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+            <Bell className="h-5 w-5" />
+          </span>
+          <p className="text-body-medium-medium text-slate-500 dark:text-slate-400">
+            등록된 공지사항이 없습니다.
+          </p>
+          <p className="text-body-small-regular text-slate-400 dark:text-slate-500">
+            새로운 소식이 등록되면 이곳에 표시됩니다.
+          </p>
+        </div>
+      )}
     </section>
   );
 }
