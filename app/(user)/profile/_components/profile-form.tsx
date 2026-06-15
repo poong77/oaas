@@ -3,8 +3,7 @@
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { TextField } from '@/components/ui/text-field';
 import { Button } from '@/components/ui/button';
 import { updateProfileAction } from '@/app/actions/profile-actions';
 
@@ -93,24 +92,18 @@ function Field({
   mono?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <Label htmlFor={name}>
-        {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
-      </Label>
-      <Input
-        id={name}
-        name={name}
-        type={type}
-        defaultValue={defaultValue}
-        required={required}
-        placeholder={placeholder}
-        disabled={disabled}
-        aria-invalid={!!error}
-        className={`${disabled ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' : ''} ${mono ? 'font-mono text-sm' : ''}`}
-      />
-      {helper && <p className="text-xs text-slate-400 dark:text-slate-500">{helper}</p>}
-      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-    </div>
+    <TextField
+      id={name}
+      name={name}
+      type={type}
+      label={label}
+      required={required}
+      defaultValue={defaultValue}
+      placeholder={placeholder}
+      disabled={disabled}
+      error={error}
+      helperText={helper}
+      className={mono ? 'font-mono' : undefined}
+    />
   );
 }

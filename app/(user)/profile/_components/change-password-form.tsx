@@ -10,8 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { TextField } from '@/components/ui/text-field';
 import { Button } from '@/components/ui/button';
 import { changePasswordAction } from '@/app/actions/profile-actions';
 
@@ -47,50 +46,35 @@ export function ChangePasswordForm() {
       </CardHeader>
       <form ref={formRef} onSubmit={handleSubmit}>
         <CardContent className="grid gap-4 sm:grid-cols-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="currentPassword">현재 비밀번호 *</Label>
-            <Input
-              id="currentPassword"
-              name="currentPassword"
-              type="password"
-              autoComplete="current-password"
-              required
-              aria-invalid={!!errors.currentPassword}
-            />
-            {errors.currentPassword && (
-              <p className="text-xs text-red-600">{errors.currentPassword}</p>
-            )}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="newPassword">새 비밀번호 *</Label>
-            <Input
-              id="newPassword"
-              name="newPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={8}
-              aria-invalid={!!errors.newPassword}
-            />
-            {errors.newPassword && (
-              <p className="text-xs text-red-600">{errors.newPassword}</p>
-            )}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="newPasswordConfirm">새 비밀번호 확인 *</Label>
-            <Input
-              id="newPasswordConfirm"
-              name="newPasswordConfirm"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={8}
-              aria-invalid={!!errors.newPasswordConfirm}
-            />
-            {errors.newPasswordConfirm && (
-              <p className="text-xs text-red-600">{errors.newPasswordConfirm}</p>
-            )}
-          </div>
+          <TextField
+            id="currentPassword"
+            name="currentPassword"
+            type="password"
+            label="현재 비밀번호"
+            required
+            autoComplete="current-password"
+            error={errors.currentPassword}
+          />
+          <TextField
+            id="newPassword"
+            name="newPassword"
+            type="password"
+            label="새 비밀번호"
+            required
+            autoComplete="new-password"
+            minLength={8}
+            error={errors.newPassword}
+          />
+          <TextField
+            id="newPasswordConfirm"
+            name="newPasswordConfirm"
+            type="password"
+            label="새 비밀번호 확인"
+            required
+            autoComplete="new-password"
+            minLength={8}
+            error={errors.newPasswordConfirm}
+          />
         </CardContent>
         <CardFooter>
           <Button type="submit" disabled={pending}>

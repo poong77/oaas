@@ -66,8 +66,8 @@ export function MyTicketsList({
 
   return (
     <>
-      {/* 데스크톱 테이블 */}
-      <div className="hidden overflow-hidden rounded-xl border border-black/[0.06] dark:border-slate-800 sm:block">
+      {/* 데스크톱 테이블 — 평평한 테이블(상단 구분선 #DCDEE3, 행 구분선 black 6%) */}
+      <div className="hidden border-t border-[#DCDEE3] dark:border-slate-700 sm:block">
         <table className="w-full table-fixed">
           <colgroup>
             <col className="w-[132px]" />
@@ -78,11 +78,11 @@ export function MyTicketsList({
           </colgroup>
           <thead>
             <tr className="border-b border-black/[0.06] text-sm text-[#868B94] dark:border-slate-800">
-              <th className="px-5 py-3 text-left font-medium">문의일</th>
-              <th className="px-5 py-3 text-left font-medium">처리 상태</th>
-              <th className="px-5 py-3 text-left font-medium">제목</th>
-              <th className="px-5 py-3 text-left font-medium">문의 유형</th>
-              <th className="px-5 py-3 text-right font-medium">답변일</th>
+              <th className="px-3 py-4 text-left font-medium">문의일</th>
+              <th className="px-3 py-4 text-left font-medium">처리 상태</th>
+              <th className="px-3 py-4 text-left font-medium">제목</th>
+              <th className="px-3 py-4 text-center font-medium">문의 유형</th>
+              <th className="px-3 py-4 text-right font-medium">답변일</th>
             </tr>
           </thead>
           <tbody>
@@ -91,13 +91,13 @@ export function MyTicketsList({
                 key={t.id}
                 className="border-b border-black/[0.06] text-sm last:border-b-0 dark:border-slate-800"
               >
-                <td className="whitespace-nowrap px-5 py-4 text-[#555D6D] dark:text-slate-300">
+                <td className="whitespace-nowrap px-3 py-6 text-[#555D6D] dark:text-slate-300">
                   {fmtDate(t.createdAt)}
                 </td>
-                <td className="px-5 py-4">
+                <td className="px-3 py-6">
                   <StatusPill status={t.status} />
                 </td>
-                <td className="px-5 py-4">
+                <td className="px-3 py-6">
                   <Link
                     href={`/tickets/${t.id}`}
                     title={t.title}
@@ -106,12 +106,12 @@ export function MyTicketsList({
                     {t.title}
                   </Link>
                 </td>
-                <td className="px-5 py-4 text-[#555D6D] dark:text-slate-300">
+                <td className="px-3 py-6 text-center text-[#555D6D] dark:text-slate-300">
                   <span className="block truncate" title={typeLabel(t)}>
                     {typeLabel(t)}
                   </span>
                 </td>
-                <td className="whitespace-nowrap px-5 py-4 text-right text-[#868B94] dark:text-slate-400">
+                <td className="whitespace-nowrap px-3 py-6 text-right text-[#868B94] dark:text-slate-400">
                   {fmtDate(t.answeredAt)}
                 </td>
               </tr>

@@ -185,7 +185,7 @@ function ProfileMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
+        className="inline-flex items-center gap-1.5 rounded-md border border-[rgba(0,0,0,0.0627)] px-2.5 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-white/10 dark:hover:bg-slate-800"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -255,7 +255,7 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[rgba(0,0,0,0.0627)] text-slate-700 hover:bg-slate-100 dark:border-white/10 dark:text-slate-300 dark:hover:bg-slate-800"
       aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
       title={`현재: ${theme === 'system' ? `system (${resolvedTheme})` : theme}`}
     >

@@ -57,7 +57,7 @@ export function RoleStarters({ items }: { items?: RoleStarter[] }) {
   return (
     <section
       aria-labelledby="role-heading"
-      className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
+      className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8"
     >
       <div className="mb-5">
         <h2

@@ -99,7 +99,7 @@ export function PreviewRenderer() {
     <>
       <PreviewBanner isPublishedSource={data.isPublishedSource} />
 
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
         <div className="flex flex-col gap-3">
           <span className="inline-flex items-center gap-1 text-xs text-slate-500">
             <ArrowLeft className="h-3 w-3" />

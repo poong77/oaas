@@ -48,7 +48,7 @@ export default async function NewTicketPage({
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-[860px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+    <div className="mx-auto w-full max-w-[860px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       <Suspense fallback={null}>
         <TicketCreateForm
           viewer={{

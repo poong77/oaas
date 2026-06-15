@@ -276,38 +276,38 @@ export function StaffManager({
         )}
 
         {/* 직원 리스트 — 한 사람당 한 줄, 길면 말줄임(가로 스크롤 없음). 행 클릭 → 팝업 */}
-        <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-800">
+        <div className="border-t border-[#DCDEE3] dark:border-slate-700">
           <table className="w-full table-fixed text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
-              <tr>
-                <th className="w-[44%] px-3 py-2 text-left font-medium">이름</th>
-                <th className="w-[36%] px-3 py-2 text-left font-medium">직책</th>
-                <th className="w-[20%] px-3 py-2 text-left font-medium">상태</th>
+            <thead>
+              <tr className="border-b border-black/[0.06] text-sm text-[#868B94] dark:border-slate-800">
+                <th className="w-[44%] px-3 py-4 text-left font-medium">이름</th>
+                <th className="w-[36%] px-3 py-4 text-left font-medium">직책</th>
+                <th className="w-[20%] px-3 py-4 text-left font-medium">상태</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody>
               {initialStaff.map((s) => {
                 const isSelf = s.id === myUserId;
                 return (
                   <tr
                     key={s.id}
                     onClick={isSelf ? undefined : () => setEditing(s)}
-                    className={`${s.isActive ? '' : 'opacity-60'} ${
+                    className={`border-b border-black/[0.06] last:border-b-0 dark:border-slate-800 ${s.isActive ? '' : 'opacity-60'} ${
                       isSelf
                         ? ''
                         : 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50'
                     }`}
                   >
-                    <td className="truncate px-3 py-2.5 font-medium">
+                    <td className="truncate px-3 py-6 font-medium">
                       {s.name}
                       {isSelf && (
                         <span className="ml-1 text-xs text-brand-600 dark:text-brand-400">(나)</span>
                       )}
                     </td>
-                    <td className="truncate px-3 py-2.5 text-slate-600 dark:text-slate-300">
+                    <td className="truncate px-3 py-6 text-slate-600 dark:text-slate-300">
                       {s.title ?? '-'}
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="px-3 py-6">
                       {s.isActive ? (
                         <Badge tone="success">활성</Badge>
                       ) : (

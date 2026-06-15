@@ -27,12 +27,12 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
   return (
     <section
       aria-labelledby="home-notice-heading"
-      className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8"
+      className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8"
     >
       <div className="mb-4 flex items-center justify-between">
         <h2
           id="home-notice-heading"
-          className="text-title-large-bold tracking-tight sm:text-heading-small-bold"
+          className="text-heading-medium-bold tracking-tight"
         >
           공지사항
         </h2>
@@ -52,14 +52,14 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
             <li key={n.id} className="border-b border-slate-200 dark:border-slate-800">
               <Link
                 href={`/notices/${n.id}`}
-                className="flex flex-col gap-2 px-2 py-6 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40 sm:flex-row sm:items-center sm:gap-5"
+                className="grid grid-cols-[100px_minmax(0,1fr)_auto] items-center gap-x-4 px-2 py-6 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
               >
                 <span
-                  className={`inline-flex min-w-[88px] shrink-0 items-center justify-center rounded-lg px-2 py-0.5 text-label-small-medium ${m.cls}`}
+                  className={`inline-flex w-fit items-center justify-center whitespace-nowrap rounded-full px-3 py-1 text-label-small-medium ${m.cls}`}
                 >
                   {m.label}
                 </span>
-                <span className="flex-1 truncate text-title-medium-medium text-slate-800 dark:text-slate-100">
+                <span className="min-w-0 truncate text-title-medium-medium text-slate-800 dark:text-slate-100">
                   {n.title}
                 </span>
                 <span className="shrink-0 text-body-medium-medium text-slate-400 dark:text-slate-500">

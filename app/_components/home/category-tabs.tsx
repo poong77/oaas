@@ -110,7 +110,7 @@ function CategoryCard({
             <Icon className="h-12 w-12" strokeWidth={1.5} />
           )}
         </span>
-        <span className="text-body-medium-semibold text-slate-800 dark:text-slate-100">
+        <span className="text-title-medium-medium text-slate-800 dark:text-slate-100">
           {label}
         </span>
       </Link>

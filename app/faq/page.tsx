@@ -76,7 +76,7 @@ export default async function FaqPage({
   const hasFilter = Boolean(sp.q || sp.productCode || sp.issueType);
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
         <div className="flex flex-col gap-6">
       <PageHeader

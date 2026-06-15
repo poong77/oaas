@@ -51,10 +51,10 @@ export function HomeMyTickets({
   return (
     <section
       aria-labelledby="my-tickets-heading"
-      className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8"
+      className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8"
     >
       <div className="mb-4 flex items-center justify-between">
-        <h2 id="my-tickets-heading" className="text-title-large-bold tracking-tight sm:text-heading-small-bold">
+        <h2 id="my-tickets-heading" className="text-heading-medium-bold tracking-tight">
           내 문의
         </h2>
         <Link
@@ -101,18 +101,18 @@ export function HomeMyTickets({
                 <li key={t.id}>
                   <Link
                     href={`/tickets/${t.id}`}
-                    className="flex flex-col gap-2 px-2 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40 sm:flex-row sm:items-center sm:gap-5"
+                    className="grid grid-cols-[80px_minmax(0,1fr)_auto] items-center gap-x-4 px-2 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
                   >
                     <span
-                      className={`inline-flex w-fit shrink-0 items-center justify-center rounded-full border px-3 py-1 text-label-small-semibold min-w-[80px] ${m.badge}`}
+                      className={`inline-flex w-fit items-center justify-center whitespace-nowrap rounded-md border px-1.5 py-1 text-label-small-semibold ${m.badge}`}
                     >
                       {m.label}
                     </span>
-                    <span className="flex flex-1 flex-col">
-                      <span className="text-title-medium-semibold text-slate-900 dark:text-slate-100">
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate text-title-medium-semibold text-slate-900 dark:text-slate-100">
                         {t.title}
                       </span>
-                      <span className="text-body-small-regular text-slate-500 dark:text-slate-400">{meta}</span>
+                      <span className="truncate text-body-small-regular text-slate-500 dark:text-slate-400">{meta}</span>
                     </span>
                     <span className="shrink-0 text-body-small-regular text-slate-400">{fmtDate(t.createdAt)}</span>
                   </Link>

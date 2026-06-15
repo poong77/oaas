@@ -189,14 +189,15 @@ function toneFor(s: BusinessStatusResult): Tone {
 
 const TONE_CLASS: Record<Tone, string> = {
   open: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
-  lunch: 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+  // 점심시간: 풀 툴팁 head(HEAD_CLS.blue)와 색상 일치
+  lunch: 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
   warn: 'bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300',
   closed: 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
 };
 
 const BORDER_CLASS: Record<Tone, string> = {
   open: 'border-emerald-200 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300',
-  lunch: 'border-amber-200 text-amber-700 dark:border-amber-900 dark:text-amber-300',
+  lunch: 'border-blue-200 text-blue-700 dark:border-blue-900 dark:text-blue-300',
   warn: 'border-orange-200 text-orange-700 dark:border-orange-900 dark:text-orange-300',
   closed: 'border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300',
 };

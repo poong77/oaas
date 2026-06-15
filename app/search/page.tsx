@@ -98,7 +98,7 @@ export default async function SearchPage({
     !!currentUser && isManagerOrAdmin(currentUser.role);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       {/* 중앙 검색바 — 페이지 자체에서 바로 검색 (2026-06-01) */}
       <div className="flex flex-col items-center gap-4 py-2">
         <h1 className="text-center text-xl font-bold tracking-tight sm:text-2xl">

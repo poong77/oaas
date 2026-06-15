@@ -329,7 +329,7 @@ export function TicketCreateForm(props: TicketCreateFormProps) {
             maxLength={200}
             disabled={busy}
             placeholder="문제를 한 줄로 요약해주세요"
-            className="h-[52px] w-full rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+            className="h-[52px] w-full rounded-lg border border-[#dcdee3] bg-white px-4 text-base leading-[1.48] text-[#1a1c20] placeholder:text-[#8b8f9a] focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600/30 dark:border-slate-600 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500"
           />
           {fieldErrors.title && (
             <span className="text-xs text-red-500">{fieldErrors.title}</span>

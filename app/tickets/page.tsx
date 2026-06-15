@@ -112,7 +112,7 @@ export default async function MyTicketsPage({
   ).filter((p) => p >= 1 && p <= totalPages);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-[#1A1C20] dark:text-white">
           내 문의

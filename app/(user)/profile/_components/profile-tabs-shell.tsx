@@ -83,7 +83,7 @@ export function ProfileTabsShell({
     <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
       {/* 좌측: 사용자 카드 + 탭 내비 */}
       <aside className="flex flex-col gap-4">
-        <div className="rounded-xl bg-slate-200/70 px-4 py-3.5 dark:bg-slate-800">
+        <div className="rounded-lg border border-black/[0.0627] bg-[#f7f8f9] px-4 py-3.5 dark:border-white/10 dark:bg-slate-800">
           {subline && (
             <p className="text-xs text-slate-500 dark:text-slate-400">{subline}</p>
           )}
@@ -112,8 +112,8 @@ export function ProfileTabsShell({
         </nav>
       </aside>
 
-      {/* 콘텐츠 */}
-      <div className="min-w-0">
+      {/* 콘텐츠 — 컨텐츠 박스(Card) 그림자 제거(평평한 디자인) */}
+      <div className="min-w-0 [&_.shadow-sm]:shadow-none">
         {tabs.map((tab) => (
           <div
             key={tab.key}

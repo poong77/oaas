@@ -35,7 +35,7 @@ export function HomeCTA() {
   return (
     <section
       aria-labelledby="cta-heading"
-      className="bg-slate-50/60 py-8 dark:bg-slate-900/40 sm:py-10"
+      className="bg-slate-50/60 py-10 dark:bg-slate-900/40 sm:py-14"
     >
       <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
         <div className="mb-5">

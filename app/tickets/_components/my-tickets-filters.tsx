@@ -79,7 +79,7 @@ export function MyTicketsFilters({
           <Select
             value={productCode ?? ''}
             onChange={(e) => updateParam({ productCode: e.target.value || null })}
-            className="h-[44px] w-full rounded-lg border-transparent bg-[#F3F4F5] shadow-none dark:border-transparent dark:bg-slate-800 sm:w-32"
+            className="h-[40px] w-full rounded-lg border-black/[0.06] bg-white shadow-none dark:border-white/10 dark:bg-slate-900 sm:w-[136px]"
           >
             <option value="">전체 제품</option>
             {products.map((p) => (
@@ -91,20 +91,20 @@ export function MyTicketsFilters({
           <Select
             value={sortOrder}
             onChange={(e) => updateParam({ sortOrder: e.target.value })}
-            className="h-[44px] w-full rounded-lg border-transparent bg-[#F3F4F5] shadow-none dark:border-transparent dark:bg-slate-800 sm:w-28"
+            className="h-[40px] w-full rounded-lg border-black/[0.06] bg-white shadow-none dark:border-white/10 dark:bg-slate-900 sm:w-[120px]"
           >
             <option value="desc">최신순</option>
             <option value="asc">오래된순</option>
           </Select>
         </div>
-        <label className="flex h-[44px] w-full items-center gap-2 rounded-lg border border-transparent bg-[#F3F4F5] px-4 dark:bg-slate-800 sm:w-[300px]">
+        <label className="flex h-[40px] w-full items-center gap-3 rounded-lg border border-black/[0.06] bg-[#F7F8F9] px-4 dark:border-white/10 dark:bg-slate-800 sm:w-[280px]">
           <button
             type="button"
             aria-label="검색"
             onClick={() => updateParam({ q: query.trim() || null })}
             className="shrink-0 text-[#868B94]"
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-5 w-5" />
           </button>
           <input
             type="search"

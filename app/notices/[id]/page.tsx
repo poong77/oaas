@@ -65,7 +65,7 @@ export default async function NoticeDetailPage({
     : '전체';
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 print:max-w-full print:px-0 print:py-2">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-4 py-10 sm:px-6 sm:py-14 lg:px-8 print:max-w-full print:px-0 print:py-2">
       {/* view_count 증분 (Client Component, useEffect 1회) */}
       <NoticeViewBumper noticeId={notice.id} />
 
