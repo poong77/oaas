@@ -24,6 +24,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx db/seed.ts",
+    "db:migrate-vercel-blob-images": "tsx -r dotenv/config db/migrate-vercel-blob-images.ts dotenv_config_path=.env.local",
     "db:migrate-faq-help": "tsx db/migrate-faq-help.ts",
     "db:migrate-faq-sheet": "tsx db/migrate-faq-sheet.ts",
     "db:migrate-as-hotels": "tsx db/migrate-as-hotels.ts",
