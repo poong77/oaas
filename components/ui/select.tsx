@@ -14,10 +14,18 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, children, style, ...props }, ref) => (
     <select
       ref={ref}
-      style={{ backgroundImage: CHEVRON_BG, ...style }}
+      // chevron 위치·크기·반복까지 모두 inline style로 지정.
+      // (Tailwind v4는 타입힌트 없는 bg-[right_0.5rem_center]를 background-position으로
+      //  인식하지 못해 화살표가 좌상단(0% 0%)에 찍히는 문제가 있음)
+      style={{
+        backgroundImage: CHEVRON_BG,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'right 0.5rem center',
+        backgroundSize: '16px 16px',
+        ...style,
+      }}
       className={cn(
         'flex h-9 w-full appearance-none rounded-md border border-slate-200 bg-white py-1 pl-3 pr-8 text-sm shadow-sm',
-        'bg-[length:16px_16px] bg-[right_0.5rem_center] bg-no-repeat',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1',
         'disabled:cursor-not-allowed disabled:opacity-50',
         'dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50',

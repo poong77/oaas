@@ -100,7 +100,7 @@ function CategoryCard({
     <li>
       <Link
         href={href}
-        className="group flex h-32 w-[124px] flex-col items-center justify-center gap-4 rounded-lg bg-white px-7 py-5 text-center transition-all hover:-translate-y-0.5 hover:shadow-sm dark:bg-slate-900"
+        className="group flex h-32 w-[124px] flex-col items-center justify-center gap-4 rounded-lg bg-white py-5 text-center transition-all hover:-translate-y-0.5 hover:shadow-sm dark:bg-slate-900"
       >
         <span className="flex h-12 w-12 items-center justify-center overflow-hidden text-brand-600 transition-colors group-hover:text-brand-700 dark:text-brand-300 dark:group-hover:text-brand-200">
           {iconImageUrl ? (
