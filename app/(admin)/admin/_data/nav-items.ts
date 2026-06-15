@@ -45,7 +45,7 @@ export const NAV_ITEMS: NavItem[] = [
   // 개요 (최상단)
   {
     href: '/admin/insights/dashboard',
-    label: '운영 대시보드',
+    label: '대시보드',
     icon: LayoutDashboard,
     roles: ['manager', 'admin'],
     group: 'overview',

@@ -16,7 +16,7 @@ export default function DashboardLoading() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="운영 인사이트"
+        title="대시보드"
         description="데이터를 불러오는 중…"
       />
 

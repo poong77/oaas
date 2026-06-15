@@ -29,6 +29,7 @@ export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{
   status?: string;
+  longDelayed?: string;
   productCode?: string;
   issueType?: string;
   urgency?: string;
@@ -48,7 +49,9 @@ export default async function AdminTicketsQueuePage({
   const user = await requireRole(['manager', 'admin']);
   const params = await searchParams;
 
-  const statusRaw = params.status ?? 'received';
+  const longDelayed = params.longDelayed === '1';
+  // 장기 지연 필터가 켜지면 상태 기본값(received)을 강제하지 않는다(미완료 전체 대상).
+  const statusRaw = params.status ?? (longDelayed ? 'all' : 'received');
   const status: TicketStatus | 'all' | 'open' =
     statusRaw === 'received' ||
     statusRaw === 'in_progress' ||
@@ -79,6 +82,7 @@ export default async function AdminTicketsQueuePage({
     listTickets(
       {
         status,
+        longDelayed,
         productCode: params.productCode || undefined,
         issueType: params.issueType || undefined,
         urgency: params.urgency || undefined,
@@ -180,6 +184,7 @@ export default async function AdminTicketsQueuePage({
               .slice(0, 20)
               .map((p) => {
                 const sp = new URLSearchParams();
+                if (longDelayed) sp.set('longDelayed', '1');
                 if (status !== 'received') sp.set('status', status);
                 if (params.productCode) sp.set('productCode', params.productCode);
                 if (params.issueType) sp.set('issueType', params.issueType);

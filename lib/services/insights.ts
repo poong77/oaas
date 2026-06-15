@@ -90,7 +90,7 @@ export type FunnelStats = {
 export type KeywordAgg = { term: string; count: number; zeroRate: number };
 export type HotelAgg = { hotelName: string; count: number };
 export type ChannelDaily = { days: string[]; series: { name: string; data: number[] }[] };
-export type TypeAgg = { label: string; completed: number; ongoing: number };
+export type TypeAgg = { code: string; label: string; completed: number; ongoing: number };
 export type ProductAgg = { label: string; count: number };
 export type StatusDist = {
   received: number;
@@ -662,6 +662,7 @@ function computeByType(
   }
   return [...map.entries()]
     .map(([code, v]) => ({
+      code,
       label: issueLabels[code] ?? code,
       completed: v.completed,
       ongoing: v.ongoing,

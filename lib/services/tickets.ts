@@ -153,6 +153,32 @@ export async function loadCategoryLabelMaps(): Promise<{
 
 export { STATUS_LABEL } from './tickets-meta';
 import { STATUS_LABEL } from './tickets-meta';
+import { businessDaysBetween, loadHolidaySet } from './business-days';
+
+/**
+ * 장기 지연(미완료 · 접수 후 영업일 3일 초과) 티켓 ID 집합.
+ * 대시보드 액션카드와 동일 기준(insights.getActionCards). 영업일 계산은 JS측에서
+ * 수행하므로 후보(미완료) id+createdAt만 끌어와 필터한다.
+ */
+async function getLongDelayedTicketIds(): Promise<string[]> {
+  if (!db) return [];
+  const [openRows, holidays] = await Promise.all([
+    db
+      .select({ id: tickets.id, createdAt: tickets.createdAt })
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.isActive, true),
+          inArray(tickets.status, ['received', 'in_progress']),
+        ),
+      ),
+    loadHolidaySet(),
+  ]);
+  const now = new Date();
+  return openRows
+    .filter((r) => businessDaysBetween(r.createdAt, now, holidays) > 3)
+    .map((r) => r.id);
+}
 
 // ─────────────────────────────────────────────────────────────────────
 // 티켓 번호 발급
@@ -626,6 +652,8 @@ export type ListTicketsParams = {
   q?: string;
   /** 'open' = 미완료(received + in_progress) 합산 필터 */
   status?: TicketStatus | 'all' | 'open';
+  /** 장기 지연(미완료 · 접수 후 영업일 3일 초과)만 필터 */
+  longDelayed?: boolean;
   productCode?: string;
   issueType?: string;
   urgency?: string;
@@ -657,7 +685,12 @@ export async function listTickets(
 
   const conditions: SQL[] = [eq(tickets.isActive, true)];
 
-  if (params.status === 'open') {
+  if (params.longDelayed) {
+    // 장기 지연 = 미완료(open) ∩ 영업일 3일 초과. 후보 id를 미리 산출해 IN 조건으로.
+    const ids = await getLongDelayedTicketIds();
+    if (ids.length === 0) return { items: [], total: 0, page, pageSize };
+    conditions.push(inArray(tickets.id, ids));
+  } else if (params.status === 'open') {
     conditions.push(inArray(tickets.status, ['received', 'in_progress']));
   } else if (params.status && params.status !== 'all') {
     conditions.push(eq(tickets.status, params.status));
@@ -1532,6 +1565,7 @@ export async function getTicketQueueSummary(): Promise<{
   inProgress: number;
   completed: number;
   p1Urgent: number;
+  longDelayed: number;
 }> {
   const empty = {
     total: 0,
@@ -1539,6 +1573,7 @@ export async function getTicketQueueSummary(): Promise<{
     inProgress: 0,
     completed: 0,
     p1Urgent: 0,
+    longDelayed: 0,
   };
   if (!db) return empty;
   try {
@@ -1561,17 +1596,20 @@ export async function getTicketQueueSummary(): Promise<{
       else if (r.status === 'completed') completed = c;
     }
 
-    // P1 긴급(미완료) 별도 — 상태와 교차되므로 분리 집계
-    const [p1Row] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(tickets)
-      .where(
-        and(
-          eq(tickets.isActive, true),
-          eq(tickets.urgency, 'p1'),
-          inArray(tickets.status, ['received', 'in_progress']),
+    // P1 긴급(미완료) + 장기 지연 — 상태와 교차되므로 분리 집계 (병렬)
+    const [[p1Row], longDelayedIds] = await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(tickets)
+        .where(
+          and(
+            eq(tickets.isActive, true),
+            eq(tickets.urgency, 'p1'),
+            inArray(tickets.status, ['received', 'in_progress']),
+          ),
         ),
-      );
+      getLongDelayedTicketIds(),
+    ]);
 
     return {
       total,
@@ -1579,6 +1617,7 @@ export async function getTicketQueueSummary(): Promise<{
       inProgress,
       completed,
       p1Urgent: Number(p1Row?.count ?? 0),
+      longDelayed: longDelayedIds.length,
     };
   } catch (err) {
     console.error('[tickets.getTicketQueueSummary] 실패:', err);

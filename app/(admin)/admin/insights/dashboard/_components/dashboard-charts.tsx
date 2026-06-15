@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { EChart, chartTheme, useIsDark } from './echart';
 import type {
   ChannelDaily,
@@ -81,6 +82,7 @@ export function WordcloudChart({ data }: { data: KeywordAgg[] }) {
 // ── 호텔별 문의 Top 15 (가로 막대) ─────────────────────────
 export function HotelBarChart({ data }: { data: HotelAgg[] }) {
   const dark = useIsDark();
+  const router = useRouter();
   const option = useMemo(() => {
   const t = chartTheme(dark);
   const rows = [...data].reverse(); // 큰 값이 위로
@@ -130,7 +132,17 @@ export function HotelBarChart({ data }: { data: HotelAgg[] }) {
     ],
   };
   }, [data, dark]);
-  return <EChart option={option} height={420} />;
+  return (
+    <EChart
+      option={option}
+      height={420}
+      onItemClick={({ name }) =>
+        router.push(
+          `/admin/tickets?status=all&q=${encodeURIComponent(name)}`,
+        )
+      }
+    />
+  );
 }
 
 // ── 일자별 × 채널별 누적 막대 ──────────────────────────────
@@ -213,6 +225,11 @@ export function ProductPieChart({ data }: { data: ProductAgg[] }) {
 // ── 유형별 (가로 누적 막대: 완료 / 처리중) ─────────────────
 export function TypeBarChart({ data }: { data: TypeAgg[] }) {
   const dark = useIsDark();
+  const router = useRouter();
+  const labelToCode = useMemo(
+    () => new Map(data.map((d) => [d.label, d.code])),
+    [data],
+  );
   const option = useMemo(() => {
   const t = chartTheme(dark);
   const rows = [...data].reverse();
@@ -259,5 +276,18 @@ export function TypeBarChart({ data }: { data: TypeAgg[] }) {
     ],
   };
   }, [data, dark]);
-  return <EChart option={option} height={Math.max(160, data.length * 34 + 50)} />;
+  return (
+    <EChart
+      option={option}
+      height={Math.max(160, data.length * 34 + 50)}
+      onItemClick={({ name }) => {
+        const code = labelToCode.get(name);
+        router.push(
+          code
+            ? `/admin/tickets?status=all&issueType=${encodeURIComponent(code)}`
+            : `/admin/tickets?status=all&q=${encodeURIComponent(name)}`,
+        );
+      }}
+    />
+  );
 }

@@ -13,14 +13,20 @@ export function EChart({
   option,
   height = 240,
   className,
+  onItemClick,
 }: {
   option: Record<string, unknown>;
   height?: number;
   className?: string;
+  /** 막대/조각 클릭 시 호출 — params.name(카테고리/계열명)을 전달. */
+  onItemClick?: (params: { name: string; seriesName?: string }) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   // echarts 인스턴스를 effect 간 공유.
   const chartRef = useRef<ECharts | null>(null);
+  // 최신 콜백을 effect 재실행 없이 참조.
+  const clickRef = useRef(onItemClick);
+  clickRef.current = onItemClick;
 
   useEffect(() => {
     let disposed = false;
@@ -32,6 +38,9 @@ export function EChart({
       const inst = echarts.init(ref.current, undefined, { renderer: 'svg' });
       chartRef.current = inst;
       inst.setOption(option);
+      inst.on('click', (p: { name: string; seriesName?: string }) => {
+        clickRef.current?.({ name: p.name, seriesName: p.seriesName });
+      });
       ro = new ResizeObserver(() => inst.resize());
       ro.observe(ref.current);
     })();

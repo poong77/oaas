@@ -5,6 +5,7 @@
  * 기간: 어제 / 7일 / 30일 (KST, 오늘 제외) · 제품 필터.
  */
 
+import Link from 'next/link';
 import { AlertTriangle, Clock, Search, TriangleAlert } from 'lucide-react';
 import { requireRole } from '@/lib/permissions';
 import { loadCategoryLabelMaps } from '@/lib/services/tickets';
@@ -27,7 +28,7 @@ import {
 } from './_components/dashboard-charts';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '운영 인사이트 — OA서포트 어드민' };
+export const metadata = { title: '대시보드 — OA서포트 어드민' };
 
 function pct(n: number, d: number): string {
   if (d <= 0) return '—';
@@ -61,7 +62,7 @@ export default async function InsightDashboardPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="운영 인사이트"
+        title="대시보드"
         description={`${PERIOD_LABEL[period]} 기준 · 셀프검색부터 완료까지 운영 흐름 한눈에.`}
       />
 
@@ -71,7 +72,30 @@ export default async function InsightDashboardPage({
         products={products}
       />
 
-      {/* ① 액션 카드 */}
+      {/* ⓪ 퍼널 (행위자 기준 처리 흐름 — 최상단) */}
+      <section className="flex flex-col gap-2">
+        <SectionLabel>행위자 기준 처리 퍼널</SectionLabel>
+        <Card>
+          <CardContent className="flex flex-col gap-2 p-5 sm:flex-row sm:items-end">
+            <FunnelStage label="검색" actor="호텔리어" value={funnel.search} sub="웹/챗봇 진입" tone="brand" />
+            <FunnelArrow value={pct(funnel.inquiry, funnel.search)} />
+            <FunnelStage label="문의" actor="호텔리어" value={funnel.inquiry} sub="티켓 생성" tone="sky" />
+            <FunnelArrow value={pct(funnel.accepted, funnel.inquiry)} />
+            <FunnelStage label="접수" actor="운영팀" value={funnel.accepted} sub="처리 착수" tone="violet" />
+            <FunnelArrow value={pct(funnel.devEscalated, funnel.accepted)} tone="rose" />
+            <FunnelStage label="Dev이관" actor="운영팀" value={funnel.devEscalated} sub="에스컬레이션" tone="rose" />
+            <FunnelArrow />
+            <FunnelStage label="완료" actor="운영팀" value={funnel.completed} sub="해결 완료" tone="emerald" />
+          </CardContent>
+        </Card>
+        <p className="text-xs text-slate-400 dark:text-slate-500">
+          전화 문의는 검색 없이 직접 접수되며 카카오·방문 채널은 없음 —
+          deflection(자가해결 전환) 지표는 적용하지 않습니다. 검색은 웹/챗봇
+          셀프서비스 진입량 참고치입니다.
+        </p>
+      </section>
+
+      {/* ① 액션 카드 (클릭 시 문의 관리 해당 목록으로 이동) */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <ActionCard
           tone="danger"
@@ -79,6 +103,7 @@ export default async function InsightDashboardPage({
           label="긴급 처리건 (P1 미완료)"
           value={actionCards.p1Open}
           note="urgency P1 · 미완료 전체"
+          href="/admin/tickets?status=open&urgency=p1"
         />
         <ActionCard
           tone="warn"
@@ -86,6 +111,7 @@ export default async function InsightDashboardPage({
           label="장기 지연건 (영업일 3일+)"
           value={actionCards.longDelayed}
           note="미완료 · 접수 후 영업일 3일 초과"
+          href="/admin/tickets?longDelayed=1"
         />
       </section>
 
@@ -121,29 +147,6 @@ export default async function InsightDashboardPage({
         <p className="text-xs text-slate-400 dark:text-slate-500">
           ※ 원팀완료 + Dev개입 = 100% (에스컬레이션 여부로 양분). 원콜완료는
           자체해결의 부분집합이라 합산 대상이 아닙니다.
-        </p>
-      </section>
-
-      {/* ③ 퍼널 */}
-      <section className="flex flex-col gap-2">
-        <SectionLabel>행위자 기준 처리 퍼널</SectionLabel>
-        <Card>
-          <CardContent className="flex flex-col gap-2 p-5 sm:flex-row sm:items-end">
-            <FunnelStage label="검색" actor="호텔리어" value={funnel.search} sub="웹/챗봇 진입" tone="brand" />
-            <FunnelArrow value={pct(funnel.inquiry, funnel.search)} />
-            <FunnelStage label="문의" actor="호텔리어" value={funnel.inquiry} sub="티켓 생성" tone="sky" />
-            <FunnelArrow value={pct(funnel.accepted, funnel.inquiry)} />
-            <FunnelStage label="접수" actor="운영팀" value={funnel.accepted} sub="처리 착수" tone="violet" />
-            <FunnelArrow value={pct(funnel.devEscalated, funnel.accepted)} tone="rose" />
-            <FunnelStage label="Dev이관" actor="운영팀" value={funnel.devEscalated} sub="에스컬레이션" tone="rose" />
-            <FunnelArrow />
-            <FunnelStage label="완료" actor="운영팀" value={funnel.completed} sub="해결 완료" tone="emerald" />
-          </CardContent>
-        </Card>
-        <p className="text-xs text-slate-400 dark:text-slate-500">
-          전화 문의는 검색 없이 직접 접수되며 카카오·방문 채널은 없음 —
-          deflection(자가해결 전환) 지표는 적용하지 않습니다. 검색은 웹/챗봇
-          셀프서비스 진입량 참고치입니다.
         </p>
       </section>
 
@@ -309,8 +312,13 @@ export default async function InsightDashboardPage({
                         key={r.ticketNo}
                         className="border-b border-slate-50 last:border-0 dark:border-slate-800/60"
                       >
-                        <td className="py-2.5 pr-3 font-medium text-slate-700 dark:text-slate-200">
-                          {r.ticketNo}
+                        <td className="py-2.5 pr-3 font-medium">
+                          <Link
+                            href={`/admin/tickets?status=all&q=${encodeURIComponent(r.ticketNo)}`}
+                            className="text-brand-600 hover:underline dark:text-brand-400"
+                          >
+                            {r.ticketNo}
+                          </Link>
                         </td>
                         <td className="py-2.5 pr-3 text-slate-500">{r.productLabel}</td>
                         <td className="py-2.5 pr-3 text-slate-500">{r.issueTypeLabel}</td>
@@ -404,12 +412,15 @@ function ActionCard({
   label,
   value,
   note,
+  href,
 }: {
   tone: 'danger' | 'warn';
   icon: React.ReactNode;
   label: string;
   value: number;
   note: string;
+  /** 지정 시 카드 전체가 문의 관리 해당 목록으로 이동하는 링크가 된다. */
+  href?: string;
 }) {
   const border = tone === 'danger' ? 'border-l-rose-500' : 'border-l-orange-400';
   const iconBg =
@@ -420,8 +431,12 @@ function ActionCard({
     tone === 'danger'
       ? 'text-rose-600 dark:text-rose-400'
       : 'text-orange-500 dark:text-orange-400';
-  return (
-    <Card className={`border-l-4 ${border}`}>
+  const card = (
+    <Card
+      className={`border-l-4 ${border} ${
+        href ? 'transition-all hover:-translate-y-0.5 hover:shadow-md' : ''
+      }`}
+    >
       <CardContent className="flex items-start gap-4 p-5">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
           {icon}
@@ -436,6 +451,15 @@ function ActionCard({
         </div>
       </CardContent>
     </Card>
+  );
+  if (!href) return card;
+  return (
+    <Link
+      href={href}
+      className="rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+    >
+      {card}
+    </Link>
   );
 }
 

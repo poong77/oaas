@@ -10,7 +10,14 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { CheckCircle2, Clock, Flame, Hourglass, LayoutList } from 'lucide-react';
+import {
+  CheckCircle2,
+  Clock,
+  Flame,
+  Hourglass,
+  LayoutList,
+  TimerOff,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -41,18 +48,21 @@ export function TicketsSummaryCards({
   inProgress,
   completed,
   p1Urgent,
+  longDelayed,
 }: {
   total: number;
   received: number;
   inProgress: number;
   completed: number;
   p1Urgent: number;
+  longDelayed: number;
 }) {
   const pathname = usePathname();
   const sp = useSearchParams();
   // 활성 강조는 목록 화면(/admin/tickets)에서만. 칸반에선 강조 없음.
   const onList = pathname === '/admin/tickets';
-  const curStatus = sp.get('status') ?? 'received';
+  const isLongDelayed = sp.get('longDelayed') === '1';
+  const curStatus = sp.get('status') ?? (isLongDelayed ? 'all' : 'received');
   const isP1 = sp.get('urgency') === 'p1';
 
   function buildHref(next: Record<string, string | null>): string {
@@ -83,8 +93,8 @@ export function TicketsSummaryCards({
       value: total,
       icon: <LayoutList className="h-4 w-4" />,
       tone: 'slate',
-      href: buildHref({ status: 'all', urgency: null }),
-      active: onList && !isP1 && curStatus === 'all',
+      href: buildHref({ status: 'all', urgency: null, longDelayed: null }),
+      active: onList && !isP1 && !isLongDelayed && curStatus === 'all',
     },
     {
       key: 'received',
@@ -92,8 +102,8 @@ export function TicketsSummaryCards({
       value: received,
       icon: <Clock className="h-4 w-4" />,
       tone: 'brand',
-      href: buildHref({ status: 'received', urgency: null }),
-      active: onList && !isP1 && curStatus === 'received',
+      href: buildHref({ status: 'received', urgency: null, longDelayed: null }),
+      active: onList && !isP1 && !isLongDelayed && curStatus === 'received',
     },
     {
       key: 'in_progress',
@@ -101,8 +111,8 @@ export function TicketsSummaryCards({
       value: inProgress,
       icon: <Hourglass className="h-4 w-4" />,
       tone: 'warn',
-      href: buildHref({ status: 'in_progress', urgency: null }),
-      active: onList && !isP1 && curStatus === 'in_progress',
+      href: buildHref({ status: 'in_progress', urgency: null, longDelayed: null }),
+      active: onList && !isP1 && !isLongDelayed && curStatus === 'in_progress',
     },
     {
       key: 'completed',
@@ -110,8 +120,8 @@ export function TicketsSummaryCards({
       value: completed,
       icon: <CheckCircle2 className="h-4 w-4" />,
       tone: 'dark',
-      href: buildHref({ status: 'completed', urgency: null }),
-      active: onList && !isP1 && curStatus === 'completed',
+      href: buildHref({ status: 'completed', urgency: null, longDelayed: null }),
+      active: onList && !isP1 && !isLongDelayed && curStatus === 'completed',
     },
     {
       key: 'p1',
@@ -120,8 +130,8 @@ export function TicketsSummaryCards({
       icon: <Flame className="h-4 w-4" />,
       tone: 'danger',
       // 카드 숫자(p1Urgent)는 미완료 P1만 집계하므로, 클릭 필터도 미완료(open=접수+처리중)로 일치시킨다
-      href: buildHref({ status: 'open', urgency: 'p1' }),
-      active: onList && isP1,
+      href: buildHref({ status: 'open', urgency: 'p1', longDelayed: null }),
+      active: onList && isP1 && !isLongDelayed,
       // 카운트 기준(P1 ∧ 미처리)을 '긴급' + '미처리' 두 뱃지로 명시
       secondBadge: {
         label: '미처리',
@@ -129,10 +139,25 @@ export function TicketsSummaryCards({
         tone: 'warn',
       },
     },
+    {
+      key: 'longDelayed',
+      label: '장기지연',
+      value: longDelayed,
+      icon: <TimerOff className="h-4 w-4" />,
+      tone: 'danger',
+      // 미완료 ∩ 접수 후 영업일 3일 초과. 상태/긴급 필터는 해제하고 장기지연 단독 필터.
+      href: buildHref({ status: null, urgency: null, longDelayed: '1' }),
+      active: onList && isLongDelayed,
+      secondBadge: {
+        label: '영업일 3일+',
+        icon: <Clock className="h-4 w-4" />,
+        tone: 'warn',
+      },
+    },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
       {cards.map((c) => (
         <Link
           key={c.key}
