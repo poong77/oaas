@@ -78,4 +78,6 @@ export const NOTICE_POPUP_SIZE_META: Record<
   small: { label: '소', maxWidth: 'max-w-sm' },
   medium: { label: '중', maxWidth: 'max-w-md' },
   large: { label: '대', maxWidth: 'max-w-2xl' },
+  // 원본: 프리셋 너비를 강제하지 않고 이미지 원본 크기 그대로(뷰포트 95% 한도). 모달이 width:fit 처리.
+  original: { label: '원본', maxWidth: 'max-w-[95vw]' },
 };

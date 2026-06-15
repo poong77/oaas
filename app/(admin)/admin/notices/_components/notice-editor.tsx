@@ -64,7 +64,12 @@ type InitialValues = {
 };
 
 const KIND_OPTIONS: NoticeKind[] = ['notice', 'release', 'incident'];
-const POPUP_SIZE_OPTIONS: NoticePopupSize[] = ['small', 'medium', 'large'];
+const POPUP_SIZE_OPTIONS: NoticePopupSize[] = [
+  'small',
+  'medium',
+  'large',
+  'original',
+];
 
 /** 'YYYY-MM-DDTHH:mm' (KST) — N일 뒤 */
 function daysFromNowInput(days: number): string {
@@ -279,7 +284,16 @@ export function NoticeEditor({
         }
       } else {
         if (result.fieldErrors) setFieldErrors(result.fieldErrors);
-        toast.error(result.message ?? '저장 실패');
+        // 인라인 에러가 없는 필드(제품·팝업 이미지·크기 등)도 사유를 알 수 있도록
+        // 필드 에러 메시지를 토스트에 함께 노출한다.
+        const detail = result.fieldErrors
+          ? Object.values(result.fieldErrors).join(' · ')
+          : '';
+        toast.error(
+          detail
+            ? `${result.message ?? '저장 실패'} — ${detail}`
+            : (result.message ?? '저장 실패'),
+        );
       }
     });
   }
@@ -449,7 +463,7 @@ export function NoticeEditor({
                   <Label className="text-xs text-slate-600 dark:text-slate-400">
                     배너 크기
                   </Label>
-                  <div className="grid max-w-xs grid-cols-3 gap-2">
+                  <div className="grid max-w-sm grid-cols-4 gap-2">
                     {POPUP_SIZE_OPTIONS.map((s) => (
                       <ChoiceCard
                         key={s}
@@ -459,6 +473,9 @@ export function NoticeEditor({
                       />
                     ))}
                   </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    원본 — 이미지 크기 그대로 노출 (화면이 작으면 자동 축소)
+                  </p>
                 </div>
 
                 {/* 종료일자 + 빠른 설정 */}

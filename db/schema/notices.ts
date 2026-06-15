@@ -61,6 +61,8 @@ export const noticePopupSizeEnum = pgEnum('notice_popup_size', [
   'small',
   'medium',
   'large',
+  /** original — 이미지 원본 크기 그대로 노출 (뷰포트 한도 내). 프리셋 너비 강제 없음 */
+  'original',
 ]);
 
 export type NoticePopupSize = (typeof noticePopupSizeEnum.enumValues)[number];

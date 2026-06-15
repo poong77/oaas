@@ -46,6 +46,8 @@ export function PopupBannerModal({
   const maxWidth = NOTICE_POPUP_SIZE_META[size].maxWidth;
   // 치수를 알면 width/height 부여 → 브라우저가 종횡비로 공간 예약(CLS 0). 레거시 행은 미부여(기존 동작).
   const hasDims = Boolean(width && height);
+  // 원본 크기: 프리셋 너비로 늘리지 않고 이미지 본래 크기 그대로(뷰포트 한도 내 자동 축소).
+  const isOriginal = size === 'original';
 
   const image = (
     // 외부(Blob) 이미지이므로 next/image 대신 img 사용
@@ -53,7 +55,11 @@ export function PopupBannerModal({
     <img
       src={imageUrl}
       alt={title}
-      className="h-auto w-full select-none rounded-t-lg object-contain"
+      className={cn(
+        'h-auto select-none rounded-t-lg object-contain',
+        // 원본: 본래 너비(컨테이너 한도 내). 프리셋: 컨테이너 가득 채움.
+        isOriginal ? 'w-auto max-w-full' : 'w-full',
+      )}
       draggable={false}
       // CLS 완화: 종횡비 공간 예약 + 디코딩을 메인 스레드에서 분리
       width={hasDims ? (width as number) : undefined}
@@ -73,7 +79,9 @@ export function PopupBannerModal({
     >
       <div
         className={cn(
-          'relative w-full overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-slate-900',
+          'relative overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-slate-900',
+          // 원본: 이미지 크기에 맞춰 컨테이너가 줄어들도록 width:fit. 프리셋: 가득 채움.
+          isOriginal ? 'w-fit' : 'w-full',
           maxWidth,
         )}
         onClick={(e) => e.stopPropagation()}

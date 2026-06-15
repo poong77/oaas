@@ -66,10 +66,19 @@ const NoticeWriteSchema = z.object({
   bannerUntilIso: z.string().optional().nullable(),
   // NT-04 홈 팝업 배너
   popupEnabled: z.boolean().optional(),
-  popupImageUrl: z.string().url('유효한 이미지 URL이 아닙니다').optional().nullable(),
+  // 업로드 API는 비공개 버킷 인증 프록시의 상대경로(`/api/files/view?key=...`)를 반환하므로
+  // 절대 URL뿐 아니라 루트 상대경로('/...')도 허용한다. (절대 URL only면 팝업 배너 발행이 막힘)
+  popupImageUrl: z
+    .string()
+    .refine(
+      (v) => /^https?:\/\//i.test(v) || v.startsWith('/'),
+      '유효한 이미지 URL이 아닙니다',
+    )
+    .optional()
+    .nullable(),
   popupImageWidth: z.coerce.number().int().positive().optional().nullable(),
   popupImageHeight: z.coerce.number().int().positive().optional().nullable(),
-  popupSize: z.enum(['small', 'medium', 'large']).optional(),
+  popupSize: z.enum(['small', 'medium', 'large', 'original']).optional(),
   popupUntilIso: z.string().optional().nullable(),
   publish: z.boolean().optional(),
 });
