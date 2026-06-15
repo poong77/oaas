@@ -53,14 +53,8 @@ export function Header() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/oatech_logo.png"
-              alt="OAtech"
-              className="h-5 w-auto dark:brightness-110"
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/support_logo.png"
-              alt="Support"
+              src="/oasupport-logo.svg"
+              alt="OAtech Support"
               className="h-5 w-auto dark:brightness-110"
             />
           </Link>
