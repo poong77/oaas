@@ -68,6 +68,7 @@ const POPUP_SIZE_OPTIONS: NoticePopupSize[] = [
   'small',
   'medium',
   'large',
+  'wide',
   'original',
 ];
 
@@ -463,7 +464,7 @@ export function NoticeEditor({
                   <Label className="text-xs text-slate-600 dark:text-slate-400">
                     배너 크기
                   </Label>
-                  <div className="grid max-w-sm grid-cols-4 gap-2">
+                  <div className="grid max-w-sm grid-cols-5 gap-2">
                     {POPUP_SIZE_OPTIONS.map((s) => (
                       <ChoiceCard
                         key={s}

@@ -78,7 +78,7 @@ const NoticeWriteSchema = z.object({
     .nullable(),
   popupImageWidth: z.coerce.number().int().positive().optional().nullable(),
   popupImageHeight: z.coerce.number().int().positive().optional().nullable(),
-  popupSize: z.enum(['small', 'medium', 'large', 'original']).optional(),
+  popupSize: z.enum(['small', 'medium', 'large', 'wide', 'original']).optional(),
   popupUntilIso: z.string().optional().nullable(),
   publish: z.boolean().optional(),
 });

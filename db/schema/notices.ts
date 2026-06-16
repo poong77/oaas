@@ -53,9 +53,10 @@ export type NoticeKind = (typeof noticeKindEnum.enumValues)[number];
 /**
  * 홈 팝업 배너 크기 프리셋 (NT-04).
  *
- * small    — max-w-sm  (작은 안내/이벤트)
- * medium   — max-w-md  (기본)
- * large    — max-w-2xl (메인 프로모션)
+ * small    — max-w-sm        (작은 안내/이벤트)
+ * medium   — max-w-md        (기본)
+ * large    — max-w-2xl       (메인 프로모션)
+ * wide     — max-w-[1200px]  (와이드 1200px)
  * original — 이미지 원본 크기 그대로 노출 (뷰포트 한도 내). 프리셋 너비 강제 없음
  *
  * ⚠️ pg enum이 아니라 text 컬럼이다. drizzle-kit push가 enum 값 추가 시
@@ -66,6 +67,7 @@ export const NOTICE_POPUP_SIZES = [
   'small',
   'medium',
   'large',
+  'wide',
   'original',
 ] as const;
 
