@@ -28,10 +28,7 @@ import {
   listPinnedPublishedNotices,
   listRecentPublishedNotices,
 } from '@/lib/services/notices';
-import {
-  NOTICE_KIND_CLASSES,
-  NOTICE_KIND_META,
-} from '@/lib/services/notices-meta';
+import { NoticeKindBadge } from '@/components/badges/notice-kind-badge';
 import type { NoticeKind } from '@/db/schema';
 
 type LatestStatus = Awaited<ReturnType<typeof getLatestServiceStatus>>;
@@ -72,8 +69,7 @@ type UpdateItem = {
   source: 'notice';
   id: string;
   href: string;
-  label: string;
-  labelClass: string;
+  kind: NoticeKind;
   title: string;
   publishedAt: Date | string | null;
   pinned: boolean;
@@ -96,8 +92,7 @@ export async function HomeStatusUpdatesBox({ latest }: { latest: LatestStatus })
     source: 'notice',
     id: n.id,
     href: `/notices/${n.id}`,
-    label: NOTICE_KIND_META[n.kind as NoticeKind].label,
-    labelClass: NOTICE_KIND_CLASSES[n.kind as NoticeKind],
+    kind: n.kind as NoticeKind,
     title: n.title,
     publishedAt: n.publishedAt,
     pinned,
@@ -174,14 +169,7 @@ export async function HomeStatusUpdatesBox({ latest }: { latest: LatestStatus })
                 href={item.href}
                 className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
-                <span
-                  className={cn(
-                    'inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-label-small-semibold',
-                    item.labelClass,
-                  )}
-                >
-                  {item.label}
-                </span>
+                <NoticeKindBadge kind={item.kind} />
                 <p className="min-w-0 flex-1 truncate text-body-small-medium text-slate-800 dark:text-slate-100 sm:text-body-medium-medium">
                   {item.title}
                 </p>

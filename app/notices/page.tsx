@@ -10,10 +10,7 @@ import { ChevronLeft, ChevronRight, Megaphone, Pin, Search } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { listNotices } from '@/lib/services/notices';
-import {
-  NOTICE_KIND_CLASSES,
-  NOTICE_KIND_META,
-} from '@/lib/services/notices-meta';
+import { NoticeKindBadge } from '@/components/badges/notice-kind-badge';
 import type { NoticeKind } from '@/db/schema';
 import { formatDateKst } from '@/lib/business-hours/format';
 import { PageContainer } from '@/components/layout/page-container';
@@ -136,8 +133,6 @@ export default async function NoticesPage({
       ) : (
         <ul className="border-t border-slate-200 dark:border-slate-800">
           {items.map((n) => {
-            const meta = NOTICE_KIND_META[n.kind];
-            const kindClass = NOTICE_KIND_CLASSES[n.kind];
             return (
               <li
                 key={n.id}
@@ -157,11 +152,7 @@ export default async function NoticesPage({
                         고정
                       </span>
                     )}
-                    <span
-                      className={`inline-flex items-center justify-center rounded-md px-1 py-1.5 text-xs font-medium min-w-[88px] ${kindClass}`}
-                    >
-                      {meta.label}
-                    </span>
+                    <NoticeKindBadge kind={n.kind} />
                   </span>
                   <span className="flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                     {n.title}

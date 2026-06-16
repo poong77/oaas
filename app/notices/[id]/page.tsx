@@ -18,10 +18,7 @@ import {
   listRelatedNotices,
 } from '@/lib/services/notices';
 import { getProductCategories } from '@/lib/services/categories';
-import {
-  NOTICE_KIND_CLASSES,
-  NOTICE_KIND_META,
-} from '@/lib/services/notices-meta';
+import { NoticeKindBadge } from '@/components/badges/notice-kind-badge';
 import { formatDateKst } from '@/lib/business-hours/format';
 import { NoticeViewBumper } from './_components/notice-view-bumper';
 import { NoticeActionsBar } from './_components/notice-actions-bar';
@@ -57,8 +54,6 @@ export default async function NoticeDetailPage({
     getProductCategories(),
   ]);
 
-  const meta = NOTICE_KIND_META[notice.kind];
-  const kindClass = NOTICE_KIND_CLASSES[notice.kind];
   const productLabel = notice.productCode
     ? (categories.find((c) => c.code === notice.productCode)?.label ??
       notice.productCode)
@@ -82,11 +77,7 @@ export default async function NoticeDetailPage({
                   고정
                 </span>
               )}
-              <span
-                className={`inline-flex items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium min-w-[88px] ${kindClass}`}
-              >
-                {meta.label}
-              </span>
+              <NoticeKindBadge kind={notice.kind} />
               <span className="text-xl font-bold tracking-tight sm:text-2xl">
                 {notice.title}
               </span>
@@ -158,8 +149,6 @@ export default async function NoticeDetailPage({
           </h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((r) => {
-              const rMeta = NOTICE_KIND_META[r.kind];
-              const rKindClass = NOTICE_KIND_CLASSES[r.kind];
               return (
                 <li key={r.id}>
                   <Link
@@ -167,11 +156,7 @@ export default async function NoticeDetailPage({
                     className="flex h-full flex-col gap-2 rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-brand-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700"
                   >
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium min-w-[88px] ${rKindClass}`}
-                      >
-                        {rMeta.label}
-                      </span>
+                      <NoticeKindBadge kind={r.kind} />
                       {r.publishedAt && (
                         <span className="text-xs text-slate-400">
                           {formatDateKst(r.publishedAt)}

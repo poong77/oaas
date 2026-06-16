@@ -31,10 +31,7 @@ import {
   summarizeNoticeBody,
   type SearchNoticeHit,
 } from '@/lib/services/notices';
-import {
-  NOTICE_KIND_CLASSES,
-  NOTICE_KIND_META,
-} from '@/lib/services/notices-meta';
+import { NoticeKindBadge } from '@/components/badges/notice-kind-badge';
 import { expandKeywords } from '@/lib/services/synonym-expander';
 import { buildHighlightRegex } from '@/lib/text/search-match';
 import { logSearch } from '@/lib/services/search-logs';
@@ -391,8 +388,6 @@ async function SearchResults({
               ) : (
                 <ul className="grid gap-3">
                   {sortedNotice.map((n, i) => {
-                    const meta = NOTICE_KIND_META[n.kind];
-                    const kindClass = NOTICE_KIND_CLASSES[n.kind];
                     return (
                       <li key={n.id}>
                         <TrackedLink
@@ -405,11 +400,7 @@ async function SearchResults({
                           className="hover:border-brand-300 hover:bg-brand-50/30 dark:hover:border-brand-700 dark:hover:bg-brand-950/20 flex flex-col gap-1 rounded-lg border border-slate-200 bg-white p-4 transition-colors dark:border-slate-700 dark:bg-slate-900"
                         >
                           <div className="flex items-center gap-2">
-                            <span
-                              className={`inline-flex items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium min-w-[88px] ${kindClass}`}
-                            >
-                              {meta.label}
-                            </span>
+                            <NoticeKindBadge kind={n.kind} />
                             {n.productCode && (
                               <Badge tone="slate" className="uppercase">
                                 {n.productCode}

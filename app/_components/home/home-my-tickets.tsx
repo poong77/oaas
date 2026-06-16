@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import type { TicketListItem } from '@/lib/services/tickets';
 import type { TicketStatus } from '@/db/schema';
+import { TicketStatusBadge } from '@/components/badges/ticket-status-badge';
 
 const STATUS_META: Record<
   TicketStatus,
@@ -104,11 +105,7 @@ export function HomeMyTickets({
                     href={`/tickets/${t.id}`}
                     className="grid grid-cols-[80px_minmax(0,1fr)_auto] items-center gap-x-4 px-2 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
                   >
-                    <span
-                      className={`inline-flex w-[69px] items-center justify-center whitespace-nowrap rounded-full border px-1.5 py-3 text-label-small-semibold ${m.badge}`}
-                    >
-                      {m.label}
-                    </span>
+                    <TicketStatusBadge label={m.label} className={m.badge} />
                     <span className="flex min-w-0 flex-col">
                       <span className="truncate text-title-medium-semibold text-slate-900 dark:text-slate-100">
                         {t.title}

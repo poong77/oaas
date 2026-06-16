@@ -8,13 +8,7 @@
 import Link from 'next/link';
 import { ArrowRight, Bell } from 'lucide-react';
 import type { NoticeListItem } from '@/lib/services/notices';
-import type { NoticeKind } from '@/db/schema';
-
-const KIND_META: Record<NoticeKind, { label: string; cls: string }> = {
-  notice: { label: '공지사항', cls: 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300' },
-  release: { label: '릴리즈', cls: 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300' },
-  incident: { label: '서비스 장애', cls: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300' },
-};
+import { NoticeKindBadge } from '@/components/badges/notice-kind-badge';
 
 function fmtDate(d: Date | null): string {
   if (!d) return '';
@@ -48,18 +42,13 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
       {items.length > 0 ? (
         <ul className="border-t border-slate-200 dark:border-slate-800">
           {items.map((n) => {
-            const m = KIND_META[n.kind];
             return (
               <li key={n.id} className="border-b border-slate-200 dark:border-slate-800">
                 <Link
                   href={`/notices/${n.id}`}
                   className="grid grid-cols-[100px_minmax(0,1fr)_auto] items-center gap-x-4 px-2 py-6 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
                 >
-                  <span
-                    className={`inline-flex min-w-[88px] items-center justify-center whitespace-nowrap rounded-md px-1 py-1.5 text-label-small-medium ${m.cls}`}
-                  >
-                    {m.label}
-                  </span>
+                  <NoticeKindBadge kind={n.kind} />
                   <span className="min-w-0 truncate text-title-medium-medium text-slate-800 dark:text-slate-100">
                     {n.title}
                   </span>

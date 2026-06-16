@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { ListChecks } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
+import { TicketStatusBadge } from '@/components/badges/ticket-status-badge';
 import type { TicketListItem } from '@/lib/services/tickets';
 import type { TicketStatus } from '@/db/schema';
 
@@ -21,13 +22,7 @@ const STATUS_META: Record<TicketStatus, { label: string; cls: string }> = {
 
 function StatusPill({ status }: { status: TicketStatus }) {
   const m = STATUS_META[status];
-  return (
-    <span
-      className={`inline-flex w-[69px] shrink-0 items-center justify-center rounded-full border px-1.5 py-3 text-xs font-medium ${m.cls}`}
-    >
-      {m.label}
-    </span>
-  );
+  return <TicketStatusBadge label={m.label} className={m.cls} />;
 }
 
 function fmtDate(d: Date | null): string {
