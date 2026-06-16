@@ -153,6 +153,46 @@ export async function suggestFaqKeywords(
 }
 
 /**
+ * 동의어 사전 — 대표어 기준 숙박업계 동의어 AI 추천 (어드민 원페이지 보조).
+ *
+ * 호텔/숙박 업계에서 호텔리어가 같은 개념을 부를 법한 다른 표현(약어·영문·구어·오타 포함)을 제안.
+ * 대표어 자신과 이미 등록된 동의어는 제외하고, 검색 확장에 바로 쓸 수 있는 짧은 표현만 반환.
+ * graceful: 키 미설정/오류 시 빈 배열.
+ */
+export async function suggestSynonyms(
+  canonicalTerm: string,
+  existing: string[] = [],
+): Promise<string[]> {
+  const term = canonicalTerm.trim();
+  if (term.length < 1) return [];
+  const sys =
+    '너는 호텔·숙박업 솔루션(PMS/키오스크/도어락/예약·채널) 고객지원 검색의 동의어 사전 큐레이터다. ' +
+    '주어진 대표어와 같은 개념을, 호텔리어·프런트·하우스키핑 직원이 실제로 부를 법한 다른 표현으로 확장한다. ' +
+    '규칙: ① 숙박업 현장 용어·약어·영문 표기·구어체·흔한 오타/띄어쓰기 변형을 폭넓게 포함 ' +
+    '② 대표어와 의미가 같거나 매우 가까운 것만(상위/하위 개념·연관어 금지) ' +
+    '③ 2~20자, 8~12개 ④ 대표어 자신과 이미 등록된 항목은 중복 금지 ⑤ 설명·문장 금지, 단어/짧은 구만. ' +
+    'JSON {"synonyms": string[]} 형식으로만 답한다.';
+  const usr = `대표어: ${term}\n이미 등록된 동의어: ${existing.join(', ') || '(없음)'}\n\n위 대표어의 숙박업계 동의어 후보를 제안.`;
+  const out = await chatJson<{ synonyms?: string[] }>(sys, usr, {
+    temperature: 0.4,
+  });
+  if (!Array.isArray(out?.synonyms)) return [];
+  const seen = new Set(
+    [term, ...existing].map((s) => s.trim().toLowerCase()),
+  );
+  const result: string[] = [];
+  for (const raw of out.synonyms) {
+    if (typeof raw !== 'string') continue;
+    const t = raw.trim().slice(0, 60);
+    const key = t.toLowerCase();
+    if (t.length < 1 || seen.has(key)) continue;
+    seen.add(key);
+    result.push(t);
+  }
+  return result.slice(0, 12);
+}
+
+/**
  * 검색 결과 목록의 질의 적합도 채점 (LLM-as-a-judge).
  * @returns 입력 results 순서에 대응하는 0~3 점수 배열 (3=완벽, 0=무관). null이면 실패.
  */

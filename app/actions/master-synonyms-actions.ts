@@ -13,6 +13,12 @@ import { z } from 'zod';
 
 import { requireRole } from '@/lib/permissions';
 import { logActivity } from '@/lib/audit';
+import { rateLimitOrThrow, RateLimitExceededError } from '@/lib/ai/rate-limiter';
+import { suggestSynonyms } from '@/lib/services/llm';
+import {
+  dismissKeywordGap,
+  restoreKeywordGap,
+} from '@/lib/services/keyword-gap';
 import {
   addSynonym,
   createTermGroup,
@@ -121,6 +127,138 @@ export async function createTermGroupAction(
   revalidateTag('synonyms', 'default');
   revalidatePath('/admin/master/synonyms');
   redirect(`/admin/master/synonyms/${result.id}`);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 원페이지 — 대표어 + 동의어 한 번에 생성
+// ─────────────────────────────────────────────────────────────────
+
+export async function createGroupWithSynonymsAction(input: {
+  canonicalTerm: string;
+  synonyms: string[];
+}): Promise<{ ok: boolean; id?: string; message?: string; added?: number }> {
+  const user = await requireRole(['manager', 'admin']);
+  const canonicalTerm = (input.canonicalTerm ?? '').trim();
+  if (canonicalTerm.length < 1 || canonicalTerm.length > 60) {
+    return { ok: false, message: '대표어를 1~60자로 입력하세요' };
+  }
+
+  // category/sortOrder 등은 기본값(misc/0). 원페이지는 대표어+동의어만 받는다.
+  const created = await createTermGroup({
+    canonicalTerm,
+    category: 'misc',
+    description: null,
+    suggestedCategoryId: null,
+    sortOrder: 0,
+  });
+  if (!created.ok) {
+    if (created.message === 'DUPLICATE_CANONICAL') {
+      return { ok: false, message: '이미 등록된 대표어입니다' };
+    }
+    return { ok: false, message: '저장 실패' };
+  }
+
+  logActivity({
+    userId: user.id,
+    action: 'master.term_group.create',
+    targetType: 'term_group',
+    targetId: created.id,
+    payload: { canonicalTerm, via: 'one-page' },
+  });
+
+  // 동의어 일괄 추가 (대표어 자신/중복/공백 제외)
+  let added = 0;
+  const seen = new Set([canonicalTerm.toLowerCase()]);
+  for (const raw of Array.isArray(input.synonyms) ? input.synonyms : []) {
+    const term = (raw ?? '').trim();
+    const key = term.toLowerCase();
+    if (term.length < 1 || term.length > 60 || seen.has(key)) continue;
+    seen.add(key);
+    const r = await addSynonym({ groupId: created.id, term, language: 'ko' });
+    if (r.ok) added += 1;
+  }
+
+  revalidateTag('synonyms', 'default');
+  revalidatePath('/admin/master/synonyms');
+  return { ok: true, id: created.id, added };
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 갭 키워드 — 무시 / 무시 해제
+// ─────────────────────────────────────────────────────────────────
+
+export async function dismissKeywordGapAction(
+  term: string,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const t = (term ?? '').trim();
+  if (!t) return { ok: false, message: '키워드 누락' };
+  const result = await dismissKeywordGap(t, user.id);
+  if (!result.ok) return { ok: false, message: result.message ?? '무시 실패' };
+  logActivity({
+    userId: user.id,
+    action: 'master.keyword_gap.dismiss',
+    targetType: 'keyword_gap',
+    targetId: t,
+  });
+  revalidatePath('/admin/master/synonyms');
+  return { ok: true };
+}
+
+export async function restoreKeywordGapAction(
+  term: string,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const t = (term ?? '').trim();
+  if (!t) return { ok: false, message: '키워드 누락' };
+  const result = await restoreKeywordGap(t, user.id);
+  if (!result.ok) return { ok: false, message: result.message ?? '복원 실패' };
+  logActivity({
+    userId: user.id,
+    action: 'master.keyword_gap.restore',
+    targetType: 'keyword_gap',
+    targetId: t,
+  });
+  revalidatePath('/admin/master/synonyms');
+  return { ok: true };
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 원페이지 — AI 동의어 추천 (숙박업계 기준)
+// ─────────────────────────────────────────────────────────────────
+
+export async function suggestSynonymsAction(input: {
+  canonicalTerm: string;
+  existing?: string[];
+}): Promise<{ ok: boolean; synonyms?: string[]; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const canonicalTerm = (input.canonicalTerm ?? '').trim();
+  if (canonicalTerm.length < 1) {
+    return { ok: false, message: '대표어를 먼저 입력하세요' };
+  }
+  try {
+    await rateLimitOrThrow(user.id, {
+      perMin: 10,
+      perDay: 200,
+      bucket: 'ai-assist',
+    });
+  } catch (e) {
+    if (e instanceof RateLimitExceededError) {
+      return { ok: false, message: e.message };
+    }
+    throw e;
+  }
+  const synonyms = await suggestSynonyms(
+    canonicalTerm,
+    Array.isArray(input.existing) ? input.existing : [],
+  );
+  if (synonyms.length === 0) {
+    return {
+      ok: false,
+      message: 'AI 제안을 가져오지 못했어요 (키 미설정/일시 오류)',
+    };
+  }
+  return { ok: true, synonyms };
 }
 
 // ─────────────────────────────────────────────────────────────────

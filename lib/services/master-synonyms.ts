@@ -118,6 +118,61 @@ export async function listTermGroups(
   }
 }
 
+/**
+ * 원페이지 편집기용 — 활성 그룹 전체 + 각 그룹의 활성 동의어를 한 번에 로딩.
+ * 검색(search)은 대표어 + 동의어 본문 양쪽에 매칭.
+ */
+export async function listTermGroupsWithSynonyms(
+  params: { search?: string } = {},
+): Promise<TermGroupWithSynonyms[]> {
+  if (!db) return [];
+  try {
+    const groups = await db
+      .select()
+      .from(termGroups)
+      .where(eq(termGroups.isActive, true))
+      .orderBy(desc(termGroups.updatedAt), asc(termGroups.canonicalTerm));
+    if (groups.length === 0) return [];
+
+    const groupIds = groups.map((g) => g.id);
+    const synonyms = await db
+      .select()
+      .from(termSynonyms)
+      .where(
+        and(
+          inArray(termSynonyms.groupId, groupIds),
+          eq(termSynonyms.isActive, true),
+        ),
+      )
+      .orderBy(asc(termSynonyms.sortOrder), asc(termSynonyms.term));
+
+    const byGroup = new Map<string, TermSynonym[]>();
+    for (const s of synonyms) {
+      const arr = byGroup.get(s.groupId);
+      if (arr) arr.push(s);
+      else byGroup.set(s.groupId, [s]);
+    }
+
+    let result = groups.map((g) => ({
+      ...g,
+      synonyms: byGroup.get(g.id) ?? [],
+    }));
+
+    const q = params.search?.trim().toLowerCase();
+    if (q) {
+      result = result.filter(
+        (g) =>
+          g.canonicalTerm.toLowerCase().includes(q) ||
+          g.synonyms.some((s) => s.term.toLowerCase().includes(q)),
+      );
+    }
+    return result;
+  } catch (err) {
+    console.error('[master-synonyms.listTermGroupsWithSynonyms] 실패:', err);
+    return [];
+  }
+}
+
 export async function getTermGroupById(
   id: string,
 ): Promise<TermGroupWithSynonyms | null> {

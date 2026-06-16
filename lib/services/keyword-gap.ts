@@ -18,9 +18,88 @@ import 'server-only';
 import { and, eq } from 'drizzle-orm';
 
 import { db } from '@/db';
-import { articles } from '@/db/schema';
+import { articles, systemSettings } from '@/db/schema';
 import { loadSynonymIndex } from './master-synonyms';
 import { collapseSpacing } from '@/lib/text/normalize';
+
+/**
+ * 무시(dismiss)한 갭 키워드 보관 — system_settings 키.
+ * 값: collapseSpacing 키 배열(string[]). 새 테이블 없이 운영 안전하게 저장.
+ */
+export const DISMISSED_GAPS_SETTING_KEY = 'dismissed_keyword_gaps';
+
+/** 무시 목록(collapse 키 집합)을 읽는다. 없으면 빈 Set. */
+export async function getDismissedGapKeys(): Promise<Set<string>> {
+  if (!db) return new Set();
+  try {
+    const rows = await db
+      .select({ value: systemSettings.value })
+      .from(systemSettings)
+      .where(eq(systemSettings.key, DISMISSED_GAPS_SETTING_KEY))
+      .limit(1);
+    const value = rows[0]?.value;
+    if (Array.isArray(value)) {
+      return new Set(value.filter((v): v is string => typeof v === 'string'));
+    }
+    return new Set();
+  } catch (err) {
+    console.error('[keyword-gap.getDismissedGapKeys] 실패:', err);
+    return new Set();
+  }
+}
+
+async function writeDismissedGapKeys(
+  keys: string[],
+  updatedBy: string | null,
+): Promise<{ ok: boolean; message?: string }> {
+  if (!db) return { ok: false, message: 'DB_NOT_READY' };
+  try {
+    await db
+      .insert(systemSettings)
+      .values({
+        key: DISMISSED_GAPS_SETTING_KEY,
+        value: keys,
+        description: '동의어 갭 카드에서 무시한 키워드(collapse 키) 목록',
+        updatedBy: updatedBy ?? null,
+      })
+      .onConflictDoUpdate({
+        target: systemSettings.key,
+        set: { value: keys, updatedBy: updatedBy ?? null, isActive: true },
+      });
+    return { ok: true };
+  } catch (err) {
+    console.error('[keyword-gap.writeDismissedGapKeys] 실패:', err);
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'INTERNAL_ERROR',
+    };
+  }
+}
+
+/** 갭 키워드 1건 무시 (display 문자열 → collapse 키로 정규화 후 저장). */
+export async function dismissKeywordGap(
+  term: string,
+  updatedBy: string | null,
+): Promise<{ ok: boolean; message?: string }> {
+  const key = collapseSpacing(term);
+  if (!key) return { ok: false, message: 'EMPTY_TERM' };
+  const current = await getDismissedGapKeys();
+  if (current.has(key)) return { ok: true }; // 멱등
+  current.add(key);
+  return writeDismissedGapKeys([...current], updatedBy);
+}
+
+/** 무시 해제 1건. */
+export async function restoreKeywordGap(
+  term: string,
+  updatedBy: string | null,
+): Promise<{ ok: boolean; message?: string }> {
+  const key = collapseSpacing(term);
+  if (!key) return { ok: false, message: 'EMPTY_TERM' };
+  const current = await getDismissedGapKeys();
+  if (!current.delete(key)) return { ok: true }; // 멱등
+  return writeDismissedGapKeys([...current], updatedBy);
+}
 
 export type KeywordGap = {
   /** 키워드 원본 (대표 표기 — 가장 빈번한 원형 보존) */
@@ -36,6 +115,10 @@ export type KeywordGapResult = {
   totalDistinctKeywords: number;
   /** 그중 동의어 사전에 이미 등록된 키워드 수 */
   coveredKeywords: number;
+  /** 어드민이 무시 처리해 카드에서 숨긴 키워드 수 */
+  dismissedKeywords: number;
+  /** 무시한 키워드 목록(collapse 키, 가나다순) — "무시한 키워드 보기"용 */
+  dismissedTerms: string[];
 };
 
 export type AnalyzeKeywordGapsOptions = {
@@ -59,7 +142,13 @@ export async function analyzeKeywordGaps(
   const minArticleCount = Math.max(1, options.minArticleCount ?? 1);
 
   if (!db) {
-    return { gaps: [], totalDistinctKeywords: 0, coveredKeywords: 0 };
+    return {
+      gaps: [],
+      totalDistinctKeywords: 0,
+      coveredKeywords: 0,
+      dismissedKeywords: 0,
+      dismissedTerms: [],
+    };
   }
 
   try {
@@ -97,13 +186,21 @@ export async function analyzeKeywordGaps(
 
     const totalDistinctKeywords = counts.size;
 
-    // 3) 동의어 사전과 대조 — termToGroupIds(normalize된 key)에 없으면 미등록
-    const index = await loadSynonymIndex();
+    // 3) 동의어 사전 + 무시 목록과 대조 — 둘 중 하나라도 있으면 후보 제외
+    const [index, dismissed] = await Promise.all([
+      loadSynonymIndex(),
+      getDismissedGapKeys(),
+    ]);
     let coveredKeywords = 0;
+    let dismissedKeywords = 0;
     const gaps: KeywordGap[] = [];
     for (const [key, { display, articleCount }] of counts) {
       if (index.termToGroupIds.has(key)) {
         coveredKeywords += 1;
+        continue;
+      }
+      if (dismissed.has(key)) {
+        dismissedKeywords += 1;
         continue;
       }
       if (articleCount < minArticleCount) continue;
@@ -121,9 +218,17 @@ export async function analyzeKeywordGaps(
       gaps: gaps.slice(0, limit),
       totalDistinctKeywords,
       coveredKeywords,
+      dismissedKeywords,
+      dismissedTerms: [...dismissed].sort((a, b) => a.localeCompare(b, 'ko')),
     };
   } catch (err) {
     console.error('[keyword-gap.analyzeKeywordGaps] 실패:', err);
-    return { gaps: [], totalDistinctKeywords: 0, coveredKeywords: 0 };
+    return {
+      gaps: [],
+      totalDistinctKeywords: 0,
+      coveredKeywords: 0,
+      dismissedKeywords: 0,
+      dismissedTerms: [],
+    };
   }
 }
