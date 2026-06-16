@@ -670,16 +670,23 @@ export async function searchArticles(
       baseConds.push(eq(articles.contentType, options.contentType));
     }
 
-    // (1) 키워드 leg — 그룹 간 AND 매칭.
-    const keywordConds = [...baseConds];
-    const searchCond = buildArticleSearchConditionGrouped(groups);
-    if (searchCond) keywordConds.push(searchCond);
-    const keywordRows = await db
-      .select(ARTICLE_LIST_SELECT)
-      .from(articles)
-      .where(and(...keywordConds))
-      .orderBy(desc(articles.publishedAt))
-      .limit(limit);
+    // (1) 키워드 leg — 그룹 간 AND 매칭. 단, 다단어 AND가 0건이면 단어 OR로
+    // 폴백(재현율 확보). "계정 찾기"처럼 일부 단어("찾기")만 일반어인 쿼리에서
+    // AND가 전멸하는 것을 막는다. AND가 1건이라도 있으면 폴백 안 함(정밀 유지).
+    const conn = db;
+    const runKeyword = (cond: SQL | undefined) => {
+      const conds = cond ? [...baseConds, cond] : [...baseConds];
+      return conn
+        .select(ARTICLE_LIST_SELECT)
+        .from(articles)
+        .where(and(...conds))
+        .orderBy(desc(articles.publishedAt))
+        .limit(limit);
+    };
+    let keywordRows = await runKeyword(buildArticleSearchConditionGrouped(groups));
+    if (keywordRows.length === 0 && groups.length > 1) {
+      keywordRows = await runKeyword(buildArticleSearchCondition(flat));
+    }
 
     // (2) 벡터 leg — 쿼리 임베딩이 생성되면 코사인 최근접. graceful: 키 없으면 skip.
     const { embedText, toVectorLiteral } = await import('./embeddings');

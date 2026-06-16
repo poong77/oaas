@@ -682,49 +682,60 @@ export async function searchNotices(
     if (options.productCode) {
       conditions.push(eq(notices.productCode, options.productCode));
     }
-    // 그룹 간 AND, 그룹 내 동의어 OR.
-    const andParts: SQL[] = [];
-    for (const group of groups) {
-      if (group.length === 0) continue;
+    // 그룹 간 AND, 그룹 내 동의어 OR. 단, 다단어 AND 0건이면 OR 폴백("계정 찾기").
+    const orCond = (terms: string[]): SQL | undefined => {
       const orParts: SQL[] = [];
-      for (const term of group) {
+      for (const term of terms) {
         const p = `%${term}%`;
         const c = or(ilike(notices.title, p), ilike(notices.bodyMarkdown, p));
         if (c) orParts.push(c);
       }
-      if (orParts.length === 0) continue;
-      const groupCond = orParts.length === 1 ? orParts[0] : or(...orParts);
+      if (orParts.length === 0) return undefined;
+      return orParts.length === 1 ? orParts[0] : or(...orParts);
+    };
+    const andParts: SQL[] = [];
+    for (const group of groups) {
+      if (group.length === 0) continue;
+      const groupCond = orCond(group);
       if (groupCond) andParts.push(groupCond);
     }
-    const searchCond =
+    const andSearchCond =
       andParts.length === 0
         ? undefined
         : andParts.length === 1
           ? andParts[0]
           : and(...andParts);
-    if (searchCond) conditions.push(searchCond);
 
-    const rows = await db
-      .select({
-        id: notices.id,
-        kind: notices.kind,
-        productCode: notices.productCode,
-        title: notices.title,
-        bodyMarkdown: notices.bodyMarkdown,
-        pinned: notices.pinned,
-        banner: notices.banner,
-        bannerUntil: notices.bannerUntil,
-        publishedAt: notices.publishedAt,
-        viewCount: notices.viewCount,
-        isActive: notices.isActive,
-        createdAt: notices.createdAt,
-        updatedAt: notices.updatedAt,
-        authorId: notices.authorId,
-      })
-      .from(notices)
-      .where(and(...conditions))
-      .orderBy(desc(notices.pinned), desc(notices.publishedAt))
-      .limit(limit);
+    const SELECT = {
+      id: notices.id,
+      kind: notices.kind,
+      productCode: notices.productCode,
+      title: notices.title,
+      bodyMarkdown: notices.bodyMarkdown,
+      pinned: notices.pinned,
+      banner: notices.banner,
+      bannerUntil: notices.bannerUntil,
+      publishedAt: notices.publishedAt,
+      viewCount: notices.viewCount,
+      isActive: notices.isActive,
+      createdAt: notices.createdAt,
+      updatedAt: notices.updatedAt,
+      authorId: notices.authorId,
+    } as const;
+    const conn = db;
+    const runKeyword = (cond: SQL | undefined) => {
+      const conds = cond ? [...conditions, cond] : conditions;
+      return conn
+        .select(SELECT)
+        .from(notices)
+        .where(and(...conds))
+        .orderBy(desc(notices.pinned), desc(notices.publishedAt))
+        .limit(limit);
+    };
+    let rows = await runKeyword(andSearchCond);
+    if (rows.length === 0 && groups.length > 1) {
+      rows = await runKeyword(orCond(flat));
+    }
 
     const { matchesAnyTerm } = await import('@/lib/text/search-match');
     const lowered = query.toLowerCase();

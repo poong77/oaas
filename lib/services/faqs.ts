@@ -332,33 +332,45 @@ export async function searchFaqs(
 
     // (1) 키워드 leg — 그룹 간 AND 매칭 (그룹 내 동의어 OR).
     //   "단체 예약"이 "예약"만 든 FAQ를 빨아들이지 않게 한다.
+    //   단, 다단어 AND가 0건이면 단어 OR로 폴백(재현율 — "계정 찾기" 대응).
     // v1.7 정렬: 후보(FAQ는 소량) fetch 후 score 정렬→limit.
     const CANDIDATE_CAP = 200;
-    const andParts: SQL[] = [];
-    for (const group of groups) {
-      if (group.length === 0) continue;
-      const orParts: SQL[] = [arrayOverlaps(faqs.keywords, group)];
-      for (const term of group) {
+    /** terms 묶음을 OR(keywords 배열 + question/answer ILIKE) 조건으로. */
+    const orCond = (terms: string[]): SQL | undefined => {
+      const orParts: SQL[] = [arrayOverlaps(faqs.keywords, terms)];
+      for (const term of terms) {
         const p = `%${term}%`;
         const c = or(ilike(faqs.question, p), ilike(faqs.answerMarkdown, p));
         if (c) orParts.push(c);
       }
-      const groupCond = orParts.length === 1 ? orParts[0] : or(...orParts);
+      return orParts.length === 1 ? orParts[0] : or(...orParts);
+    };
+    const andParts: SQL[] = [];
+    for (const group of groups) {
+      if (group.length === 0) continue;
+      const groupCond = orCond(group);
       if (groupCond) andParts.push(groupCond);
     }
-    const searchCond =
+    const andSearchCond =
       andParts.length === 0
         ? undefined
         : andParts.length === 1
           ? andParts[0]
           : and(...andParts);
-    const keywordConds = searchCond ? [...baseConds, searchCond] : baseConds;
-    const keywordRows = await db
-      .select(SELECT)
-      .from(faqs)
-      .where(and(...keywordConds))
-      .orderBy(asc(faqs.sortOrder), desc(faqs.createdAt))
-      .limit(CANDIDATE_CAP);
+    const conn = db;
+    const runKeyword = (cond: SQL | undefined) => {
+      const conds = cond ? [...baseConds, cond] : baseConds;
+      return conn
+        .select(SELECT)
+        .from(faqs)
+        .where(and(...conds))
+        .orderBy(asc(faqs.sortOrder), desc(faqs.createdAt))
+        .limit(CANDIDATE_CAP);
+    };
+    let keywordRows = await runKeyword(andSearchCond);
+    if (keywordRows.length === 0 && groups.length > 1) {
+      keywordRows = await runKeyword(orCond(flat));
+    }
 
     // (2) 벡터 leg — 쿼리 임베딩이 생성되면 코사인 최근접. graceful: 키 없으면 skip.
     const { embedText, toVectorLiteral } = await import('./embeddings');
