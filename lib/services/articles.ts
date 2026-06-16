@@ -113,6 +113,12 @@ export type ListArticlesResult = {
  */
 const SEMANTIC_MIN_SIM = Number(process.env.SEMANTIC_MIN_SIM ?? '0.4');
 
+/**
+ * 시맨틱 전용 hit(키워드로 안 잡힌 글)을 결과에 새로 추가하기 위한 더 높은
+ * 하한선. 0.4~0.55 구간의 "주제만 비슷한" 글이 결과를 늘리는 것을 막는다.
+ */
+const SEMANTIC_STRICT_SIM = Number(process.env.SEMANTIC_STRICT_SIM ?? '0.55');
+
 /** ArticleListItem과 매칭되는 select 객체 (5개 list 함수에서 재사용). */
 const ARTICLE_LIST_SELECT = {
   id: articles.id,
@@ -174,6 +180,38 @@ function buildArticleSearchCondition(expanded: string[]): SQL | undefined {
     if (cond) orParts.push(cond);
   }
   return orParts.length === 1 ? orParts[0] : or(...orParts);
+}
+
+/**
+ * 통합검색용 — "그룹 간 AND, 그룹 내 OR" 매칭 조건.
+ *
+ * buildArticleSearchCondition가 모든 확장 term을 OR로 합치는 것과 달리,
+ * 각 쿼리 단어 그룹을 모두 만족(AND)해야 매칭된다. 다단어 쿼리에서
+ * 한 단어("예약")만 든 문서가 결과를 점령하는 것을 막는다.
+ */
+function buildArticleSearchConditionGrouped(
+  groups: string[][],
+): SQL | undefined {
+  if (groups.length === 0) return undefined;
+  const andParts: SQL[] = [];
+  for (const group of groups) {
+    if (group.length === 0) continue;
+    const orParts: SQL[] = [arrayOverlaps(articles.keywords, group)];
+    for (const term of group) {
+      const pattern = `%${term}%`;
+      const cond = or(
+        ilike(articles.title, pattern),
+        ilike(articles.summary, pattern),
+        ilike(articles.summary30s, pattern),
+        ilike(articles.bodyMarkdown, pattern),
+      );
+      if (cond) orParts.push(cond);
+    }
+    const groupCond = orParts.length === 1 ? orParts[0] : or(...orParts);
+    if (groupCond) andParts.push(groupCond);
+  }
+  if (andParts.length === 0) return undefined;
+  return andParts.length === 1 ? andParts[0] : and(...andParts);
 }
 
 /**
@@ -609,9 +647,16 @@ export async function searchArticles(
   if (!query) return [];
   const limit = Math.min(100, Math.max(1, options.limit ?? 50));
   try {
-    // v1.1: synonyms-master로 쿼리 확장 (Plan §6, Design §11.1)
-    const { expandKeywords } = await import('@/lib/services/synonym-expander');
-    const expanded = await expandKeywords(query, { maxTokens: 32 });
+    // v1.8: 단어별 그룹 확장 — "그룹 간 AND, 그룹 내 동의어 OR" 매칭으로
+    // 다단어 쿼리 정밀도 확보 ("단체 예약"이 "예약"만 든 글을 안 잡게).
+    const { expandKeywordsGrouped } = await import(
+      '@/lib/services/synonym-expander'
+    );
+    const { groups: rawGroups, flat } = await expandKeywordsGrouped(query, {
+      maxTokens: 32,
+    });
+    // 토큰이 안 잡히는 짧은 쿼리는 flat 전체를 한 그룹으로 (기존 동작 보존).
+    const groups = rawGroups.length > 0 ? rawGroups : [flat];
 
     // 공통 필터 (키워드/벡터 양쪽 동일).
     const baseConds: SQL[] = [
@@ -625,9 +670,9 @@ export async function searchArticles(
       baseConds.push(eq(articles.contentType, options.contentType));
     }
 
-    // (1) 키워드 leg — keywords 배열 OR + 확장 term ILIKE (listArticles와 공유)
+    // (1) 키워드 leg — 그룹 간 AND 매칭.
     const keywordConds = [...baseConds];
-    const searchCond = buildArticleSearchCondition(expanded);
+    const searchCond = buildArticleSearchConditionGrouped(groups);
     if (searchCond) keywordConds.push(searchCond);
     const keywordRows = await db
       .select(ARTICLE_LIST_SELECT)
@@ -662,31 +707,36 @@ export async function searchArticles(
       for (const r of rows) vectorRows.push({ ...r, sim: Number(r.sim) });
     }
 
-    // (3) 병합 + 점수. 키워드 점수(확장 term 기준)와 벡터 유사도를 합산.
-    // 동의어 결과가 0점으로 가라앉지 않도록 base(0.5) 보장.
+    // (3) 병합 + 점수. 그룹 커버리지(몇 개 단어를 만족하나)를 핵심 신호로.
     const { matchesAnyTerm, keywordsMatchAnyTerm } =
       await import('@/lib/text/search-match');
-    const terms = expanded.length > 0 ? expanded : [query];
     const lowered = query.toLowerCase();
     /** 벡터 유사도 가중치 — sim(0~1) × 4 가 제목 일치(2.5)와 견줄 수준. */
     const VEC_WEIGHT = 4;
+    const groupCount = groups.length || 1;
 
     function keywordScore(r: ArticleListItem): {
       score: number;
       titleMatch: boolean;
     } {
-      let score = 0;
-      const titleMatch = matchesAnyTerm(r.title, terms);
-      if (titleMatch) score += 2.5;
-      if (
-        matchesAnyTerm(r.summary, terms) ||
-        matchesAnyTerm(r.summary30s, terms)
-      )
-        score += 1;
-      if (keywordsMatchAnyTerm(r.keywords, terms)) score += 1;
-      // 동의어가 아닌 원본 검색어가 제목에 그대로 있으면 가산(직접 일치 우대).
-      if (r.title.toLowerCase().includes(lowered)) score += 1;
-      return { score, titleMatch };
+      let titleGroups = 0;
+      let anyGroups = 0;
+      for (const g of groups) {
+        const inTitle = matchesAnyTerm(r.title, g);
+        const inAny =
+          inTitle ||
+          matchesAnyTerm(r.summary, g) ||
+          matchesAnyTerm(r.summary30s, g) ||
+          keywordsMatchAnyTerm(r.keywords, g);
+        if (inTitle) titleGroups++;
+        if (inAny) anyGroups++;
+      }
+      // 커버리지 비율 기반: 모든 단어를 제목에서 만족 = 최고점.
+      let score = (titleGroups / groupCount) * 2.5;
+      score += (anyGroups / groupCount) * 1.5;
+      // 원본 검색어 구절이 제목에 그대로 = 강한 직접 일치 가산.
+      if (r.title.toLowerCase().includes(lowered)) score += 1.5;
+      return { score, titleMatch: titleGroups > 0 };
     }
 
     const byId = new Map<string, SearchArticleHit>();
@@ -697,9 +747,11 @@ export async function searchArticles(
     for (const r of vectorRows) {
       const existing = byId.get(r.id);
       if (existing) {
+        // 키워드로 이미 잡힌 글 → 의미 유사도를 랭킹 보강 신호로 가산.
         existing.score += r.sim * VEC_WEIGHT;
-      } else {
-        // 키워드로는 안 잡혔지만 의미적으로 가까운 글 (시맨틱 전용 hit).
+      } else if (r.sim >= SEMANTIC_STRICT_SIM) {
+        // 키워드 AND를 통과 못한 시맨틱 전용 hit은 매우 가까운 경우만 채택
+        // (0.4~0.55 구간의 "주제만 비슷한" 노이즈 차단).
         const { score, titleMatch } = keywordScore(r);
         byId.set(r.id, {
           ...r,

@@ -28,6 +28,9 @@ import { faqs, type Faq, type NewFaq } from '@/db/schema';
 /** 시맨틱 검색 코사인 유사도 하한선 (articles.ts와 동일값, 기본 0.4). */
 const SEMANTIC_MIN_SIM = Number(process.env.SEMANTIC_MIN_SIM ?? '0.4');
 
+/** 시맨틱 전용 hit 채택 하한선 (articles.ts와 동일값, 기본 0.55). */
+const SEMANTIC_STRICT_SIM = Number(process.env.SEMANTIC_STRICT_SIM ?? '0.55');
+
 export type FaqListItem = Pick<
   Faq,
   | 'id'
@@ -298,11 +301,12 @@ export async function searchFaqs(
   if (!query) return [];
   const limit = Math.min(100, Math.max(1, options.limit ?? 50));
   try {
-    // v1.6 — articles와 동일하게 동의어 확장 적용 (통합검색 일관성).
-    // 이전: 원본 검색어 ILIKE만 → "CI"로 "체크인" FAQ를 못 찾음.
-    const { expandKeywords } = await import('./synonym-expander');
-    const expanded = await expandKeywords(query, { maxTokens: 32 });
-    const terms = expanded.length > 0 ? expanded : [query];
+    // v1.8 — articles와 동일하게 "단어별 그룹 AND" 확장 (다단어 정밀도).
+    const { expandKeywordsGrouped } = await import('./synonym-expander');
+    const { groups: rawGroups, flat } = await expandKeywordsGrouped(query, {
+      maxTokens: 32,
+    });
+    const groups = rawGroups.length > 0 ? rawGroups : [flat];
 
     // 공통 필터 (키워드/벡터 leg 동일).
     const baseConds: SQL[] = [eq(faqs.isActive, true)];
@@ -326,18 +330,28 @@ export async function searchFaqs(
       updatedAt: faqs.updatedAt,
     } as const;
 
-    // (1) 키워드 leg — articles.buildArticleSearchCondition와 동일 패턴.
-    //   keywords 배열 GIN 매칭(정확 일치) + 확장 term ILIKE(question/answer).
-    // v1.7 정렬 버그 수정: sort_order로 자른 뒤 점수 매기던 것을 → 후보 전체
-    // (FAQ는 소량) fetch 후 score 정렬→limit으로 변경.
+    // (1) 키워드 leg — 그룹 간 AND 매칭 (그룹 내 동의어 OR).
+    //   "단체 예약"이 "예약"만 든 FAQ를 빨아들이지 않게 한다.
+    // v1.7 정렬: 후보(FAQ는 소량) fetch 후 score 정렬→limit.
     const CANDIDATE_CAP = 200;
-    const orParts: SQL[] = [arrayOverlaps(faqs.keywords, terms)];
-    for (const term of terms) {
-      const p = `%${term}%`;
-      const c = or(ilike(faqs.question, p), ilike(faqs.answerMarkdown, p));
-      if (c) orParts.push(c);
+    const andParts: SQL[] = [];
+    for (const group of groups) {
+      if (group.length === 0) continue;
+      const orParts: SQL[] = [arrayOverlaps(faqs.keywords, group)];
+      for (const term of group) {
+        const p = `%${term}%`;
+        const c = or(ilike(faqs.question, p), ilike(faqs.answerMarkdown, p));
+        if (c) orParts.push(c);
+      }
+      const groupCond = orParts.length === 1 ? orParts[0] : or(...orParts);
+      if (groupCond) andParts.push(groupCond);
     }
-    const searchCond = orParts.length === 1 ? orParts[0] : or(...orParts);
+    const searchCond =
+      andParts.length === 0
+        ? undefined
+        : andParts.length === 1
+          ? andParts[0]
+          : and(...andParts);
     const keywordConds = searchCond ? [...baseConds, searchCond] : baseConds;
     const keywordRows = await db
       .select(SELECT)
@@ -377,21 +391,30 @@ export async function searchFaqs(
     const lowered = query.toLowerCase();
     /** 벡터 유사도 가중치 — sim(0~1)×4 가 질문 일치(2.5)와 견줄 수준. */
     const VEC_WEIGHT = 4;
+    const groupCount = groups.length || 1;
 
     type FaqRow = (typeof keywordRows)[number];
     function scoreRow(r: FaqRow): { score: number; questionMatch: boolean } {
-      // 관련도 (articles 골격): question + answer + keywords + 원본 직접일치
-      let score = 0;
-      const questionMatch = matchesAnyTerm(r.question, terms);
-      if (questionMatch) score += 2.5;
-      if (matchesAnyTerm(r.answerMarkdown, terms)) score += 1;
-      if (keywordsMatchAnyTerm(r.keywords, terms)) score += 1;
-      if (r.question.toLowerCase().includes(lowered)) score += 1;
+      // 그룹 커버리지 기반 (articles와 동일 골격).
+      let questionGroups = 0;
+      let anyGroups = 0;
+      for (const g of groups) {
+        const inQ = matchesAnyTerm(r.question, g);
+        const inAny =
+          inQ ||
+          matchesAnyTerm(r.answerMarkdown, g) ||
+          keywordsMatchAnyTerm(r.keywords, g);
+        if (inQ) questionGroups++;
+        if (inAny) anyGroups++;
+      }
+      let score = (questionGroups / groupCount) * 2.5;
+      score += (anyGroups / groupCount) * 1.5;
+      if (r.question.toLowerCase().includes(lowered)) score += 1.5;
       // 인기·유용도 가중 (관련도보다 작게 — 동점 보정 수준).
       score += Math.min(0.8, Math.log10(1 + Math.max(0, r.viewCount)) * 0.4);
       const helpfulTotal = r.helpfulYes + r.helpfulNo;
       if (helpfulTotal >= 3) score += (r.helpfulYes / helpfulTotal) * 0.6;
-      return { score, questionMatch };
+      return { score, questionMatch: questionGroups > 0 };
     }
 
     const byId = new Map<string, SearchFaqHit>();
@@ -403,8 +426,8 @@ export async function searchFaqs(
       const existing = byId.get(r.id);
       if (existing) {
         existing.score += r.sim * VEC_WEIGHT;
-      } else {
-        // 키워드로는 안 잡혔지만 의미적으로 가까운 FAQ (시맨틱 전용 hit).
+      } else if (r.sim >= SEMANTIC_STRICT_SIM) {
+        // 키워드 AND 미통과 시맨틱 전용 hit은 매우 가까운 경우만 채택.
         const { score, questionMatch } = scoreRow(r);
         byId.set(r.id, {
           ...r,

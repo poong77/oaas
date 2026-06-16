@@ -37,6 +37,7 @@ import {
   type NoticeKind,
   type NoticePopupSize,
 } from '@/db/schema';
+import { buildPopupProxyUrl, extractUploadKey } from '@/lib/s3';
 
 // ─────────────────────────────────────────────────────────────────────
 // 타입
@@ -406,7 +407,9 @@ export async function listActivePopupNotices(): Promise<PopupNoticeItem[]> {
         id: r.id,
         kind: r.kind,
         title: r.title,
-        popupImageUrl: r.popupImageUrl,
+        // 로그인 필수 editor 프록시(/api/files/view) → 비로그인 홈에서도 보이는
+        // 공개 팝업 프록시(/api/files/popup)로 치환. DB 원본 값은 유지.
+        popupImageUrl: toPublicPopupImageUrl(r.popupImageUrl),
         popupSize: r.popupSize,
         popupImageWidth: r.popupImageWidth,
         popupImageHeight: r.popupImageHeight,
@@ -414,6 +417,46 @@ export async function listActivePopupNotices(): Promise<PopupNoticeItem[]> {
   } catch (err) {
     console.error('[notices.listActivePopupNotices] 실패:', err);
     return [];
+  }
+}
+
+/**
+ * 팝업 배너 이미지 URL을 공개 프록시 형태로 변환.
+ * - 로그인 필수 `/api/files/view?key=...` → 공개 `/api/files/popup?key=...`
+ * - 그 외(이미 공개 URL/절대 S3 URL 등)는 그대로 둔다.
+ */
+function toPublicPopupImageUrl(stored: string): string {
+  if (stored.startsWith('/api/files/view')) {
+    const key = extractUploadKey(stored);
+    if (key) return buildPopupProxyUrl(key);
+  }
+  return stored;
+}
+
+/**
+ * 주어진 S3 객체 키가 **현재 노출 중인 활성 팝업 공지**의 배너 이미지인지 검증.
+ * 공개 팝업 프록시(`/api/files/popup`)가 임의 객체 읽기를 막기 위해 사용한다.
+ */
+export async function isActivePopupImageKey(key: string): Promise<boolean> {
+  if (!db || !key) return false;
+  try {
+    const now = new Date();
+    const rows = await db
+      .select({ popupImageUrl: notices.popupImageUrl })
+      .from(notices)
+      .where(
+        and(
+          eq(notices.isActive, true),
+          eq(notices.popupEnabled, true),
+          isNotNull(notices.publishedAt),
+          isNotNull(notices.popupImageUrl),
+          or(isNull(notices.popupUntil), gt(notices.popupUntil, now)),
+        ),
+      );
+    return rows.some((r) => extractUploadKey(r.popupImageUrl) === key);
+  } catch (err) {
+    console.error('[notices.isActivePopupImageKey] 실패:', err);
+    return false;
   }
 }
 

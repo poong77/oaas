@@ -111,6 +111,81 @@ export async function expandKeywords(
   return Array.from(result);
 }
 
+export type GroupedExpansion = {
+  /**
+   * 쿼리 토큰별 동의어 그룹. groups[i] = [tokenᵢ, ...tokenᵢ의 동의어].
+   * 검색은 "그룹 간 AND, 그룹 내 OR"로 매칭한다 → 다단어 쿼리에서
+   * 모든 단어(또는 그 동의어)를 포함하는 문서만 잡혀 정밀도가 올라간다.
+   */
+  groups: string[][];
+  /** 전체 확장 term 합집합 (점수·하이라이트·keywords 매칭용, 원본 포함). */
+  flat: string[];
+};
+
+/**
+ * 입력 키워드 → "단어별 그룹" 동의어 확장.
+ *
+ * expandKeywords()가 모든 동의어를 평평한 OR 리스트로 합치는 것과 달리,
+ * 각 쿼리 토큰을 독립 그룹으로 유지한다. 호출처(searchArticles/Faqs/Notices)는
+ * 그룹 간 AND로 매칭해, "단체 예약" 같은 다단어 쿼리가 "예약"만 든 문서까지
+ * 빨아들이지 않게 한다. (단일 토큰 쿼리는 그룹 1개 = 기존 동작과 동일)
+ *
+ * @example
+ *   await expandKeywordsGrouped('단체 예약')
+ *   // { groups: [['단체', ...], ['예약', ...]], flat: ['단체 예약','단체','예약',...] }
+ */
+export async function expandKeywordsGrouped(
+  input: string,
+  options: ExpandKeywordsOptions = {},
+): Promise<GroupedExpansion> {
+  const maxTokens = Math.max(1, options.maxTokens ?? 64);
+  const trimmed = (input ?? '').trim();
+  if (!trimmed) return { groups: [], flat: [] };
+
+  const tokens = tokenizeQuery(trimmed);
+  const flat = new Set<string>();
+  flat.add(trimmed);
+  for (const t of tokens) flat.add(t);
+
+  if (tokens.length === 0) return { groups: [], flat: Array.from(flat) };
+
+  let index: Awaited<ReturnType<typeof loadSynonymIndex>> | null = null;
+  try {
+    index = await loadSynonymIndex();
+  } catch (err) {
+    console.warn(
+      '[synonym-expander.expandKeywordsGrouped] 확장 실패, 원본 토큰만 사용:',
+      err instanceof Error ? err.message : err,
+    );
+  }
+
+  const groups: string[][] = [];
+  for (const tok of tokens) {
+    const group = new Set<string>([tok]);
+    if (index) {
+      // 토큰 단위 probe만 (bigram/전체결합 제외 — 그룹 경계 유지).
+      const probeKeys = new Set<string>([tok, collapseSpacing(tok)]);
+      probeKeys.delete('');
+      const seenGroups = new Set<string>();
+      for (const key of probeKeys) {
+        const groupIds = index.termToGroupIds.get(key);
+        if (!groupIds) continue;
+        for (const gid of groupIds) {
+          if (seenGroups.has(gid)) continue;
+          seenGroups.add(gid);
+          for (const t of index.groupIdToTerms.get(gid) ?? []) {
+            group.add(t);
+            flat.add(t);
+          }
+        }
+      }
+    }
+    groups.push(Array.from(group).slice(0, maxTokens));
+  }
+
+  return { groups, flat: Array.from(flat).slice(0, maxTokens) };
+}
+
 /**
  * 추천 카테고리 매칭 (P1 — category-suggester).
  *

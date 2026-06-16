@@ -91,6 +91,34 @@ export function buildMasterIconProxyUrl(key: string): string {
 }
 
 /**
+ * 홈 팝업 배너 이미지용 **공개 프록시 URL** (인증 없음).
+ *
+ * 팝업 배너는 비로그인 홈에 노출돼야 하나, 이미지는 `editor/` prefix로 업로드되어
+ * 로그인 필수 `/api/files/view`로 저장된다. 그대로 두면 비로그인 시 401로 깨진다.
+ * 대신 이 공개 프록시는 **DB에 등록된 활성 팝업 공지가 참조하는 키만** 스트리밍한다.
+ */
+export function buildPopupProxyUrl(key: string): string {
+  return `/api/files/popup?key=${encodeURIComponent(key)}`;
+}
+
+/**
+ * 업로드 프록시 URL(`/api/files/view|popup?key=...`) 또는 S3 URL에서 객체 키 추출.
+ * 키를 못 구하면 null.
+ */
+export function extractUploadKey(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/[?&]key=([^&]+)/);
+  if (m) return decodeURIComponent(m[1]).replace(/^\/+/, '');
+  try {
+    const u = new URL(url, 'http://_');
+    const path = u.pathname.replace(/^\/+/, '');
+    return path || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * 첨부 레코드(pathname/blobUrl)에서 실제 GetObject 대상 { bucket, key } 도출.
  *
  * - key: `pathname`이 URL이 아니면 그대로(앞 슬래시 제거). URL이거나 비어있으면 `blobUrl`에서 path 추출.
