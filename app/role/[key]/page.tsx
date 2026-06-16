@@ -157,36 +157,36 @@ export default async function RoleStarterPage({
               const meta = CONTENT_TYPE_META[a.contentType as ArticleContentType];
               return (
                 <li key={a.id} data-testid="role-article-card">
-                  <Card className="h-full transition hover:border-brand-300 dark:hover:border-brand-700">
-                    <CardContent className="flex h-full flex-col gap-2 p-4 sm:flex-row sm:items-start">
-                      <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                        {idx + 1}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-                          {/* 의도 타입 뱃지 — 아티클 카드와 동일(사용방법/기능설명/문제해결) */}
-                          {meta && <Badge tone={meta.tone}>{meta.label}</Badge>}
-                          <span className="text-[10px] uppercase tracking-wider text-slate-400">
-                            {a.productCode}
-                          </span>
-                        </div>
-                        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                          <Link
-                            href={`/help/${a.productCode}/${a.contentType}/${a.slug}`}
-                            className="hover:underline"
-                          >
+                  <Link
+                    href={`/help/${a.productCode}/${a.contentType}/${a.slug}`}
+                    className="group block h-full"
+                  >
+                    <Card className="h-full transition hover:border-brand-300 dark:hover:border-brand-700">
+                      <CardContent className="flex h-full flex-col gap-2 p-4 sm:flex-row sm:items-start">
+                        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+                          {idx + 1}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                            {/* 의도 타입 뱃지 — 아티클 카드와 동일(사용방법/기능설명/문제해결) */}
+                            {meta && <Badge tone={meta.tone}>{meta.label}</Badge>}
+                            <span className="text-[10px] uppercase tracking-wider text-slate-400">
+                              {a.productCode}
+                            </span>
+                          </div>
+                          <h3 className="text-sm font-semibold text-slate-900 group-hover:underline dark:text-slate-100">
                             {a.title}
-                          </Link>
-                        </h3>
-                        {a.summary && (
-                          <p className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
-                            {a.summary}
-                          </p>
-                        )}
-                      </div>
-                      <ExternalLink className="hidden h-4 w-4 text-slate-300 sm:block" />
-                    </CardContent>
-                  </Card>
+                          </h3>
+                          {a.summary && (
+                            <p className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
+                              {a.summary}
+                            </p>
+                          )}
+                        </div>
+                        <ExternalLink className="hidden h-4 w-4 text-slate-300 group-hover:text-brand-400 sm:block" />
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </li>
               );
             })}

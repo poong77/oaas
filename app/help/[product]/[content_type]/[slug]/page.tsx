@@ -18,7 +18,8 @@
 
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { ArrowLeft, MessageCircle, Pencil, ThumbsUp } from 'lucide-react';
+import { MessageCircle, Pencil, ThumbsUp } from 'lucide-react';
+import { BackLink } from '@/components/back-link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,6 @@ import {
   getRelatedArticles,
 } from '@/lib/services/articles';
 import { getCurrentUser } from '@/lib/permissions';
-import { getProductCategories } from '@/lib/services/categories';
 import { CONTENT_TYPE_LABEL } from '@/lib/articles/zod-schemas';
 import { CONTENT_TYPE_META } from '@/lib/articles/content-type-meta';
 import type { ArticleContentType } from '@/db/schema';
@@ -107,16 +107,11 @@ export default async function HelpArticlePage({
 
   if (!canPreview && article.status !== 'published') notFound();
 
-  const [related, productCats] = await Promise.all([
-    getRelatedArticles(
-      article.relatedArticleIds,
-      article.productCode,
-      4,
-    ),
-    getProductCategories(),
-  ]);
-  const productLabel =
-    productCats.find((c) => c.code === product)?.label ?? product;
+  const related = await getRelatedArticles(
+    article.relatedArticleIds,
+    article.productCode,
+    4,
+  );
 
   const helpfulTotal = article.helpfulYes + article.helpfulNo;
   const helpfulPct =
@@ -131,13 +126,12 @@ export default async function HelpArticlePage({
       <ArticleViewTracker articleId={article.id} />
 
       <div className="flex flex-col gap-3">
-        <Link
-          href={`/help/${product}`}
+        <BackLink
+          fallbackHref={`/help/${product}`}
           className="inline-flex items-center gap-1 text-xs text-slate-500 hover:underline"
         >
-          <ArrowLeft className="h-3 w-3" />
-          {productLabel} 가이드
-        </Link>
+          뒤로 가기
+        </BackLink>
 
         <div className="flex flex-wrap items-center gap-2">
           {/* 의도(콘텐츠 유형) 칩을 가장 좌측에 */}

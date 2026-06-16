@@ -98,13 +98,13 @@ export function MenuTreeSidebar({
     <aside className="flex flex-col gap-2">
       <div className="rounded-md border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">
+          <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">
             카테고리
           </h3>
           <button
             type="button"
             onClick={() => navigateTo([])}
-            className={`text-xs ${
+            className={`text-sm ${
               selectedPath.length === 0
                 ? 'font-semibold text-brand-600 dark:text-brand-300'
                 : 'text-slate-500 hover:text-brand-600'
