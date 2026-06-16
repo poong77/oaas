@@ -176,7 +176,7 @@ function TreeList({
               <button
                 type="button"
                 onClick={() => onSelect(myPath)}
-                className={`flex min-w-0 flex-1 items-center gap-1 text-left text-xs ${
+                className={`flex min-w-0 flex-1 items-center gap-1 text-left text-sm ${
                   isSelected
                     ? 'font-semibold text-brand-700 dark:text-brand-300'
                     : 'text-slate-700 dark:text-slate-200'
