@@ -668,10 +668,12 @@ export async function searchNotices(
   if (!query) return [];
   const limit = Math.min(100, Math.max(1, options.limit ?? 50));
   try {
-    // v1.6 — articles/faqs와 동일하게 동의어 확장 적용.
-    const { expandKeywords } = await import('./synonym-expander');
-    const expanded = await expandKeywords(query, { maxTokens: 32 });
-    const terms = expanded.length > 0 ? expanded : [query];
+    // v1.8 — articles/faqs와 동일하게 "단어별 그룹 AND" 매칭.
+    const { expandKeywordsGrouped } = await import('./synonym-expander');
+    const { groups: rawGroups, flat } = await expandKeywordsGrouped(query, {
+      maxTokens: 32,
+    });
+    const groups = rawGroups.length > 0 ? rawGroups : [flat];
 
     const conditions: SQL[] = [
       eq(notices.isActive, true),
@@ -680,18 +682,26 @@ export async function searchNotices(
     if (options.productCode) {
       conditions.push(eq(notices.productCode, options.productCode));
     }
-    const orParts: SQL[] = [];
-    for (const term of terms) {
-      const p = `%${term}%`;
-      const c = or(ilike(notices.title, p), ilike(notices.bodyMarkdown, p));
-      if (c) orParts.push(c);
+    // 그룹 간 AND, 그룹 내 동의어 OR.
+    const andParts: SQL[] = [];
+    for (const group of groups) {
+      if (group.length === 0) continue;
+      const orParts: SQL[] = [];
+      for (const term of group) {
+        const p = `%${term}%`;
+        const c = or(ilike(notices.title, p), ilike(notices.bodyMarkdown, p));
+        if (c) orParts.push(c);
+      }
+      if (orParts.length === 0) continue;
+      const groupCond = orParts.length === 1 ? orParts[0] : or(...orParts);
+      if (groupCond) andParts.push(groupCond);
     }
     const searchCond =
-      orParts.length === 0
+      andParts.length === 0
         ? undefined
-        : orParts.length === 1
-          ? orParts[0]
-          : or(...orParts);
+        : andParts.length === 1
+          ? andParts[0]
+          : and(...andParts);
     if (searchCond) conditions.push(searchCond);
 
     const rows = await db
@@ -718,14 +728,20 @@ export async function searchNotices(
 
     const { matchesAnyTerm } = await import('@/lib/text/search-match');
     const lowered = query.toLowerCase();
+    const groupCount = groups.length || 1;
     return rows.map((r) => {
-      let score = 0.5;
-      const titleMatch = matchesAnyTerm(r.title, terms);
-      if (titleMatch) score += 2.5;
-      if (matchesAnyTerm(r.bodyMarkdown, terms)) score += 1;
-      // 원본 검색어가 제목에 그대로 있으면 가산(직접 일치 우대).
+      let titleGroups = 0;
+      let anyGroups = 0;
+      for (const g of groups) {
+        const inTitle = matchesAnyTerm(r.title, g);
+        if (inTitle) titleGroups++;
+        if (inTitle || matchesAnyTerm(r.bodyMarkdown, g)) anyGroups++;
+      }
+      let score = 0.5 + (titleGroups / groupCount) * 2.5;
+      score += (anyGroups / groupCount) * 1;
+      // 원본 검색어 구절이 제목에 그대로 = 직접 일치 가산.
       if (r.title.toLowerCase().includes(lowered)) score += 1;
-      return { ...r, score, titleMatch };
+      return { ...r, score, titleMatch: titleGroups > 0 };
     });
   } catch (err) {
     console.error('[notices.searchNotices] 실패:', err);
