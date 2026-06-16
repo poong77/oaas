@@ -34,6 +34,80 @@ export function usedVariables(template: string): string[] {
   return MESSAGE_VARIABLES.filter((v) => found.has(v.token)).map((v) => v.token);
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// 변수 바인딩 (MSG-15) — 동적 변수(커스텀 변수명 포함) + 값 소스
+// ─────────────────────────────────────────────────────────────────────
+
+/** 기본 변수명(연락처 자동주입 가능). 커스텀 변수는 이 외 임의 이름. */
+export const BASE_VAR_NAMES = MESSAGE_VARIABLES.map((v) => v.key) as string[];
+
+/** 임의 토큰 매칭(기본 4종 + 커스텀 변수명1~7 등). 이름 1~40자. */
+const ANY_VAR_RE = /#\{([^}\n]{1,40})\}/g;
+
+/** 값 소스: auto=연락처 자동주입 / manual=직접입력(전 수신자 공통) / excel=엑셀 열 */
+export type VarSource = 'auto' | 'manual' | 'excel';
+
+/** 본문 변수 1건의 값 결정 규칙. */
+export type VarBinding = {
+  /** 변수명 (토큰은 `#{name}`). */
+  name: string;
+  source: VarSource;
+  /** source='manual'일 때 전 수신자 공통 값. */
+  value?: string | null;
+};
+
+/** 템플릿(본문+제목)에 실제 사용된 변수명 목록(중복 제거, 등장 순서). */
+export function extractVarNames(...templates: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const t of templates) {
+    if (!t) continue;
+    for (const m of t.matchAll(ANY_VAR_RE)) {
+      const name = m[1].trim();
+      if (name && !seen.has(name)) {
+        seen.add(name);
+        out.push(name);
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * 수신자 1명의 변수 값 맵을 바인딩 + 수신자 데이터로 해석.
+ * - auto: recipient.auto[name] (호텔 연락처 자동주입)
+ * - manual: binding.value (전 수신자 공통)
+ * - excel: recipient.excel[name] (업로드 행 값)
+ */
+export function resolveRecipientVars(
+  bindings: VarBinding[],
+  recipient: {
+    auto?: Record<string, string | null | undefined>;
+    excel?: Record<string, string | null | undefined>;
+  },
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const b of bindings) {
+    const name = b.name.trim();
+    if (!name) continue;
+    if (b.source === 'manual') out[name] = (b.value ?? '').toString();
+    else if (b.source === 'excel') out[name] = (recipient.excel?.[name] ?? '').toString();
+    else out[name] = (recipient.auto?.[name] ?? '').toString();
+  }
+  return out;
+}
+
+/** 임의 토큰을 값 맵으로 치환. 값 없으면 빈 문자열. */
+export function substituteAll(
+  template: string,
+  values: Record<string, string | null | undefined>,
+): string {
+  return template.replace(ANY_VAR_RE, (_, raw: string) => {
+    const v = values[raw.trim()];
+    return v == null ? '' : String(v);
+  });
+}
+
 /** 한국형 byte 길이 (한글 등 비ASCII 2, ASCII 1). */
 export function byteLength(s: string): number {
   let n = 0;

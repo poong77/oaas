@@ -47,6 +47,8 @@ export * from './notices';
 // Phase 9 — 어드민 마스터 데이터
 export * from './notification-templates';
 export * from './quick-reply-templates';
+// MSG-16 — 메일&문자 수동 발송 템플릿 (자주 쓰는 발송 양식)
+export * from './manual-message-templates';
 export * from './hotelier-templates';
 export * from './role-starters';
 export * from './system-settings';

@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>메일 &amp; 문자 개편 와이어프레임 — MSG-15~22</title>
+<style>
+:root {
+  --brand:#00A36B; --brand-d:#00794f; --brand-l:#e6f7f0; --brand-100:#c7ecdd;
+  --ink:#1a2b22; --muted:#5b7265; --line:#e2ebe6; --bg:#f3f7f5; --card:#fff;
+  --red:#dc2626; --red-bg:#fef2f2;
+  --amber:#d97706; --amber-bg:#fffbeb;
+  --blue:#2563eb; --blue-bg:#eff6ff;
+  --purple:#7c3aed; --purple-bg:#f5f3ff;
+  --new-border:#00A36B; --new-bg:#e6f7f0;
+  --chg-border:#d97706; --chg-bg:#fffbeb;
+  --bug-border:#dc2626; --bug-bg:#fef2f2;
+  --radius:14px;
+  --shadow:0 2px 10px rgba(0,163,107,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;
+  background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55}
+
+/* ─── 안내 배너 ─── */
+.top-banner{background:linear-gradient(135deg,#1a2b22,#0d4a30);color:#fff;padding:18px 24px;
+  border-radius:var(--radius);margin:20px;box-shadow:var(--shadow)}
+.top-banner h1{font-size:18px;font-weight:800;margin-bottom:6px;letter-spacing:-.3px}
+.top-banner p{font-size:12.5px;opacity:.85;margin-bottom:12px}
+.legend-row{display:flex;flex-wrap:wrap;gap:8px}
+.leg{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 10px;
+  border-radius:999px;font-weight:700}
+.leg.new{background:var(--new-bg);color:var(--brand-d)}
+.leg.chg{background:var(--chg-bg);color:var(--amber)}
+.leg.bug{background:var(--bug-bg);color:var(--red)}
+
+/* ─── 앱 프레임 ─── */
+.app-frame{margin:0 20px 80px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+
+/* 페이지 헤더 */
+.page-header{background:#fff;border-bottom:1px solid var(--line);padding:20px 24px 0}
+.page-header-row{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+.page-header h2{font-size:20px;font-weight:800;letter-spacing:-.4px}
+.page-header .desc{color:var(--muted);font-size:13px;margin-top:3px}
+.perm-badge{display:inline-flex;align-items:center;gap:5px;background:var(--brand-l);
+  color:var(--brand-d);font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px}
+
+/* 탭 */
+.tabs{display:flex;gap:0;border-bottom:none}
+.tab{padding:10px 18px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;
+  border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;
+  transition:all .15s;position:relative;top:1px;background:transparent}
+.tab:hover{color:var(--ink);background:#f8faf9}
+.tab.active{background:var(--brand-l);color:var(--brand-d);border-color:var(--line);
+  border-bottom-color:var(--brand-l)}
+.tab-badge{font-size:10px;background:var(--brand);color:#fff;
+  padding:1px 5px;border-radius:999px;margin-left:4px;vertical-align:middle}
+
+/* ─── 탭 콘텐츠 ─── */
+.tab-content{display:none;padding:24px}
+.tab-content.active{display:block}
+
+/* ─── 공용 레이아웃 ─── */
+.section{margin-bottom:20px}
+.section-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.4px;margin-bottom:8px}
+.field-row{display:grid;gap:12px;margin-bottom:16px}
+.field-row.col2{grid-template-columns:1fr 1fr}
+.field-row.col3{grid-template-columns:1fr 1fr 1fr}
+.field-group{display:flex;flex-direction:column;gap:5px}
+label.lbl{font-size:12.5px;font-weight:600;color:var(--ink)}
+label.lbl .req{color:var(--red);margin-left:2px}
+label.lbl .opt{color:var(--muted);font-weight:400;font-size:11px;margin-left:4px}
+.inp{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 12px;
+  font-size:13.5px;font-family:inherit;background:#fff;color:var(--ink);outline:none;transition:border .15s}
+.inp:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,163,107,.1)}
+.inp::placeholder{color:#adc4b8}
+select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235b7265' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer}
+textarea.inp{resize:vertical;min-height:120px;line-height:1.6}
+
+/* 발신자 행 (MSG-20) */
+.sender-row{display:flex;align-items:flex-end;gap:8px}
+.sender-name-group{flex:0 0 auto;min-width:140px}
+.sender-local-group{flex:1}
+.at-domain{font-size:13px;color:var(--muted);white-space:nowrap;line-height:1;padding-bottom:10px}
+.sender-preview{font-size:12px;color:var(--brand-d);background:var(--brand-l);
+  padding:4px 10px;border-radius:6px;margin-top:6px;display:inline-block}
+
+/* 수신자 선택기 */
+.recipient-box{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.recipient-search{padding:10px 12px;border-bottom:1px solid var(--line);
+  display:flex;gap:8px;align-items:center;background:#fafcfb}
+.recipient-search .inp{flex:1;margin:0}
+.hotel-results{max-height:120px;overflow-y:auto;border-bottom:1px solid var(--line)}
+.hotel-item{padding:8px 14px;cursor:pointer;font-size:13px;display:flex;
+  align-items:center;justify-content:space-between;transition:background .1s}
+.hotel-item:hover{background:var(--brand-l)}
+.hotel-item .name{font-weight:600}
+.hotel-item .email{color:var(--muted);font-size:12px}
+.chip-area{padding:10px 12px;min-height:52px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--brand-l);
+  color:var(--brand-d);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:500}
+.chip .x{cursor:pointer;opacity:.6;font-size:13px;line-height:1}
+.chip:hover .x{opacity:1}
+
+/* 엑셀 업로드 + 전체불러오기 영역 (MSG-17, 18) */
+.recipient-actions{padding:10px 12px;background:#f8faf9;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.recipient-actions .hint{font-size:11.5px;color:var(--muted);flex:1;min-width:200px}
+.drop-zone{border:1.5px dashed var(--brand-100);border-radius:8px;padding:10px 14px;
+  background:var(--brand-l);color:var(--brand-d);font-size:12.5px;font-weight:600;
+  cursor:pointer;text-align:center;transition:all .15s;min-width:140px}
+.drop-zone:hover{border-color:var(--brand);background:#d0f0e4}
+
+/* 엑셀 미리보기 테이블 */
+.excel-preview{margin-top:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.excel-preview table{width:100%;border-collapse:collapse;font-size:12.5px}
+.excel-preview th{background:var(--brand-l);color:var(--brand-d);padding:8px 10px;
+  font-weight:700;text-align:left;font-size:11.5px}
+.excel-preview td{padding:8px 10px;border-top:1px solid var(--line)}
+.excel-preview tr:hover td{background:#f8faf9}
+.excel-header-note{font-size:11px;color:var(--muted);padding:6px 10px;background:#f8faf9;
+  border-top:1px solid var(--line)}
+
+/* 버튼 */
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;
+  font-size:13px;font-weight:700;padding:8px 16px;cursor:pointer;
+  border:1px solid transparent;transition:all .15s;font-family:inherit;white-space:nowrap}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.primary:hover{background:var(--brand-d)}
+.btn.outline{background:#fff;color:var(--ink);border-color:var(--line)}
+.btn.outline:hover{background:#f3f7f5;border-color:var(--brand-100)}
+.btn.ghost{background:transparent;color:var(--muted);border:none;padding:8px 10px}
+.btn.ghost:hover{background:#f0f4f2;color:var(--ink)}
+.btn.sm{padding:6px 12px;font-size:12px}
+.btn.danger{background:var(--red);color:#fff}
+.btn.ai{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.btn.ai:hover{opacity:.9}
+
+/* 변수 칩 */
+.var-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.var-chip{display:inline-flex;align-items:center;gap:4px;background:#eef3f0;
+  color:var(--brand-d);border:1px solid var(--brand-100);border-radius:6px;
+  padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:ui-monospace,monospace}
+.var-chip:hover{background:var(--brand-l);border-color:var(--brand)}
+.var-hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+
+/* ──────────────────────────────────────────────
+   MSG-15 변수 값 패널 (핵심)
+────────────────────────────────────────────── */
+.var-value-panel{border:2px solid var(--brand);border-radius:10px;overflow:hidden;margin-top:16px;
+  background:#fff;box-shadow:0 0 0 4px rgba(0,163,107,.08)}
+.var-value-panel-header{background:var(--brand-l);padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between}
+.var-value-panel-header .ttl{font-size:13px;font-weight:800;color:var(--brand-d)}
+.var-value-panel-header .sub{font-size:11.5px;color:var(--muted)}
+.var-value-table{width:100%;border-collapse:collapse;font-size:13px}
+.var-value-table th{padding:9px 14px;text-align:left;font-size:12px;font-weight:700;
+  color:var(--muted);background:#f8faf9;border-bottom:1px solid var(--line)}
+.var-value-table td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.var-value-table tr:last-child td{border-bottom:none}
+.var-name-cell{font-family:ui-monospace,monospace;font-weight:700;color:var(--brand-d);font-size:12.5px}
+.var-source-select{border:1px solid var(--line);border-radius:6px;padding:6px 26px 6px 9px;
+  font-size:12.5px;font-family:inherit;appearance:none;background:#fff;cursor:pointer;min-width:160px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235b7265' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center}
+.var-source-select:focus{outline:none;border-color:var(--brand)}
+.var-source-auto{font-size:12px;color:var(--brand-d);background:var(--brand-l);
+  padding:5px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:5px}
+.var-source-auto .ic{font-size:14px}
+.var-direct-input{border:1px solid var(--line);border-radius:6px;padding:7px 10px;
+  font-size:13px;font-family:inherit;width:100%;max-width:280px}
+.var-direct-input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 2px rgba(0,163,107,.1)}
+.excel-col-hint{font-size:12px;color:var(--muted);background:#f3f7f5;
+  padding:5px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:5px}
+
+/* 바이트 표시 */
+.byte-row{display:flex;align-items:center;gap:10px;margin-top:6px}
+.byte-bar{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.byte-fill{height:100%;background:var(--brand);border-radius:3px;transition:width .2s}
+.sms-kind-badge{padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:800}
+.sms-kind-badge.sms{background:#e0f2fe;color:#0369a1}
+.sms-kind-badge.lms{background:var(--amber-bg);color:var(--amber)}
+.sms-kind-badge.mms{background:var(--purple-bg);color:var(--purple)}
+
+/* 발송 정보 박스 */
+.send-info{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.send-info-item{background:var(--bg);border:1px solid var(--line);border-radius:8px;
+  padding:8px 14px;text-align:center;flex:1;min-width:100px}
+.send-info-item .val{font-size:20px;font-weight:800;color:var(--brand)}
+.send-info-item .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* 경고박스 */
+.warn-box{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;
+  font-size:12.5px;color:#92400e;display:flex;gap:8px;align-items:flex-start}
+.warn-box .ic{flex:0 0 auto;font-size:16px;margin-top:1px}
+
+/* 푸터 미리보기 */
+.footer-preview{border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+  background:#f8faf9;font-size:12px;color:var(--muted);line-height:1.8}
+.footer-preview .logo-text{font-weight:800;color:var(--brand);font-size:13px}
+
+/* 발송 버튼 영역 */
+.send-area{border-top:1px solid var(--line);padding:16px 24px;
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  background:#fafcfb}
+
+/* ─── 어노테이션 배지 ─── */
+.anno-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;
+  padding:2px 8px;border-radius:999px;white-space:nowrap;vertical-align:middle;margin-left:6px}
+.anno-badge.new{background:var(--new-bg);color:var(--brand-d);border:1px solid var(--brand-100)}
+.anno-badge.chg{background:var(--chg-bg);color:var(--amber);border:1px solid #fde68a}
+.anno-badge.bug{background:var(--bug-bg);color:var(--red);border:1px solid #fca5a5}
+
+/* 말풍선 주석 */
+.callout{position:relative;background:#fff;border:1.5px dashed var(--brand);border-radius:8px;
+  padding:8px 12px;font-size:12px;color:var(--brand-d);margin-top:8px;
+  display:flex;align-items:flex-start;gap:6px}
+.callout::before{content:"💬";font-size:13px;flex:0 0 auto}
+.callout.chg{border-color:var(--amber);color:var(--amber)}
+.callout.chg::before{content:"✏️"}
+.callout.bug{border-color:var(--red);color:var(--red)}
+.callout.bug::before{content:"🐛"}
+
+/* ─── 템플릿 탭 ─── */
+.tpl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.tpl-list{display:flex;flex-direction:column;gap:8px}
+.tpl-item{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s}
+.tpl-item:hover{border-color:var(--brand-100);box-shadow:0 2px 8px rgba(0,163,107,.08)}
+.tpl-drag{color:#c5d5cd;font-size:18px;cursor:grab;flex:0 0 auto;user-select:none}
+.tpl-drag:active{cursor:grabbing}
+.tpl-channel-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;
+  flex:0 0 auto;white-space:nowrap}
+.tpl-channel-badge.mail{background:#eff6ff;color:#1d4ed8}
+.tpl-channel-badge.sms{background:var(--amber-bg);color:#a16207}
+.tpl-info{flex:1;min-width:0}
+.tpl-title{font-size:13.5px;font-weight:700;margin-bottom:2px}
+.tpl-memo{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tpl-actions{display:flex;gap:4px;flex:0 0 auto}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+  border-radius:6px;cursor:pointer;border:1px solid transparent;color:var(--muted);
+  background:transparent;transition:all .1s}
+.icon-btn:hover.edit{background:var(--blue-bg);color:var(--blue);border-color:#bfdbfe}
+.icon-btn:hover.del{background:var(--red-bg);color:var(--red);border-color:#fca5a5}
+
+/* ─── 메시지함 탭 ─── */
+.msg-search{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;
+  background:#f8faf9;border:1px solid var(--line);border-radius:10px;padding:14px}
+.msg-search .inp{flex:1;min-width:130px}
+.msg-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.msg-table th{background:var(--brand-l);color:var(--brand-d);padding:10px 12px;
+  text-align:left;font-size:12px;font-weight:700}
+.msg-table td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle}
+.msg-table tr:hover td{background:#fafdfb}
+.success{color:#16a34a;font-weight:700}
+.fail{color:var(--red);font-weight:700}
+.type-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.type-badge.mail{background:#eff6ff;color:#1d4ed8}
+.type-badge.sms{background:var(--amber-bg);color:#a16207}
+
+/* ─── 모달 ─── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+  z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:680px;max-height:90vh;
+  overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--line);padding-bottom:16px;position:sticky;top:0;background:#fff;z-index:1}
+.modal-header h3{font-size:17px;font-weight:800}
+.modal-body{padding:20px 24px}
+.modal-footer{padding:14px 24px;border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  position:sticky;bottom:0;background:#fff}
+.channel-toggle{display:flex;gap:6px;margin-bottom:16px}
+.channel-btn{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--line);color:var(--muted);background:#fff}
+.channel-btn.active.mail{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}
+.channel-btn.active.sms{background:var(--amber-bg);color:#a16207;border-color:#fcd34d}
+
+/* 커스텀 변수 추가 */
+.custom-var-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.custom-var-chip{display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;
+  color:#334155;border:1px solid #cbd5e1;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600}
+.custom-var-chip .x{opacity:.5;cursor:pointer}
+
+/* ─── 결정사항 체크리스트 ─── */
+.checklist-section{background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:24px;margin:0 20px 40px}
+.checklist-section h3{font-size:16px;font-weight:800;margin-bottom:14px;
+  padding-left:12px;border-left:4px solid var(--brand)}
+.cl-item{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.cl-item:last-child{border-bottom:none}
+.cl-check{width:18px;height:18px;border:2px solid var(--line);border-radius:4px;
+  flex:0 0 auto;margin-top:1px;cursor:pointer}
+.cl-item .q{font-size:13.5px;font-weight:700;margin-bottom:3px}
+.cl-item .hint{font-size:12px;color:var(--muted)}
+
+/* ─── MSG-21 문자 Split Pane ─── */
+.sms-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.sms-left-pane{display:flex;flex-direction:column;gap:0}
+.sms-right-pane{position:sticky;top:16px}
+.phone-preview-wrap{display:flex;flex-direction:column;gap:8px}
+.preview-recipient-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.preview-recipient-row label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.preview-recipient-select{border:1px solid var(--line);border-radius:7px;padding:6px 26px 6px 9px;
+  font-size:12.5px;font-family:inherit;appearance:none;background:#fff;cursor:pointer;flex:1;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235b7265' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center}
+.phone-frame{background:#1c1c1e;border-radius:32px;padding:10px 6px;box-shadow:0 8px 32px rgba(0,0,0,.22);max-width:260px;margin:0 auto}
+.phone-statusbar{display:flex;justify-content:space-between;align-items:center;padding:4px 14px 8px;font-size:10px;color:#fff}
+.phone-screen{background:#f2f2f7;border-radius:24px;overflow:hidden;min-height:340px;display:flex;flex-direction:column}
+.phone-header{background:#fff;border-bottom:1px solid #e5e5ea;padding:10px 14px 8px;display:flex;align-items:center;gap:8px}
+.phone-header .back{font-size:17px;color:#007aff;font-weight:400}
+.phone-header .contact-info{flex:1;text-align:center}
+.phone-header .contact-name{font-size:13px;font-weight:600;color:#000}
+.phone-header .contact-num{font-size:10.5px;color:#8e8e93}
+.phone-messages{flex:1;padding:10px 10px 6px;display:flex;flex-direction:column;gap:6px}
+.phone-sender-info{font-size:10px;color:#8e8e93;text-align:center;margin-bottom:2px}
+.msg-bubble-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.msg-bubble{background:#fff;border-radius:16px 16px 16px 4px;padding:9px 12px;max-width:200px;
+  font-size:12.5px;line-height:1.55;color:#000;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.msg-bubble .sms-title{font-weight:800;font-size:13px;margin-bottom:4px;display:block}
+.msg-time{font-size:10px;color:#8e8e93;margin-top:1px;padding-left:4px}
+.phone-byte-bar{background:#fff;border-top:1px solid #e5e5ea;padding:7px 12px;
+  display:flex;align-items:center;gap:8px}
+.phone-byte-bar .pb-count{font-size:11px;color:#8e8e93;white-space:nowrap}
+.phone-byte-badge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px}
+
+/* ─── MSG-22 테스트 발송 모달 ─── */
+.test-modal{background:#fff;border-radius:14px;width:100%;max-width:400px;
+  box-shadow:0 12px 48px rgba(0,0,0,.18)}
+.test-modal .modal-header h3{font-size:15px}
+.test-modal-info{background:var(--brand-l);border-radius:8px;padding:10px 12px;
+  font-size:12.5px;color:var(--brand-d);line-height:1.6;margin-bottom:14px;
+  display:flex;align-items:flex-start;gap:6px}
+.test-modal-info::before{content:"ℹ️";flex:0 0 auto;font-size:14px}
+
+/* ─── MSG-21 메일 미리보기 모달 ─── */
+.mail-preview-modal{background:#fff;border-radius:16px;width:100%;max-width:640px;max-height:90vh;
+  overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.mail-preview-area{background:#f5f5f5;border:1px solid var(--line);border-radius:10px;padding:20px;font-size:13.5px;line-height:1.7;color:#1a1a1a}
+.mail-preview-from{font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.mail-preview-subject{font-size:16px;font-weight:800;margin-bottom:14px;color:var(--ink);border-bottom:1px solid var(--line);padding-bottom:10px}
+.mail-preview-body{white-space:pre-wrap;margin-bottom:16px}
+.mail-preview-footer{border-top:1px dashed var(--line);padding-top:12px;font-size:12px;color:var(--muted);line-height:1.8}
+.mail-preview-footer .fp-brand{font-weight:800;color:var(--brand);font-size:13px}
+
+/* ─── 반응형 ─── */
+@media(max-width:640px){
+  .sms-split{grid-template-columns:1fr}
+  .sms-right-pane{position:static}
+}
+  .top-banner,.app-frame,.checklist-section{margin-left:10px;margin-right:10px}
+  .field-row.col2,.field-row.col3{grid-template-columns:1fr}
+  .sender-row{flex-direction:column;align-items:stretch}
+  .at-domain{display:none}
+  .page-header{padding:14px 14px 0}
+  .tab-content{padding:14px}
+  .send-area{padding:12px 14px}
+  .msg-table{font-size:12px}
+  .msg-table th:nth-child(n+4),.msg-table td:nth-child(n+4){display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ━━━━━━━━ 안내 배너 ━━━━━━━━ -->
+<div class="top-banner">
+  <h1>📨 메일 &amp; 문자 개편 와이어프레임</h1>
+  <p>빌드 전 검토용 목업 · <code style="background:rgba(255,255,255,.15);color:#fff;padding:1px 6px;border-radius:4px">/admin/insights/messaging</code> · 매니저·어드민 전용</p>
+  <div class="legend-row">
+    <span class="leg new">🆕 신규</span>
+    <span class="leg chg">✏️ 변경</span>
+    <span class="leg bug">🐛 버그수정</span>
+    <span style="font-size:12px;opacity:.7;padding:3px 0">MSG-15 변수값패널 · MSG-16 템플릿탭 · MSG-17 엑셀업로드 · MSG-18 전체불러오기 · MSG-19 제목필수화 · MSG-20 발신자명 · MSG-21 발송미리보기 · MSG-22 테스트발송</span>
+  </div>
+</div>
+
+<!-- ━━━━━━━━ 앱 프레임 ━━━━━━━━ -->
+<div class="app-frame">
+
+  <!-- 페이지 헤더 -->
+  <div class="page-header">
+    <div class="page-header-row">
+      <div>
+        <h2>메일 &amp; 문자 발송</h2>
+        <div class="desc">대량 메일(SES) · 문자(Solapi) 발송 및 이력 관리</div>
+      </div>
+      <span class="perm-badge">🔒 매니저·어드민</span>
+    </div>
+    <!-- 탭 4개 (MSG-16 템플릿 신설) -->
+    <div class="tabs">
+      <div class="tab active" data-tab="mail" onclick="switchTab('mail',this)">
+        ✉️ 메일
+      </div>
+      <div class="tab" data-tab="sms" onclick="switchTab('sms',this)">
+        💬 문자
+      </div>
+      <div class="tab" data-tab="templates" onclick="switchTab('templates',this)">
+        📋 템플릿 <span class="tab-badge">🆕</span>
+      </div>
+      <div class="tab" data-tab="history" onclick="switchTab('history',this)">
+        📦 메시지함
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ 메일 탭 ══════════════════ -->
+  <div class="tab-content active" id="tab-mail">
+
+    <!-- MSG-20: 발신자명 + 주소 같은 줄 -->
+    <div class="section">
+      <div class="section-label">발신자 정보 <span class="anno-badge chg">✏️ MSG-20 변경</span></div>
+      <div class="sender-row">
+        <div class="sender-name-group">
+          <div class="field-group">
+            <label class="lbl">발신자명 <span class="req">*</span> <span class="anno-badge new">🆕 신규</span></label>
+            <input class="inp" type="text" value="오아테크" placeholder="오아테크" />
+          </div>
+        </div>
+        <div class="sender-local-group">
+          <div class="field-group">
+            <label class="lbl">발신 이메일 주소 <span class="req">*</span></label>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input class="inp" type="text" value="as" placeholder="as" style="max-width:160px" oninput="updatePreview()" id="localInput"/>
+              <span class="at-domain">@oapms.com</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sender-preview" id="senderPreview">오아테크 &lt;as@oapms.com&gt;</div>
+      <div class="callout chg">MSG-20: 기존에는 로컬 주소만 입력 가능했음. 발신자명(기본값 "오아테크")을 같은 줄에 추가해 수신자 메일함에 표시되는 FROM 이름을 제어합니다.</div>
+    </div>
+
+    <!-- 수신자 선택기 (MSG-17, 18 포함) -->
+    <div class="section">
+      <div class="section-label">수신자 선택 <span class="anno-badge new">🆕 MSG-17·18</span></div>
+      <div class="recipient-box">
+        <div class="recipient-search">
+          <input class="inp" type="text" placeholder="🔍  호텔명 검색… (예: 그랜드 조선)" />
+          <button class="btn outline sm">검색</button>
+        </div>
+        <!-- 검색 결과 드롭다운 예시 -->
+        <div class="hotel-results">
+          <div class="hotel-item">
+            <div><span class="name">그랜드 조선 부산</span><br/><span class="email">gib@oapms.com · 010-3333-4444</span></div>
+            <button class="btn sm primary">추가</button>
+          </div>
+          <div class="hotel-item">
+            <div><span class="name">롯데 호텔 서울</span><br/><span class="email">lhs@oapms.com · 010-5555-6666</span></div>
+            <button class="btn sm primary">추가</button>
+          </div>
+          <div class="hotel-item" style="color:var(--muted);font-style:italic;font-size:12.5px">
+            직접 입력 — 이메일 주소를 쉼표로 구분하여 입력 가능
+          </div>
+        </div>
+        <!-- 추가된 수신자 칩 -->
+        <div class="chip-area">
+          <div class="chip">그랜드 조선 부산 <span class="x">×</span></div>
+          <div class="chip">롯데 호텔 서울 <span class="x">×</span></div>
+          <div class="chip">partner@testhotel.com <span class="x">×</span></div>
+          <input class="inp" style="flex:1;min-width:200px;border:none;outline:none;padding:4px 6px;font-size:13px" placeholder="이메일 직접 입력 후 Enter…"/>
+        </div>
+        <!-- MSG-17, 18 액션바 -->
+        <div class="recipient-actions">
+          <span class="hint">📎 엑셀 일괄 업로드 또는 호텔리어 전체 불러오기</span>
+          <div class="drop-zone" onclick="toggleExcelPreview()">
+            ⬆️ 엑셀 업로드 <span class="anno-badge new">🆕 MSG-17</span>
+          </div>
+          <button class="btn outline sm" onclick="showHotelierAll()">
+            🏨 호텔리어 전체 불러오기 <span style="background:var(--brand);color:#fff;font-size:10px;padding:1px 6px;border-radius:999px;margin-left:4px">247명</span>
+            <span class="anno-badge new">🆕 MSG-18</span>
+          </button>
+          <a href="#" style="font-size:12px;color:var(--brand-d);text-decoration:underline;">📥 템플릿 다운로드</a>
+        </div>
+        <!-- 엑셀 미리보기 (토글) -->
+        <div class="excel-preview" id="excelPreview" style="display:none">
+          <table>
+            <thead>
+              <tr>
+                <th>업체명 <span style="color:var(--red)">*</span></th>
+                <th>이메일 <span style="color:var(--red)">*</span></th>
+                <th>담당자명</th>
+                <th>연락처</th>
+                <th>변수명1</th>
+                <th>변수명2</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>시티뷰호텔</td><td>city@ex.com</td><td>김호텔</td><td>010-1234-5678</td><td>객실개수: 120</td><td>만족도: 98%</td></tr>
+              <tr><td>오션파크리조트</td><td>ocean@ex.com</td><td>이리조트</td><td>010-8765-4321</td><td>객실개수: 240</td><td>만족도: 95%</td></tr>
+              <tr><td style="color:var(--muted);font-style:italic" colspan="6">… 총 18행 업로드됨</td></tr>
+            </tbody>
+          </table>
+          <div class="excel-header-note">💡 열 순서는 자유롭지만 컬럼명이 정확해야 합니다. 변수명1~7은 본문의 <code>#{변수명1}</code> 토큰과 연결됩니다.</div>
+        </div>
+      </div>
+      <div class="callout">MSG-17: 엑셀 업로드 시 업체명·이메일(필수) + 담당자명·연락처·변수명1~7(선택)을 인식합니다. 업로드 후 수신자 목록이 칩으로 채워지며 변수값 패널이 자동으로 활성화됩니다.</div>
+      <div class="callout" style="margin-top:6px">MSG-18: 호텔리어 전체 불러오기 — 클릭 시 "이메일 / 문자" 선택 확인 후 현재 활성 호텔리어 전체가 수신자로 추가됩니다. 예상 인원수 배지(247명)가 버튼에 표시됩니다.</div>
+    </div>
+
+    <!-- 제목 -->
+    <div class="section">
+      <div class="field-group">
+        <label class="lbl">제목 <span class="req">*</span></label>
+        <input class="inp" type="text" placeholder="예: [오아테크] PMS v3.2 업데이트 안내" value="[오아테크] PMS v3.2 주요 기능 업데이트 안내드립니다" />
+      </div>
+    </div>
+
+    <!-- 본문 + 변수칩 -->
+    <div class="section">
+      <div class="section-label">본문</div>
+      <div class="var-chips" style="margin-bottom:8px">
+        <span class="var-chip" onclick="insertVar('#{업체명}')">+#{업체명}</span>
+        <span class="var-chip" onclick="insertVar('#{담당자명}')">+#{담당자명}</span>
+        <span class="var-chip" onclick="insertVar('#{연락처}')">+#{연락처}</span>
+        <span class="var-chip" onclick="insertVar('#{호텔명}')">+#{호텔명}</span>
+        <span class="var-chip" onclick="insertVar('#{변수명1}')">+#{변수명1}</span>
+        <button class="btn ghost sm" style="font-size:12px">✨ AI 작성</button>
+      </div>
+      <textarea class="inp" id="mailBody" style="min-height:160px" oninput="updateVarPanel()" placeholder="본문을 입력하세요. 변수칩을 클릭하면 #{변수명} 토큰이 삽입됩니다.">안녕하세요, #{업체명} #{담당자명}님.
+
+오아테크에서 PMS v3.2 업데이트 주요 사항을 안내드립니다.
+
+주요 변경사항:
+• 객실 예약 화면 속도 개선 (약 30% 빠른 응답)
+• 야간 정산 배치 안정성 강화
+• 키리스 연동 오류 로그 상세화
+
+문의사항은 연락처 #{연락처} 로 연락주시기 바랍니다.
+
+감사합니다.</textarea>
+
+      <!-- ══ MSG-15 변수 값 패널 (핵심) ══ -->
+      <div class="var-value-panel" id="varValuePanel">
+        <div class="var-value-panel-header">
+          <div>
+            <div class="ttl">🔤 변수 값 설정 <span class="anno-badge bug">🐛 MSG-15 버그수정</span></div>
+            <div class="sub">본문에 사용된 변수 각각의 값 소스를 지정하세요</div>
+          </div>
+        </div>
+        <table class="var-value-table">
+          <thead>
+            <tr>
+              <th style="width:120px">변수</th>
+              <th style="width:200px">값 소스</th>
+              <th>값 / 안내</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="var-name-cell">#{업체명}</span></td>
+              <td>
+                <select class="var-source-select" onchange="handleSourceChange(this,'val-업체명')">
+                  <option value="auto" selected>연락처 자동주입</option>
+                  <option value="direct">직접입력</option>
+                  <option value="excel">엑셀 열</option>
+                </select>
+              </td>
+              <td>
+                <div class="var-source-auto" id="val-업체명">
+                  <span class="ic">🔗</span> 호텔 연락처에서 수신자별 자동 채움
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="var-name-cell">#{담당자명}</span></td>
+              <td>
+                <select class="var-source-select" onchange="handleSourceChange(this,'val-담당자명')">
+                  <option value="auto" selected>연락처 자동주입</option>
+                  <option value="direct">직접입력</option>
+                  <option value="excel">엑셀 열</option>
+                </select>
+              </td>
+              <td>
+                <div class="var-source-auto" id="val-담당자명">
+                  <span class="ic">🔗</span> 호텔 연락처에서 수신자별 자동 채움
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="var-name-cell">#{연락처}</span></td>
+              <td>
+                <select class="var-source-select" onchange="handleSourceChange(this,'val-연락처')">
+                  <option value="auto" selected>연락처 자동주입</option>
+                  <option value="direct">직접입력</option>
+                  <option value="excel">엑셀 열</option>
+                </select>
+              </td>
+              <td>
+                <div class="var-source-auto" id="val-연락처">
+                  <span class="ic">🔗</span> 호텔 연락처에서 수신자별 자동 채움
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="var-name-cell">#{변수명1}</span></td>
+              <td>
+                <select class="var-source-select" onchange="handleSourceChange(this,'val-변수명1')">
+                  <option value="auto">연락처 자동주입</option>
+                  <option value="direct">직접입력</option>
+                  <option value="excel" selected>엑셀 열</option>
+                </select>
+              </td>
+              <td>
+                <div class="excel-col-hint" id="val-변수명1">
+                  <span>📊</span> 엑셀 "변수명1" 열 값이 수신자별로 채워짐
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout bug">MSG-15 버그수정: 기존에는 변수칩 클릭 시 본문에 <code>#{업체명}</code> 토큰만 삽입되고 실제 값을 어디서도 설정할 수 없었습니다. 이 패널에서 변수마다 "연락처 자동주입 / 직접입력 / 엑셀 열" 중 소스를 지정합니다.</div>
+    </div>
+
+    <!-- 발송 사유 -->
+    <div class="section">
+      <div class="field-group">
+        <label class="lbl">발송 사유 <span class="opt">(내부 메모)</span></label>
+        <input class="inp" type="text" placeholder="예: PMS 3.2 업데이트 공지 — 전체 운영 호텔 대상" />
+      </div>
+    </div>
+
+    <!-- 회사 푸터 미리보기 -->
+    <div class="section">
+      <div class="section-label">이메일 푸터 미리보기 <span style="font-size:11px;color:var(--muted)">(자동 첨부)</span></div>
+      <div class="footer-preview">
+        <div class="logo-text">OA서포트 · 오아테크</div>
+        <div>서울특별시 강남구 테헤란로 ○○○  |  support@oapms.com  |  02-0000-0000</div>
+        <div style="margin-top:4px;font-size:11.5px">이 메일은 OA서포트를 통해 발송된 공식 안내 메일입니다. 수신 거부: <span style="color:var(--brand-d)">수신거부 링크</span></div>
+      </div>
+    </div>
+
+    <!-- 경고 -->
+    <div class="warn-box" style="margin:0 0 8px">
+      <span class="ic">⚠️</span>
+      <span>수신자 수가 많을 경우 발송에 시간이 걸릴 수 있습니다. 발송 중 창을 닫아도 계속 진행됩니다.</span>
+    </div>
+
+    <!-- 발송 정보 -->
+    <div class="send-info">
+      <div class="send-info-item"><div class="val">3</div><div class="lbl">총 수신자</div></div>
+      <div class="send-info-item"><div class="val" style="color:var(--blue)">SES</div><div class="lbl">발송 채널</div></div>
+      <div class="send-info-item"><div class="val" style="color:var(--amber)">무료</div><div class="lbl">예상 비용</div></div>
+    </div>
+  </div><!-- /tab-mail content -->
+  <!-- MSG-21 메일 미리보기 버튼 안내 -->
+  <div style="padding:0 24px 12px;display:none" id="mailPreviewHint"><!-- 스크립트로 제어 --></div>
+  <div class="send-area" id="mailSendArea">
+    <button class="btn outline">초기화</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <!-- MSG-21 미리보기 버튼 -->
+      <button class="btn outline" onclick="openMailPreview()" style="border-color:var(--brand-100);color:var(--brand-d)" title="발송 전 메일 내용을 미리 확인합니다">
+        👁 미리보기 <span class="anno-badge new">🆕 MSG-21</span>
+      </button>
+      <!-- MSG-22 테스트 발송 버튼 -->
+      <button class="btn outline" onclick="openTestSend('mail')" style="color:var(--muted)" title="나에게 테스트 메일을 1건 발송합니다">
+        🧪 테스트 발송 <span class="anno-badge new">🆕 MSG-22</span>
+      </button>
+      <button class="btn primary" style="min-width:120px">✉️ 메일 발송</button>
+    </div>
+  </div>
+  <div class="callout" style="margin:0 24px 16px;border-style:solid;border-color:var(--brand-100)">MSG-21: 메일 [미리보기] 버튼 클릭 시 모달에서 발신자명·주소·제목·본문·자동 푸터가 실제 렌더된 모습을 확인합니다. 변수는 샘플값(그랜드호텔, 김호텔)으로 치환되어 표시됩니다.</div>
+
+  <!-- ══════════════════ 문자 탭 ══════════════════ -->
+  <div class="tab-content" id="tab-sms">
+
+    <!-- 발신번호 -->
+    <div class="section">
+      <div class="section-label">발신 번호</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="background:var(--bg);border:1px solid var(--line);border-radius:8px;
+          padding:9px 14px;font-size:13.5px;font-weight:700;color:var(--ink)">
+          080-000-1234
+        </span>
+        <span style="font-size:12px;color:var(--muted)">고정 발신번호 (Solapi 등록)</span>
+      </div>
+    </div>
+
+    <!-- 수신자 선택기 (메일과 동일 구조, MSG-17·18) -->
+    <div class="section">
+      <div class="section-label">수신자 선택 <span class="anno-badge new">🆕 MSG-17·18</span></div>
+      <div class="recipient-box">
+        <div class="recipient-search">
+          <input class="inp" type="text" placeholder="🔍  호텔명 검색… (예: 오션파크)" />
+          <button class="btn outline sm">검색</button>
+        </div>
+        <div class="hotel-results">
+          <div class="hotel-item">
+            <div><span class="name">오션파크 리조트</span><br/><span class="email">010-8765-4321</span></div>
+            <button class="btn sm primary">추가</button>
+          </div>
+        </div>
+        <div class="chip-area">
+          <div class="chip">오션파크 리조트 <span class="x">×</span></div>
+          <div class="chip">시티뷰 호텔 <span class="x">×</span></div>
+          <input class="inp" style="flex:1;min-width:180px;border:none;outline:none;padding:4px 6px;font-size:13px" placeholder="번호 직접 입력 후 Enter…"/>
+        </div>
+        <div class="recipient-actions">
+          <span class="hint">📎 엑셀 일괄 업로드 또는 호텔리어 전체 불러오기</span>
+          <div class="drop-zone">⬆️ 엑셀 업로드 <span class="anno-badge new">🆕 MSG-17</span></div>
+          <button class="btn outline sm">
+            🏨 호텔리어 전체 불러오기
+            <span style="background:var(--brand);color:#fff;font-size:10px;padding:1px 6px;border-radius:999px;margin-left:4px">247명</span>
+            <span class="anno-badge new">🆕 MSG-18</span>
+          </button>
+          <a href="#" style="font-size:12px;color:var(--brand-d);text-decoration:underline">📥 템플릿 다운로드</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- MSG-19: 제목 필수화 -->
+    <div class="section">
+      <div class="field-group">
+        <label class="lbl">
+          제목 <span class="req">*</span>
+          <span class="anno-badge chg">✏️ MSG-19 필수화</span>
+          <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px">최대 40자 · LMS/MMS 발송 시 필수 표시</span>
+        </label>
+        <input class="inp" id="smsTitle" type="text" value="[오아테크]" placeholder="[오아테크]" maxlength="40"
+          oninput="this.nextElementSibling.textContent=this.value.length+'/40';updatePhonePreview()" />
+        <div style="font-size:11.5px;color:var(--muted);text-align:right;margin-top:3px">5/40</div>
+      </div>
+      <div class="callout chg">MSG-19: 기존 "선택" → "필수"로 변경. 기본값 <code>[오아테크]</code>가 미리 채워집니다. LMS·MMS 판정 시 제목이 본문 상단에 굵게 표시됩니다.</div>
+    </div>
+
+    <!-- 본문 + 변수칩 — MSG-21 Split Pane -->
+    <div class="section">
+      <div class="section-label">본문 <span class="anno-badge new">🆕 MSG-21 미리보기 분할</span></div>
+      <div class="callout" style="margin-bottom:12px">MSG-21: 좌우 2단 분할 — 좌측 입력, 우측 실시간 휴대폰 말풍선 미리보기. 변수는 "미리볼 수신자" 샘플값으로 치환되어 표시됩니다.</div>
+
+      <div class="sms-split">
+        <!-- 좌측: 입력 패널 -->
+        <div class="sms-left-pane">
+          <div class="var-chips" style="margin-bottom:8px">
+            <span class="var-chip" onclick="insertSmsVar('#{업체명}')">+#{업체명}</span>
+            <span class="var-chip" onclick="insertSmsVar('#{담당자명}')">+#{담당자명}</span>
+            <span class="var-chip" onclick="insertSmsVar('#{연락처}')">+#{연락처}</span>
+            <span class="var-chip" onclick="insertSmsVar('#{호텔명}')">+#{호텔명}</span>
+          </div>
+          <textarea class="inp" id="smsBody" style="min-height:130px" oninput="updateBytes();updatePhonePreview()">안녕하세요, #{업체명} #{담당자명}님.
+OA서포트입니다.
+PMS v3.2 업데이트가 완료되었습니다.
+문의: 1588-0000</textarea>
+
+          <!-- 바이트 표시 -->
+          <div class="byte-row">
+            <div class="byte-bar"><div class="byte-fill" id="byteFill" style="width:18%"></div></div>
+            <span id="byteCount" style="font-size:12px;color:var(--muted);white-space:nowrap">74 / 90 byte</span>
+            <span class="sms-kind-badge sms" id="smsKind">SMS</span>
+          </div>
+          <div class="var-hint">90byte 이하: SMS · 91~2,000byte: LMS · 이미지 첨부: MMS</div>
+
+          <!-- MSG-15 변수값 패널 (문자탭) -->
+          <div class="var-value-panel" style="margin-top:16px">
+            <div class="var-value-panel-header">
+              <div>
+                <div class="ttl">🔤 변수 값 설정 <span class="anno-badge bug">🐛 MSG-15 버그수정</span></div>
+                <div class="sub">본문에 사용된 변수 각각의 값 소스를 지정하세요</div>
+              </div>
+            </div>
+            <table class="var-value-table">
+              <thead>
+                <tr>
+                  <th style="width:100px">변수</th>
+                  <th style="width:160px">값 소스</th>
+                  <th>값 / 안내</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="var-name-cell">#{업체명}</span></td>
+                  <td>
+                    <select class="var-source-select" onchange="handleSourceChange(this,'sms-val-업체명')">
+                      <option value="auto" selected>연락처 자동주입</option>
+                      <option value="direct">직접입력</option>
+                      <option value="excel">엑셀 열</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div class="var-source-auto" id="sms-val-업체명">
+                      <span class="ic">🔗</span> 수신자별 자동 채움
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="var-name-cell">#{담당자명}</span></td>
+                  <td>
+                    <select class="var-source-select" onchange="handleSourceChange(this,'sms-val-담당자명')">
+                      <option value="auto" selected>연락처 자동주입</option>
+                      <option value="direct">직접입력</option>
+                      <option value="excel">엑셀 열</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div class="var-source-auto" id="sms-val-담당자명">
+                      <span class="ic">🔗</span> 수신자별 자동 채움
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 우측: 실시간 휴대폰 미리보기 (MSG-21) -->
+        <div class="sms-right-pane">
+          <div class="phone-preview-wrap">
+            <div class="section-label" style="margin-bottom:8px">실시간 미리보기 <span class="anno-badge new">🆕 MSG-21</span></div>
+            <!-- 미리볼 수신자 선택 -->
+            <div class="preview-recipient-row">
+              <label>미리볼 수신자</label>
+              <select class="preview-recipient-select" onchange="updatePhonePreview()">
+                <option value="0">오션파크 리조트 (010-8765-4321)</option>
+                <option value="1">시티뷰 호텔 (010-1234-5678)</option>
+              </select>
+            </div>
+            <!-- 폰 프레임 -->
+            <div class="phone-frame">
+              <!-- 상단 상태바 -->
+              <div class="phone-statusbar">
+                <span>9:41</span>
+                <span>●●●●&nbsp;WiFi&nbsp;🔋</span>
+              </div>
+              <!-- 폰 화면 -->
+              <div class="phone-screen">
+                <!-- 메시지 앱 헤더 -->
+                <div class="phone-header">
+                  <span class="back">‹</span>
+                  <div class="contact-info">
+                    <div class="contact-name" id="previewSenderName">080-000-1234</div>
+                    <div class="contact-num">수신 문자</div>
+                  </div>
+                </div>
+                <!-- 말풍선 영역 -->
+                <div class="phone-messages">
+                  <div class="phone-sender-info" id="previewSenderNum">080-000-1234</div>
+                  <div class="msg-bubble-wrap">
+                    <div class="msg-bubble">
+                      <span class="sms-title" id="previewTitle" style="display:none"></span>
+                      <span id="previewBody">안녕하세요, 오션파크 리조트 김호텔님.
+OA서포트입니다.
+PMS v3.2 업데이트가 완료되었습니다.
+문의: 1588-0000</span>
+                    </div>
+                    <div class="msg-time" id="previewTime">오전 9:41</div>
+                  </div>
+                </div>
+                <!-- 바이트/유형 배지 -->
+                <div class="phone-byte-bar">
+                  <span class="pb-count" id="previewByteCount">74 byte</span>
+                  <span class="phone-byte-badge sms" id="previewKindBadge" style="background:#e0f2fe;color:#0369a1">SMS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 발송 정보 -->
+    <div class="send-info" style="margin-bottom:12px">
+      <div class="send-info-item"><div class="val">2</div><div class="lbl">총 수신자</div></div>
+      <div class="send-info-item"><div class="val sms-kind-badge sms" style="font-size:16px">SMS</div><div class="lbl">발송 유형</div></div>
+      <div class="send-info-item"><div class="val" style="color:var(--amber)">₩14</div><div class="lbl">예상 비용</div></div>
+    </div>
+
+    <div class="warn-box">
+      <span class="ic">⚠️</span>
+      <span>수신 거부 번호는 자동으로 제외됩니다. 야간(21시 이후~08시 이전) 발송은 법적으로 제한됩니다.</span>
+    </div>
+  </div><!-- /tab-sms content -->
+  <div class="send-area" id="smsSendArea" style="display:none">
+    <button class="btn outline">초기화</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <!-- MSG-22 테스트 발송 버튼 -->
+      <button class="btn outline" onclick="openTestSend('sms')" style="color:var(--muted)" title="나에게 테스트 문자를 1건 발송합니다">
+        🧪 테스트 발송 <span class="anno-badge new">🆕 MSG-22</span>
+      </button>
+      <button class="btn primary" style="min-width:120px">💬 문자 발송</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ 템플릿 탭 ══════════════════ -->
+  <div class="tab-content" id="tab-templates">
+
+    <div class="tpl-header">
+      <div>
+        <h3 style="font-size:16px;font-weight:800">발송 템플릿</h3>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:3px">
+          자주 쓰는 메일·문자 양식을 저장하고, 클릭 한 번으로 해당 탭에 불러옵니다.
+          <span class="anno-badge new">🆕 MSG-16</span>
+        </p>
+      </div>
+      <button class="btn primary" onclick="openModal()">+ 새 템플릿</button>
+    </div>
+
+    <div class="tpl-list" id="tplList">
+      <!-- 드래그핸들 + 채널배지 + 정보 + 아이콘 -->
+      <div class="tpl-item">
+        <span class="tpl-drag" title="드래그하여 순서 변경">⠿</span>
+        <span class="tpl-channel-badge mail">메일</span>
+        <div class="tpl-info">
+          <div class="tpl-title">PMS 정기 업데이트 안내</div>
+          <div class="tpl-memo">매월 업데이트 시 전체 호텔 공지용 메일 템플릿 — #{업체명}, #{담당자명} 변수 포함</div>
+        </div>
+        <div class="tpl-actions">
+          <button class="btn outline sm" onclick="useTemplate('mail','PMS 정기 업데이트 안내')">사용</button>
+          <span class="icon-btn edit" title="수정" onclick="openModal()">✏️</span>
+          <span class="icon-btn del" title="삭제">🗑️</span>
+        </div>
+      </div>
+      <div class="tpl-item">
+        <span class="tpl-drag">⠿</span>
+        <span class="tpl-channel-badge sms">문자</span>
+        <div class="tpl-info">
+          <div class="tpl-title">점검 완료 SMS</div>
+          <div class="tpl-memo">원격 점검 완료 후 담당자에게 발송하는 단문 SMS — #{업체명}, #{담당자명} 포함</div>
+        </div>
+        <div class="tpl-actions">
+          <button class="btn outline sm" onclick="useTemplate('sms','점검 완료 SMS')">사용</button>
+          <span class="icon-btn edit" title="수정" onclick="openModal()">✏️</span>
+          <span class="icon-btn del" title="삭제">🗑️</span>
+        </div>
+      </div>
+      <div class="tpl-item">
+        <span class="tpl-drag">⠿</span>
+        <span class="tpl-channel-badge mail">메일</span>
+        <div class="tpl-info">
+          <div class="tpl-title">계정 초기화 안내</div>
+          <div class="tpl-memo">비밀번호 초기화 완료 후 자격증명 안내 메일 — #{담당자명}, #{연락처} 포함</div>
+        </div>
+        <div class="tpl-actions">
+          <button class="btn outline sm" onclick="useTemplate('mail','계정 초기화 안내')">사용</button>
+          <span class="icon-btn edit" title="수정" onclick="openModal()">✏️</span>
+          <span class="icon-btn del" title="삭제">🗑️</span>
+        </div>
+      </div>
+      <div class="tpl-item">
+        <span class="tpl-drag">⠿</span>
+        <span class="tpl-channel-badge sms">문자</span>
+        <div class="tpl-info">
+          <div class="tpl-title">방문 일정 확인 요청</div>
+          <div class="tpl-memo">현장 방문 전 담당자 일정 확인 문자 — #{업체명}, #{담당자명}, #{변수명1}(방문예정일) 포함</div>
+        </div>
+        <div class="tpl-actions">
+          <button class="btn outline sm" onclick="useTemplate('sms','방문 일정 확인 요청')">사용</button>
+          <span class="icon-btn edit" title="수정" onclick="openModal()">✏️</span>
+          <span class="icon-btn del" title="삭제">🗑️</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:14px">
+      MSG-16: 템플릿 행의 [사용] 버튼 클릭 → 해당 채널 탭(메일/문자)으로 이동 + 제목·본문·변수가 자동 채워집니다. 수신자와 변수 값만 지정하면 바로 발송 가능합니다.
+    </div>
+    <div class="callout" style="margin-top:6px">
+      순서 변경: ⠿ 드래그 핸들을 잡고 위·아래로 드래그하면 표시 순서가 저장됩니다.
+    </div>
+  </div><!-- /tab-templates content -->
+
+  <!-- ══════════════════ 메시지함 탭 ══════════════════ -->
+  <div class="tab-content" id="tab-history">
+
+    <!-- 검색폼 -->
+    <div class="msg-search">
+      <input class="inp" type="date" value="2026-06-01" style="max-width:130px"/>
+      <span style="line-height:38px;color:var(--muted);font-size:12px">~</span>
+      <input class="inp" type="date" value="2026-06-16" style="max-width:130px"/>
+      <select class="inp" style="max-width:100px">
+        <option>전체</option>
+        <option>메일</option>
+        <option>문자</option>
+      </select>
+      <input class="inp" type="text" placeholder="업체명" style="max-width:120px"/>
+      <input class="inp" type="text" placeholder="이메일 주소" style="max-width:160px"/>
+      <button class="btn primary sm">🔍 검색</button>
+    </div>
+
+    <div class="callout chg" style="margin-bottom:10px">컬럼 점검(2026-06-16): <code>총발송·성공·실패</code> 3칸 → <b>결과</b> 1칸 통합(공간 효율 원칙), 그 자리에 <b>수신 대상(업체 요약)</b> 노출. 제목 클릭→본문, 수신 클릭→수신자 목록.</div>
+    <!-- 테이블 -->
+    <table class="msg-table">
+      <thead>
+        <tr>
+          <th>발송일시</th>
+          <th>유형</th>
+          <th>제목</th>
+          <th>수신</th>
+          <th>결과</th>
+          <th>발송자</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="white-space:nowrap;font-size:12.5px">2026-06-16<br/>14:32</td>
+          <td><span class="type-badge mail">메일</span></td>
+          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="#" style="color:var(--brand-d)">[오아테크] PMS v3.2 주요 기능 업데이트 안내드립니다</a></td>
+          <td style="font-size:12px"><a href="#" style="color:var(--brand-d)">그랜드호텔 외 2 · 3명</a></td>
+          <td style="font-size:12px"><span class="success">성공 3</span> <span style="color:var(--line)">/</span> <span class="fail">실패 0</span></td>
+          <td style="font-size:12px">김매니저</td>
+        </tr>
+        <tr>
+          <td style="white-space:nowrap;font-size:12.5px">2026-06-15<br/>11:07</td>
+          <td><span class="type-badge sms">문자</span></td>
+          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="#" style="color:var(--brand-d)">[오아테크] 야간 점검 완료 안내드립니다.</a></td>
+          <td style="font-size:12px"><a href="#" style="color:var(--brand-d)">시티뷰호텔 외 17 · 18명</a></td>
+          <td style="font-size:12px"><span class="success">성공 17</span> <span style="color:var(--line)">/</span> <span class="fail" style="font-weight:700">실패 1</span></td>
+          <td style="font-size:12px">박어드민</td>
+        </tr>
+        <tr>
+          <td style="white-space:nowrap;font-size:12.5px">2026-06-14<br/>09:55</td>
+          <td><span class="type-badge mail">메일</span></td>
+          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="#" style="color:var(--brand-d)">키리스 v2.1 연동 오류 해결 및 패치 안내</a></td>
+          <td style="font-size:12px"><a href="#" style="color:var(--brand-d)">엑셀 업로드 · 45명</a></td>
+          <td style="font-size:12px"><span class="success">성공 44</span> <span style="color:var(--line)">/</span> <span class="fail" style="font-weight:700">실패 1</span></td>
+          <td style="font-size:12px">김매니저</td>
+        </tr>
+        <tr>
+          <td style="white-space:nowrap;font-size:12.5px">2026-06-12<br/>17:21</td>
+          <td><span class="type-badge sms">문자</span></td>
+          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="#" style="color:var(--brand-d)">[오아테크] 6월 정기 유지보수 일정 안내</a></td>
+          <td style="font-size:12px"><a href="#" style="color:var(--brand-d)">호텔리어 전체 · 247명</a></td>
+          <td style="font-size:12px"><span class="success">성공 245</span> <span style="color:var(--line)">/</span> <span class="fail" style="font-weight:700">실패 2</span></td>
+          <td style="font-size:12px">박어드민</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 페이지네이션 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12.5px;color:var(--muted)">총 4건 · 1/1 페이지</div>
+      <div style="display:flex;gap:4px">
+        <button class="btn outline sm">◀ 이전</button>
+        <button class="btn primary sm">1</button>
+        <button class="btn outline sm">다음 ▶</button>
+      </div>
+      <select class="inp" style="width:80px;font-size:12.5px">
+        <option>20건</option>
+        <option>50건</option>
+        <option>100건</option>
+      </select>
+    </div>
+  </div><!-- /tab-history content -->
+
+</div><!-- /app-frame -->
+
+<!-- ━━━━━━━━ 템플릿 편집 모달 ━━━━━━━━ -->
+<div class="modal-overlay" id="tplModal" onclick="closeModalOnBg(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>새 템플릿 <span class="anno-badge new">🆕 MSG-16</span></h3>
+      <button class="btn ghost" onclick="closeModal()">✕ 닫기</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- 채널 선택 -->
+      <div class="field-group" style="margin-bottom:16px">
+        <label class="lbl">채널 <span class="req">*</span></label>
+        <div class="channel-toggle">
+          <button class="channel-btn active mail" onclick="setChannel(this,'mail')">✉️ 메일</button>
+          <button class="channel-btn" onclick="setChannel(this,'sms')">💬 문자</button>
+        </div>
+      </div>
+
+      <!-- 제목 -->
+      <div class="field-group" style="margin-bottom:14px">
+        <label class="lbl">템플릿 제목 <span class="req">*</span></label>
+        <input class="inp" type="text" placeholder="예: PMS 정기 업데이트 안내" value=""/>
+      </div>
+
+      <!-- 메모 -->
+      <div class="field-group" style="margin-bottom:14px">
+        <label class="lbl">메모 <span class="opt">(내부 설명)</span></label>
+        <input class="inp" type="text" placeholder="예: 매월 업데이트 시 전체 공지용 — 담당자 자동주입"/>
+      </div>
+
+      <!-- 변수칩 + 본문 -->
+      <div class="field-group" style="margin-bottom:14px">
+        <label class="lbl">본문 <span class="req">*</span></label>
+        <div class="var-chips" style="margin-bottom:8px">
+          <span class="var-chip">+#{업체명}</span>
+          <span class="var-chip">+#{담당자명}</span>
+          <span class="var-chip">+#{연락처}</span>
+          <span class="var-chip">+#{호텔명}</span>
+          <span class="var-chip" id="customVarChip" style="display:none">+#{변수명1}</span>
+        </div>
+        <textarea class="inp" style="min-height:120px" placeholder="본문을 입력하세요. 변수 토큰을 클릭하여 삽입합니다."></textarea>
+      </div>
+
+      <!-- 커스텀 변수명 추가 (MSG-16 기능) -->
+      <div class="field-group">
+        <label class="lbl">커스텀 변수 추가 <span class="opt">(선택)</span> <span class="anno-badge new">🆕</span></label>
+        <div class="custom-var-row">
+          <div class="custom-var-chip">#{변수명1} <span class="x">×</span></div>
+          <div class="custom-var-chip">#{방문예정일} <span class="x">×</span></div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input class="inp" type="text" placeholder="변수명 입력 (예: 방문예정일)" style="max-width:180px;height:34px"/>
+            <button class="btn outline sm">+ 추가</button>
+          </div>
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:5px">
+          추가한 변수는 본문에서 <code>#{변수명}</code> 형태로 사용하고, 발송 시 변수 값 패널에서 소스를 지정합니다.
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn outline" onclick="closeModal()">취소</button>
+      <button class="btn primary" onclick="saveTemplate()">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━ MSG-21 메일 미리보기 모달 ━━━━━━━━ -->
+<div class="modal-overlay" id="mailPreviewModal" onclick="closeMailPreviewOnBg(event)">
+  <div class="mail-preview-modal">
+    <div class="modal-header">
+      <h3>메일 미리보기 <span class="anno-badge new">🆕 MSG-21</span></h3>
+      <button class="btn ghost" onclick="closeMailPreview()">✕ 닫기</button>
+    </div>
+    <div class="modal-body">
+      <div class="mail-preview-area">
+        <div class="mail-preview-from" id="mpFrom">보낸 사람: 오아테크 &lt;as@oapms.com&gt;</div>
+        <div class="mail-preview-subject" id="mpSubject">[오아테크] PMS v3.2 주요 기능 업데이트 안내드립니다</div>
+        <div class="mail-preview-body" id="mpBody">안녕하세요, 그랜드 조선 부산 김호텔님.
+
+오아테크에서 PMS v3.2 업데이트 주요 사항을 안내드립니다.
+
+주요 변경사항:
+• 객실 예약 화면 속도 개선 (약 30% 빠른 응답)
+• 야간 정산 배치 안정성 강화
+• 키리스 연동 오류 로그 상세화
+
+문의사항은 연락처 010-3333-4444 로 연락주시기 바랍니다.
+
+감사합니다.</div>
+        <div class="mail-preview-footer">
+          <div class="fp-brand">OA서포트 · 오아테크</div>
+          <div>서울특별시 강남구 테헤란로 ○○○ &nbsp;|&nbsp; support@oapms.com &nbsp;|&nbsp; 02-0000-0000</div>
+          <div style="margin-top:4px;font-size:11.5px">이 메일은 OA서포트를 통해 발송된 공식 안내 메일입니다. 수신 거부: <span style="color:var(--brand-d)">수신거부 링크</span></div>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:12px">샘플 수신자: 그랜드 조선 부산 (김호텔) 기준으로 변수가 치환된 모습입니다. 실제 발송 시 수신자별로 치환됩니다.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn outline" onclick="closeMailPreview()">닫기</button>
+      <button class="btn primary" onclick="closeMailPreview()">확인 후 발송 진행</button>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━ MSG-22 테스트 발송 모달 ━━━━━━━━ -->
+<div class="modal-overlay" id="testSendModal" onclick="closeTestSendOnBg(event)">
+  <div class="test-modal">
+    <div class="modal-header">
+      <h3>테스트 발송 <span class="anno-badge new">🆕 MSG-22</span></h3>
+      <button class="btn ghost" onclick="closeTestSend()">✕ 닫기</button>
+    </div>
+    <div class="modal-body">
+      <div class="test-modal-info">
+        샘플 수신자 1명 기준으로 변수 치환되어 1건만 발송됩니다. 실제 수신자 목록과 무관하며, 아래 입력한 번호(또는 이메일)로만 전송됩니다.
+      </div>
+      <div id="testSendMailField" style="display:none">
+        <div class="field-group" style="margin-bottom:14px">
+          <label class="lbl">테스트 수신 이메일 <span class="req">*</span></label>
+          <input class="inp" type="email" id="testEmailInput" placeholder="예: manager@oapms.com" value="" />
+          <div style="font-size:11.5px;color:var(--muted);margin-top:4px">기본값: 본인 계정 이메일 (manager@oapms.com)</div>
+        </div>
+      </div>
+      <div id="testSendSmsField" style="display:none">
+        <div class="field-group" style="margin-bottom:14px">
+          <label class="lbl">테스트 수신 휴대폰 번호 <span class="req">*</span></label>
+          <input class="inp" type="tel" id="testPhoneInput" placeholder="예: 010-0000-0000" value="" />
+          <div style="font-size:11.5px;color:var(--muted);margin-top:4px">기본값: 본인 계정 연락처 (010-0000-0000)</div>
+        </div>
+      </div>
+      <div class="warn-box" style="margin-top:4px">
+        <span class="ic">⚠️</span>
+        <span>테스트 발송도 실제 건수에 포함되며, 문자 발송 비용이 발생합니다 (1건).</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn outline" onclick="closeTestSend()">취소</button>
+      <button class="btn primary" onclick="confirmTestSend()">🧪 테스트 발송</button>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━ 검토 결정사항 체크리스트 ━━━━━━━━ -->
+<div class="checklist-section">
+  <h3>이 와이어프레임에서 검토할 결정사항</h3>
+  <div class="cl-item">
+    <input type="checkbox" class="cl-check" />
+    <div>
+      <div class="q">MSG-15 — 변수 값 패널의 "소스 선택" UX가 직관적인가?</div>
+      <div class="hint">현재안: 드롭다운(연락처 자동주입 / 직접입력 / 엑셀 열). 대안: 라디오 버튼 3개 나열, 또는 토글 칩. 선택지 명칭이 명확한지 확인 필요.</div>
+    </div>
+  </div>
+  <div class="cl-item">
+    <input type="checkbox" class="cl-check" />
+    <div>
+      <div class="q">MSG-16 — 템플릿 편집이 "모달"이 맞는가, 아니면 인라인 슬라이드패널(Sheet)인가?</div>
+      <div class="hint">현재안: 풀스크린 모달. 대안: 우측 Drawer(Sheet)로 열어 목록을 배경으로 볼 수 있게. 본문 에디터가 길어지면 모달 스크롤이 불편할 수 있음.</div>
+    </div>
+  </div>
+  <div class="cl-item">
+    <input type="checkbox" class="cl-check" />
+    <div>
+      <div class="q">MSG-17 — 엑셀 컬럼 순서 및 필수/선택 기준이 적절한가?</div>
+      <div class="hint">현재안: 업체명·이메일(필수) + 담당자명·연락처·변수명1~7(선택). 문자용은 이메일 대신 휴대폰 컬럼 필수. 탭별로 서로 다른 템플릿 파일을 제공할지 공용 파일 하나로 할지.</div>
+    </div>
+  </div>
+  <div class="cl-item">
+    <input type="checkbox" class="cl-check" />
+    <div>
+      <div class="q">MSG-18 — 호텔리어 전체 불러오기 시 채널 선택 UX는?</div>
+      <div class="hint">현재안: 버튼 클릭 시 간단한 확인 다이얼로그(메일 / 문자 선택). 대안: 탭에 따라 자동 채널 판정(메일 탭이면 이메일, 문자 탭이면 휴대폰). 혼용 불가 업체 처리 방법도 확인 필요.</div>
+    </div>
+  </div>
+  <div class="cl-item">
+    <input type="checkbox" class="cl-check" />
+    <div>
+      <div class="q">MSG-19 — 문자 제목 기본값 <code>[오아테크]</code>를 DB 설정으로 뺄 것인가?</div>
+      <div class="hint">현재안: 하드코딩 기본값. 대안: 시스템 설정(어드민 마스터 메뉴)에서 "SMS 기본 제목 접두어" 편집 가능. 브랜드명 변경 시 유지보수 용이성 고려.</div>
+    </div>
+  </div>
+  <div class="cl-item">
+    <input type="checkbox" class="cl-check" />
+    <div>
+      <div class="q">MSG-20 — 발신자명이 수신자 메일함에 실제로 표시되는지 SES 설정 확인</div>
+      <div class="hint">AWS SES의 FROM 헤더에 <code>"오아테크" &lt;as@oapms.com&gt;</code> 형태가 실제 동작하는지 샌드박스 테스트 필요. 발신자명에 특수문자 포함 시 인코딩(RFC 2047) 처리 방식도 확인.</div>
+    </div>
+  </div>
+  <div class="cl-item">
+    <input type="checkbox" class="cl-check" />
+    <div>
+      <div class="q">변수 값 패널 — 본문에 토큰이 없으면 패널이 사라지는 동작이 맞는가?</div>
+      <div class="hint">현재안: 토큰이 하나라도 있으면 패널 표시, 없으면 숨김. 대안: 항상 표시하되 "변수 없음" 안내. 토큰 삭제 시 패널 행도 실시간으로 사라지는 UX가 직관적인지 검토 필요.</div>
+    </div>
+  </div>
+  <div class="cl-item">
+    <input type="checkbox" class="cl-check" />
+    <div>
+      <div class="q">MSG-21 — 문자 미리보기 분할 비율은 좌우 5:5 vs 6:4 중 어느 쪽이 적절한가?</div>
+      <div class="hint">현재안: 5:5 균등 분할 (<code>grid-template-columns: 1fr 1fr</code>). 대안: 6:4(입력 넓게) 또는 4:6(미리보기 넓게). 본문 textarea가 길어질 때 입력 영역이 충분한지, 미리보기 폰 프레임이 너무 작아지지 않는지 검토 필요.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━ JS ━━━━━━━━ -->
+<script>
+/* ── 탭 전환 ── */
+function switchTab(tabId, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + tabId)?.classList.add('active');
+
+  // 발송 버튼 영역 노출 제어
+  document.querySelectorAll('.send-area').forEach(sa => {
+    sa.style.display = 'none';
+  });
+  if (tabId === 'mail') {
+    const mailArea = document.getElementById('mailSendArea');
+    if (mailArea) mailArea.style.display = 'flex';
+  } else if (tabId === 'sms') {
+    document.getElementById('smsSendArea').style.display = 'flex';
+  }
+}
+
+/* ── 발신자 미리보기 (MSG-20) ── */
+function updatePreview() {
+  const local = document.getElementById('localInput')?.value || 'as';
+  document.getElementById('senderPreview').textContent = '오아테크 <' + local + '@oapms.com>';
+}
+
+/* ── 변수 삽입 ── */
+function insertVar(token) {
+  const ta = document.getElementById('mailBody');
+  if (!ta) return;
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  ta.value = ta.value.slice(0,s) + token + ta.value.slice(e);
+  ta.selectionStart = ta.selectionEnd = s + token.length;
+  ta.focus();
+  updateVarPanel();
+}
+
+function insertSmsVar(token) {
+  const ta = document.getElementById('smsBody');
+  if (!ta) return;
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  ta.value = ta.value.slice(0,s) + token + ta.value.slice(e);
+  ta.selectionStart = ta.selectionEnd = s + token.length;
+  ta.focus();
+  updateBytes();
+}
+
+/* ── 변수 값 패널 토큰 감지 (MSG-15) ── */
+function updateVarPanel() {
+  // 실제 구현에서는 본문 토큰 파싱 후 패널 행 동적 생성
+  // 와이어프레임에서는 패널 항상 표시
+}
+
+/* ── 변수 소스 변경 핸들러 (MSG-15) ── */
+function handleSourceChange(sel, targetId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  const v = sel.value;
+  if (v === 'auto') {
+    el.className = 'var-source-auto';
+    el.innerHTML = '<span class="ic">🔗</span> 호텔 연락처에서 수신자별 자동 채움';
+  } else if (v === 'direct') {
+    el.className = '';
+    el.innerHTML = '<input class="var-direct-input" type="text" placeholder="전체 수신자 공통 값 직접 입력…" />';
+  } else if (v === 'excel') {
+    el.className = '';
+    el.innerHTML = '<div class="excel-col-hint"><span>📊</span> 엑셀 열 이름 입력: <input style="border:1px solid var(--line);border-radius:5px;padding:3px 7px;font-size:12px;margin-left:4px;width:100px" placeholder="예: 변수명1" /></div>';
+  }
+}
+
+/* ── 바이트 계산 (문자탭) ── */
+function updateBytes() {
+  const ta = document.getElementById('smsBody');
+  if (!ta) return;
+  const txt = ta.value;
+  let bytes = 0;
+  for (let i=0;i<txt.length;i++) {
+    bytes += txt.charCodeAt(i) > 127 ? 2 : 1;
+  }
+  const maxBytes = 2000;
+  document.getElementById('byteCount').textContent = bytes + ' / 90 byte';
+  const fill = Math.min(100, (bytes/90)*100);
+  const bar = document.getElementById('byteFill');
+  if (bar) {
+    bar.style.width = fill + '%';
+    bar.style.background = bytes <= 90 ? 'var(--brand)' : bytes <= 2000 ? 'var(--amber)' : 'var(--red)';
+  }
+  const kind = document.getElementById('smsKind');
+  if (kind) {
+    if (bytes <= 90) {
+      kind.textContent = 'SMS';
+      kind.className = 'sms-kind-badge sms';
+      document.getElementById('byteCount').textContent = bytes + ' / 90 byte';
+    } else if (bytes <= 2000) {
+      kind.textContent = 'LMS';
+      kind.className = 'sms-kind-badge lms';
+      document.getElementById('byteCount').textContent = bytes + ' / 2,000 byte';
+    } else {
+      kind.textContent = 'MMS';
+      kind.className = 'sms-kind-badge mms';
+    }
+  }
+}
+
+/* ── 엑셀 미리보기 토글 (MSG-17) ── */
+function toggleExcelPreview() {
+  const el = document.getElementById('excelPreview');
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+/* ── 호텔리어 전체 불러오기 (MSG-18) ── */
+function showHotelierAll() {
+  const confirmed = confirm('호텔리어 전체(247명)를 수신자로 추가하시겠습니까?\n\n• 메일 탭: 이메일 주소 기준\n• 문자 탭: 휴대폰 번호 기준\n\n연락처 미등록 호텔리어는 자동 제외됩니다.');
+  if (confirmed) {
+    const area = document.querySelector('#tab-mail .chip-area') || document.querySelector('.chip-area');
+    if (area) {
+      const hint = area.querySelector('input');
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.style.background = '#fff3cd';
+      chip.style.color = '#d97706';
+      chip.style.border = '1px solid #fde68a';
+      chip.innerHTML = '호텔리어 전체 247명 <span class="x" onclick="this.parentElement.remove()">×</span>';
+      if (hint) area.insertBefore(chip, hint);
+      else area.appendChild(chip);
+    }
+  }
+}
+
+/* ── 모달 ── */
+function openModal() {
+  document.getElementById('tplModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('tplModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeModalOnBg(e) {
+  if (e.target === document.getElementById('tplModal')) closeModal();
+}
+function saveTemplate() {
+  alert('템플릿이 저장되었습니다.\n(와이어프레임 — 실제 저장은 API 연동 후 동작)');
+  closeModal();
+}
+
+/* ── 채널 토글 ── */
+function setChannel(btn, ch) {
+  document.querySelectorAll('.channel-btn').forEach(b => {
+    b.classList.remove('active','mail','sms');
+  });
+  btn.classList.add('active', ch);
+}
+
+/* ── 템플릿 사용 ── */
+function useTemplate(channel, name) {
+  const tabMap = {mail:'mail',sms:'sms'};
+  const tab = document.querySelector('.tab[data-tab="' + tabMap[channel] + '"]');
+  if (tab) switchTab(tabMap[channel], tab);
+  setTimeout(() => {
+    const ta = document.getElementById(channel === 'mail' ? 'mailBody' : 'smsBody');
+    if (ta) {
+      ta.value = '── 템플릿 "' + name + '" 불러옴 ──\n\n안녕하세요, #{업체명} #{담당자명}님.\n\n[여기에 템플릿 본문이 채워집니다]\n\n감사합니다.';
+      if (channel === 'sms') updateBytes();
+    }
+    // 변수 패널 업데이트
+    updateVarPanel();
+  }, 100);
+}
+
+/* ── MSG-21: 문자 실시간 폰 미리보기 ── */
+const SMS_SAMPLE_RECIPIENTS = [
+  { name: '오션파크 리조트', 업체명: '오션파크 리조트', 담당자명: '이리조트', 연락처: '010-8765-4321', 호텔명: '오션파크 리조트' },
+  { name: '시티뷰 호텔', 업체명: '시티뷰 호텔', 담당자명: '김호텔', 연락처: '010-1234-5678', 호텔명: '시티뷰 호텔' },
+];
+function updatePhonePreview() {
+  const sel = document.querySelector('.preview-recipient-select');
+  const idx = sel ? parseInt(sel.value) : 0;
+  const r = SMS_SAMPLE_RECIPIENTS[idx] || SMS_SAMPLE_RECIPIENTS[0];
+
+  const body = document.getElementById('smsBody')?.value || '';
+  // 변수 치환
+  let rendered = body
+    .replace(/#{업체명}/g, r.업체명)
+    .replace(/#{담당자명}/g, r.담당자명)
+    .replace(/#{연락처}/g, r.연락처)
+    .replace(/#{호텔명}/g, r.호텔명);
+
+  // 제목 (SMS탭)
+  const titleEl = document.getElementById('smsTitle');
+  const titleVal = titleEl ? titleEl.value : '';
+  const previewTitle = document.getElementById('previewTitle');
+  if (previewTitle) {
+    if (titleVal && titleVal.trim()) {
+      previewTitle.textContent = titleVal;
+      previewTitle.style.display = 'block';
+    } else {
+      previewTitle.style.display = 'none';
+    }
+  }
+
+  const previewBody = document.getElementById('previewBody');
+  if (previewBody) previewBody.textContent = rendered;
+
+  // 바이트 수
+  let bytes = 0;
+  for (let i = 0; i < rendered.length; i++) bytes += rendered.charCodeAt(i) > 127 ? 2 : 1;
+  const pbCount = document.getElementById('previewByteCount');
+  if (pbCount) pbCount.textContent = bytes + ' byte';
+
+  // 유형 배지
+  const kindBadge = document.getElementById('previewKindBadge');
+  if (kindBadge) {
+    if (bytes <= 90) {
+      kindBadge.textContent = 'SMS';
+      kindBadge.style.background = '#e0f2fe';
+      kindBadge.style.color = '#0369a1';
+    } else if (bytes <= 2000) {
+      kindBadge.textContent = 'LMS';
+      kindBadge.style.background = '#fffbeb';
+      kindBadge.style.color = '#d97706';
+    } else {
+      kindBadge.textContent = 'MMS';
+      kindBadge.style.background = '#f5f3ff';
+      kindBadge.style.color = '#7c3aed';
+    }
+  }
+
+  // 시간
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  const ampm = h < 12 ? '오전' : '오후';
+  const displayH = h % 12 === 0 ? 12 : h % 12;
+  const timeEl = document.getElementById('previewTime');
+  if (timeEl) timeEl.textContent = `${ampm} ${displayH}:${String(m).padStart(2,'0')}`;
+}
+
+/* ── MSG-21: 메일 미리보기 모달 ── */
+function openMailPreview() {
+  // 발신자
+  const local = document.getElementById('localInput')?.value || 'as';
+  document.getElementById('mpFrom').textContent = '보낸 사람: 오아테크 <' + local + '@oapms.com>';
+  // 제목
+  const subjectEl = document.querySelector('#tab-mail .section input.inp[type="text"][placeholder*="오아테크"]') || { value:'[오아테크] PMS v3.2 주요 기능 업데이트 안내드립니다' };
+  document.getElementById('mpSubject').textContent = subjectEl.value || '[오아테크] PMS v3.2 주요 기능 업데이트 안내드립니다';
+  // 본문 변수 치환 (샘플: 그랜드 조선 부산 / 김호텔)
+  const body = document.getElementById('mailBody')?.value || '';
+  const rendered = body
+    .replace(/#{업체명}/g, '그랜드 조선 부산')
+    .replace(/#{담당자명}/g, '김호텔')
+    .replace(/#{연락처}/g, '010-3333-4444')
+    .replace(/#{호텔명}/g, '그랜드 조선 부산')
+    .replace(/#{변수명1}/g, '120');
+  document.getElementById('mpBody').textContent = rendered;
+  document.getElementById('mailPreviewModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMailPreview() {
+  document.getElementById('mailPreviewModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeMailPreviewOnBg(e) {
+  if (e.target === document.getElementById('mailPreviewModal')) closeMailPreview();
+}
+
+/* ── MSG-22: 테스트 발송 모달 ── */
+let _testSendChannel = 'mail';
+function openTestSend(channel) {
+  _testSendChannel = channel;
+  document.getElementById('testSendMailField').style.display = channel === 'mail' ? 'block' : 'none';
+  document.getElementById('testSendSmsField').style.display = channel === 'sms' ? 'block' : 'none';
+  document.getElementById('testSendModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeTestSend() {
+  document.getElementById('testSendModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeTestSendOnBg(e) {
+  if (e.target === document.getElementById('testSendModal')) closeTestSend();
+}
+function confirmTestSend() {
+  const target = _testSendChannel === 'mail'
+    ? (document.getElementById('testEmailInput')?.value || 'manager@oapms.com')
+    : (document.getElementById('testPhoneInput')?.value || '010-0000-0000');
+  const ch = _testSendChannel === 'mail' ? '이메일' : '문자';
+  alert(`테스트 발송 완료 (와이어프레임 시뮬레이션)\n\n채널: ${ch}\n수신: ${target}\n\n샘플 수신자 1번 기준으로 변수가 치환되어 발송되었습니다.`);
+  closeTestSend();
+}
+
+/* ── 초기화 ── */
+document.addEventListener('DOMContentLoaded', () => {
+  updateBytes();
+  updatePreview();
+  updatePhonePreview();
+  // 초기: 메일 탭 발송버튼만 표시
+  document.querySelectorAll('.send-area').forEach((sa) => {
+    sa.style.display = 'none';
+  });
+  const mailArea = document.getElementById('mailSendArea');
+  if (mailArea) mailArea.style.display = 'flex';
+  document.getElementById('smsSendArea').style.display = 'none';
+});
+</script>
+</body>
+</html>

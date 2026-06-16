@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>메일&문자 개편 빌드 완료 보고 — 2026-06-16</title>
+<style>
+  :root{--brand:#00A36B;--brand-d:#00794f;--brand-l:#e6f7f0;--ink:#1a2b22;--muted:#5b6b63;--line:#e3eae6;--bg:#f6f9f7;--card:#fff;--ok:#16a34a}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Pretendard",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;font-size:15px}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 80px}
+  header.top{background:linear-gradient(135deg,var(--brand),var(--brand-d));color:#fff;border-radius:18px;padding:30px 28px;margin-bottom:26px;box-shadow:0 8px 24px rgba(0,163,107,.18)}
+  header.top h1{margin:0 0 8px;font-size:25px}
+  header.top p{margin:0;opacity:.92;font-size:14px}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .meta span{background:rgba(255,255,255,.18);padding:4px 12px;border-radius:999px;font-size:12.5px}
+  h2{font-size:18px;margin:34px 0 12px;padding-left:11px;border-left:4px solid var(--brand)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px;margin:16px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+  .card .num{font-size:27px;font-weight:800;color:var(--brand)}
+  .card .lbl{font-size:12px;color:var(--muted);margin-top:6px}
+  table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--line);font-size:13.5px;margin:10px 0}
+  th{background:var(--brand-l);color:var(--brand-d);text-align:left;padding:10px 12px;font-size:12.5px}
+  td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
+  .ok{color:var(--ok);font-weight:700}
+  code{background:#eef3f0;padding:1px 6px;border-radius:5px;font-size:12px;font-family:ui-monospace,monospace}
+  .id{font-family:ui-monospace,monospace;font-weight:700;color:var(--brand-d);white-space:nowrap}
+  footer{margin-top:46px;text-align:center;color:var(--muted);font-size:12.5px}
+  .files li{margin:5px 0;font-size:13.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>📨 메일 &amp; 문자 개편 — 빌드 완료 보고</h1>
+    <p>PDCA Do/Check 완료 · 설계-구현 갭 분석 100% · next build 통과</p>
+    <div class="meta"><span>2026-06-16</span><span>MSG-15 ~ MSG-23</span><span>갭 100%</span><span>tsc 0 errors</span></div>
+  </header>
+
+  <h2>요약</h2>
+  <div class="cards">
+    <div class="card"><div class="num">9</div><div class="lbl">구현 항목 (MSG-15~23)</div></div>
+    <div class="card"><div class="num">100%</div><div class="lbl">설계-구현 갭</div></div>
+    <div class="card"><div class="num">0</div><div class="lbl">타입 오류</div></div>
+    <div class="card"><div class="num">✓</div><div class="lbl">next build</div></div>
+  </div>
+
+  <h2>갭 분석 — 항목별 구현 근거</h2>
+  <table>
+    <thead><tr><th>ID</th><th>요구</th><th>구현</th><th>상태</th></tr></thead>
+    <tbody>
+      <tr><td class="id">MSG-15</td><td>변수 값 입력 필드(버그수정)</td><td>변수 토큰 시 <code>VariablePanel</code> 노출 · 소스 auto/manual/excel · 동적 토큰 모델(<code>format.ts</code> resolveRecipientVars/substituteAll)</td><td class="ok">완료</td></tr>
+      <tr><td class="id">MSG-16</td><td>템플릿 탭 + 팝업 모달</td><td><code>manual_message_templates</code> 테이블 · CRUD/정렬 액션 5종 · <code>template-tab.tsx</code> 드래그정렬·아이콘·모달 에디터·변수명 추가</td><td class="ok">완료</td></tr>
+      <tr><td class="id">MSG-17</td><td>연락처 엑셀 업로드</td><td>SheetJS <code>xlsx</code> 서버 파싱 · 업체명/이메일·휴대폰/담당자/변수명1~7 · 양식 다운로드 API</td><td class="ok">완료</td></tr>
+      <tr><td class="id">MSG-18</td><td>호텔리어 전체 불러오기</td><td><code>listHoteliersAsRecipientsAction</code> · 채널별 주소 보유분 · 최대 200 · confirm 다이얼로그</td><td class="ok">완료</td></tr>
+      <tr><td class="id">MSG-19</td><td>문자 제목 필수 + 기본값</td><td>스키마 <code>subject min(1)</code> · UI 필수표시 · 기본값 <code>[오아테크]</code></td><td class="ok">완료</td></tr>
+      <tr><td class="id">MSG-20</td><td>메일 발신자명(한 줄)</td><td>발신자명+주소 동일 행 · 기본값 <code>오아테크</code> · RFC2047 한글 인코딩 · 미리보기 <code>오아테크 &lt;as@oapms.com&gt;</code></td><td class="ok">완료</td></tr>
+      <tr><td class="id">MSG-21</td><td>발송 미리보기</td><td>문자=본문 좌우 분할 실시간 휴대폰 말풍선(수신자 드롭다운) · 메일=미리보기 모달(푸터 렌더)</td><td class="ok">완료</td></tr>
+      <tr><td class="id">MSG-22</td><td>테스트 발송</td><td><code>sendTestEmailAction</code>/<code>sendTestSmsAction</code> · batch 미부여(메시지함 제외) · isTest 표식</td><td class="ok">완료</td></tr>
+      <tr><td class="id">MSG-23</td><td>메시지함 컬럼 개편</td><td>발송일시·유형·<b>제목</b>·<b>수신(업체 요약)</b>·<b>결과(성공/실패 통합)</b>·<b>발송자</b> · 성공/실패 3칸→1칸</td><td class="ok">완료</td></tr>
+    </tbody>
+  </table>
+
+  <h2>변경 파일</h2>
+  <ul class="files">
+    <li><b>신규</b> <code>db/schema/manual-message-templates.ts</code> · <code>scripts/ddl-manual-message-templates.ts</code> (멱등 DDL, 적용 완료)</li>
+    <li><b>신규</b> <code>app/api/admin/messaging/recipient-template/route.ts</code> (엑셀 양식 다운로드)</li>
+    <li><b>신규 컴포넌트</b> <code>_components/</code> shared · variable-panel · recipient-picker · mail-tab · sms-tab · template-tab · messagebox-tab</li>
+    <li><b>수정</b> <code>app/actions/messaging-actions.ts</code> (발송 확장·테스트·템플릿·엑셀·호텔리어, 액션 8종 신규)</li>
+    <li><b>수정</b> <code>lib/messaging/format.ts</code> (동적 변수 모델 MSG-15)</li>
+    <li><b>수정</b> <code>db/schema/index.ts</code> · <code>messaging-client.tsx</code>(4탭 셸) · <code>package.json</code>(xlsx)</li>
+  </ul>
+
+  <h2>검증</h2>
+  <table>
+    <thead><tr><th>검증</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td>전체 타입체크 <code>tsc --noEmit</code></td><td class="ok">0 errors</td></tr>
+      <tr><td>프로덕션 빌드 <code>next build</code></td><td class="ok">Compiled successfully (xlsx 클라 번들 누수 없음)</td></tr>
+      <tr><td>DB 테이블 <code>manual_message_templates</code></td><td class="ok">생성·조회 정상 (멱등 DDL)</td></tr>
+      <tr><td>라우트 <code>/admin/insights/messaging</code> · 양식 API</td><td class="ok">빌드 산출물 확인</td></tr>
+    </tbody>
+  </table>
+
+  <h2>실발송 미수행 (의도적)</h2>
+  <p style="font-size:13.5px;color:var(--muted)">
+    로컬 <code>.env.local</code>이 운영DB·운영 SES/Solapi에 직결되어, 실제 메일·문자 발송 검증은 <b>수행하지 않았습니다</b>.
+    발송·테스트발송 경로는 UI에서 사용자가 직접 확인하시고, 필요 시 <b>테스트 발송(MSG-22)</b>으로 1건 실물 검증을 권장합니다.
+  </p>
+
+  <footer>
+    설계: <code>docs/02-design/features/messaging-revamp.design.md</code> · 와이어프레임: <code>docs/dev-logs/2026-06-16-messaging-wireframe.html</code><br/>
+    PDCA: Plan ✅ · Design ✅ · Do ✅ · Check(갭 100%) ✅
+  </footer>
+</div>
+</body>
+</html>
