@@ -106,6 +106,13 @@ export type ListArticlesResult = {
 // 헬퍼
 // ─────────────────────────────────────────────────────────────────────
 
+/**
+ * 시맨틱(벡터) 검색 코사인 유사도 하한선. 이 값 미만은 "의미적으로 가깝지 않다"
+ * 고 보고 결과에서 제외한다. text-embedding-3-small 기준 기본 0.4.
+ * 환경변수 SEMANTIC_MIN_SIM으로 데이터에 맞게 튜닝 가능. (faqs.ts와 동일값)
+ */
+const SEMANTIC_MIN_SIM = Number(process.env.SEMANTIC_MIN_SIM ?? '0.4');
+
 /** ArticleListItem과 매칭되는 select 객체 (5개 list 함수에서 재사용). */
 const ARTICLE_LIST_SELECT = {
   id: articles.id,
@@ -638,10 +645,18 @@ export async function searchArticles(
       const lit = toVectorLiteral(qVec);
       // 코사인 유사도 = 1 - 거리(<=>). 거리 오름차순 = 유사도 내림차순.
       const distance = sql<number>`(${articles.embedding} <=> ${lit}::vector)`;
+      // 유사도 하한선: 이게 없으면 검색어와 무관해도 가장 가까운 N개가 무조건
+      // 반환돼 결과·카운트가 코퍼스 전체로 부풀려진다(키워드 leg는 정상).
       const rows = await db
         .select({ ...ARTICLE_LIST_SELECT, sim: sql<number>`1 - ${distance}` })
         .from(articles)
-        .where(and(...baseConds, isNotNull(articles.embedding)))
+        .where(
+          and(
+            ...baseConds,
+            isNotNull(articles.embedding),
+            sql`(1 - ${distance}) >= ${SEMANTIC_MIN_SIM}`,
+          ),
+        )
         .orderBy(distance)
         .limit(limit);
       for (const r of rows) vectorRows.push({ ...r, sim: Number(r.sim) });

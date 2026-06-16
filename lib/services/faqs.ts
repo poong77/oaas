@@ -25,6 +25,9 @@ import {
 import { db } from '@/db';
 import { faqs, type Faq, type NewFaq } from '@/db/schema';
 
+/** 시맨틱 검색 코사인 유사도 하한선 (articles.ts와 동일값, 기본 0.4). */
+const SEMANTIC_MIN_SIM = Number(process.env.SEMANTIC_MIN_SIM ?? '0.4');
+
 export type FaqListItem = Pick<
   Faq,
   | 'id'
@@ -350,10 +353,18 @@ export async function searchFaqs(
     if (qVec) {
       const lit = toVectorLiteral(qVec);
       const distance = sql<number>`(${faqs.embedding} <=> ${lit}::vector)`;
+      // 유사도 하한선(articles와 동일): 없으면 검색어 무관하게 가장 가까운 N개가
+      // 무조건 반환돼 FAQ 전체가 결과로 부풀려진다.
       const rows = await db
         .select({ ...SELECT, sim: sql<number>`1 - ${distance}` })
         .from(faqs)
-        .where(and(...baseConds, isNotNull(faqs.embedding)))
+        .where(
+          and(
+            ...baseConds,
+            isNotNull(faqs.embedding),
+            sql`(1 - ${distance}) >= ${SEMANTIC_MIN_SIM}`,
+          ),
+        )
         .orderBy(distance)
         .limit(limit);
       for (const r of rows) vectorRows.push({ ...r, sim: Number(r.sim) });
