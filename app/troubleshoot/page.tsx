@@ -24,6 +24,7 @@ import { getProductCategories } from '@/lib/services/categories';
 import { buildProductMap } from '@/components/faqs/category-maps';
 import { ContactPanel } from '@/components/contact/contact-panel';
 import { TroubleshootFilters } from './_components/troubleshoot-filters';
+import { PageContainer } from '@/components/layout/page-container';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '트러블슈팅 — OA서포트' };
@@ -57,7 +58,7 @@ export default async function TroubleshootHubPage({
   const hasFilter = Boolean(sp.q || sp.productCode);
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <PageContainer className="py-10 sm:py-14">
       <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
         <div className="flex flex-col gap-6">
       <PageHeader
@@ -176,6 +177,6 @@ export default async function TroubleshootHubPage({
         </div>
         <ContactPanel variant="sidebar" />
       </div>
-    </div>
+    </PageContainer>
   );
 }

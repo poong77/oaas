@@ -32,6 +32,7 @@ import {
 } from '@/components/faqs/category-maps';
 import { ContactPanel } from '@/components/contact/contact-panel';
 import { FaqFilters } from './_components/faq-filters';
+import { PageContainer } from '@/components/layout/page-container';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '빠른 해결 — OA서포트' };
@@ -76,7 +77,7 @@ export default async function FaqPage({
   const hasFilter = Boolean(sp.q || sp.productCode || sp.issueType);
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <PageContainer className="py-10 sm:py-14">
       <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
         <div className="flex flex-col gap-6">
       <PageHeader
@@ -165,6 +166,6 @@ export default async function FaqPage({
         </div>
         <ContactPanel variant="sidebar" />
       </div>
-    </div>
+    </PageContainer>
   );
 }

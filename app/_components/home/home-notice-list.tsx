@@ -56,7 +56,7 @@ export function HomeNoticeList({ items }: { items: NoticeListItem[] }) {
                   className="grid grid-cols-[100px_minmax(0,1fr)_auto] items-center gap-x-4 px-2 py-6 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
                 >
                   <span
-                    className={`inline-flex w-full items-center justify-center whitespace-nowrap rounded-full px-3 py-1 text-label-small-medium ${m.cls}`}
+                    className={`inline-flex min-w-[88px] items-center justify-center whitespace-nowrap rounded-md px-1 py-1.5 text-label-small-medium ${m.cls}`}
                   >
                     {m.label}
                   </span>

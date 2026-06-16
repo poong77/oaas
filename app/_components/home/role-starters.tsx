@@ -57,8 +57,9 @@ export function RoleStarters({ items }: { items?: RoleStarter[] }) {
   return (
     <section
       aria-labelledby="role-heading"
-      className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8"
+      className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8"
     >
+      <div className="mx-auto w-full max-w-[1200px]">
       <div className="mb-5">
         <h2
           id="role-heading"
@@ -102,6 +103,7 @@ export function RoleStarters({ items }: { items?: RoleStarter[] }) {
           );
         })}
       </ul>
+      </div>
     </section>
   );
 }

@@ -19,7 +19,8 @@ export function HomeQuickChoice() {
       aria-labelledby="quick-choice-heading"
       className="bg-slate-50/60 py-10 dark:bg-slate-900/40 sm:py-14"
     >
-      <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
+      <div className="px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1200px]">
         <div className="mb-5">
           <h2
             id="quick-choice-heading"
@@ -76,6 +77,7 @@ export function HomeQuickChoice() {
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
+      </div>
       </div>
     </section>
   );

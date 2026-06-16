@@ -16,6 +16,7 @@ import {
 } from '@/lib/services/notices-meta';
 import type { NoticeKind } from '@/db/schema';
 import { formatDateKst } from '@/lib/business-hours/format';
+import { PageContainer } from '@/components/layout/page-container';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,7 +83,7 @@ export default async function NoticesPage({
   ).filter((p) => p >= 1 && p <= lastPage);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <PageContainer className="py-10 sm:py-14" innerClassName="flex flex-col gap-6">
       <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">공지사항</h1>
 
       {/* 필터 탭 + 검색 */}
@@ -157,7 +158,7 @@ export default async function NoticesPage({
                       </span>
                     )}
                     <span
-                      className={`inline-flex items-center justify-center rounded-lg px-2 py-0.5 text-xs font-medium min-w-[88px] ${kindClass}`}
+                      className={`inline-flex items-center justify-center rounded-md px-1 py-1.5 text-xs font-medium min-w-[88px] ${kindClass}`}
                     >
                       {meta.label}
                     </span>
@@ -221,6 +222,6 @@ export default async function NoticesPage({
           )}
         </nav>
       )}
-    </div>
+    </PageContainer>
   );
 }

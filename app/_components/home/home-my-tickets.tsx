@@ -105,7 +105,7 @@ export function HomeMyTickets({
                     className="grid grid-cols-[80px_minmax(0,1fr)_auto] items-center gap-x-4 px-2 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/40"
                   >
                     <span
-                      className={`inline-flex w-full items-center justify-center whitespace-nowrap rounded-md border px-1.5 py-1 text-label-small-semibold ${m.badge}`}
+                      className={`inline-flex w-[69px] items-center justify-center whitespace-nowrap rounded-full border px-1.5 py-3 text-label-small-semibold ${m.badge}`}
                     >
                       {m.label}
                     </span>

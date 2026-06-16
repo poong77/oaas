@@ -14,11 +14,10 @@ export default async function UserLayout({
 
   // 보조 내비(UserNav)는 프로필 탭·전역 헤더와 중복이라 제거(2026-06-10).
   return (
-    <div
-      data-role={userMode}
-      className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8"
-    >
-      {children}
+    <div data-role={userMode} className="px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
+        {children}
+      </div>
     </div>
   );
 }

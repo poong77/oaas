@@ -23,7 +23,7 @@ function StatusPill({ status }: { status: TicketStatus }) {
   const m = STATUS_META[status];
   return (
     <span
-      className={`inline-flex w-fit shrink-0 items-center justify-center rounded-md border px-1.5 py-1 text-xs font-medium ${m.cls}`}
+      className={`inline-flex w-[69px] shrink-0 items-center justify-center rounded-full border px-1.5 py-3 text-xs font-medium ${m.cls}`}
     >
       {m.label}
     </span>

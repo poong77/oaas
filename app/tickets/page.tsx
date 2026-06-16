@@ -18,6 +18,7 @@ import {
 import type { TicketStatus } from '@/db/schema';
 import { MyTicketsList } from './_components/my-tickets-list';
 import { MyTicketsFilters } from './_components/my-tickets-filters';
+import { PageContainer } from '@/components/layout/page-container';
 
 export const metadata = { title: '내 문의 — OA서포트' };
 export const dynamic = 'force-dynamic';
@@ -112,7 +113,7 @@ export default async function MyTicketsPage({
   ).filter((p) => p >= 1 && p <= totalPages);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <PageContainer className="py-10 sm:py-14" innerClassName="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-[#1A1C20] dark:text-white">
           내 문의
@@ -186,6 +187,6 @@ export default async function MyTicketsPage({
           )}
         </nav>
       )}
-    </div>
+    </PageContainer>
   );
 }

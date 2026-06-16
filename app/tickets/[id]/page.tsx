@@ -24,6 +24,7 @@ import { FeedbackWidget } from './_components/feedback-widget';
 import type { TicketStatus } from '@/db/schema';
 import { TicketThread } from './_components/ticket-thread';
 import { ReplyForm } from './_components/reply-form';
+import { PageContainer } from '@/components/layout/page-container';
 
 export const dynamic = 'force-dynamic';
 
@@ -133,7 +134,7 @@ export default async function HotelierTicketDetailPage({
   ];
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <PageContainer className="py-10 sm:py-14">
       {/* 상단 */}
       <Link
         href="/tickets"
@@ -325,7 +326,7 @@ export default async function HotelierTicketDetailPage({
           </div>
         </aside>
       </div>
-    </div>
+    </PageContainer>
   );
 }
 

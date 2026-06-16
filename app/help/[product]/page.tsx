@@ -20,6 +20,7 @@ import { parsePathParam, pathToKey } from '@/lib/url-query';
 import { MasterIcon } from '@/components/master-icon';
 import { MenuTreeSidebar } from './_components/menu-tree-sidebar';
 import { ProductArticleBrowser } from './_components/product-article-browser';
+import { PageContainer } from '@/components/layout/page-container';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,7 +99,7 @@ export default async function HelpProductPage({
   const others = categories.filter((c) => c.code !== product);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <PageContainer className="py-10 sm:py-14" innerClassName="flex flex-col gap-6">
       <PageHeader
         title={
           <span className="inline-flex items-center gap-2.5">
@@ -164,6 +165,6 @@ export default async function HelpProductPage({
           </div>
         }
       />
-    </div>
+    </PageContainer>
   );
 }

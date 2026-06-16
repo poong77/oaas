@@ -94,10 +94,8 @@ export default async function RoleStarterPage({
   });
 
   return (
-    <div
-      data-testid="role-starter-page"
-      className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
-    >
+    <div data-testid="role-starter-page" className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
       <PageHeader
         title={`${label} 시작하기`}
         description={description}
@@ -228,6 +226,7 @@ export default async function RoleStarterPage({
           ))}
         </ul>
       </section>
+      </div>
     </div>
   );
 }

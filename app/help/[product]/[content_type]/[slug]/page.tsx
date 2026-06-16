@@ -37,6 +37,7 @@ import { getProductCategories } from '@/lib/services/categories';
 import { CONTENT_TYPE_LABEL } from '@/lib/articles/zod-schemas';
 import { CONTENT_TYPE_META } from '@/lib/articles/content-type-meta';
 import type { ArticleContentType } from '@/db/schema';
+import { PageContainer } from '@/components/layout/page-container';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,7 +127,7 @@ export default async function HelpArticlePage({
   const summaryText = article.summary ?? article.summary30s;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <PageContainer className="py-10 sm:py-14" innerClassName="flex flex-col gap-6">
       <ArticleViewTracker articleId={article.id} />
 
       <div className="flex flex-col gap-3">
@@ -265,7 +266,7 @@ export default async function HelpArticlePage({
           </Button>
         </aside>
       </div>
-    </div>
+    </PageContainer>
   );
 }
 

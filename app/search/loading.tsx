@@ -1,11 +1,12 @@
 import { PageHeaderSkeleton, SearchResultsSkeleton } from '@/components/ui/skeletons';
+import { PageContainer } from '@/components/layout/page-container';
 
 /** /search 진입 시 — 헤더 즉시 + 결과 영역 스켈레톤. */
 export default function Loading() {
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <PageContainer className="py-10 sm:py-14" innerClassName="flex flex-col gap-6">
       <PageHeaderSkeleton />
       <SearchResultsSkeleton />
-    </div>
+    </PageContainer>
   );
 }
