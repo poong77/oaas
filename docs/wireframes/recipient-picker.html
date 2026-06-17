@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>수신자 선택기 — 2단 레이아웃 와이어프레임</title>
+<style>
+  :root{
+    --brand:#00A36B; --brand-50:#e9f8f1; --line:#e2e8f0; --line2:#f1f5f9;
+    --slate-400:#94a3b8; --slate-500:#64748b; --slate-700:#334155; --bg:#f8fafc;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Segoe UI",sans-serif;background:var(--bg);color:#0f172a;padding:24px;line-height:1.5}
+  h1{font-size:18px;margin:0 0 4px}
+  .sub{color:var(--slate-500);font-size:13px;margin:0 0 20px}
+  .toggle{display:inline-flex;gap:6px;margin-bottom:16px}
+  .toggle button{border:1px solid var(--line);background:#fff;padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer}
+  .toggle button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;max-width:840px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .label{font-size:12px;color:var(--slate-700);font-weight:600;margin-bottom:10px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:680px){.grid{grid-template-columns:1fr}}
+  .col{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
+  .coltitle{font-size:11px;font-weight:600;color:var(--slate-500)}
+  .row{display:flex;gap:8px}
+  .input{position:relative;flex:1}
+  .input input{width:100%;height:36px;border:1px solid var(--line);border-radius:8px;padding:0 10px 0 30px;font-size:13px}
+  .input svg{position:absolute;left:8px;top:9px;color:var(--slate-400)}
+  .btn{height:36px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:0 12px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .btn.brand{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .hint{font-size:11px;color:var(--slate-400)}
+  .link{font-size:11px;color:var(--slate-500);display:inline-flex;gap:4px;align-items:center;text-decoration:none}
+  /* dropdown */
+  .dd{border:1px solid var(--line);border-radius:8px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.08);overflow:hidden}
+  .dd .sec{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--slate-400);padding:6px 12px 2px}
+  .dd .it{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:13px;cursor:pointer}
+  .dd .it:hover{background:var(--brand-50)}
+  .dd .it .meta{color:var(--slate-400);font-size:12px}
+  .dd .it.disabled{opacity:.4}
+  .ic{width:14px;height:14px;color:var(--slate-400);flex:none}
+  /* contacts panel */
+  .panel{border:1px solid var(--line);border-radius:8px;padding:8px}
+  .panel .ph{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--slate-500);margin-bottom:6px}
+  .panel .ph a{color:var(--brand);font-weight:600;font-size:12px;text-decoration:none;cursor:pointer}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .addchip{border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer}
+  .addchip:hover{border-color:var(--brand);background:var(--brand-50)}
+  /* right list */
+  .listhdr{display:flex;justify-content:space-between;align-items:center}
+  .clear{font-size:11px;color:var(--slate-400);cursor:pointer;text-decoration:underline}
+  .reclist{display:flex;flex-wrap:wrap;align-content:flex-start;gap:5px;border:1px solid var(--line2);border-radius:8px;padding:6px;max-height:150px;overflow:auto}
+  .rchip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:#f8fafc;border-radius:999px;padding:2px 5px 2px 9px;font-size:12px}
+  .rchip .x{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--slate-400);cursor:pointer}
+  .rchip .x:hover{background:#fee2e2;color:#e11d48}
+  .empty{min-height:88px;flex:1;display:flex;align-items:center;justify-content:center;text-align:center;border:1px dashed var(--line);border-radius:8px;color:var(--slate-400);font-size:12px}
+  textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;resize:vertical;font-family:inherit}
+  .right-end{display:flex;justify-content:flex-end}
+  .note{max-width:840px;margin-top:18px;font-size:12px;color:var(--slate-500);background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .note b{color:#0f172a}
+  .old{max-width:840px;margin-top:24px;opacity:.85}
+  .oldcard{background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:16px}
+  .stack>*{margin-bottom:8px}
+</style>
+</head>
+<body>
+  <h1>수신자 선택기 — 신규 2단 레이아웃 (와이어프레임)</h1>
+  <p class="sub">좌측: 수신자 추가(검색·엑셀·전체) · 우측: 수신자 확인(칩 목록·개별 삭제·직접 입력) · 메일/문자 공통 컴포넌트</p>
+
+  <div class="toggle">
+    <button class="on" onclick="setMode('email',this)">메일(이메일)</button>
+    <button onclick="setMode('phone',this)">문자(전화번호)</button>
+    <button style="border-color:var(--brand);color:var(--brand)" onclick="demoSend()">▶ 발송 진행률 미리보기</button>
+  </div>
+
+  <!-- 발송 진행률 모달 데모 -->
+  <div id="ov" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;padding:16px">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.4)"></div>
+    <div style="position:relative;z-index:10;width:100%;max-width:420px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.25)">
+      <h3 style="margin:0 0 12px;font-size:14px">메일 발송</h3>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--slate-500);margin-bottom:6px">
+        <span id="pst">발송 중…</span><span id="pcnt">0 / 236 (0%)</span>
+      </div>
+      <div style="height:10px;background:#f1f5f9;border-radius:999px;overflow:hidden">
+        <div id="pbar" style="height:100%;width:0;background:var(--brand);transition:width .25s"></div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;display:flex;gap:16px">
+        <span style="color:#059669">성공 <span id="psent">0</span></span>
+        <span style="color:#e11d48">실패 <span id="pfail">0</span></span>
+      </div>
+      <div id="phint" style="margin-top:12px;font-size:11px;color:var(--slate-400)">대량 발송은 20명씩 나눠 처리됩니다. 이 창을 닫지 말고 잠시 기다려 주세요.</div>
+      <div id="pclose" style="display:none;margin-top:16px;text-align:right">
+        <button class="btn brand" onclick="document.getElementById('ov').style.display='none'">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">수신자 (<span id="ml">이메일</span>) · 3명</div>
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="col">
+        <div class="coltitle">수신자 추가</div>
+        <div class="row">
+          <div class="input">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input value="더페이즈" />
+          </div>
+          <button class="btn">검색</button>
+        </div>
+
+        <!-- dropdown: 사용자 + 호텔 동시 -->
+        <div class="dd">
+          <div class="sec">사용자</div>
+          <div class="it"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>김매니저</b><span class="meta">더페이즈호텔 · <span class="addr">manager@thephase.co.kr</span></span></div>
+          <div class="it"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>이프론트</b><span class="meta">더페이즈호텔 · <span class="addr">front@thephase.co.kr</span></span></div>
+          <div class="sec">호텔</div>
+          <div class="it"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>더페이즈호텔</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0-12 4 4m-4-4-4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>엑셀 업로드</button>
+          <button class="btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M2 20a7 7 0 0 1 14 0M16 6a3 3 0 0 1 0 6m6 8a6 6 0 0 0-5-5.9"/></svg>호텔리어 전체</button>
+          <a class="link" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>양식 다운로드</a>
+        </div>
+        <div class="hint">엑셀 컬럼: 업체명 · <span id="excol">이메일</span>(필수) · 담당자명 · 변수명1~7</div>
+
+        <!-- contacts panel after picking hotel -->
+        <div class="panel">
+          <div class="ph"><span>더페이즈호텔 · 연락처 2건</span><a>전체 추가</a></div>
+          <div class="chips">
+            <span class="addchip">+ manager@thephase.co.kr</span>
+            <span class="addchip">+ front@thephase.co.kr</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="col">
+        <div class="listhdr">
+          <div class="coltitle">수신자 목록 · 3명</div>
+          <span class="clear">전체 비우기</span>
+        </div>
+        <div class="reclist">
+          <span class="rchip">manager@thephase.co.kr <span class="x">✕</span></span>
+          <span class="rchip">front@thephase.co.kr <span class="x">✕</span></span>
+          <span class="rchip">ceo@grandhotel.co.kr <span class="x">✕</span></span>
+        </div>
+        <textarea rows="2" placeholder="이메일을 줄바꿈/쉼표로 구분해 입력 (⌘/Ctrl+Enter로 추가)"></textarea>
+        <div class="right-end"><button class="btn">직접 추가</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>변경 요약</b><br/>
+    ① 좌/우 2단 분리 — 추가 도구와 확인 목록이 한 화면에서 동시에 보임(세로 스크롤 감소).<br/>
+    ② 우측은 raw textarea 대신 <b>삭제 가능한 칩 목록</b> + 직접 입력(추가) 분리 → 누가 들어갔는지 직관적 확인.<br/>
+    ③ 검색이 <b>호텔명 + 사용자명</b> 동시 매칭 — 드롭다운에 "사용자"/"호텔" 섹션 분리, 사용자는 클릭 즉시 추가.<br/>
+    ④ "호텔리어 전체" 200명 제한 → <b>500명</b>으로 상향 + 전체 페이지네이션(활성 호텔리어 236명 전원 적재).
+  </div>
+
+  <div class="old">
+    <div class="coltitle" style="margin-bottom:6px">참고 — 기존(세로 1단) 구조</div>
+    <div class="oldcard stack">
+      <div class="label">수신자 (이메일) · 0명</div>
+      <div class="row"><div class="input" style="flex:1"><input value="호텔명으로 연락처 불러오기" style="color:#94a3b8"/></div><button class="btn">검색</button></div>
+      <div class="actions"><button class="btn">엑셀 업로드</button><button class="btn">호텔리어 전체</button><a class="link">양식 다운로드</a></div>
+      <div class="hint">엑셀 컬럼: 업체명 · 이메일(필수) · 담당자명 · 변수명1~7</div>
+      <textarea rows="4" placeholder="이메일 주소를 줄바꿈/쉼표로 구분해 입력하거나 위에서 추가하세요"></textarea>
+    </div>
+  </div>
+
+<script>
+  function setMode(m, el){
+    document.querySelectorAll('.toggle button').forEach(b=>b.classList.remove('on'));
+    el.classList.add('on');
+    const email = m==='email';
+    document.getElementById('ml').textContent = email?'이메일':'전화번호';
+    document.getElementById('excol').textContent = email?'이메일':'연락처(휴대폰)';
+    const addrs = email
+      ? ['manager@thephase.co.kr','front@thephase.co.kr','ceo@grandhotel.co.kr']
+      : ['010-1234-5678','010-2222-3333','010-9876-5432'];
+    document.querySelectorAll('.addr')[0].textContent = addrs[0];
+    document.querySelectorAll('.addr')[1].textContent = addrs[1];
+    document.querySelectorAll('.reclist .rchip').forEach((c,i)=>{ c.childNodes[0].textContent = addrs[i]+' '; });
+    document.querySelectorAll('.panel .addchip')[0].textContent = '+ '+addrs[0];
+    document.querySelectorAll('.panel .addchip')[1].textContent = '+ '+addrs[1];
+    document.querySelector('textarea').placeholder = email
+      ? '이메일을 줄바꿈/쉼표로 구분해 입력 (⌘/Ctrl+Enter로 추가)'
+      : '전화번호를 줄바꿈/쉼표로 구분해 입력 (⌘/Ctrl+Enter로 추가)';
+  }
+
+  // 발송 진행률 데모 — 20명 청크씩 채워지는 모습 시뮬레이션
+  function demoSend(){
+    const total=236, chunk=20; let done=0, sent=0, fail=0;
+    const ov=document.getElementById('ov'); ov.style.display='flex';
+    document.getElementById('pclose').style.display='none';
+    document.getElementById('phint').style.display='block';
+    document.getElementById('pst').textContent='발송 중…';
+    const t=setInterval(()=>{
+      const n=Math.min(chunk, total-done); done+=n;
+      const f=Math.random()<0.15?1:0; fail+=f; sent+=n-f;
+      const pct=Math.round(done/total*100);
+      document.getElementById('pcnt').textContent=`${done} / ${total} (${pct}%)`;
+      document.getElementById('pbar').style.width=pct+'%';
+      document.getElementById('psent').textContent=sent;
+      document.getElementById('pfail').textContent=fail;
+      if(done>=total){clearInterval(t);
+        document.getElementById('pst').textContent='완료';
+        document.getElementById('phint').style.display='none';
+        document.getElementById('pclose').style.display='block';
+      }
+    },350);
+  }
+</script>
+</body>
+</html>

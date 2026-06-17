@@ -199,6 +199,108 @@ export function CopyButton({ label, text, disabled }: { label: string; text: str
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// 청크 분할 발송 + 진행률 (대량 발송 시 Vercel 타임아웃 회피 + 진행 표시)
+// ─────────────────────────────────────────────────────────────────────
+
+export type SendProgress = { total: number; done: number; sent: number; failed: number };
+
+/** 수신자를 chunkSize씩 나눠 순차 발송하며 진행률 콜백. 같은 batchId로 묶음 유지. */
+export async function runChunkedSend<T>(opts: {
+  items: T[];
+  batchId: string;
+  chunkSize?: number;
+  send: (chunk: T[], batchId: string) => Promise<{ ok: boolean; sent?: number; failed?: number; message?: string }>;
+  onProgress: (p: SendProgress) => void;
+}): Promise<{ sent: number; failed: number; errors: number; firstError?: string }> {
+  const { items, batchId, chunkSize = 20, send, onProgress } = opts;
+  let sent = 0;
+  let failed = 0;
+  let errors = 0;
+  let done = 0;
+  let firstError: string | undefined;
+  onProgress({ total: items.length, done, sent, failed });
+  for (let i = 0; i < items.length; i += chunkSize) {
+    const chunk = items.slice(i, i + chunkSize);
+    try {
+      const res = await send(chunk, batchId);
+      if (res.ok) {
+        sent += res.sent ?? 0;
+        failed += res.failed ?? 0;
+      } else {
+        errors += chunk.length;
+        if (!firstError) firstError = res.message;
+      }
+    } catch {
+      errors += chunk.length;
+      if (!firstError) firstError = '발송 중 오류';
+    }
+    done += chunk.length;
+    onProgress({ total: items.length, done, sent, failed });
+  }
+  return { sent, failed, errors, firstError };
+}
+
+/** 발송 진행률 모달 — 진행 중에는 닫기 불가, 완료 시 결과 + 닫기. */
+export function SendProgressModal({
+  title,
+  progress,
+  finished,
+  errors = 0,
+  onClose,
+}: {
+  title: string;
+  progress: SendProgress;
+  finished: boolean;
+  errors?: number;
+  onClose: () => void;
+}) {
+  const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative z-10 w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+        <h3 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
+
+        <div className="mb-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span>{finished ? '완료' : '발송 중…'}</span>
+          <span>
+            {progress.done} / {progress.total} ({pct}%)
+          </span>
+        </div>
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+          <div
+            className={`h-full rounded-full transition-[width] duration-300 ${finished ? 'bg-brand-600' : 'bg-brand-500'}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+          <span className="text-emerald-600 dark:text-emerald-400">성공 {progress.sent}</span>
+          <span className="text-rose-600 dark:text-rose-400">실패 {progress.failed}</span>
+          {errors > 0 && <span className="text-amber-600 dark:text-amber-400">오류 {errors}</span>}
+        </div>
+
+        {finished ? (
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              닫기
+            </button>
+          </div>
+        ) : (
+          <p className="mt-3 text-[11px] text-slate-400">
+            대량 발송은 나눠서 처리됩니다. 이 창을 닫지 말고 잠시 기다려 주세요.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function Modal({
   title,
   onClose,

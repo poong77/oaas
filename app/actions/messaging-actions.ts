@@ -38,8 +38,8 @@ const MAIL_DOMAIN = 'oapms.com';
 /** 발신자 앞부분 기본값 / 검증 정규식. */
 const DEFAULT_MAIL_LOCAL = 'as';
 const MAIL_LOCAL_RE = /^[a-zA-Z0-9._-]{1,64}$/;
-/** 1회 최대 수신자 수 (오발송·과금 방지). */
-const MAX_RECIPIENTS = 200;
+/** 1회 최대 수신자 수 (오발송·과금 방지). 활성 호텔리어 전체(236명)+여유분. */
+const MAX_RECIPIENTS = 500;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -125,6 +125,50 @@ export async function getHotelContactsAction(hotelId: string): Promise<{
   }
 }
 
+/** 수신자 후보 — 검색 결과의 개별 사용자(호텔리어). */
+export type RecipientUserHit = {
+  id: string;
+  name: string;
+  hotel: string | null;
+  /** 채널 주소: 이메일 모드면 email, 문자 모드면 정규화된 휴대폰. 없으면 null. */
+  address: string | null;
+  phone: string | null;
+};
+
+/**
+ * 수신자 사용자 검색 — 이름·아이디·이메일·휴대폰·호텔명으로 호텔리어를 찾아 직접 추가용으로 반환.
+ * 호텔명 검색(getHotelContactsAction)과 별개로, 담당자명 등으로 바로 찾을 때 사용.
+ */
+export async function searchRecipientUsersAction(input: {
+  q: string;
+  channel: 'email' | 'sms';
+}): Promise<{ ok: boolean; users?: RecipientUserHit[]; message?: string }> {
+  await requireRole(['manager', 'admin']);
+  const q = (input.q ?? '').trim();
+  if (q.length === 0) return { ok: true, users: [] };
+  const channel = input.channel === 'sms' ? 'sms' : 'email';
+  try {
+    const res = await listUsers({ role: 'hotelier', isActive: true, q, page: 1, pageSize: 20 });
+    const users: RecipientUserHit[] = res.items.map((u) => {
+      const phone = (u.phone ?? '').replace(/[^0-9]/g, '');
+      const email = (u.email ?? '').trim();
+      const address =
+        channel === 'email'
+          ? email && EMAIL_RE.test(email)
+            ? email
+            : null
+          : phone.length >= 9 && phone.length <= 11
+            ? phone
+            : null;
+      return { id: u.id, name: u.name ?? '', hotel: u.hotelName ?? null, address, phone: u.phone ?? null };
+    });
+    return { ok: true, users };
+  } catch (err) {
+    console.error('[searchRecipientUsersAction] 실패:', err);
+    return { ok: false, message: '사용자 검색 실패' };
+  }
+}
+
 const EmailSchema = z.object({
   recipients: z.array(RecipientSchema).min(1).max(MAX_RECIPIENTS),
   fromLocal: z.string().optional(),
@@ -134,6 +178,10 @@ const EmailSchema = z.object({
   reason: z.string().max(500).optional(),
   ticketId: z.string().uuid().nullable().optional(),
   varBindings: z.array(VarBindingSchema).optional(),
+  /** 청크 분할 발송 시 묶음 유지용. 미지정 시 새로 생성. */
+  batchId: z.string().uuid().optional(),
+  /** 청크 발송 시 true → 개별 감사로그 생략(요약은 recordBulkSendActivityAction). */
+  skipActivityLog: z.boolean().optional(),
 });
 
 /** RFC 2047 — 한글 발신자 표시명을 SES 헤더에 안전하게 인코딩. */
@@ -156,6 +204,8 @@ export async function sendBulkEmailAction(input: {
   reason?: string;
   ticketId?: string | null;
   varBindings?: VarBinding[];
+  batchId?: string;
+  skipActivityLog?: boolean;
 }): Promise<{ ok: boolean; sent?: number; failed?: number; message?: string }> {
   const user = await requireRole(['manager', 'admin']);
   const parsed = EmailSchema.safeParse(input);
@@ -176,7 +226,7 @@ export async function sendBulkEmailAction(input: {
 
   const addr = resolveMailFrom(parsed.data.fromLocal);
   const from = encodeFromHeader(parsed.data.fromName, addr);
-  const batchId = randomUUID();
+  const batchId = parsed.data.batchId ?? randomUUID();
   const footerHtml = buildMailFooterHtml();
   const footerText = buildMailFooterText();
   const bindings = resolveBindings([parsed.data.subject, parsed.data.markdown], parsed.data.varBindings);
@@ -212,22 +262,24 @@ export async function sendBulkEmailAction(input: {
     else failed += 1;
   }
 
-  logActivity({
-    userId: user.id,
-    action: 'messaging.email.send',
-    targetType: 'messaging',
-    targetId: parsed.data.ticketId ?? null,
-    payload: {
-      channel: 'email',
-      batchId,
-      from,
-      recipients: valid.length,
-      sent,
-      failed,
-      subject: parsed.data.subject,
-      reason: parsed.data.reason ?? null,
-    },
-  });
+  if (!parsed.data.skipActivityLog) {
+    logActivity({
+      userId: user.id,
+      action: 'messaging.email.send',
+      targetType: 'messaging',
+      targetId: parsed.data.ticketId ?? null,
+      payload: {
+        channel: 'email',
+        batchId,
+        from,
+        recipients: valid.length,
+        sent,
+        failed,
+        subject: parsed.data.subject,
+        reason: parsed.data.reason ?? null,
+      },
+    });
+  }
   return { ok: true, sent, failed };
 }
 
@@ -237,6 +289,8 @@ const SmsSchema = z.object({
   subject: z.string().min(1).max(40),
   text: z.string().min(1).max(2000),
   reason: z.string().max(500).optional(),
+  batchId: z.string().uuid().optional(),
+  skipActivityLog: z.boolean().optional(),
   ticketId: z.string().uuid().nullable().optional(),
   varBindings: z.array(VarBindingSchema).optional(),
 });
@@ -249,6 +303,8 @@ export async function sendBulkSmsAction(input: {
   reason?: string;
   ticketId?: string | null;
   varBindings?: VarBinding[];
+  batchId?: string;
+  skipActivityLog?: boolean;
 }): Promise<{ ok: boolean; sent?: number; failed?: number; message?: string }> {
   const user = await requireRole(['manager', 'admin']);
   const parsed = SmsSchema.safeParse(input);
@@ -269,7 +325,7 @@ export async function sendBulkSmsAction(input: {
   }
 
   const subject = parsed.data.subject.trim();
-  const batchId = randomUUID();
+  const batchId = parsed.data.batchId ?? randomUUID();
   // 유형은 batch 단위로 한 번 판정(템플릿 기준) → 메시지함 대표 유형 표시 일관성 보장.
   // (수신자별 변수 치환으로 byte가 미세 변동해도 batch 표시는 동일하게 유지)
   const msgType = classifySms({ text: parsed.data.text, hasSubject: true });
@@ -301,22 +357,56 @@ export async function sendBulkSmsAction(input: {
     else failed += 1;
   }
 
+  if (!parsed.data.skipActivityLog) {
+    logActivity({
+      userId: user.id,
+      action: 'messaging.sms.send',
+      targetType: 'messaging',
+      targetId: parsed.data.ticketId ?? null,
+      payload: {
+        channel: 'sms',
+        batchId,
+        recipients: valid.length,
+        sent,
+        failed,
+        subject,
+        reason: parsed.data.reason ?? null,
+      },
+    });
+  }
+  return { ok: true, sent, failed };
+}
+
+/** 청크 분할 발송 완료 후 감사로그 1건만 요약 기록. */
+export async function recordBulkSendActivityAction(input: {
+  channel: 'email' | 'sms';
+  batchId: string;
+  recipients: number;
+  sent: number;
+  failed: number;
+  subject: string;
+  reason?: string | null;
+  ticketId?: string | null;
+}): Promise<{ ok: boolean }> {
+  const user = await requireRole(['manager', 'admin']);
+  if (!z.string().uuid().safeParse(input.batchId).success) return { ok: false };
   logActivity({
     userId: user.id,
-    action: 'messaging.sms.send',
+    action: input.channel === 'email' ? 'messaging.email.send' : 'messaging.sms.send',
     targetType: 'messaging',
-    targetId: parsed.data.ticketId ?? null,
+    targetId: input.ticketId ?? null,
     payload: {
-      channel: 'sms',
-      batchId,
-      recipients: valid.length,
-      sent,
-      failed,
-      subject,
-      reason: parsed.data.reason ?? null,
+      channel: input.channel,
+      batchId: input.batchId,
+      recipients: input.recipients,
+      sent: input.sent,
+      failed: input.failed,
+      subject: input.subject,
+      reason: input.reason ?? null,
+      chunked: true,
     },
   });
-  return { ok: true, sent, failed };
+  return { ok: true };
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -962,8 +1052,8 @@ export async function listHoteliersAsRecipientsAction(input: {
     const seen = new Set<string>();
     let skipped = 0;
     let page = 1;
-    // listUsers는 pageSize 최대 100 → 200명까지 2페이지 수집.
-    for (let guard = 0; guard < 3 && recipients.length < MAX_RECIPIENTS; guard += 1) {
+    // listUsers는 pageSize 최대 100 → 활성 호텔리어 전체를 끝까지 페이지네이션 (MAX_RECIPIENTS 도달 시 중단).
+    for (let guard = 0; guard < 50 && recipients.length < MAX_RECIPIENTS; guard += 1) {
       const res = await listUsers({ role: 'hotelier', isActive: true, page, pageSize: 100 });
       if (res.items.length === 0) break;
       for (const u of res.items) {

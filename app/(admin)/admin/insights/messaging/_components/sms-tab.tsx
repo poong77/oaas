@@ -25,7 +25,11 @@ import {
   resolveRecipientVars,
   substituteAll,
 } from '@/lib/messaging/format';
-import { sendBulkSmsAction, sendTestSmsAction } from '@/app/actions/messaging-actions';
+import {
+  sendBulkSmsAction,
+  sendTestSmsAction,
+  recordBulkSendActivityAction,
+} from '@/app/actions/messaging-actions';
 import type { VarSource } from '@/lib/messaging/format';
 import {
   buildSendRecipients,
@@ -34,6 +38,9 @@ import {
   VariableChips,
   WarningBox,
   Modal,
+  SendProgressModal,
+  runChunkedSend,
+  type SendProgress,
   type MetaMap,
   type TemplateSeed,
 } from './shared';
@@ -48,6 +55,9 @@ export function SmsTab({ senderPhone, seed }: { senderPhone: string; seed?: Temp
   const [testPending, startTest] = useTransition();
 
   const [recipients, setRecipients] = useState('');
+  const [progress, setProgress] = useState<SendProgress | null>(null);
+  const [progressDone, setProgressDone] = useState(false);
+  const [progressErrors, setProgressErrors] = useState(0);
   const [meta, setMeta] = useState<MetaMap>({});
   const [subject, setSubject] = useState(seed?.subject || DEFAULT_SMS_SUBJECT);
   const [text, setText] = useState(seed?.body ?? '');
@@ -162,19 +172,43 @@ export function SmsTab({ senderPhone, seed }: { senderPhone: string; seed?: Temp
     });
     if (!ok) return;
 
+    const built = buildSendRecipients(list, meta);
+    const batchId = crypto.randomUUID();
+    const varBindings = bindings.map((b) => ({ name: b.name, source: b.source, value: b.value }));
+
     startTransition(async () => {
-      const res = await sendBulkSmsAction({
-        recipients: buildSendRecipients(list, meta),
-        subject: subject.trim(),
-        text: text.trim(),
-        reason: reason.trim() || undefined,
-        varBindings: bindings.map((b) => ({ name: b.name, source: b.source, value: b.value })),
+      setProgressDone(false);
+      setProgressErrors(0);
+      setProgress({ total: built.length, done: 0, sent: 0, failed: 0 });
+      const result = await runChunkedSend({
+        items: built,
+        batchId,
+        chunkSize: 20,
+        onProgress: setProgress,
+        send: (chunk, bid) =>
+          sendBulkSmsAction({
+            recipients: chunk,
+            batchId: bid,
+            skipActivityLog: true,
+            subject: subject.trim(),
+            text: text.trim(),
+            reason: reason.trim() || undefined,
+            varBindings,
+          }),
       });
-      if (!res.ok) {
-        toast.error(res.message ?? '발송 실패');
-        return;
-      }
-      toast.success(`발송 완료 — 성공 ${res.sent} / 실패 ${res.failed}`);
+      await recordBulkSendActivityAction({
+        channel: 'sms',
+        batchId,
+        recipients: built.length,
+        sent: result.sent,
+        failed: result.failed,
+        subject: subject.trim(),
+        reason: reason.trim() || null,
+      });
+      setProgressErrors(result.errors);
+      setProgressDone(true);
+      if (result.firstError && result.sent === 0) toast.error(result.firstError);
+      else toast.success(`발송 완료 — 성공 ${result.sent} / 실패 ${result.failed}`);
     });
   }
 
@@ -323,6 +357,16 @@ export function SmsTab({ senderPhone, seed }: { senderPhone: string; seed?: Temp
             </div>
           </div>
         </Modal>
+      )}
+
+      {progress && (
+        <SendProgressModal
+          title="문자 발송"
+          progress={progress}
+          finished={progressDone}
+          errors={progressErrors}
+          onClose={() => setProgress(null)}
+        />
       )}
     </Card>
   );

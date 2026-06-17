@@ -28,6 +28,7 @@ import {
   aiWriteEmailAction,
   sendBulkEmailAction,
   sendTestEmailAction,
+  recordBulkSendActivityAction,
 } from '@/app/actions/messaging-actions';
 import type { VarSource } from '@/lib/messaging/format';
 import {
@@ -37,6 +38,9 @@ import {
   VariableChips,
   WarningBox,
   Modal,
+  SendProgressModal,
+  runChunkedSend,
+  type SendProgress,
   type MetaMap,
   type TemplateSeed,
 } from './shared';
@@ -73,6 +77,9 @@ export function MailTab({
   const [fromName, setFromName] = useState(seed?.fromName ?? '오아테크');
   const [fromLocal, setFromLocal] = useState(seed?.fromLocal ?? senderEmailLocal);
   const [recipients, setRecipients] = useState('');
+  const [progress, setProgress] = useState<SendProgress | null>(null);
+  const [progressDone, setProgressDone] = useState(false);
+  const [progressErrors, setProgressErrors] = useState(0);
   const [meta, setMeta] = useState<MetaMap>({});
   const [subject, setSubject] = useState(seed?.subject ?? '');
   const [body, setBody] = useState(seed?.body ?? '');
@@ -188,21 +195,46 @@ export function MailTab({
     });
     if (!ok) return;
 
+    const built = buildSendRecipients(list, meta);
+    const batchId = crypto.randomUUID();
+    const varBindings = bindings.map((b) => ({ name: b.name, source: b.source, value: b.value }));
+
     startTransition(async () => {
-      const res = await sendBulkEmailAction({
-        recipients: buildSendRecipients(list, meta),
-        fromLocal: fromLocal.trim() || undefined,
-        fromName: fromName.trim() || undefined,
-        subject: subject.trim(),
-        markdown: body.trim(),
-        reason: reason.trim() || undefined,
-        varBindings: bindings.map((b) => ({ name: b.name, source: b.source, value: b.value })),
+      setProgressDone(false);
+      setProgressErrors(0);
+      setProgress({ total: built.length, done: 0, sent: 0, failed: 0 });
+      const result = await runChunkedSend({
+        items: built,
+        batchId,
+        chunkSize: 20,
+        onProgress: setProgress,
+        send: (chunk, bid) =>
+          sendBulkEmailAction({
+            recipients: chunk,
+            batchId: bid,
+            skipActivityLog: true,
+            fromLocal: fromLocal.trim() || undefined,
+            fromName: fromName.trim() || undefined,
+            subject: subject.trim(),
+            markdown: body.trim(),
+            reason: reason.trim() || undefined,
+            varBindings,
+          }),
       });
-      if (!res.ok) {
-        toast.error(res.message ?? '발송 실패');
-        return;
-      }
-      toast.success(`발송 완료 — 성공 ${res.sent} / 실패 ${res.failed}`);
+      // 감사로그 1건 요약 기록.
+      await recordBulkSendActivityAction({
+        channel: 'email',
+        batchId,
+        recipients: built.length,
+        sent: result.sent,
+        failed: result.failed,
+        subject: subject.trim(),
+        reason: reason.trim() || null,
+      });
+      setProgressErrors(result.errors);
+      setProgressDone(true);
+      if (result.firstError && result.sent === 0) toast.error(result.firstError);
+      else toast.success(`발송 완료 — 성공 ${result.sent} / 실패 ${result.failed}`);
     });
   }
 
@@ -359,6 +391,16 @@ export function MailTab({
             </div>
           </div>
         </Modal>
+      )}
+
+      {progress && (
+        <SendProgressModal
+          title="메일 발송"
+          progress={progress}
+          finished={progressDone}
+          errors={progressErrors}
+          onClose={() => setProgress(null)}
+        />
       )}
     </Card>
   );
