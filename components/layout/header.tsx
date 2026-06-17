@@ -12,7 +12,9 @@ import {
   User,
   ChevronDown,
   FileText,
+  ExternalLink,
 } from 'lucide-react';
+import type { UserRole } from '@/db/schema';
 import { signOut } from 'next-auth/react';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { useCurrentUser } from '@/lib/hooks/use-current-user';
@@ -68,6 +70,7 @@ export function Header() {
           {status === 'authenticated' && user ? (
             <ProfileMenu
               name={user.name ?? '내 프로필'}
+              role={user.role}
               onLogout={handleLogout}
             />
           ) : (
@@ -105,6 +108,18 @@ export function Header() {
           <div className="flex flex-col gap-2">
             {status === 'authenticated' && user ? (
               <>
+                {(user.role === 'admin' || user.role === 'manager') && (
+                  <a
+                    href="https://support.oapms.com/admin/insights/dashboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 dark:border-brand-900 dark:bg-brand-950/40 dark:text-brand-300"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    어드민 바로가기
+                  </a>
+                )}
                 <Link
                   href="/profile"
                   onClick={() => setMobileOpen(false)}
@@ -155,11 +170,14 @@ export function Header() {
  */
 function ProfileMenu({
   name,
+  role,
   onLogout,
 }: {
   name: string;
+  role: UserRole;
   onLogout: () => void;
 }) {
+  const isStaff = role === 'admin' || role === 'manager';
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -205,6 +223,22 @@ function ProfileMenu({
           role="menu"
           className="absolute right-0 mt-2 w-44 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
         >
+          {isStaff && (
+            <>
+              <a
+                href="https://support.oapms.com/admin/insights/dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-950/40"
+              >
+                <ExternalLink className="h-4 w-4 text-brand-500" />
+                어드민 바로가기
+              </a>
+              <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+            </>
+          )}
           <Link
             href="/profile"
             role="menuitem"
