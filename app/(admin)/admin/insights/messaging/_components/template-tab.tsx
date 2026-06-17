@@ -75,8 +75,10 @@ export function TemplateTab({ onUse }: { onUse: (seed: TemplateSeed) => void }) 
 
   function useTemplate(t: ManualTemplate) {
     onUse({
+      // 템플릿의 제목(템플릿명)을 메일/문자 탭의 제목 필드에 적용.
+      // (subject가 따로 있으면 우선, 없으면 title을 제목으로 사용)
       channel: t.channel,
-      subject: t.subject ?? '',
+      subject: t.title || t.subject || '',
       body: t.body,
       fromName: t.fromName,
       fromLocal: t.fromLocal,
