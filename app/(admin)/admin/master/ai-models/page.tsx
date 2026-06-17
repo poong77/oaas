@@ -1,8 +1,10 @@
 /**
  * /admin/master/ai-models — AI 답변 초안 모델 마스터 (ai-reply-assist).
  *
- * 어드민 전용. 모델 목록/기본값/ON·OFF/정렬/라벨·단가 편집.
- * 모델을 코드에 하드코딩하지 않고 여기서 관리 — 신모델·가격변동 시 무중단 대응.
+ * 어드민 전용. 모델 목록/기본값/ON·OFF/정렬/라벨·설명 편집.
+ * 모델을 코드에 하드코딩하지 않고 여기서 관리 — 신모델 추가 시 무중단 대응.
+ * 단, 설명에 적는 단가는 화면 표시용 참고값이며, 실제 요금 집계 단가·환율은
+ * 코드(lib/ai/pricing.ts)에서 관리한다.
  */
 
 import Link from 'next/link';
@@ -15,7 +17,7 @@ import { listAllModels } from '@/lib/services/ai-models';
 import { AiModelsManager, type ManagerModel } from './_components/ai-models-manager';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'AI 모델 — 마스터DB' };
+export const metadata = { title: 'AI 모델 — OA서포트 어드민' };
 
 export default async function MasterAiModelsPage() {
   await requireRole(['manager', 'admin']);
@@ -67,8 +69,15 @@ export default async function MasterAiModelsPage() {
               노출됩니다(예: <span className="font-mono">Claude Haiku 4.5 · 약 7원/건</span>).{' '}
               <span className="font-medium">설명</span>에는 1M 토큰 단가·특성을
               적습니다(예: <span className="font-mono">입$1·출$5/1M · 한국어 CS 균형</span>).
-              가격 변동 시 여기서 직접 수정하세요. <span className="font-mono">code</span>는
-              실제 API 모델 ID이므로 신중히 변경하세요.
+              단, 여기 적는 단가는{' '}
+              <strong className="text-slate-700 dark:text-slate-200">
+                화면 표시용 참고값
+              </strong>
+              일 뿐 실제 요금 집계에 쓰이지 않습니다. 청구 계산 단가·환율은 코드(
+              <span className="font-mono">lib/ai/pricing.ts</span>)에서 관리하므로
+              단가가 바뀌면 코드도 함께 갱신해야 합니다.{' '}
+              <span className="font-mono">code</span>는 실제 API 모델 ID이므로 신중히
+              변경하세요.
             </p>
           </div>
         </CardContent>

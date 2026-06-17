@@ -249,6 +249,7 @@ async function QuickReplyPanel() {
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-semibold">{it.title}</span>
+                  <Badge tone="slate">정렬 {it.sortOrder}</Badge>
                   {it.category && <Badge tone="slate">{it.category}</Badge>}
                   {!it.isActive && <Badge tone="danger">비활성</Badge>}
                 </div>

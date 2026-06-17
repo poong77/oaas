@@ -37,7 +37,7 @@ function buildAccountGuide(u: ListItem): string {
   const loginId = u.username ?? toLoginId(u.email);
   const hotel = u.hotelName ?? u.name;
   return [
-    `[OA 통합 포털] ${hotel} 계정 안내`,
+    `[OA서포트] ${hotel} 계정 안내`,
     '',
     `▷ 접속 주소: ${origin}`,
     `▷ 아이디: ${loginId}`,

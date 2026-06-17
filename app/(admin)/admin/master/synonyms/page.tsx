@@ -12,7 +12,7 @@ import { analyzeKeywordGaps } from '@/lib/services/keyword-gap';
 import { SynonymsManager } from './_components/synonyms-manager';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '동의어 사전 — 마스터' };
+export const metadata = { title: '동의어 사전 — OA서포트 어드민' };
 
 export default async function SynonymsIndexPage() {
   await requireRole(['manager', 'admin']);
@@ -25,7 +25,7 @@ export default async function SynonymsIndexPage() {
     <div className="flex flex-col gap-5">
       <PageHeader
         title="동의어 사전"
-        description="대표어 + 동의어로 통합 검색 결과를 확장합니다. AI 추천(숙박업계 기준)으로 빠르게 채우세요."
+        description="대표어 + 동의어로 도움말·FAQ·공지·티켓 검색 결과를 함께 확장합니다. AI 추천(숙박업계 기준)으로 빠르게 채우세요."
       />
       <SynonymsManager groups={groups} gapData={gapData} />
     </div>
