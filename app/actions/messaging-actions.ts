@@ -22,8 +22,8 @@ import { runClaudeText } from '@/lib/ai/anthropic-client';
 import { markdownToHtml } from '@/lib/editor/markdown-to-html';
 import { markdownToPlain } from '@/lib/editor/markdown-to-plain';
 import {
-  buildMailFooterHtml,
-  buildMailFooterText,
+  wrapMailFooterHtml,
+  wrapMailFooterText,
   classifySms,
   extractVarNames,
   resolveRecipientVars,
@@ -32,6 +32,7 @@ import {
   type VarBinding,
   type VarSource,
 } from '@/lib/messaging/format';
+import { getMailFooterMarkdown, setMailFooterMarkdown } from '@/lib/services/mail-footer';
 
 /** 메일 발신 도메인 (고정). 앞부분(local part)만 사용자 입력. */
 const MAIL_DOMAIN = 'oapms.com';
@@ -227,8 +228,9 @@ export async function sendBulkEmailAction(input: {
   const addr = resolveMailFrom(parsed.data.fromLocal);
   const from = encodeFromHeader(parsed.data.fromName, addr);
   const batchId = parsed.data.batchId ?? randomUUID();
-  const footerHtml = buildMailFooterHtml();
-  const footerText = buildMailFooterText();
+  const footerMd = await getMailFooterMarkdown();
+  const footerHtml = wrapMailFooterHtml(markdownToHtml(footerMd));
+  const footerText = wrapMailFooterText(markdownToPlain(footerMd));
   const bindings = resolveBindings([parsed.data.subject, parsed.data.markdown], parsed.data.varBindings);
 
   let sent = 0;
@@ -441,8 +443,9 @@ export async function sendTestEmailAction(input: {
   const values = parsed.data.sampleValues ?? {};
   const subject = substituteAll(parsed.data.subject, values);
   const bodyMd = substituteAll(parsed.data.markdown, values);
-  const html = markdownToHtml(bodyMd) + buildMailFooterHtml();
-  const text = markdownToPlain(bodyMd) + buildMailFooterText();
+  const footerMd = await getMailFooterMarkdown();
+  const html = markdownToHtml(bodyMd) + wrapMailFooterHtml(markdownToHtml(footerMd));
+  const text = markdownToPlain(bodyMd) + wrapMailFooterText(markdownToPlain(footerMd));
 
   const res = await notifyEmail(
     { to: parsed.data.to.trim(), subject: `[테스트] ${subject}`, html, text, from },
@@ -749,6 +752,45 @@ export async function aiWriteEmailAction(input: {
     console.error('[aiWriteEmailAction] 실패:', err);
     return { ok: false, message: 'AI 작성 중 오류가 발생했습니다' };
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// 메일 푸터 — 발송 메일 본문 하단 자동 첨부(어드민 편집)
+// ─────────────────────────────────────────────────────────────────────
+
+/** 현재 푸터 마크다운 조회(미저장 시 기본값). */
+export async function getMailFooterAction(): Promise<{
+  ok: boolean;
+  markdown?: string;
+  message?: string;
+}> {
+  await requireRole(['manager', 'admin']);
+  const markdown = await getMailFooterMarkdown();
+  return { ok: true, markdown };
+}
+
+const SaveFooterSchema = z.object({
+  markdown: z.string().max(50000),
+});
+
+/** 푸터 마크다운 저장. */
+export async function saveMailFooterAction(input: {
+  markdown: string;
+}): Promise<{ ok: boolean; message?: string }> {
+  const user = await requireRole(['manager', 'admin']);
+  const parsed = SaveFooterSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: '푸터 내용을 확인하세요' };
+
+  const res = await setMailFooterMarkdown(parsed.data.markdown, user.id);
+  if (!res.ok) return res;
+  logActivity({
+    userId: user.id,
+    action: 'messaging.footer.update',
+    targetType: 'system_settings',
+    targetId: null,
+    payload: { length: parsed.data.markdown.length },
+  });
+  return { ok: true };
 }
 
 // ─────────────────────────────────────────────────────────────────────

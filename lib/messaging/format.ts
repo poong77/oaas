@@ -145,21 +145,33 @@ export const MAIL_FOOTER = {
   fax: 'Fax. 0505-300-4702',
 } as const;
 
-/** 메일 본문 HTML 하단에 붙는 푸터 HTML. */
-export function buildMailFooterHtml(): string {
-  const f = MAIL_FOOTER;
+/**
+ * 푸터 기본 콘텐츠(마크다운). 어드민이 별도 저장하기 전까지 이 값이 사용된다.
+ * 첨부 이미지(회사 정보 푸터)와 동일한 내용.
+ */
+export const DEFAULT_MAIL_FOOTER_MD = [
+  `**${MAIL_FOOTER.companyKo}**  |  ${MAIL_FOOTER.companyEn}`,
+  '',
+  MAIL_FOOTER.hq,
+  '',
+  MAIL_FOOTER.seoul,
+  '',
+  `${MAIL_FOOTER.tel}  |  ${MAIL_FOOTER.fax}`,
+].join('\n');
+
+/**
+ * 푸터 HTML을 메일 본문 하단 컨테이너(상단 구분선·muted 색)로 감싼다.
+ * `innerHtml`은 푸터 마크다운을 markdownToHtml로 변환한 결과.
+ */
+export function wrapMailFooterHtml(innerHtml: string): string {
   return [
     '<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:12px;line-height:1.7;color:#64748b;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Apple SD Gothic Neo\',sans-serif;">',
-    `<div style="font-weight:700;color:#334155;font-size:13px;">${f.companyKo}&nbsp;&nbsp;|&nbsp;&nbsp;<span style="color:#94a3b8;">${f.companyEn}</span></div>`,
-    `<div>${f.hq}</div>`,
-    `<div>${f.seoul}</div>`,
-    `<div style="margin-top:4px;">${f.tel}&nbsp;&nbsp;|&nbsp;&nbsp;${f.fax}</div>`,
+    innerHtml,
     '</div>',
   ].join('');
 }
 
-/** 메일 text 파트 하단 푸터(plain). */
-export function buildMailFooterText(): string {
-  const f = MAIL_FOOTER;
-  return ['', '----------', `${f.companyKo} | ${f.companyEn}`, f.hq, f.seoul, `${f.tel} | ${f.fax}`].join('\n');
+/** 메일 text 파트 하단 푸터(plain). `footerPlain`은 푸터 마크다운→plain 변환 결과. */
+export function wrapMailFooterText(footerPlain: string): string {
+  return ['', '----------', footerPlain.trim()].join('\n');
 }

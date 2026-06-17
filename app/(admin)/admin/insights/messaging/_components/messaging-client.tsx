@@ -9,10 +9,11 @@
  */
 
 import { useState } from 'react';
-import { Mail, MessageSquare, Inbox, Send } from 'lucide-react';
+import { Mail, MessageSquare, Inbox, Send, AlignLeft } from 'lucide-react';
 import { MailTab } from './mail-tab';
 import { SmsTab } from './sms-tab';
 import { TemplateTab } from './template-tab';
+import { FooterTab } from './footer-tab';
 import { MessageBoxTab } from './messagebox-tab';
 import type { Tab, TemplateSeed } from './shared';
 
@@ -54,6 +55,9 @@ export function MessagingClient({
         <TabButton active={tab === 'template'} onClick={() => setTab('template')} icon={<Send className="h-4 w-4" />}>
           템플릿
         </TabButton>
+        <TabButton active={tab === 'footer'} onClick={() => setTab('footer')} icon={<AlignLeft className="h-4 w-4" />}>
+          푸터
+        </TabButton>
         <TabButton active={tab === 'messagebox'} onClick={() => setTab('messagebox')} icon={<Inbox className="h-4 w-4" />}>
           메시지함
         </TabButton>
@@ -65,6 +69,8 @@ export function MessagingClient({
         <SmsTab key={smsKey} senderPhone={senderPhone} seed={smsSeed} />
       ) : tab === 'template' ? (
         <TemplateTab onUse={applyTemplate} />
+      ) : tab === 'footer' ? (
+        <FooterTab />
       ) : (
         <MessageBoxTab />
       )}

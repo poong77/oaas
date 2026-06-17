@@ -8,7 +8,7 @@
  * - MSG-22: 테스트 발송
  */
 
-import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Mail, Sparkles, Eye, FlaskConical } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +19,6 @@ import { RichEditor } from '@/components/editor/rich-editor';
 import { useConfirmDialog } from '@/components/dialogs/confirm-dialog';
 import { markdownToHtml } from '@/lib/editor/markdown-to-html';
 import {
-  MAIL_FOOTER,
   extractVarNames,
   resolveRecipientVars,
   substituteAll,
@@ -29,6 +28,7 @@ import {
   sendBulkEmailAction,
   sendTestEmailAction,
   recordBulkSendActivityAction,
+  getMailFooterAction,
 } from '@/app/actions/messaging-actions';
 import type { VarSource } from '@/lib/messaging/format';
 import {
@@ -47,17 +47,14 @@ import {
 import { RecipientPicker, type PickerMeta } from './recipient-picker';
 import { VariablePanel, effectiveBindings } from './variable-panel';
 
-function MailFooterPreview() {
+/** 저장된 푸터(마크다운)를 렌더. '푸터' 탭에서 편집한 내용이 그대로 표시된다. */
+function MailFooterPreview({ markdown }: { markdown: string }) {
   return (
     <div className="mt-3 border-t border-slate-200 pt-3 text-[11.5px] leading-relaxed text-slate-500 dark:border-slate-700">
-      <div className="font-semibold text-slate-700 dark:text-slate-200">
-        {MAIL_FOOTER.companyKo} &nbsp;|&nbsp; <span className="text-slate-400">{MAIL_FOOTER.companyEn}</span>
-      </div>
-      <div>{MAIL_FOOTER.hq}</div>
-      <div>{MAIL_FOOTER.seoul}</div>
-      <div className="mt-0.5">
-        {MAIL_FOOTER.tel} &nbsp;|&nbsp; {MAIL_FOOTER.fax}
-      </div>
+      <div
+        className="prose prose-sm max-w-none dark:prose-invert [&_p]:my-0.5 [&_img]:my-1"
+        dangerouslySetInnerHTML={{ __html: markdownToHtml(markdown) }}
+      />
     </div>
   );
 }
@@ -94,6 +91,18 @@ export function MailTab({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
   const [testTo, setTestTo] = useState('');
+  const [footerMd, setFooterMd] = useState('');
+
+  // 발송 시 본문 하단에 붙는 푸터(어드민이 '푸터' 탭에서 편집). 미리보기·발송 모두 동일 적용.
+  useEffect(() => {
+    let alive = true;
+    void getMailFooterAction().then((res) => {
+      if (alive && res.ok && typeof res.markdown === 'string') setFooterMd(res.markdown);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const addMeta = useCallback((address: string, m: PickerMeta) => {
     if (m.excel && Object.keys(m.excel).length > 0) setExcelAvailable(true);
@@ -312,7 +321,7 @@ export function MailTab({
             disabled={pending}
           />
           <VariablePanel bindings={bindings} excelAvailable={excelAvailable} onEdit={editBinding} />
-          <MailFooterPreview />
+          <MailFooterPreview markdown={footerMd} />
         </div>
 
         <ReasonInput value={reason} onChange={setReason} />
@@ -354,7 +363,7 @@ export function MailTab({
               className="prose prose-sm max-w-none rounded-md border border-slate-200 bg-white p-4 dark:prose-invert dark:border-slate-700 dark:bg-slate-900"
               dangerouslySetInnerHTML={{ __html: markdownToHtml(substituteAll(body, sampleValues)) }}
             />
-            <MailFooterPreview />
+            <MailFooterPreview markdown={footerMd} />
             {usedNames.some((n) => !sampleValues[n]) && (
               <p className="text-xs text-amber-600">
                 ⚠ 일부 변수에 샘플 값이 없습니다(빈 문자열로 치환). 변수 값 소스를 확인하세요.

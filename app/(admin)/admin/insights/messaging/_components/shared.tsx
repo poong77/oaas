@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import type { SendRecipient, MessageBatchItem } from '@/app/actions/messaging-actions';
 import type { VarSource } from '@/lib/messaging/format';
 
-export type Tab = 'mail' | 'sms' | 'template' | 'messagebox';
+export type Tab = 'mail' | 'sms' | 'template' | 'footer' | 'messagebox';
 export type HotelHit = { id: string; name: string };
 
 /** 수신자 주소 → 변수/업체명 매핑. 호텔검색·엑셀·호텔리어 전체 공용. */
