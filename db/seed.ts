@@ -931,7 +931,7 @@ async function main() {
     {
       channel: 'email',
       eventKey: 'ticket.received',
-      subject: '[OA 통합 AS] 접수 완료 — {{ticket_no}}',
+      subject: '[OA서포트] 접수 완료 — {{ticket_no}}',
       bodyTemplate:
         '{{reporter_name}}님, 문의가 접수되었습니다.\n티켓 번호: {{ticket_no}}\n제목: {{title}}\n진행상황: {{ticket_url}}',
       description: '신규 티켓 접수 시 호텔리어에게 이메일 발송',
@@ -941,13 +941,13 @@ async function main() {
       eventKey: 'ticket.received',
       subject: null,
       bodyTemplate:
-        '[OA 통합 AS] 접수 완료. 티켓 {{ticket_no}}. {{title}} {{ticket_url}}',
+        '[OA서포트] 접수 완료. 티켓 {{ticket_no}}. {{title}} {{ticket_url}}',
       description: '신규 티켓 접수 SMS',
     },
     {
       channel: 'email',
       eventKey: 'ticket.in_progress',
-      subject: '[OA 통합 AS] 처리중 — {{ticket_no}}',
+      subject: '[OA서포트] 처리중 — {{ticket_no}}',
       bodyTemplate:
         '{{reporter_name}}님, 티켓 {{ticket_no}}이(가) 처리 단계로 전환되었습니다.\n{{ticket_url}}',
       description: '티켓 처리중 전환 알림',
@@ -957,13 +957,13 @@ async function main() {
       eventKey: 'ticket.in_progress',
       subject: null,
       bodyTemplate:
-        '[OA 통합 AS] {{ticket_no}} 처리중. {{title}} {{ticket_url}}',
+        '[OA서포트] {{ticket_no}} 처리중. {{title}} {{ticket_url}}',
       description: '티켓 처리중 SMS',
     },
     {
       channel: 'email',
       eventKey: 'ticket.completed',
-      subject: '[OA 통합 AS] 처리 완료 — {{ticket_no}}',
+      subject: '[OA서포트] 처리 완료 — {{ticket_no}}',
       bodyTemplate:
         '{{reporter_name}}님, 티켓 {{ticket_no}}이(가) 완료되었습니다.\n{{ticket_url}}',
       description: '티켓 완료 알림',
@@ -973,15 +973,15 @@ async function main() {
       eventKey: 'ticket.completed',
       subject: null,
       bodyTemplate:
-        '[OA 통합 AS] {{ticket_no}} 처리 완료. {{title}} {{ticket_url}}',
+        '[OA서포트] {{ticket_no}} 처리 완료. {{title}} {{ticket_url}}',
       description: '티켓 완료 SMS',
     },
     {
       channel: 'email',
       eventKey: 'account.invite',
-      subject: '[OA 통합 AS] {{name}}님, 계정이 생성되었습니다',
+      subject: '[OA서포트] {{name}}님, 계정이 생성되었습니다',
       bodyTemplate:
-        '{{name}}님, 통합 AS 플랫폼에 초대되었습니다.\n이메일: {{email}}\n임시 비밀번호: {{temp_password}}\n로그인: {{login_url}}\n첫 로그인 후 반드시 비밀번호를 변경해주세요.',
+        '{{name}}님, OA서포트에 초대되었습니다.\n이메일: {{email}}\n임시 비밀번호: {{temp_password}}\n로그인: {{login_url}}\n첫 로그인 후 반드시 비밀번호를 변경해주세요.',
       description: '계정 초대 이메일',
     },
     {
@@ -989,13 +989,13 @@ async function main() {
       eventKey: 'account.invite',
       subject: null,
       bodyTemplate:
-        '[OA 통합 AS] {{name}}님 계정 생성. 임시비번: {{temp_password}} (첫 로그인 후 변경) {{login_url}}',
+        '[OA서포트] {{name}}님 계정 생성. 임시비번: {{temp_password}} (첫 로그인 후 변경) {{login_url}}',
       description: '계정 초대 SMS',
     },
     {
       channel: 'email',
       eventKey: 'account.password_reset',
-      subject: '[OA 통합 AS] 비밀번호가 초기화되었습니다',
+      subject: '[OA서포트] 비밀번호가 초기화되었습니다',
       bodyTemplate:
         '{{name}}님 비밀번호가 초기화되었습니다.\n임시 비밀번호: {{temp_password}}\n로그인: {{login_url}}\n로그인 후 즉시 변경해주세요.',
       description: '비밀번호 초기화 이메일',
@@ -1005,7 +1005,7 @@ async function main() {
       eventKey: 'account.password_reset',
       subject: null,
       bodyTemplate:
-        '[OA 통합 AS] 비밀번호가 초기화됐어요. 임시비번: {{temp_password}} 로그인 후 즉시 변경 {{login_url}}',
+        '[OA서포트] 비밀번호가 초기화됐어요. 임시비번: {{temp_password}} 로그인 후 즉시 변경 {{login_url}}',
       description: '비밀번호 초기화 SMS',
     },
   ];
