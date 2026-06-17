@@ -11,6 +11,28 @@
 
 import 'server-only';
 import { env, isOpenAIConfigured } from '@/lib/env';
+import { trackCost } from '@/lib/ai/cost-tracker';
+
+/** OpenAI 응답 usage → ai_usage_logs 적재 (fire-and-forget). */
+type OpenAIUsage = {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+};
+function recordOpenAIUsage(
+  model: string,
+  usage: OpenAIUsage | undefined,
+  bucket: string,
+): void {
+  if (!usage) return;
+  trackCost({
+    inputTokens: usage.prompt_tokens ?? 0,
+    outputTokens: usage.completion_tokens ?? 0,
+    cacheReadTokens: 0,
+    bucket,
+    provider: 'openai',
+    model,
+  });
+}
 
 const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 /** 평가/생성용 저비용 모델. */
@@ -19,7 +41,7 @@ const MODEL = 'gpt-4o-mini';
 async function chatJson<T>(
   system: string,
   user: string,
-  opts: { temperature?: number } = {},
+  opts: { temperature?: number; bucket?: string } = {},
 ): Promise<T | null> {
   if (!isOpenAIConfigured()) return null;
   try {
@@ -45,7 +67,9 @@ async function chatJson<T>(
     }
     const json = (await res.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
+      usage?: OpenAIUsage;
     };
+    recordOpenAIUsage(MODEL, json.usage, opts.bucket ?? 'llm-json');
     const content = json.choices?.[0]?.message?.content;
     if (!content) return null;
     return JSON.parse(content) as T;
@@ -66,6 +90,8 @@ export async function runOpenAIText(opts: {
   model: string;
   maxTokens?: number;
   temperature?: number;
+  /** 비용 집계 용도 분류. 미지정 시 'ai-assist'. */
+  bucket?: string;
 }): Promise<string> {
   if (!isOpenAIConfigured()) {
     throw new Error('OPENAI_API_KEY missing — .env 확인');
@@ -99,7 +125,9 @@ export async function runOpenAIText(opts: {
   }
   const json = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
+    usage?: OpenAIUsage;
   };
+  recordOpenAIUsage(opts.model, json.usage, opts.bucket ?? 'ai-assist');
   const content = json.choices?.[0]?.message?.content?.trim();
   if (!content) throw new Error('OpenAI 응답이 비었습니다.');
   return content;
@@ -118,7 +146,10 @@ export async function generateEvalQueries(
     '주어진 도움말 문서를 보고, 이 문서가 정답이 되어야 할 "실제 사용자가 칠 법한 짧은 검색 질의"를 만든다. ' +
     '구어체·증상 위주, 5~20자, 전문용어보다 일상 표현. JSON {"queries": string[]} 형식으로만 답한다.';
   const usr = `문서 제목: ${article.title}\n요약: ${article.summary ?? ''}\n본문 일부: ${(article.bodyExcerpt ?? '').slice(0, 600)}\n\n위 문서가 정답인 검색 질의 ${count}개를 생성.`;
-  const out = await chatJson<{ queries?: string[] }>(sys, usr, { temperature: 0.5 });
+  const out = await chatJson<{ queries?: string[] }>(sys, usr, {
+    temperature: 0.5,
+    bucket: 'search-eval',
+  });
   return Array.isArray(out?.queries)
     ? out.queries.filter((q) => typeof q === 'string' && q.trim().length >= 2).slice(0, count)
     : [];
@@ -143,6 +174,7 @@ export async function suggestFaqKeywords(
   const usr = `질문: ${faq.question}\n답변: ${(faq.answer ?? '').slice(0, 800)}\n이미 등록된 키워드: ${existing.join(', ') || '(없음)'}\n\n위 FAQ의 검색 키워드를 제안.`;
   const out = await chatJson<{ keywords?: string[] }>(sys, usr, {
     temperature: 0.3,
+    bucket: 'ai-faq-keywords',
   });
   return Array.isArray(out?.keywords)
     ? out.keywords
@@ -175,6 +207,7 @@ export async function suggestSynonyms(
   const usr = `대표어: ${term}\n이미 등록된 동의어: ${existing.join(', ') || '(없음)'}\n\n위 대표어의 숙박업계 동의어 후보를 제안.`;
   const out = await chatJson<{ synonyms?: string[] }>(sys, usr, {
     temperature: 0.4,
+    bucket: 'ai-synonym-suggest',
   });
   if (!Array.isArray(out?.synonyms)) return [];
   const seen = new Set(
@@ -209,7 +242,10 @@ export async function judgeRelevance(
     .map((r, i) => `${i + 1}. ${r.title}${r.snippet ? ` — ${r.snippet.slice(0, 120)}` : ''}`)
     .join('\n');
   const usr = `질의: "${query}"\n\n결과:\n${list}\n\n각 결과의 적합도 점수(0~3)를 ${results.length}개 배열로.`;
-  const out = await chatJson<{ scores?: number[] }>(sys, usr, { temperature: 0 });
+  const out = await chatJson<{ scores?: number[] }>(sys, usr, {
+    temperature: 0,
+    bucket: 'search-eval',
+  });
   if (!Array.isArray(out?.scores)) return null;
   // 길이/범위 보정
   return results.map((_, i) => {

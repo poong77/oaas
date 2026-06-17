@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>유료 사용현황 와이어프레임 — 마스터DB ⑤ 시스템·운영</title>
+<style>
+:root{
+  --brand:#00A36B; --brand-d:#00794f; --brand-l:#e6f7f0; --brand-100:#c7ecdd;
+  --ink:#1a2b22; --muted:#5b7265; --line:#e2ebe6; --bg:#f3f7f5; --card:#fff;
+  --red:#dc2626; --red-bg:#fef2f2;
+  --amber:#d97706; --amber-bg:#fffbeb;
+  --indigo:#4f46e5; --indigo-bg:#eef2ff;
+  --slate:#475569; --slate-bg:#f1f5f9;
+  --radius:14px; --shadow:0 2px 10px rgba(0,163,107,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;
+  background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55}
+
+/* 안내 배너 */
+.top-banner{background:linear-gradient(135deg,#1a2b22,#0d4a30);color:#fff;padding:18px 24px;
+  border-radius:var(--radius);margin:20px;box-shadow:var(--shadow)}
+.top-banner h1{font-size:18px;font-weight:800;margin-bottom:6px;letter-spacing:-.3px}
+.top-banner p{font-size:12.5px;opacity:.85;margin-bottom:12px}
+.legend-row{display:flex;flex-wrap:wrap;gap:8px}
+.leg{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 10px;
+  border-radius:999px;font-weight:700}
+.leg.a{background:var(--brand-l);color:var(--brand-d)}
+.leg.b{background:var(--indigo-bg);color:var(--indigo)}
+.leg.c{background:var(--amber-bg);color:var(--amber)}
+
+/* 앱 프레임 */
+.app-frame{margin:0 20px 80px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);max-width:1080px}
+.app-frame.wide{margin-left:auto;margin-right:auto}
+
+/* 페이지 헤더 */
+.page-header{background:#fff;border-bottom:1px solid var(--line);padding:20px 24px}
+.crumb{font-size:12px;color:var(--muted);margin-bottom:8px;display:inline-flex;align-items:center;gap:4px}
+.page-header-row{display:flex;align-items:flex-end;justify-content:space-between}
+.page-header h2{font-size:20px;font-weight:800;letter-spacing:-.4px}
+.page-header .desc{color:var(--muted);font-size:13px;margin-top:3px;max-width:640px}
+.perm-badge{display:inline-flex;align-items:center;gap:5px;background:var(--amber-bg);
+  color:var(--amber);font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px}
+
+.body{padding:24px;display:flex;flex-direction:column;gap:18px}
+
+/* 기간 탭 */
+.period-tabs{display:flex;gap:8px}
+.ptab{display:flex;align-items:center;gap:6px;border:none;cursor:pointer;
+  padding:8px 16px;border-radius:10px;font-size:13.5px;font-weight:700;
+  background:var(--slate-bg);color:var(--muted);transition:all .15s}
+.ptab small{font-weight:400;font-size:11px;opacity:.7}
+.ptab:hover{background:#e6ece9}
+.ptab.active{background:var(--brand);color:#fff}
+.ptab.active small{opacity:.85}
+
+/* 요약 카드 */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px;
+  display:flex;gap:12px;align-items:flex-start}
+.card .ic{width:40px;height:40px;border-radius:10px;flex:0 0 auto;display:flex;
+  align-items:center;justify-content:center;font-size:18px}
+.ic.brand{background:var(--brand-l);color:var(--brand-d)}
+.ic.indigo{background:var(--indigo-bg);color:var(--indigo)}
+.ic.amber{background:var(--amber-bg);color:var(--amber)}
+.card .t{font-size:12px;color:var(--muted)}
+.card .m{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-top:1px}
+.card .s{font-size:11.5px;color:#8aa295;margin-top:3px}
+
+/* 안내 박스 */
+.notice{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);
+  border-radius:12px;background:#fff;padding:14px}
+.notice .ic{width:32px;height:32px;border-radius:9px;background:var(--amber-bg);
+  color:var(--amber);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.notice strong{font-size:13px}
+.notice p{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* 패널 */
+.panel{border:1px solid var(--line);border-radius:12px;background:#fff;padding:18px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.panel-head h3{font-size:14px;font-weight:800}
+.panel-head .hint{font-size:11px;color:#8aa295}
+
+/* 추이 테이블 */
+table.trend{width:100%;border-collapse:collapse;font-size:13px}
+table.trend th{text-align:right;font-size:11px;font-weight:600;color:var(--muted);
+  padding:8px 8px;border-bottom:1px solid var(--line)}
+table.trend th.l{text-align:left}
+table.trend td{padding:9px 8px;border-bottom:1px solid #f0f5f2;text-align:right;
+  font-variant-numeric:tabular-nums;color:#3b4f45}
+table.trend td.l{text-align:left;font-weight:700;color:var(--ink)}
+table.trend tr:last-child td{border-bottom:none}
+.barcell{display:flex;align-items:center;gap:8px;min-width:200px}
+.bartrack{flex:1;height:8px;border-radius:999px;background:#eef3f0;overflow:hidden}
+.barfill{height:100%;border-radius:999px;background:var(--brand)}
+.barval{width:78px;text-align:right;font-size:11.5px;color:var(--muted)}
+.dash{color:#c2d2ca}
+
+/* AI 모델별 */
+.model-row{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 2px;border-bottom:1px solid #f0f5f2}
+.model-row:last-child{border-bottom:none}
+.model-left{display:flex;align-items:center;gap:8px}
+.pill{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
+.pill.anthropic{background:var(--brand-l);color:var(--brand-d)}
+.pill.openai{background:var(--slate-bg);color:var(--slate)}
+.mono{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:12px;color:#3b4f45}
+.model-right{display:flex;align-items:center;gap:18px;font-size:12px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.model-right b{color:var(--ink);font-size:13px}
+
+/* kind 칩 */
+.kinds{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.kchip{font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;
+  background:var(--slate-bg);color:var(--slate)}
+.kchip b{color:var(--ink)}
+
+.foot{font-size:11px;color:#8aa295;line-height:1.7}
+.foot .mono{font-size:11px}
+
+/* AI 내역 2열 (모델별 | 용도별) */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.two-col{grid-template-columns:1fr}}
+
+/* 용도별 행 */
+.bk-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #f0f5f2}
+.bk-row:last-child{border-bottom:none}
+.bk-cat{width:6px;height:28px;border-radius:3px;flex:0 0 auto}
+.bk-cat.gen{background:var(--brand)}
+.bk-cat.rec{background:var(--indigo)}
+.bk-cat.infra{background:#94a3b8}
+.bk-main{flex:1;min-width:0}
+.bk-label{font-size:13px;font-weight:700;color:var(--ink)}
+.bk-sub{font-size:11px;color:#8aa295;display:flex;align-items:center;gap:6px;margin-top:1px}
+.bk-key{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:10.5px;color:#aab8b0}
+.bk-right{text-align:right;font-variant-numeric:tabular-nums}
+.bk-right b{font-size:13px;color:var(--ink)}
+.bk-right span{display:block;font-size:11px;color:var(--muted)}
+.bk-bar{height:6px;border-radius:999px;background:#eef3f0;overflow:hidden;margin-top:5px}
+.bk-bar i{display:block;height:100%;border-radius:999px}
+.bk-bar i.gen{background:var(--brand)}
+.bk-bar i.rec{background:var(--indigo)}
+.bk-bar i.infra{background:#94a3b8}
+.cat-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--muted)}
+.cat-legend span{display:inline-flex;align-items:center;gap:5px}
+.cat-dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+.cat-dot.gen{background:var(--brand)}
+.cat-dot.rec{background:var(--indigo)}
+.cat-dot.infra{background:#94a3b8}
+
+/* 주석 핀 */
+.note-pin{margin:0 20px 14px;max-width:1080px;background:var(--brand-l);
+  border:1px dashed var(--brand-100);border-radius:12px;padding:14px 18px}
+.note-pin h4{font-size:12px;font-weight:800;color:var(--brand-d);margin-bottom:8px;
+  text-transform:uppercase;letter-spacing:.4px}
+.note-pin ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.note-pin li{font-size:12.5px;color:#2c4438;padding-left:18px;position:relative}
+.note-pin li:before{content:"▸";position:absolute;left:2px;color:var(--brand)}
+.app-frame.wide{margin-bottom:14px}
+.wrap{max-width:1120px;margin:0 auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top-banner">
+  <h1>유료 사용현황 — 와이어프레임</h1>
+  <p>마스터DB → ⑤ 시스템·운영 (맨 우측, 어드민 전용) · AI·문자 사용량/요금을 일·주·월로 집계</p>
+  <div class="legend-row">
+    <span class="leg a">● AI (ai_usage_logs · 배포 후 누적)</span>
+    <span class="leg b">● 문자 (notification_logs · 과거 소급)</span>
+    <span class="leg c">● 합산 예상요금 (환율 가정)</span>
+  </div>
+</div>
+
+<div class="app-frame wide">
+  <!-- 헤더 -->
+  <div class="page-header">
+    <span class="crumb">← 마스터DB</span>
+    <div class="page-header-row">
+      <div>
+        <h2>유료 사용현황</h2>
+        <p class="desc">AI·문자 사용량과 예상 요금을 일·주·월 단위로 집계합니다. 단가는 <span class="mono">lib/ai/pricing.ts</span>에서 조정합니다.</p>
+      </div>
+      <span class="perm-badge">🔒 어드민 전용</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- 기간 탭 -->
+    <div class="period-tabs">
+      <button class="ptab active" data-p="daily">일간 <small>최근 30일</small></button>
+      <button class="ptab" data-p="weekly">주간 <small>최근 12주</small></button>
+      <button class="ptab" data-p="monthly">월간 <small>최근 12개월</small></button>
+    </div>
+
+    <!-- 요약 카드 -->
+    <div class="cards">
+      <div class="card">
+        <div class="ic brand">🤖</div>
+        <div>
+          <div class="t">AI 비용</div>
+          <div class="m" data-k="aiUsd">$2.41</div>
+          <div class="s" data-k="aiSub">₩3,374 · 312회 호출</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ic indigo">💬</div>
+        <div>
+          <div class="t">문자 요금</div>
+          <div class="m" data-k="smsKrw">₩940</div>
+          <div class="s" data-k="smsSub">38건 (SMS 30 · LMS 7 · MMS 1)</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ic amber">🪙</div>
+        <div>
+          <div class="t">합산 예상요금</div>
+          <div class="m" data-k="sumKrw">₩4,314</div>
+          <div class="s">환율 ₩1,400/$ 가정</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI 적재 대기 안내 (월간에서만 노출 예시) -->
+    <div class="notice" id="aiNotice" style="display:none">
+      <div class="ic">ⓘ</div>
+      <div>
+        <strong>이 기간에 적재된 AI 사용 데이터가 없습니다.</strong>
+        <p>AI 사용량은 로깅 도입 시점 이후 호출분부터 집계됩니다. 문자 요금은 과거 발송 이력까지 정상 집계됩니다.</p>
+      </div>
+    </div>
+
+    <!-- 기간별 추이 -->
+    <div class="panel">
+      <div class="panel-head">
+        <h3>기간별 추이 (<span data-k="periodLabel">일간</span>)</h3>
+        <span class="hint">막대 = AI+문자 합산(₩)</span>
+      </div>
+      <table class="trend">
+        <thead>
+          <tr>
+            <th class="l">기간</th><th>AI 호출</th><th>AI 비용</th>
+            <th>문자 건수</th><th>문자 요금</th><th class="l">합산(₩)</th>
+          </tr>
+        </thead>
+        <tbody id="trendBody"></tbody>
+      </table>
+    </div>
+
+    <!-- AI 내역: 모델별 | 용도별 -->
+    <div class="two-col">
+      <!-- AI 모델별 -->
+      <div class="panel">
+        <div class="panel-head">
+          <h3>AI 모델별 내역 (<span data-k="periodHint">최근 30일</span>)</h3>
+        </div>
+        <div id="modelBody"></div>
+      </div>
+
+      <!-- AI 용도별 (bucket) -->
+      <div class="panel">
+        <div class="panel-head">
+          <h3>AI 용도별 내역 (<span data-k="periodHint2">최근 30일</span>)</h3>
+          <span class="hint">비용 높은 순</span>
+        </div>
+        <div id="bucketBody"></div>
+        <div class="cat-legend">
+          <span><i class="cat-dot gen"></i>답변·콘텐츠 생성</span>
+          <span><i class="cat-dot rec"></i>추천·보조</span>
+          <span><i class="cat-dot infra"></i>검색 인프라</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 문자 종류 + 단가 -->
+    <div class="panel">
+      <div class="panel-head"><h3>문자 종류별 건수</h3></div>
+      <div class="kinds" id="kindBody"></div>
+      <p class="foot" style="margin-top:14px">
+        문자 단가(건당): SMS 20원 · LMS 50원 · MMS 200원. AI 단가는 모델별 토큰 단가 기준이며 실제 청구액과 차이가 있을 수 있습니다.
+        단가·환율 조정은 <span class="mono">lib/ai/pricing.ts</span>.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="note-pin">
+  <h4>구현 메모</h4>
+  <ul>
+    <li>위치: 마스터DB ⑤ 시스템·운영 → <b>운영시간 · 메뉴 접근 제어 · [유료 사용현황]</b> (맨 우측, '비용' 뱃지)</li>
+    <li>접근: <span class="mono">requireRole(['admin'])</span> — 매니저 차단(menu-access 토글 없는 어드민 고정)</li>
+    <li>AI 데이터: <span class="mono">ai_usage_logs</span> 신규 테이블 — 배포 시점 이후 누적 / 문자: <span class="mono">notification_logs</span> 과거 소급</li>
+    <li>탭 전환은 서버에서 3개 기간 리포트를 모두 받아 클라이언트 토글(추가 패칭 없음)</li>
+    <li>막대 길이 = 버킷별 (AI비용×환율 + 문자요금) ÷ 기간 내 최대값</li>
+    <li>용도별 내역: <span class="mono">ai_usage_logs.bucket</span> 집계 → 한글 라벨 매핑(ticket-draft→티켓 답변 초안 등). 3개 묶음(답변·콘텐츠 생성 / 추천·보조 / 검색 인프라)으로 색 구분</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+const DATA = {
+  daily: {
+    periodLabel:'일간', periodHint:'최근 30일',
+    aiUsd:'$2.41', aiSub:'₩3,374 · 312회 호출',
+    smsKrw:'₩940', smsSub:'38건 (SMS 30 · LMS 7 · MMS 1)',
+    sumKrw:'₩4,314', noAi:false,
+    rows:[
+      ['6/17',58,'$0.46',9,'₩230',886],
+      ['6/16',41,'$0.31',7,'₩190',624],
+      ['6/15',12,'$0.09',4,'₩80',206],
+      ['6/14',0,'—',2,'₩40',40],
+      ['6/13',77,'$0.62',6,'₩320',1188],
+      ['6/12',63,'$0.51',5,'₩240',954],
+      ['6/11',61,'$0.42',5,'₩40',628],
+    ],
+    models:[
+      ['anthropic','claude-haiku-4-5',214,'$0.86'],
+      ['anthropic','claude-sonnet-4-6',41,'$1.12'],
+      ['openai','gpt-4.1-mini',38,'$0.21'],
+      ['openai','text-embedding-3-small',19,'$0.0008'],
+    ],
+    // [category, 한글라벨, bucketKey, 호출수, 비용표기, 비용값]
+    buckets:[
+      ['gen','티켓 답변 초안','ticket-draft',41,'$1.05',1.05],
+      ['gen','아티클 작성·리라이트','ai-assist · ai-rewrite-*',38,'$0.62',0.62],
+      ['gen','공지·메일 작성','ai-notice-draft · messaging-email-write',12,'$0.31',0.31],
+      ['rec','FAQ·동의어 추천','ai-assist (faq/synonym)',9,'$0.18',0.18],
+      ['infra','검색·임베딩','embeddings · llm-json',212,'$0.25',0.25],
+    ],
+    kinds:[['SMS',30],['LMS',7],['MMS',1]],
+  },
+  weekly: {
+    periodLabel:'주간', periodHint:'최근 12주',
+    aiUsd:'$14.80', aiSub:'₩20,720 · 1,940회 호출',
+    smsKrw:'₩6,180', smsSub:'214건 (SMS 168 · LMS 41 · MMS 5)',
+    sumKrw:'₩26,900', noAi:false,
+    rows:[
+      ['6/16~',152,'$1.21',27,'₩720',2414],
+      ['6/9~',233,'$1.88',34,'₩910',3542],
+      ['6/2~',198,'$1.55',29,'₩760',2930],
+      ['5/26~',176,'$1.34',31,'₩880',2756],
+      ['5/19~',141,'$1.02',22,'₩540',1968],
+      ['5/12~',95,'$0.71',18,'₩440',1434],
+    ],
+    models:[
+      ['anthropic','claude-haiku-4-5',1320,'$5.40'],
+      ['anthropic','claude-sonnet-4-6',288,'$7.90'],
+      ['openai','gpt-4.1-mini',221,'$1.32'],
+      ['openai','text-embedding-3-small',111,'$0.18'],
+    ],
+    buckets:[
+      ['gen','티켓 답변 초안','ticket-draft',288,'$7.10',7.10],
+      ['gen','아티클 작성·리라이트','ai-assist · ai-rewrite-*',196,'$3.80',3.80],
+      ['gen','공지·메일 작성','ai-notice-draft · messaging-email-write',64,'$1.55',1.55],
+      ['rec','FAQ·동의어 추천','ai-assist (faq/synonym)',52,'$0.85',0.85],
+      ['infra','검색·임베딩','embeddings · llm-json',1340,'$1.50',1.50],
+    ],
+    kinds:[['SMS',168],['LMS',41],['MMS',5]],
+  },
+  monthly: {
+    periodLabel:'월간', periodHint:'최근 12개월',
+    aiUsd:'$0.00', aiSub:'₩0 · 0회 호출',
+    smsKrw:'₩9,860', smsSub:'342건 (SMS 270 · LMS 64 · MMS 8)',
+    sumKrw:'₩9,860', noAi:true,
+    rows:[
+      ['2026.06',0,'—',132,'₩3,640',3640],
+      ['2026.05',0,'—',118,'₩3,300',3300],
+      ['2026.04',0,'—',92,'₩2,920',2920],
+    ],
+    models:[],
+    buckets:[],
+    kinds:[['SMS',270],['LMS',64],['MMS',8]],
+  },
+};
+
+function render(p){
+  const d = DATA[p];
+  document.querySelectorAll('[data-k]').forEach(el=>{
+    const k = el.getAttribute('data-k');
+    if(d[k]!==undefined) el.textContent = d[k];
+  });
+  document.getElementById('aiNotice').style.display = d.noAi ? 'flex':'none';
+
+  const max = Math.max(1, ...d.rows.map(r=>r[5]));
+  document.getElementById('trendBody').innerHTML = d.rows.map(r=>{
+    const pct = Math.round(r[5]/max*100);
+    return `<tr>
+      <td class="l">${r[0]}</td>
+      <td>${r[1].toLocaleString()}</td>
+      <td>${r[2]==='—'?'<span class="dash">—</span>':r[2]}</td>
+      <td>${r[3].toLocaleString()}</td>
+      <td>${r[4]==='₩0'?'<span class="dash">—</span>':r[4]}</td>
+      <td><div class="barcell"><div class="bartrack"><div class="barfill" style="width:${pct}%"></div></div>
+        <span class="barval">₩${r[5].toLocaleString()}</span></div></td>
+    </tr>`;
+  }).join('');
+
+  const mb = document.getElementById('modelBody');
+  mb.innerHTML = d.models.length ? d.models.map(m=>`
+    <div class="model-row">
+      <div class="model-left"><span class="pill ${m[0]}">${m[0]}</span><span class="mono">${m[1]}</span></div>
+      <div class="model-right"><span>${m[2].toLocaleString()}회</span><b>${m[3]}</b></div>
+    </div>`).join('')
+    : `<p class="foot">집계된 AI 호출이 없습니다.</p>`;
+
+  // 용도별(bucket)
+  document.querySelectorAll('[data-k="periodHint2"]').forEach(el=>el.textContent=d.periodHint);
+  const bb = document.getElementById('bucketBody');
+  const bmax = Math.max(0.0001, ...d.buckets.map(b=>b[5]));
+  bb.innerHTML = d.buckets.length ? d.buckets.map(b=>{
+    const pct = Math.round(b[5]/bmax*100);
+    return `<div class="bk-row">
+      <div class="bk-cat ${b[0]}"></div>
+      <div class="bk-main">
+        <div class="bk-label">${b[1]}</div>
+        <div class="bk-sub"><span class="bk-key">${b[2]}</span></div>
+        <div class="bk-bar"><i class="${b[0]}" style="width:${pct}%"></i></div>
+      </div>
+      <div class="bk-right"><b>${b[4]}</b><span>${b[3].toLocaleString()}회</span></div>
+    </div>`;
+  }).join('') : `<p class="foot">집계된 AI 호출이 없습니다.</p>`;
+
+  document.getElementById('kindBody').innerHTML = d.kinds.map(k=>
+    `<span class="kchip">문자 ${k[0]} · <b>${k[1].toLocaleString()}건</b></span>`).join('');
+}
+
+document.querySelectorAll('.ptab').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('.ptab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    render(b.dataset.p);
+  };
+});
+render('daily');
+</script>
+</body>
+</html>

@@ -27,6 +27,7 @@ import {
   ListChecks,
   MessageSquare,
   ShieldCheck,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -90,6 +91,7 @@ const GROUPS: MasterGroup[] = [
     items: [
       { href: '/admin/master/business-hours', label: '운영시간', icon: Clock, badge: '실시간' },
       { href: '/admin/master/menu-access', label: '메뉴 접근 제어', icon: ShieldCheck },
+      { href: '/admin/master/paid-usage', label: '유료 사용현황', icon: Wallet, badge: '비용' },
     ],
   },
 ];

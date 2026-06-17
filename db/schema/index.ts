@@ -41,6 +41,7 @@ export * from './tickets';
 export * from './ticket-messages';
 export * from './ticket-attachments';
 export * from './notification-logs';
+export * from './ai-usage-logs';
 export * from './ticket-feedback';
 export * from './ticket-channels';
 export * from './notices';

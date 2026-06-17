@@ -42,5 +42,6 @@ export async function generateDraft(i: GenerateDraftInput): Promise<string> {
     user: i.user,
     model: i.model,
     maxTokens: i.maxTokens ?? 1200,
+    bucket: 'ticket-draft',
   });
 }

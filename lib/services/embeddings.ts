@@ -12,6 +12,7 @@
 
 import 'server-only';
 import { env, isOpenAIConfigured } from '@/lib/env';
+import { trackCost } from '@/lib/ai/cost-tracker';
 
 const ENDPOINT = 'https://api.openai.com/v1/embeddings';
 
@@ -50,7 +51,18 @@ export async function embedText(input: string): Promise<number[] | null> {
     }
     const json = (await res.json()) as {
       data?: Array<{ embedding?: number[] }>;
+      usage?: { prompt_tokens?: number; total_tokens?: number };
     };
+    if (json.usage) {
+      trackCost({
+        inputTokens: json.usage.prompt_tokens ?? json.usage.total_tokens ?? 0,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        bucket: 'embeddings',
+        provider: 'openai',
+        model: env.OPENAI_EMBEDDING_MODEL,
+      });
+    }
     const vec = json.data?.[0]?.embedding;
     return Array.isArray(vec) && vec.length === EMBEDDING_DIM ? vec : null;
   } catch (err) {

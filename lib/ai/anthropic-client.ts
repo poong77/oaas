@@ -129,6 +129,8 @@ export async function runClaudeJson(opts: RunClaudeOptions): Promise<unknown> {
     outputTokens: message.usage.output_tokens,
     cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
     bucket: opts.bucket,
+    provider: 'anthropic',
+    model,
   });
 
   const block = message.content.find(
@@ -190,6 +192,8 @@ export async function runClaudeText(opts: RunClaudeOptions): Promise<string> {
     outputTokens: message.usage.output_tokens,
     cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
     bucket: opts.bucket,
+    provider: 'anthropic',
+    model,
   });
 
   const block = message.content.find(

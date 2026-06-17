@@ -76,6 +76,8 @@ export const MASTER_MENUS: readonly MasterMenuMeta[] = [
   { key: 'ai-models', label: 'AI 모델', hardAdminOnly: false },
   // ⑤ 시스템·운영
   { key: 'business-hours', label: '운영시간', hardAdminOnly: false },
+  // 비용·요금 데이터 — 어드민 전용 고정(토글 불가)
+  { key: 'paid-usage', label: '유료 사용현황', hardAdminOnly: true },
   // 영구 어드민 전용 (토글 불가) — 메뉴 접근 제어 자신만 해당
   { key: 'menu-access', label: '메뉴 접근 제어', hardAdminOnly: true },
 ] as const;
